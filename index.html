@@ -3937,6 +3937,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(
 // ===== NAVIGATION =====
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // 対象ページを表示
+  const pageEl = document.getElementById('page-' + id);
+  if (pageEl) pageEl.classList.add('active');
   // data-page属性を持つすべてのナビボタン（デスクトップnav・モバイルタブ・ドロワー）を一括更新
   document.querySelectorAll('[data-page]').forEach(b => {
     b.classList.toggle('active', b.dataset.page === id);
