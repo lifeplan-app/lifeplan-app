@@ -67,15 +67,21 @@
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       backdrop-filter: blur(20px) saturate(180%);
       border-bottom: .5px solid var(--border);
-      padding: 0 24px;
+      padding: 0 16px 0 8px;
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 8px;
       position: sticky;
       top: 0;
       z-index: 100;
       height: 52px;
       justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .logo {
@@ -84,6 +90,134 @@
       color: var(--text);
       white-space: nowrap;
       letter-spacing: -.3px;
+    }
+
+    /* ハンバーガーボタン */
+    .hamburger-btn {
+      background: none;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      transition: background .12s;
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover { background: var(--surface2); }
+    .hamburger-btn span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 1px;
+      transition: transform .22s, opacity .22s;
+    }
+
+    /* ドロワーオーバーレイ */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.32);
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s;
+    }
+    .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+    /* ドロワーパネル */
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 272px;
+      background: var(--surface);
+      box-shadow: 4px 0 24px rgba(0,0,0,.14);
+      z-index: 401;
+      transform: translateX(-100%);
+      transition: transform .25s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .drawer-panel.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      height: 52px;
+      border-bottom: .5px solid var(--border);
+      flex-shrink: 0;
+    }
+    .drawer-logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+      line-height: 1;
+      transition: background .12s;
+    }
+    .drawer-close:hover { background: var(--surface2); }
+
+    .drawer-section {
+      padding: 12px 8px 4px;
+    }
+    .drawer-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 10px;
+      margin-bottom: 2px;
+    }
+    .drawer-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      transition: background .12s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .drawer-item:hover { background: var(--surface2); }
+    .drawer-item.active { background: rgba(0,122,255,.1); color: var(--primary); }
+    .drawer-item .d-icon { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+    .drawer-divider {
+      height: .5px;
+      background: var(--border);
+      margin: 6px 16px;
+    }
+    .drawer-footer {
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: auto;
     }
 
     .header-actions {
@@ -107,6 +241,14 @@
       transition: background .12s;
     }
     .header-icon-btn:hover { background: var(--surface2); color: var(--text); }
+
+    /* ===== モバイル専用タブバー ===== */
+    #mobileTabBar {
+      display: none; /* デスクトップでは非表示 */
+    }
+    /* デスクトップのみ表示 */
+    .desktop-only { display: flex; }
+    @media (max-width: 768px) { .desktop-only { display: none !important; } }
 
     nav {
       display: flex;
@@ -1159,25 +1301,44 @@
     .header-actions { gap: 4px; }
     .header-icon-btn { padding: 4px 6px; font-size: 11px; }
 
-    /* ナビゲーションを底部固定バーに */
-    nav {
+    /* デスクトップnavを非表示 → モバイルタブバーに切替 */
+    nav { display: none; }
+
+    /* モバイルタブバー */
+    #mobileTabBar {
+      display: flex;
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      top: auto;
       z-index: 150;
-      background: rgba(255,255,255,.95);
+      background: rgba(255,255,255,.97);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       backdrop-filter: blur(20px) saturate(180%);
       border-top: .5px solid var(--border);
-      border-bottom: none;
-      padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-      gap: 2px;
-      overflow-x: auto;
-      margin-top: 0;
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    nav button { padding: 6px 10px; font-size: 12px; flex-shrink: 0; }
+    .mob-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 8px 4px;
+      min-height: 56px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mob-tab:active { background: rgba(0,0,0,.04); }
+    .mob-tab.active { color: var(--primary); }
+    .mob-tab .mt-icon { font-size: 22px; line-height: 1; }
+    .mob-tab .mt-label { font-size: 10px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
+    .mob-tab.active .mt-icon { transform: scale(1.08); transition: transform .12s; }
 
     main { padding: 16px 12px 80px; }
 
@@ -1298,34 +1459,130 @@
 </head>
 <body>
 
+<!-- ドロワーオーバーレイ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- ドロワーパネル -->
+<div class="drawer-panel" id="drawerPanel">
+  <div class="drawer-header">
+    <div class="drawer-logo">🌟 ライフプラン</div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+
+  <!-- ナビゲーション（補足ページ） -->
+  <div class="drawer-section">
+    <div class="drawer-section-label">ページ</div>
+    <button class="drawer-item" data-page="dashboard" onclick="closeDrawer();showPage('dashboard')">
+      <span class="d-icon">🏠</span>ダッシュボード
+    </button>
+    <button class="drawer-item" data-page="profile" onclick="closeDrawer();showPage('profile')">
+      <span class="d-icon">👤</span>プロフィール
+    </button>
+    <button class="drawer-item" data-page="goals" onclick="closeDrawer();showPage('goals')">
+      <span class="d-icon">🎯</span>目標管理
+    </button>
+    <button class="drawer-item" data-page="insurance" onclick="closeDrawer();showPage('insurance')">
+      <span class="d-icon">🛡️</span>保険管理
+    </button>
+    <button class="drawer-item" data-page="inheritance" onclick="closeDrawer();showPage('inheritance')">
+      <span class="d-icon">🏛️</span>相続・贈与
+    </button>
+  </div>
+
+  <div class="drawer-divider"></div>
+
+  <!-- ツール -->
+  <div class="drawer-section">
+    <div class="drawer-section-label">ツール</div>
+    <button class="drawer-item" onclick="closeDrawer();printLifePlan()">
+      <span class="d-icon">🖨️</span>PDF出力
+    </button>
+    <button class="drawer-item" onclick="closeDrawer();exportData()">
+      <span class="d-icon">📤</span>データ書き出し
+    </button>
+    <button class="drawer-item" onclick="closeDrawer();document.getElementById('importFileInput').click()">
+      <span class="d-icon">📥</span>データ読み込み
+    </button>
+    <button class="drawer-item" onclick="closeDrawer();openDataSettings()">
+      <span class="d-icon">⚙️</span>データ設定・削除
+    </button>
+  </div>
+
+  <div class="drawer-divider"></div>
+
+  <!-- リンク -->
+  <div class="drawer-section">
+    <div class="drawer-section-label">その他</div>
+    <a class="drawer-item" href="legal.html" target="_blank" style="text-decoration:none">
+      <span class="d-icon">📄</span>プライバシーポリシー・利用規約
+    </a>
+  </div>
+
+  <div class="drawer-footer">データはすべてこのブラウザ内のみに保存されます</div>
+</div>
+
 <header>
-  <div class="logo">🌟 ライフプラン</div>
+  <div class="header-left">
+    <button class="hamburger-btn" onclick="openDrawer()" aria-label="メニューを開く">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="logo">🌟 ライフプラン</div>
+  </div>
   <div class="header-actions">
-    <button class="header-icon-btn" onclick="printLifePlan()">🖨️ PDF出力</button>
-    <button class="header-icon-btn" onclick="exportData()">📤 書き出し</button>
-    <button class="header-icon-btn" onclick="document.getElementById('importFileInput').click()">📥 読み込み</button>
-    <button class="header-icon-btn" onclick="openDataSettings()" style="color:var(--text-muted)">⚙️ データ設定</button>
+    <!-- デスクトップ用ツールボタン（モバイルではドロワーへ） -->
+    <button class="header-icon-btn desktop-only" onclick="printLifePlan()">🖨️ PDF出力</button>
+    <button class="header-icon-btn desktop-only" onclick="exportData()">📤 書き出し</button>
+    <button class="header-icon-btn desktop-only" onclick="document.getElementById('importFileInput').click()">📥 読み込み</button>
+    <button class="header-icon-btn desktop-only" onclick="openDataSettings()" style="color:var(--text-muted)">⚙️ データ設定</button>
     <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
   </div>
 </header>
+
+<!-- モバイル専用タブバー -->
+<div id="mobileTabBar">
+  <button class="mob-tab active" data-page="dashboard" onclick="showPage('dashboard')">
+    <span class="mt-icon">🏠</span>
+    <span class="mt-label">ホーム</span>
+  </button>
+  <button class="mob-tab" data-page="finance" onclick="showPage('finance')">
+    <span class="mt-icon">💰</span>
+    <span class="mt-label">家計・資産</span>
+  </button>
+  <button class="mob-tab" data-page="lifeevents" onclick="showPage('lifeevents')">
+    <span class="mt-icon">📅</span>
+    <span class="mt-label">イベント</span>
+  </button>
+  <button class="mob-tab" data-page="timeline" onclick="showPage('timeline')">
+    <span class="mt-icon">📊</span>
+    <span class="mt-label">タイムライン</span>
+  </button>
+  <button class="mob-tab" data-page="retirement" onclick="showPage('retirement')">
+    <span class="mt-icon">🏖️</span>
+    <span class="mt-label">出口戦略</span>
+  </button>
+  <button class="mob-tab" onclick="openDrawer()">
+    <span class="mt-icon">☰</span>
+    <span class="mt-label">その他</span>
+  </button>
+</div>
 <nav id="mainNav">
-  <button class="active" onclick="showPage('dashboard')">ダッシュボード</button>
+  <button class="active" data-page="dashboard" onclick="showPage('dashboard')">🏠 ダッシュボード</button>
   <div class="nav-sep"></div>
   <span class="nav-group-label">①現状把握</span>
-  <button onclick="showPage('profile')">プロフィール</button>
-  <button onclick="showPage('finance')">家計・資産</button>
+  <button data-page="profile" onclick="showPage('profile')">👤 プロフィール</button>
+  <button data-page="finance" onclick="showPage('finance')">💰 家計・資産</button>
   <div class="nav-sep"></div>
   <span class="nav-group-label">②人生設計</span>
-  <button onclick="showPage('lifeevents')">ライフイベント</button>
-  <button onclick="showPage('goals')">目標管理</button>
-  <button onclick="showPage('timeline')">タイムライン</button>
+  <button data-page="lifeevents" onclick="showPage('lifeevents')">📅 ライフイベント</button>
+  <button data-page="goals" onclick="showPage('goals')">🎯 目標管理</button>
+  <button data-page="timeline" onclick="showPage('timeline')">📊 タイムライン</button>
   <div class="nav-sep"></div>
   <span class="nav-group-label">③戦略</span>
-  <button onclick="showPage('retirement')">出口戦略</button>
+  <button data-page="retirement" onclick="showPage('retirement')">🏖️ 出口戦略</button>
   <div class="nav-sep"></div>
   <span class="nav-group-label">補足</span>
-  <button onclick="showPage('insurance')">保険管理</button>
-  <button onclick="showPage('inheritance')">相続・贈与</button>
+  <button data-page="insurance" onclick="showPage('insurance')">🛡️ 保険管理</button>
+  <button data-page="inheritance" onclick="showPage('inheritance')">🏛️ 相続・贈与</button>
 </nav>
 
 <main>
@@ -3663,14 +3920,27 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+// ===== HAMBURGER DRAWER =====
+function openDrawer() {
+  document.getElementById('drawerPanel').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawerPanel').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+// ESCキーでドロワーを閉じる
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
 // ===== NAVIGATION =====
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  const btns = document.querySelectorAll('nav button');
-  const idx = ['dashboard','profile','finance','lifeevents','goals','timeline','retirement','insurance','inheritance'].indexOf(id);
-  if (idx >= 0) btns[idx].classList.add('active');
+  // data-page属性を持つすべてのナビボタン（デスクトップnav・モバイルタブ・ドロワー）を一括更新
+  document.querySelectorAll('[data-page]').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === id);
+  });
 
   if (id === 'dashboard')   renderDashboard();
   if (id === 'goals')       renderGoals();
@@ -9277,7 +9547,7 @@ const WZ_STEPS = [
   {
     icon: '✅',
     title: '設定完了！',
-    sub: 'ライフプランの準備ができました。\nダッシュボードから残りの入力を続けましょう。',
+    sub: 'ライフプランの準備ができました。\nダッシュボードから残りの入力を続けましょう。\n\n💡 画面左上の ☰ メニューから「PDF出力」「データ書き出し／読み込み」「データ設定」などの便利なツールにアクセスできます。スマートフォンでは下のタブバーからよく使うページにすばやく移動できます。',
     fields: [],
     next: 'ダッシュボードへ',
     isLast: true,
