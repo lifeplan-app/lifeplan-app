@@ -4559,6 +4559,7 @@ function assetCard(a) {
             <div class="val" style="color:var(--secondary)">${(a.monthly||0).toLocaleString()}万/月</div>
             <div class="lbl">月積立</div>
           </div>
+          ${(a.annualBonus||0) > 0 ? `<div class="asset-num"><div class="val" style="color:#8B5CF6">+${(a.annualBonus).toLocaleString()}万/年</div><div class="lbl">ボーナス</div></div>` : ''}
           <div class="asset-num">
             <div class="val" style="color:var(--warning)">${(a.annualReturn||0)}%</div>
             <div class="lbl">期待年利</div>
