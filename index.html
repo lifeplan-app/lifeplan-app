@@ -4473,10 +4473,32 @@ function saveAsset() {
   } else {
     state.assets.push({ id: uid(), createdAt: Date.now(), ...data });
   }
+  // アセット保存と同時にfinanceフォームの最新値もstateに同期して
+  // シミュレーション系（ダッシュボード・タイムライン等）に即反映
+  const finFields = {
+    income:               parseFloat(document.getElementById('finIncome')?.value) || undefined,
+    bonus:                parseFloat(document.getElementById('finBonus')?.value) || undefined,
+    expense:              parseFloat(document.getElementById('finExpense')?.value) || undefined,
+    simYears:             parseInt(document.getElementById('simYears')?.value) || undefined,
+    simRate:              parseFloat(document.getElementById('simRate')?.value) || undefined,
+    inflationRate:        parseFloat(document.getElementById('inflationRate')?.value) ?? undefined,
+    incomeGrowthRate:     parseFloat(document.getElementById('finIncomeGrowthRate')?.value) || undefined,
+    incomeGrowthUntilAge: parseInt(document.getElementById('finIncomeGrowthUntilAge')?.value) || undefined,
+    partnerIncome:        parseFloat(document.getElementById('finPartnerIncome')?.value) || undefined,
+    partnerGrowthRate:    parseFloat(document.getElementById('finPartnerGrowthRate')?.value) || undefined,
+  };
+  // undefinedのキーを除いてマージ（フォームが存在しないページからの保存でも安全）
+  Object.keys(finFields).forEach(k => { if (finFields[k] !== undefined) state.finance[k] = finFields[k]; });
+
   save();
   closeAssetModal();
   renderAssets();
   renderPortfolio();
+  // ダッシュボード・タイムラインが表示中なら即更新
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-timeline')?.classList.contains('active')) renderTimeline();
+  if (document.getElementById('page-retirement')?.classList.contains('active')) renderRetirementPage();
+  showNotification('アセットを保存しました');
 }
 
 function syncEndYearFromAge() {
@@ -4517,6 +4539,10 @@ function deleteAsset(id) {
   save();
   renderAssets();
   renderPortfolio();
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-timeline')?.classList.contains('active')) renderTimeline();
+  if (document.getElementById('page-retirement')?.classList.contains('active')) renderRetirementPage();
+  showNotification('アセットを削除しました');
 }
 
 // ===== PORTFOLIO SIMULATION =====
