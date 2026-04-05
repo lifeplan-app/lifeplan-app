@@ -1471,7 +1471,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>配偶者・パートナー</label>
-          <select id="profileMarital">
+          <select id="profileMarital" onchange="applyMaritalFilter()">
             <option value="single">独身</option>
             <option value="married">既婚</option>
             <option value="planning">結婚予定あり</option>
@@ -1482,7 +1482,7 @@
           <input type="number" id="profileChildren" value="0" min="0" max="20" onchange="syncChildrenCount(this.value)">
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-row" id="partnerProfileRow">
         <div class="form-group">
           <label>パートナーの生年月日</label>
           <input type="date" id="profilePartnerBirth" placeholder="パートナーがいる場合">
@@ -1592,7 +1592,7 @@
               <div style="font-size:11px;color:var(--text-muted);margin-top:3px">50歳以降は横ばいを想定</div>
             </div>
           </div>
-          <div class="form-row">
+          <div class="form-row" id="partnerFinanceRow">
             <div class="form-group">
               <label>パートナー収入（月収・手取り）万円</label>
               <input type="number" id="finPartnerIncome" placeholder="20" min="0" oninput="updateIncomeGrowthPreview()">
@@ -2170,7 +2170,7 @@
         <button id="penTab_self" onclick="switchPenTab('self')"
           style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--primary);margin-bottom:-2px;color:var(--primary)">👤 本人</button>
         <button id="penTab_partner" onclick="switchPenTab('partner')"
-          style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)">👫 パートナー</button>
+          style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)" class="partner-only">👫 パートナー</button>
       </div>
 
       <!-- 本人フォーム -->
@@ -2294,15 +2294,17 @@
           <input type="number" id="retPensionMonthly" placeholder="15" min="0" step="0.1">
         </div>
       </div>
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:10px 0 8px">👫 パートナー</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>年金受給開始年齢</label>
-          <input type="number" id="retPensionAge_p" placeholder="65" min="60" max="75">
-        </div>
-        <div class="form-group">
-          <label>年金月額（手取り）万円</label>
-          <input type="number" id="retPensionMonthly_p" placeholder="10" min="0" step="0.1">
+      <div id="partnerRetireSection" class="partner-only">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:10px 0 8px">👫 パートナー</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>年金受給開始年齢</label>
+            <input type="number" id="retPensionAge_p" placeholder="65" min="60" max="75">
+          </div>
+          <div class="form-group">
+            <label>年金月額（手取り）万円</label>
+            <input type="number" id="retPensionMonthly_p" placeholder="10" min="0" step="0.1">
+          </div>
         </div>
       </div>
       <!-- 退職金 -->
@@ -3631,9 +3633,10 @@ function showPage(id) {
   if (id === 'timeline')    renderTimeline();
   if (id === 'profile')     loadProfileForm();
   if (id === 'lifeevents')  renderLifeEventsPage();
-  if (id === 'retirement')  renderRetirementPage();
+  if (id === 'retirement')  { renderRetirementPage(); applyMaritalFilter(); }
   if (id === 'insurance')   renderInsurancePage();
   if (id === 'inheritance') renderInheritancePage();
+  if (id === 'finance')     applyMaritalFilter();
 }
 
 // ===== PROFILE =====
@@ -3648,6 +3651,34 @@ function loadProfileForm() {
   const actualCount = (state.lifeEvents?.children?.length) ?? (p.children || 0);
   if (ch) ch.value = actualCount;
   if (p) p.children = actualCount;
+  applyMaritalFilter();
+}
+
+// ===== 婚姻状況フィルター =====
+function applyMaritalFilter() {
+  const marital = document.getElementById('profileMarital')?.value
+                  ?? state.profile?.marital
+                  ?? 'single';
+  const hasParter = (marital === 'married' || marital === 'planning');
+
+  // プロフィール: パートナー行
+  const profRow = document.getElementById('partnerProfileRow');
+  if (profRow) profRow.style.display = hasParter ? '' : 'none';
+
+  // 家計・資産: パートナー収入行
+  const finRow = document.getElementById('partnerFinanceRow');
+  if (finRow) finRow.style.display = hasParter ? '' : 'none';
+
+  // 出口戦略: パートナー年金受給欄
+  const retSec = document.getElementById('partnerRetireSection');
+  if (retSec) retSec.style.display = hasParter ? '' : 'none';
+
+  // 年金試算: パートナータブ（非表示の場合は本人タブに戻す）
+  const penTab = document.getElementById('penTab_partner');
+  if (penTab) {
+    penTab.style.display = hasParter ? '' : 'none';
+    if (!hasParter) switchPenTab('self');
+  }
 }
 
 function saveProfile() {
@@ -8974,6 +9005,7 @@ function openWizard() {
 // ===== INIT =====
 load();
 renderDashboard();
+applyMaritalFilter();
 wizardAutoShow();
 consentInit();
 checkBackupReminder();
