@@ -2407,9 +2407,44 @@
           <div style="font-size:11px;color:var(--text-muted);margin-top:3px">支出が毎年この率で増加。直近平均: 約1.5〜2.0%</div>
         </div>
         <div class="form-group">
-          <label>年金の将来削減率（マクロスライド）%</label>
-          <input type="number" id="retPensionSlide" placeholder="0" min="0" max="30" step="0.5">
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">実質購買力の低下想定。悲観シナリオ: 10〜20%</div>
+          <label>年金の将来削減率（マクロスライド）</label>
+          <!-- シナリオ選択ボタン -->
+          <div id="pensionSlideScenarios" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px">
+            <button type="button" class="pension-slide-btn" data-val="0" onclick="selectPensionSlide(0,this)"
+              style="flex:1;min-width:68px;padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;text-align:center;line-height:1.35;transition:border-color .15s,background .15s">
+              <div style="font-size:10px;color:var(--text-muted)">楽観</div>
+              <div style="font-size:16px;font-weight:700">0%</div>
+              <div style="font-size:10px;color:var(--text-muted)">現状維持</div>
+            </button>
+            <button type="button" class="pension-slide-btn" data-val="10" onclick="selectPensionSlide(10,this)"
+              style="flex:1;min-width:68px;padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;text-align:center;line-height:1.35;transition:border-color .15s,background .15s">
+              <div style="font-size:10px;color:var(--text-muted)">中位</div>
+              <div style="font-size:16px;font-weight:700">10%</div>
+              <div style="font-size:10px;color:var(--text-muted)">財政検証標準</div>
+            </button>
+            <button type="button" class="pension-slide-btn" data-val="20" onclick="selectPensionSlide(20,this)"
+              style="flex:1;min-width:68px;padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;text-align:center;line-height:1.35;transition:border-color .15s,background .15s">
+              <div style="font-size:10px;color:var(--text-muted)">悲観</div>
+              <div style="font-size:16px;font-weight:700">20%</div>
+              <div style="font-size:10px;color:var(--text-muted)">低成長シナリオ</div>
+            </button>
+            <button type="button" class="pension-slide-btn" data-val="custom" onclick="selectPensionSlide('custom',this)"
+              style="flex:1;min-width:68px;padding:8px 4px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;text-align:center;line-height:1.35;transition:border-color .15s,background .15s">
+              <div style="font-size:10px;color:var(--text-muted)">独自設定</div>
+              <div style="font-size:16px;font-weight:700">✏️</div>
+              <div style="font-size:10px;color:var(--text-muted)">カスタム</div>
+            </button>
+          </div>
+          <!-- シナリオ説明 -->
+          <div id="pensionSlideDesc" style="display:none;font-size:11px;color:var(--text-muted);padding:7px 10px;background:var(--bg-secondary,#F9FAFB);border-radius:7px;border-left:3px solid #93C5FD;margin-bottom:6px;line-height:1.55"></div>
+          <!-- カスタム入力（カスタムボタン選択時のみ表示） -->
+          <div id="pensionSlideCustomWrap" style="display:none">
+            <input type="number" id="retPensionSlideCustom" placeholder="例: 15" min="0" max="30" step="0.5"
+              style="width:100%" oninput="document.getElementById('retPensionSlide').value=this.value||0;updatePensionSlideDesc()">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">0〜30% の範囲で入力してください</div>
+          </div>
+          <!-- 実際の値を保持する hidden input（JS から読み書き） -->
+          <input type="hidden" id="retPensionSlide" value="0">
         </div>
       </div>
       <div class="form-row">
@@ -8062,7 +8097,9 @@ function renderRetirementPage() {
   document.getElementById('penKokumin_p').value = penDataP.kokuminYears !== undefined ? penDataP.kokuminYears : 40;
   // 新フィールド復元
   document.getElementById('retInflationRate').value = r.inflationRate ?? 1.5;
+  // マクロスライド: hidden input をセットしてからボタン選択を復元
   document.getElementById('retPensionSlide').value  = r.pensionSlide  ?? 0;
+  restorePensionSlideBtn(r.pensionSlide ?? 0);
   document.getElementById('retMedicalModel').value  = r.medicalModel  || 'moderate';
   // 住宅ローン控除
   const m = state.lifeEvents?.mortgage || {};
@@ -8076,6 +8113,80 @@ function renderRetirementPage() {
   renderRetExtraIncomeList();
   updateSeveranceNote();
   runRetirementSim();
+}
+
+// ===== 年金マクロスライド シナリオ選択 =====
+const PENSION_SLIDE_SCENARIOS = {
+  0:  { icon: '😊', label: '楽観シナリオ（現状維持）',
+        text: '年金水準は現在のまま維持。制度改革が順調に進み、実質削減がほとんど生じない想定です。' },
+  10: { icon: '📊', label: '中位シナリオ（2024年財政検証・標準ケース参考）',
+        text: '2024年度財政検証のベースラインケースに基づく想定。段階的なマクロ経済スライド調整により、現役世代の年金受給時には約10%程度の実質削減が見込まれます。' },
+  20: { icon: '⚠️', label: '悲観シナリオ（低成長ケース）',
+        text: '経済成長が低迷した場合の保守的な試算。長寿・低金利が続くリスクを踏まえ、老後資産を手厚めに準備したい方にお勧めです。' },
+};
+
+function selectPensionSlide(val, btn) {
+  // ボタンの見た目をリセット
+  document.querySelectorAll('.pension-slide-btn').forEach(b => {
+    b.style.borderColor = 'var(--border)';
+    b.style.background  = '#fff';
+  });
+  // 選択ボタンをハイライト
+  btn.style.borderColor = 'var(--primary,#2563EB)';
+  btn.style.background  = '#EFF6FF';
+
+  const hiddenInput  = document.getElementById('retPensionSlide');
+  const customWrap   = document.getElementById('pensionSlideCustomWrap');
+
+  if (val === 'custom') {
+    customWrap.style.display = '';
+    // カスタム入力欄の現在値を hidden に反映
+    const customInput = document.getElementById('retPensionSlideCustom');
+    if (customInput && customInput.value !== '') hiddenInput.value = customInput.value;
+  } else {
+    customWrap.style.display = 'none';
+    hiddenInput.value = val;
+  }
+  updatePensionSlideDesc();
+}
+
+function updatePensionSlideDesc() {
+  const hiddenInput = document.getElementById('retPensionSlide');
+  const descEl      = document.getElementById('pensionSlideDesc');
+  if (!descEl || !hiddenInput) return;
+
+  const val     = parseFloat(hiddenInput.value);
+  const preset  = PENSION_SLIDE_SCENARIOS[val];
+
+  if (preset) {
+    descEl.innerHTML = `${preset.icon} <strong>${preset.label}</strong><br>${preset.text}`;
+    descEl.style.display = '';
+  } else if (!isNaN(val) && val > 0) {
+    descEl.innerHTML = `✏️ <strong>カスタム設定: ${val}%削減</strong><br>年金受給額を${val}%削減した額でシミュレーションします。`;
+    descEl.style.display = '';
+  } else {
+    descEl.style.display = 'none';
+  }
+}
+
+function restorePensionSlideBtn(savedVal) {
+  const val = parseFloat(savedVal) || 0;
+  // プリセット値に一致するボタンを探す
+  const presetBtn = [...document.querySelectorAll('.pension-slide-btn')]
+    .find(b => b.dataset.val !== 'custom' && parseFloat(b.dataset.val) === val);
+  if (presetBtn) {
+    selectPensionSlide(val, presetBtn);
+  } else {
+    // カスタム値の場合
+    const customBtn = document.querySelector('.pension-slide-btn[data-val="custom"]');
+    if (customBtn) {
+      selectPensionSlide('custom', customBtn);
+      const customInput = document.getElementById('retPensionSlideCustom');
+      if (customInput) customInput.value = val;
+      document.getElementById('retPensionSlide').value = val;
+      updatePensionSlideDesc();
+    }
+  }
 }
 
 function saveRetirement() {
