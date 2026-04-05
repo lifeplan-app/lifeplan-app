@@ -4922,6 +4922,7 @@ function calcAssetGrowth(a, years, extraContribs = []) {
 // 全アセットの成長データを2パスで計算（振替元→振替先の依存を解決）
 // 戻り値: [{ asset, data: values[], overflows: [] }, ...]
 function calcAllAssetGrowth(assets, years) {
+  years = Math.max(1, parseInt(years) || (state.finance?.simYears || 20));
   // パス1: 全アセットを個別に計算（extraContribs なし）
   const firstPass = assets.map(a => {
     const r = calcAssetGrowth(a, years);
@@ -7688,6 +7689,7 @@ function renderLifeEventCharts() {
 // 収支変化イベント（転職・昇給・副業・一時収入/支出）も年別に反映
 function calcIntegratedSim(years, opts = {}) {
   const currentYear = new Date().getFullYear();
+  years = Math.max(1, parseInt(years) || (state.finance?.simYears || 20));
   const result = [];
 
   // アセット別の成長データを計算（2パス：振替元→振替先）
