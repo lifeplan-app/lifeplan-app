@@ -4257,6 +4257,8 @@ function onAssetTypeChange() {
     document.getElementById('amDividendModeWrap').style.display = 'none';
     document.getElementById('amDividendModeNote').style.display = 'none';
   }
+  // 配当利回りの値に応じて受取方法セレクトを更新
+  onDividendChange();
   // NISA生涯枠フィールドの表示切替
   const isNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
   document.getElementById('amNisaBasisWrap').style.display = isNisa ? '' : 'none';
