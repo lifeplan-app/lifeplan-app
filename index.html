@@ -2670,6 +2670,7 @@
     </div>
     <div class="card" id="retBreakdownCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#CFFAFE">📋</span>年別収支シミュレーション</div>
+      <div id="retSimNote" style="display:none"></div>
       <div style="overflow-x:auto"><table id="retBreakdownTable" style="width:100%;font-size:12px;border-collapse:collapse"></table></div>
     </div>
 
@@ -8813,12 +8814,16 @@ function runRetirementSim() {
         </tr>`;
       }).join('')}
     </tbody>`;
-  // 注記をテーブルの上に挿入
-  const tableEl = document.getElementById('retBreakdownTable').closest('table') || document.getElementById('retBreakdownTable').parentElement;
-  if (simNoteHtml && tableEl) {
-    const noteEl = document.createElement('div');
-    noteEl.innerHTML = simNoteHtml;
-    tableEl.parentElement.insertBefore(noteEl.firstElementChild, tableEl);
+  // 注記を固定エリアに更新（再描画のたびに上書きするため積算しない）
+  const simNoteEl = document.getElementById('retSimNote');
+  if (simNoteEl) {
+    if (simNoteHtml) {
+      simNoteEl.innerHTML = simNoteHtml;
+      simNoteEl.style.display = '';
+    } else {
+      simNoteEl.innerHTML = '';
+      simNoteEl.style.display = 'none';
+    }
   }
 }
 
