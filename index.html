@@ -3096,6 +3096,25 @@
 
     <div id="amLimitWarn" style="display:none" class="asset-limit-warn"></div>
 
+    <!-- NISA生涯投資枠 -->
+    <div id="amNisaBasisWrap" style="display:none;margin-bottom:8px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>これまでの累計投資元本（万円）
+            <span style="font-size:11px;color:var(--text-muted);font-weight:400">※取得原価の合計</span>
+          </label>
+          <input type="number" id="amNisaBasis" placeholder="0" min="0" step="1" oninput="checkAssetLimit()">
+        </div>
+        <div class="form-group">
+          <label>残り非課税枠</label>
+          <div id="amNisaRemaining" style="padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:14px;font-weight:600;color:var(--secondary)">—</div>
+        </div>
+      </div>
+      <div id="amNisaCombinedWarn" style="display:none;font-size:12px;color:var(--warning);background:#FFF7ED;border-radius:8px;padding:6px 10px;margin-top:-4px">
+        ⚠️ 積立枠＋成長枠の合計が生涯上限1800万円を超えています
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>期待年利（%）</label>
@@ -3308,8 +3327,8 @@
 <script>
 // ===== DATA =====
 const ASSET_TYPES = {
-  nisa_tsumitate: { label: 'つみたてNISA / 新NISA積立枠', emoji: '🌱', color: '#10B981', bg: '#D1FAE5', defaultReturn: 5,   annualLimit: 120,  monthlyLimit: 10,   note: '新NISA積立枠：年間120万円まで。非課税で長期運用。' },
-  nisa_growth:    { label: '新NISA 成長投資枠',           emoji: '📈', color: '#3B82F6', bg: '#DBEAFE', defaultReturn: 6,   annualLimit: 240,  monthlyLimit: 20,   note: '新NISA成長投資枠：年間240万円まで。生涯1800万円が非課税限度。' },
+  nisa_tsumitate: { label: 'つみたてNISA / 新NISA積立枠', emoji: '🌱', color: '#10B981', bg: '#D1FAE5', defaultReturn: 5,   annualLimit: 120,  monthlyLimit: 10,  lifetimeLimit: 1800, note: '新NISA積立枠：年間120万円まで。成長枠と合わせた生涯非課税枠は1800万円。' },
+  nisa_growth:    { label: '新NISA 成長投資枠',           emoji: '📈', color: '#3B82F6', bg: '#DBEAFE', defaultReturn: 6,   annualLimit: 240,  monthlyLimit: 20,  lifetimeLimit: 1200, note: '新NISA成長投資枠：年間240万円まで。成長枠の生涯上限は1200万円（積立枠と合算で生涯1800万円）。' },
   ideco:          { label: 'iDeCo',                       emoji: '🏛️', color: '#8B5CF6', bg: '#EDE9FE', defaultReturn: 4,   monthlyLimit: 2.3, note: '会社員(企業年金なし)：月2.3万円。掛金全額所得控除。60歳まで原則引出不可。' },
   insurance:      { label: '積立保険',                    emoji: '🛡️', color: '#F59E0B', bg: '#FEF3C7', defaultReturn: 1.5, note: '積立型保険。解約返戻金が積立額を上回るまで時間がかかる場合あり。' },
   trust_allworld: { label: '投資信託（全世界・オルカン）', emoji: '🌍', color: '#06B6D4', bg: '#CFFAFE', defaultReturn: 7,   note: 'eMAXIS Slim 全世界株式(オルカン)など。過去実績ベースの期待リターン。' },
@@ -4084,6 +4103,23 @@ function assetCard(a) {
   const endStr = a.endYear ? `〜${a.endYear}年` : '';
   const startStr = a.startYear ? `${a.startYear}年` : '';
 
+  // NISA生涯枠の残り表示
+  let nisaLifetimeHtml = '';
+  if (t.lifetimeLimit) {
+    const basis     = a.nisaBasis || 0;
+    const remaining = Math.max(0, t.lifetimeLimit - basis);
+    const pct       = Math.min(100, Math.round(basis / t.lifetimeLimit * 100));
+    const barColor  = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
+    nisaLifetimeHtml = `
+      <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">
+        生涯非課税枠：累計元本 ${basis.toLocaleString()}万円 ／ 上限 ${t.lifetimeLimit.toLocaleString()}万円
+        <span style="color:${barColor};font-weight:600;margin-left:4px">残り ${remaining.toLocaleString()}万円</span>
+      </div>
+      <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;transition:width .3s"></div>
+      </div>`;
+  }
+
   return `
     <div class="asset-item">
       <div class="asset-icon" style="background:${t.bg}">${t.emoji}</div>
@@ -4109,6 +4145,7 @@ function assetCard(a) {
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${fmtMoney(Math.round((a.currentVal||0) * a.dividendYield / 100))}</div><div class="lbl">年間配当(目安)</div></div>` : ''}
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${Math.round((a.currentVal||0) * a.dividendYield / 100 / 12 * 10) / 10}万円/月</div><div class="lbl">月換算</div></div>` : ''}
         </div>
+        ${nisaLifetimeHtml}
         ${a.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escHtml(a.note)}</div>` : ''}
       </div>
       <div class="asset-actions">
@@ -4161,6 +4198,9 @@ function onAssetTypeChange() {
   document.getElementById('amTaxType').value = TAX_TYPE_DEFAULT[type] || 'tokutei';
   const divWrap = document.getElementById('amDividendWrap');
   divWrap.style.display = (type === 'high_dividend' || type === 'etf') ? '' : 'none';
+  // NISA生涯枠フィールドの表示切替
+  const isNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
+  document.getElementById('amNisaBasisWrap').style.display = isNisa ? '' : 'none';
   checkAssetLimit();
   updateTaxNote();
 }
@@ -4169,12 +4209,44 @@ function checkAssetLimit() {
   const type = document.getElementById('amType').value;
   const t = ASSET_TYPES[type] || ASSET_TYPES.other;
   const monthly = parseFloat(document.getElementById('amMonthly').value) || 0;
-  const warnEl = document.getElementById('amLimitWarn');
+  const basis   = parseFloat(document.getElementById('amNisaBasis')?.value) || 0;
+  const warnEl  = document.getElementById('amLimitWarn');
+  const warns   = [];
+
+  // 年間・月額上限チェック
   if (t.annualLimit && monthly * 12 > t.annualLimit) {
-    warnEl.textContent = `⚠️ 年間積立額 ${(monthly*12).toFixed(1)}万円 が非課税枠(${t.annualLimit}万円/年)を超えます`;
-    warnEl.style.display = 'block';
+    warns.push(`年間積立額 ${(monthly*12).toFixed(1)}万円 が年間非課税枠(${t.annualLimit}万円)を超えます`);
   } else if (t.monthlyLimit && monthly > t.monthlyLimit) {
-    warnEl.textContent = `⚠️ 月額 ${monthly}万円 が上限(${t.monthlyLimit}万円/月)を超えます`;
+    warns.push(`月額 ${monthly}万円 が月額上限(${t.monthlyLimit}万円)を超えます`);
+  }
+
+  // 生涯上限チェック
+  if (t.lifetimeLimit) {
+    const remaining = Math.max(0, t.lifetimeLimit - basis);
+    const remEl = document.getElementById('amNisaRemaining');
+    if (remEl) {
+      remEl.textContent = remaining > 0 ? `${remaining.toLocaleString()}万円 残り` : '上限到達';
+      remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
+    }
+    if (basis >= t.lifetimeLimit) {
+      warns.push(`累計投資元本 ${basis.toLocaleString()}万円 が生涯非課税枠(${t.lifetimeLimit.toLocaleString()}万円)に達しています`);
+    }
+  }
+
+  // 積立枠＋成長枠の合算1800万円チェック
+  const combinedWarnEl = document.getElementById('amNisaCombinedWarn');
+  if (combinedWarnEl) {
+    const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
+    const tsumiBasis = (state.assets||[]).filter(a => a.type === 'nisa_tsumitate' && a.id !== editingId).reduce((s,a) => s+(a.nisaBasis||0),0)
+      + (type === 'nisa_tsumitate' ? basis : 0);
+    const growthBasis = (state.assets||[]).filter(a => a.type === 'nisa_growth' && a.id !== editingId).reduce((s,a) => s+(a.nisaBasis||0),0)
+      + (type === 'nisa_growth' ? basis : 0);
+    const combinedOver = (tsumiBasis + growthBasis) > 1800;
+    combinedWarnEl.style.display = combinedOver ? '' : 'none';
+  }
+
+  if (warns.length) {
+    warnEl.textContent = '⚠️ ' + warns.join(' / ');
     warnEl.style.display = 'block';
   } else {
     warnEl.style.display = 'none';
@@ -4193,6 +4265,7 @@ function openAssetModal(id) {
     document.getElementById('amReturn').value = a.annualReturn || '';
     document.getElementById('amTaxType').value = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
     document.getElementById('amDividend').value = a.dividendYield || '';
+    document.getElementById('amNisaBasis').value = a.nisaBasis || '';
     document.getElementById('amStartYear').value = a.startYear || '';
     document.getElementById('amEndYear').value = a.endYear || '';
     document.getElementById('amEndAge').value = a.endAge || '';
@@ -4202,6 +4275,7 @@ function openAssetModal(id) {
     document.getElementById('amName').value = '';
     document.getElementById('amCurrentVal').value = '';
     document.getElementById('amMonthly').value = '';
+    document.getElementById('amNisaBasis').value = '';
     document.getElementById('amStartYear').value = new Date().getFullYear();
     document.getElementById('amEndYear').value = '';
     document.getElementById('amEndAge').value = '';
@@ -4225,6 +4299,7 @@ function saveAsset() {
     annualReturn: parseFloat(document.getElementById('amReturn').value) || 0,
     taxType: document.getElementById('amTaxType').value,
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
+    nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
     startYear: parseInt(document.getElementById('amStartYear').value) || null,
     endYear: parseInt(document.getElementById('amEndYear').value) || null,
     endAge: parseInt(document.getElementById('amEndAge').value) || null,
@@ -4291,11 +4366,32 @@ function calcAssetGrowth(a, years) {
   const taxType = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
   const nominalRate = (a.annualReturn || 0) / 100;
   const rate = effectiveReturn(nominalRate, taxType);
+
+  // NISA上限管理
+  const t = ASSET_TYPES[a.type];
+  const annualLimit   = t?.annualLimit   || null; // 年間上限（万円）
+  const lifetimeLimit = t?.lifetimeLimit || null; // 生涯上限（万円）
+  // nisaBasis = これまでの累計投資元本。未設定なら0（currentValで近似はしない）
+  let cumulativeBasis = a.nisaBasis || 0;
+
   const result = [];
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
-    const annualContrib = isActive ? (a.monthly || 0) * 12 : 0;
+    let annualContrib = isActive ? (a.monthly || 0) * 12 : 0;
+
+    // 年間上限・生涯上限の適用（y=0は現在値のため積立を加算しない）
+    if (y > 0 && annualContrib > 0) {
+      // ① 年間上限キャップ（例: 積立枠120万, 成長枠240万）
+      if (annualLimit) annualContrib = Math.min(annualContrib, annualLimit);
+      // ② 生涯上限キャップ（残り枠を超えない）
+      if (lifetimeLimit) {
+        const remaining = Math.max(0, lifetimeLimit - cumulativeBasis);
+        annualContrib = Math.min(annualContrib, remaining);
+        cumulativeBasis += annualContrib;
+      }
+    }
+
     if (y === 0) {
       result.push(a.currentVal || 0);
     } else {
@@ -4356,7 +4452,26 @@ function renderPortfolio() {
     return s + futureVal * (a.dividendYield / 100);
   }, 0);
 
-  el.innerHTML = `
+  // NISA合算チェック（積立枠＋成長枠の累計元本が1800万円を超えないか）
+  const nisaTsumiTotal  = state.assets.filter(a => a.type === 'nisa_tsumitate').reduce((s,a) => s+(a.nisaBasis||0), 0);
+  const nisaGrowthTotal = state.assets.filter(a => a.type === 'nisa_growth').reduce((s,a) => s+(a.nisaBasis||0), 0);
+  const nisaCombined    = nisaTsumiTotal + nisaGrowthTotal;
+  const nisaBannerHtml  = (nisaTsumiTotal > 0 || nisaGrowthTotal > 0) ? `
+    <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px">
+      <div style="font-weight:600;color:#166534;margin-bottom:6px">🌱 NISA生涯投資枠の状況</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div>積立枠 累計元本: <strong>${nisaTsumiTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1800-nisaTsumiTotal).toLocaleString()}万円</div>
+        <div>成長枠 累計元本: <strong>${nisaGrowthTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1200-nisaGrowthTotal).toLocaleString()}万円</div>
+        <div style="font-weight:600;color:${nisaCombined > 1800 ? '#DC2626' : '#166534'}">合計: ${nisaCombined.toLocaleString()}万円 / 1800万円
+          ${nisaCombined > 1800 ? ' ⚠️ 生涯上限超過' : ` (残り ${(1800-nisaCombined).toLocaleString()}万円)`}
+        </div>
+      </div>
+      <div style="height:6px;background:#D1FAE5;border-radius:3px;margin-top:8px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,Math.round(nisaCombined/1800*100))}%;background:${nisaCombined>1800?'#DC2626':'#10B981'};border-radius:3px"></div>
+      </div>
+    </div>` : '';
+
+  el.innerHTML = nisaBannerHtml + `
     <div class="pf-summary-grid">
       <div class="pf-stat">
         <div class="val">${fmtMoney(totalNow)}</div>
