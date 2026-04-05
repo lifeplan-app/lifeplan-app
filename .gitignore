@@ -1,0 +1,15 @@
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# Logs
+*.log
+
+# Claude Code project files — do not publish
+.claude/
+
+# Dependencies
+node_modules/

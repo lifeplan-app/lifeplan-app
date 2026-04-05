@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Add your sitemap URL below once the site is live
+# Sitemap: https://your-site.netlify.app/sitemap.xml
