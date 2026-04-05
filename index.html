@@ -8543,6 +8543,15 @@ function runRetirementSim() {
   breakdownCard.style.display = '';
   const showEvery = result.postData.length > 20 ? 5 : 1;
   const keyRows = result.postData.filter((d, i) => i % showEvery === 0 || d.depleted);
+  const withdrawalType = (state.retirement || {}).withdrawalType || 'needs';
+  const isFixedMode = withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount';
+  const hasDeficit = isFixedMode && result.postData.some(d => (d.annualDeficit || 0) > 0);
+  // シミュレーション方式の注記
+  const simNoteHtml = isFixedMode
+    ? `<div style="margin-bottom:8px;padding:8px 12px;background:#FEF3C7;border-radius:8px;font-size:12px;color:#92400E;border-left:3px solid #F59E0B">
+        ⚠️ <b>定率・定額取り崩し</b>：取り崩し額を固定し、支出が上回る場合は「年間不足額」に表示します。不足分は別途現預金等で補填が必要です。
+       </div>`
+    : '';
   document.getElementById('retBreakdownTable').innerHTML = `
     <thead>
       <tr style="border-bottom:1px solid var(--border);text-align:right">
@@ -8554,13 +8563,14 @@ function runRetirementSim() {
         <th style="padding:6px 8px;color:var(--text-secondary)">生活支出</th>
         <th style="padding:6px 8px;color:var(--danger)">ローン</th>
         <th style="padding:6px 8px;color:var(--danger)">教育費</th>
+        ${hasDeficit ? `<th style="padding:6px 8px;color:var(--danger)">年間不足</th>` : ''}
         <th style="padding:6px 8px;color:var(--text-secondary)">月間収支</th>
       </tr>
     </thead>
     <tbody>
       ${keyRows.map(d => {
         const balColor = d.monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
-        const rowBg = d.depleted ? 'background:rgba(255,59,48,.06)' : (d.leMortgage || d.leEducation) ? 'background:rgba(255,149,0,.04)' : '';
+        const rowBg = d.depleted ? 'background:rgba(255,59,48,.06)' : (d.annualDeficit > 0) ? 'background:rgba(255,149,0,.05)' : (d.leMortgage || d.leEducation) ? 'background:rgba(255,149,0,.04)' : '';
         return `<tr style="border-bottom:.5px solid var(--border);${rowBg}">
           <td style="padding:6px 8px;font-weight:600">${d.age}歳 <span style="font-weight:400;color:var(--text-muted);font-size:11px">${d.year}年</span></td>
           <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.endAssets)}</td>
@@ -8570,10 +8580,18 @@ function runRetirementSim() {
           <td style="text-align:right;padding:6px 8px;color:var(--danger)">${Math.round(d.baseExpense).toLocaleString()}万</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leMortgage?'var(--danger)':'var(--text-muted)'}">${d.leMortgage ? d.leMortgage.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leEducation?'var(--danger)':'var(--text-muted)'}">${d.leEducation ? d.leEducation.toLocaleString()+'万' : '－'}</td>
+          ${hasDeficit ? `<td style="text-align:right;padding:6px 8px;font-weight:600;color:${d.annualDeficit>0?'var(--danger)':'var(--text-muted)'}">${d.annualDeficit>0?'-'+d.annualDeficit.toLocaleString()+'万':'－'}</td>` : ''}
           <td style="text-align:right;padding:6px 8px;font-weight:700;color:${balColor}">${d.monthlyBalance>=0?'+':''}${d.monthlyBalance}万/月</td>
         </tr>`;
       }).join('')}
     </tbody>`;
+  // 注記をテーブルの上に挿入
+  const tableEl = document.getElementById('retBreakdownTable').closest('table') || document.getElementById('retBreakdownTable').parentElement;
+  if (simNoteHtml && tableEl) {
+    const noteEl = document.createElement('div');
+    noteEl.innerHTML = simNoteHtml;
+    tableEl.parentElement.insertBefore(noteEl.firstElementChild, tableEl);
+  }
 }
 
 // ===== 相続・贈与プランニング =====
@@ -9263,8 +9281,17 @@ function calcRetirementSimWithOpts(opts = {}) {
       default:             assetWithdrawal = netExpense;
     }
 
-    const monthlyBalance = Math.round((totalNonAssetIncome + Math.min(assetWithdrawal, assets * weightedReturn) - totalAnnualExpense) / 12 * 10) / 10;
-    const endAssets = Math.max(0, assets * (1 + weightedReturn) - Math.max(assetWithdrawal, netExpense));
+    // 定率・定額取り崩しは取り崩し額を固定し、不足分を別途記録する
+    // 必要額方式は支出に合わせて取り崩す（Math.maxで下限保証）
+    const actualDeduction = (withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount')
+      ? assetWithdrawal                             // 定率・定額: 設定額を厳守
+      : Math.max(assetWithdrawal, netExpense);      // 必要額・配当: 支出を必ず賄う
+
+    // 収支: 非資産収入 + 取り崩し額 - 支出（取り崩し額が支出を下回る場合は赤字）
+    const monthlyBalance = Math.round((totalNonAssetIncome + assetWithdrawal - totalAnnualExpense) / 12 * 10) / 10;
+    // 定率・定額で取り崩しが支出に足りない場合の年間不足額
+    const annualDeficit = Math.max(0, netExpense - assetWithdrawal);
+    const endAssets = Math.max(0, assets * (1 + weightedReturn) - actualDeduction);
 
     postData.push({
       year: yr, age,
@@ -9281,6 +9308,7 @@ function calcRetirementSimWithOpts(opts = {}) {
       mortgageDeduct: Math.round(mortgageDeduct),
       leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care),
       monthlyBalance,
+      annualDeficit: Math.round(annualDeficit),
       depleted: endAssets <= 0,
     });
 
