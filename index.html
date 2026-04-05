@@ -3090,7 +3090,7 @@
       </div>
       <div class="form-group">
         <label>月々の積立額（万円）</label>
-        <input type="number" id="amMonthly" placeholder="0" min="0" step="0.1" oninput="checkAssetLimit()">
+        <input type="number" id="amMonthly" placeholder="0" min="0" step="0.1" oninput="checkAssetLimit();updateTargetAssetSelect();updateTargetNote()">
       </div>
     </div>
 
@@ -3169,6 +3169,24 @@
           <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">歳時点で停止</span>
         </div>
       </div>
+    </div>
+
+    <!-- 目標金額・達成後振替 -->
+    <div id="amTargetWrap" style="display:none;background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">🎯 目標金額・達成後の振替</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>目標金額（万円）<span style="font-size:11px;color:var(--text-muted);font-weight:400">　達成後に積立停止</span></label>
+          <input type="number" id="amTargetVal" placeholder="例: 180" min="0" step="1" oninput="updateTargetNote()">
+        </div>
+        <div class="form-group">
+          <label>達成後の振替先アセット<span style="font-size:11px;color:var(--text-muted);font-weight:400">　余剰分を上乗せ</span></label>
+          <select id="amOverflowTarget">
+            <option value="">振替なし（積立停止のみ）</option>
+          </select>
+        </div>
+      </div>
+      <div id="amTargetNote" style="display:none;font-size:12px;color:var(--text-muted);padding:6px 8px;background:var(--surface);border-radius:8px;margin-top:4px"></div>
     </div>
 
     <div class="form-group">
@@ -4111,6 +4129,29 @@ function assetCard(a) {
   const endStr = a.endYear ? `〜${a.endYear}年` : '';
   const startStr = a.startYear ? `${a.startYear}年` : '';
 
+  // 目標金額の達成状況表示
+  let targetHtml = '';
+  if (a.targetVal > 0) {
+    const cur = a.currentVal || 0;
+    const pct = Math.min(100, Math.round(cur / a.targetVal * 100));
+    const remaining = Math.max(0, a.targetVal - cur);
+    const barColor  = remaining === 0 ? 'var(--secondary)' : 'var(--primary)';
+    const overflowAsset = a.overflowTargetId
+      ? state.assets.find(x => x.id === a.overflowTargetId) : null;
+    const overflowStr = overflowAsset
+      ? `達成後は「${escHtml(overflowAsset.name || '')}」へ自動振替`
+      : '達成後は積立停止';
+    targetHtml = `
+      <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">
+        🎯 目標 ${a.targetVal.toLocaleString()}万円
+        <span style="color:${barColor};font-weight:600;margin-left:4px">${remaining===0?'✅ 達成済み':'残り'+remaining.toLocaleString()+'万円'}</span>
+        <span style="color:var(--text-muted);margin-left:6px">— ${overflowStr}</span>
+      </div>
+      <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;transition:width .3s"></div>
+      </div>`;
+  }
+
   // NISA生涯枠の残り表示
   let nisaLifetimeHtml = '';
   if (t.lifetimeLimit) {
@@ -4154,6 +4195,7 @@ function assetCard(a) {
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${Math.round((a.currentVal||0) * a.dividendYield / 100 / 12 * 10) / 10}万円/月</div><div class="lbl">月換算</div></div>` : ''}
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="font-size:13px">${a.dividendMode === 'cashout' ? '🏦 受取' : '🔄 再投資'}</div><div class="lbl">配当方法</div></div>` : ''}
         </div>
+        ${targetHtml}
         ${nisaLifetimeHtml}
         ${a.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escHtml(a.note)}</div>` : ''}
       </div>
@@ -4218,6 +4260,9 @@ function onAssetTypeChange() {
   // NISA生涯枠フィールドの表示切替
   const isNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
   document.getElementById('amNisaBasisWrap').style.display = isNisa ? '' : 'none';
+  // 目標金額セクション：月積立があるアセット全般で表示
+  updateTargetAssetSelect();
+  updateTargetNote();
   checkAssetLimit();
   updateTaxNote();
 }
@@ -4233,6 +4278,62 @@ function onDividendChange() {
     modeWrap.style.display = 'none';
     modeNote.style.display = 'none';
   }
+}
+
+function updateTargetAssetSelect() {
+  const wrap   = document.getElementById('amTargetWrap');
+  const sel    = document.getElementById('amOverflowTarget');
+  const monthly = parseFloat(document.getElementById('amMonthly')?.value) || 0;
+  // 月積立が設定されているときのみ表示
+  wrap.style.display = monthly > 0 ? '' : 'none';
+  if (monthly <= 0) return;
+
+  const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">振替なし（積立停止のみ）</option>';
+  (state.assets || [])
+    .filter(a => a.id !== editingId)
+    .forEach(a => {
+      const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = `${t.emoji} ${a.name || t.label}`;
+      sel.appendChild(opt);
+    });
+  if (current) sel.value = current;
+}
+
+function updateTargetNote() {
+  const targetVal = parseFloat(document.getElementById('amTargetVal')?.value) || 0;
+  const currentVal = parseFloat(document.getElementById('amCurrentVal')?.value) || 0;
+  const monthly    = parseFloat(document.getElementById('amMonthly')?.value) || 0;
+  const noteEl     = document.getElementById('amTargetNote');
+  const wrap       = document.getElementById('amTargetWrap');
+  if (!noteEl) return;
+
+  wrap.style.display = monthly > 0 ? '' : 'none';
+  if (!targetVal || !monthly) { noteEl.style.display = 'none'; return; }
+
+  const remaining = Math.max(0, targetVal - currentVal);
+  if (remaining <= 0) {
+    noteEl.textContent = '✅ 目標金額はすでに達成済みです。積立は今すぐ停止されます。';
+    noteEl.style.display = 'block';
+    return;
+  }
+  const annualReturn = (parseFloat(document.getElementById('amReturn')?.value) || 0) / 100;
+  let years = 0, val = currentVal;
+  while (val < targetVal && years < 100) {
+    val = annualReturn > 0 ? val * (1 + annualReturn) + monthly * 12 : val + monthly * 12;
+    years++;
+  }
+  const achieveYear = new Date().getFullYear() + years;
+  const overflowSel = document.getElementById('amOverflowTarget');
+  const overflowName = overflowSel?.selectedOptions?.[0]?.textContent || '';
+  const overflowStr = overflowSel?.value
+    ? `達成後は月 ${monthly}万円を「${overflowName}」へ自動振替。`
+    : `達成後は積立停止（余剰は手元キャッシュへ）。`;
+  noteEl.textContent = `📅 目標達成予定：約 ${years}年後（${achieveYear}年）。${overflowStr}`;
+  noteEl.style.display = 'block';
 }
 
 function updateDividendModeNote() {
@@ -4312,6 +4413,7 @@ function openAssetModal(id) {
     document.getElementById('amDividend').value = a.dividendYield || '';
     document.getElementById('amDividendMode').value = a.dividendMode || 'reinvest';
     document.getElementById('amNisaBasis').value = a.nisaBasis || '';
+    document.getElementById('amTargetVal').value = a.targetVal || '';
     document.getElementById('amStartYear').value = a.startYear || '';
     document.getElementById('amEndYear').value = a.endYear || '';
     document.getElementById('amEndAge').value = a.endAge || '';
@@ -4323,11 +4425,19 @@ function openAssetModal(id) {
     document.getElementById('amMonthly').value = '';
     document.getElementById('amDividendMode').value = 'reinvest';
     document.getElementById('amNisaBasis').value = '';
+    document.getElementById('amTargetVal').value = '';
     document.getElementById('amStartYear').value = new Date().getFullYear();
     document.getElementById('amEndYear').value = '';
     document.getElementById('amEndAge').value = '';
     document.getElementById('amNote').value = '';
   }
+  // 振替先は onAssetTypeChange → updateTargetAssetSelect() で再構築してから設定
+  const savedOverflow = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId || '') : '';
+  setTimeout(() => {
+    const sel = document.getElementById('amOverflowTarget');
+    if (sel && savedOverflow) sel.value = savedOverflow;
+    updateTargetNote();
+  }, 0);
   updateEndYearPreview();
   onAssetTypeChange();
   document.getElementById('assetModal').classList.add('open');
@@ -4348,6 +4458,8 @@ function saveAsset() {
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
     dividendMode: document.getElementById('amDividendMode').value || 'reinvest',
     nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
+    targetVal: parseFloat(document.getElementById('amTargetVal').value) || 0,
+    overflowTargetId: document.getElementById('amOverflowTarget').value || '',
     startYear: parseInt(document.getElementById('amStartYear').value) || null,
     endYear: parseInt(document.getElementById('amEndYear').value) || null,
     endAge: parseInt(document.getElementById('amEndAge').value) || null,
@@ -4408,54 +4520,116 @@ function deleteAsset(id) {
 // ===== PORTFOLIO SIMULATION =====
 let pfAllocObj = null, pfGrowthObj = null, pfLineObj = null, pfDivObj = null;
 
-function calcAssetGrowth(a, years) {
+// calcAssetGrowth: returns { values: [], overflows: [] }
+// overflows[y] = 目標達成・NISA上限等で積立できなかった余剰額（年間・万円）
+// extraContribs: 他アセットから振替された追加積立（[y]=万円）
+function calcAssetGrowth(a, years, extraContribs = []) {
   const currentYear = new Date().getFullYear();
-  // 課税口座は税引き後の実効リターンで計算
   const taxType = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
   const nominalRate = (a.annualReturn || 0) / 100;
 
-  // 配当受取モード：資産成長は値上がり分のみ（配当はキャッシュフロー側へ）
+  // 配当受取モード：資産成長は値上がり分のみ
   const dividendMode = a.dividendMode || 'reinvest';
   const dividendRate = (dividendMode === 'cashout' && a.dividendYield) ? (a.dividendYield / 100) : 0;
-  const growthRate   = Math.max(0, nominalRate - dividendRate); // 値上がり分のみ
+  const growthRate   = Math.max(0, nominalRate - dividendRate);
   const rate = effectiveReturn(growthRate, taxType);
 
   // NISA上限管理
   const t = ASSET_TYPES[a.type];
-  const annualLimit   = t?.annualLimit   || null; // 年間上限（万円）
-  const lifetimeLimit = t?.lifetimeLimit || null; // 生涯上限（万円）
-  // nisaBasis = これまでの累計投資元本。未設定なら0（currentValで近似はしない）
+  const annualLimit   = t?.annualLimit   || null;
+  const lifetimeLimit = t?.lifetimeLimit || null;
   let cumulativeBasis = a.nisaBasis || 0;
 
-  const result = [];
+  // 目標金額（達成後に積立停止→余剰をoverflowsへ）
+  const targetVal = a.targetVal || 0;
+
+  const values    = [];
+  const overflows = [];
+
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
     let annualContrib = isActive ? (a.monthly || 0) * 12 : 0;
+    let overflow = 0;
 
-    // 年間上限・生涯上限の適用（y=0は現在値のため積立を加算しない）
-    if (y > 0 && annualContrib > 0) {
-      // ① 年間上限キャップ（例: 積立枠120万, 成長枠240万）
-      if (annualLimit) annualContrib = Math.min(annualContrib, annualLimit);
-      // ② 生涯上限キャップ（残り枠を超えない）
-      if (lifetimeLimit) {
+    if (y > 0) {
+      const prev = values[y - 1];
+
+      // ① 目標金額チェック：前年末時点で目標達成済みなら積立停止
+      if (targetVal > 0 && prev >= targetVal) {
+        overflow = annualContrib; // 全額を余剰へ
+        annualContrib = 0;
+      }
+
+      // ② NISA年間上限キャップ
+      if (annualContrib > 0 && annualLimit) {
+        annualContrib = Math.min(annualContrib, annualLimit);
+      }
+
+      // ③ NISA生涯上限キャップ
+      if (annualContrib > 0 && lifetimeLimit) {
         const remaining = Math.max(0, lifetimeLimit - cumulativeBasis);
-        annualContrib = Math.min(annualContrib, remaining);
+        const capped = Math.min(annualContrib, remaining);
+        if (!targetVal) overflow += annualContrib - capped; // NISA上限余剰は振替なし
+        annualContrib = capped;
         cumulativeBasis += annualContrib;
       }
-    }
 
-    if (y === 0) {
-      result.push(a.currentVal || 0);
-    } else {
-      const prev = result[y - 1];
+      // ④ 振替先からの追加積立を受け取る
+      annualContrib += extraContribs[y] || 0;
+
       const grown = rate === 0
         ? prev + annualContrib
         : prev * (1 + rate) + annualContrib;
-      result.push(Math.round(grown * 10) / 10);
+
+      // ⑤ 目標達成後の成長チェック（目標達成の年）
+      let finalVal = Math.round(grown * 10) / 10;
+      if (targetVal > 0 && prev < targetVal && finalVal > targetVal && overflow === 0) {
+        // 今年目標を超えた→超過分をoverflowへ（簡易近似）
+        overflow = Math.round((finalVal - targetVal) * 10) / 10;
+        finalVal = targetVal;
+      }
+
+      values.push(finalVal);
+      overflows.push(Math.round(overflow * 10) / 10);
+    } else {
+      values.push(a.currentVal || 0);
+      overflows.push(0);
     }
   }
-  return result;
+  return { values, overflows };
+}
+
+// 全アセットの成長データを2パスで計算（振替元→振替先の依存を解決）
+// 戻り値: [{ asset, data: values[], overflows: [] }, ...]
+function calcAllAssetGrowth(assets, years) {
+  // パス1: 全アセットを個別に計算（extraContribs なし）
+  const firstPass = assets.map(a => {
+    const r = calcAssetGrowth(a, years);
+    return { asset: a, data: r.values, overflows: r.overflows };
+  });
+
+  // 振替設定があるアセットを抽出
+  const hasOverflow = firstPass.filter(g => g.asset.overflowTargetId && g.asset.targetVal > 0);
+  if (hasOverflow.length === 0) return firstPass;
+
+  // パス2: 振替先アセットに余剰を上乗せして再計算
+  // 振替先ごとに累積extraContribsを構築
+  const extraMap = {}; // assetId -> extraContribs[]
+  hasOverflow.forEach(g => {
+    const tid = g.asset.overflowTargetId;
+    if (!tid) return;
+    if (!extraMap[tid]) extraMap[tid] = new Array(years + 1).fill(0);
+    g.overflows.forEach((v, y) => { extraMap[tid][y] += v; });
+  });
+
+  // 振替先アセットを再計算
+  return firstPass.map(g => {
+    const extra = extraMap[g.asset.id];
+    if (!extra) return g;
+    const r2 = calcAssetGrowth(g.asset, years, extra);
+    return { asset: g.asset, data: r2.values, overflows: r2.overflows };
+  });
 }
 
 function renderPortfolio() {
@@ -4480,8 +4654,8 @@ function renderPortfolio() {
   // y年後の実質値変換係数（名目値 / (1+インフレ率)^y）
   const realFactor = y => showReal && inflationRate > 0 ? 1 / Math.pow(1 + inflationRate, y) : 1;
 
-  // Growth data per asset
-  const growthData = state.assets.map(a => ({ asset: a, data: calcAssetGrowth(a, years) }));
+  // Growth data per asset（2パス：振替元→振替先の順）
+  const growthData = calcAllAssetGrowth(state.assets, years);
   const labels = makeYearLabels(years + 1, currentYear);
 
   // Totals
@@ -7176,8 +7350,8 @@ function calcIntegratedSim(years, opts = {}) {
   const currentYear = new Date().getFullYear();
   const result = [];
 
-  // アセット別の成長データを計算
-  const growthData = state.assets.map(a => calcAssetGrowth(a, years));
+  // アセット別の成長データを計算（2パス：振替元→振替先）
+  const growthData = calcAllAssetGrowth(state.assets, years);
 
   // 配当受取アセット（cashoutモード）を抽出
   const cashoutAssets = state.assets.filter(a =>
@@ -7193,13 +7367,12 @@ function calcIntegratedSim(years, opts = {}) {
     const annualExpense = getExpenseForYear(yr);
     const oneTime       = getOneTimeForYear(yr);
     // 現在の総資産 = アセット合計のみ。cashFlowは毎年の収支累積
-    const assetTotal = growthData.reduce((s, data) => s + (data[y] || 0), 0);
+    const assetTotal = growthData.reduce((s, g) => s + (g.data[y] || 0), 0);
 
     // 配当受取（cashout）アセットの年間配当をキャッシュフローに加算
-    // 配当はその年のアセット評価額（前年末値）に配当利回りをかけて計算
-    const annualDividendCashout = y === 0 ? 0 : cashoutAssets.reduce((s, a, i) => {
-      const assetIdx = state.assets.indexOf(a);
-      const prevVal  = growthData[assetIdx]?.[y - 1] || 0;
+    const annualDividendCashout = y === 0 ? 0 : cashoutAssets.reduce((s, a) => {
+      const gd = growthData.find(g => g.asset.id === a.id);
+      const prevVal = gd ? (gd.data[y - 1] || 0) : 0;
       return s + prevVal * (a.dividendYield / 100);
     }, 0);
 
