@@ -3398,6 +3398,18 @@
       </div>
     </div>
 
+    <!-- ボーナス積み増し -->
+    <div id="amBonusRow" class="form-row">
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:6px">
+          ボーナス積み増し（年間合計）万円
+          <span style="font-size:10px;color:var(--text-muted);font-weight:400;background:var(--bg-secondary,#F3F4F6);padding:2px 6px;border-radius:4px">任意</span>
+        </label>
+        <input type="number" id="amAnnualBonus" placeholder="0" min="0" step="0.1" oninput="updateBonusNote()">
+        <div id="amBonusNote" style="font-size:11px;color:var(--text-muted);margin-top:3px"></div>
+      </div>
+    </div>
+
     <div id="amLimitWarn" style="display:none" class="asset-limit-warn"></div>
 
     <!-- NISA生涯投資枠 -->
@@ -4195,14 +4207,14 @@ function getExpenseForYear(yr) {
     }
   }
 
-  // ★ B方式：アセットの月積立合計をキャッシュフローから自動控除
+  // ★ B方式：アセットの月積立＋ボーナス積み増し合計をキャッシュフローから自動控除
   // （積立はcalcAssetGrowth側で複利計算されるため、支出側からも差し引く）
-  const assetMonthlyTotal = (state.assets || []).reduce((s, a) => {
+  const assetAnnualTotal = (state.assets || []).reduce((s, a) => {
     // 当該年に積立が有効なアセットのみ
     const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
-    return s + (isActive ? (a.monthly || 0) : 0);
+    return s + (isActive ? (a.monthly || 0) * 12 + (a.annualBonus || 0) : 0);
   }, 0);
-  result += assetMonthlyTotal * 12;
+  result += assetAnnualTotal;
 
   return result;
 }
@@ -4482,7 +4494,7 @@ function renderAssets() {
 
 function assetCard(a) {
   const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
-  const annualContrib = (a.monthly || 0) * 12;
+  const annualContrib = (a.monthly || 0) * 12 + (a.annualBonus || 0);
   const limitWarn = t.annualLimit && annualContrib > t.annualLimit
     ? `<span class="asset-limit-warn">⚠️ 年間上限 ${t.annualLimit}万円を超えています</span>` : '';
   const monthLimitWarn = t.monthlyLimit && (a.monthly || 0) > t.monthlyLimit
@@ -4655,11 +4667,29 @@ function onAssetTypeChange() {
     monthlyInput.style.color = '';
   }
 
+  // ボーナス積み増し欄：noNewContrib（旧NISA等）は非表示
+  const bonusInput = document.getElementById('amAnnualBonus');
+  const bonusRow   = document.getElementById('amBonusRow');
+  if (bonusRow) bonusRow.style.display = isOldNisa ? 'none' : '';
+  if (bonusInput && isOldNisa) { bonusInput.value = ''; }
+  updateBonusNote();
+
   // 目標金額セクション：月積立があるアセット全般で表示
   updateTargetAssetSelect();
   updateTargetNote();
   checkAssetLimit();
   updateTaxNote();
+}
+
+function updateBonusNote() {
+  const annual  = parseFloat(document.getElementById('amAnnualBonus')?.value) || 0;
+  const noteEl  = document.getElementById('amBonusNote');
+  if (!noteEl) return;
+  if (annual > 0) {
+    noteEl.textContent = `1回あたり ${(annual / 2).toFixed(1)} 万円 × 年2回のイメージ`;
+  } else {
+    noteEl.textContent = 'ボーナスからアセットへ直接追加積み立てする年間額（月々とは別）';
+  }
 }
 
 function onDividendChange() {
@@ -4749,7 +4779,8 @@ function updateDividendModeNote() {
 function checkAssetLimit() {
   const type = document.getElementById('amType').value;
   const t = ASSET_TYPES[type] || ASSET_TYPES.other;
-  const monthly = parseFloat(document.getElementById('amMonthly').value) || 0;
+  const monthly     = parseFloat(document.getElementById('amMonthly').value) || 0;
+  const annualBonus = parseFloat(document.getElementById('amAnnualBonus')?.value) || 0;
   const basis   = parseFloat(document.getElementById('amNisaBasis')?.value) || 0;
   const warnEl  = document.getElementById('amLimitWarn');
   const warns   = [];
@@ -4759,9 +4790,10 @@ function checkAssetLimit() {
     warns.push(`旧NISAへの新規積み立ては2023年末で終了しています。月積立は0にしてください。`);
   }
 
-  // 年間・月額上限チェック
-  if (t.annualLimit && monthly * 12 > t.annualLimit) {
-    warns.push(`年間積立額 ${(monthly*12).toFixed(1)}万円 が年間非課税枠(${t.annualLimit}万円)を超えます`);
+  // 年間・月額上限チェック（月積立＋ボーナス積み増しの合計で判定）
+  const totalAnnual = monthly * 12 + annualBonus;
+  if (t.annualLimit && totalAnnual > t.annualLimit) {
+    warns.push(`年間積立合計 ${totalAnnual.toFixed(1)}万円（月積立${(monthly*12).toFixed(1)}万円＋ボーナス${annualBonus.toFixed(1)}万円）が年間非課税枠(${t.annualLimit}万円)を超えます`);
   } else if (t.monthlyLimit && monthly > t.monthlyLimit) {
     warns.push(`月額 ${monthly}万円 が月額上限(${t.monthlyLimit}万円)を超えます`);
   }
@@ -4808,6 +4840,7 @@ function openAssetModal(id) {
     document.getElementById('amName').value = a.name || '';
     document.getElementById('amCurrentVal').value = a.currentVal || '';
     document.getElementById('amMonthly').value = a.monthly || '';
+    document.getElementById('amAnnualBonus').value = a.annualBonus || '';
     document.getElementById('amReturn').value = a.annualReturn || '';
     document.getElementById('amTaxType').value = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
     document.getElementById('amDividend').value = a.dividendYield || '';
@@ -4823,6 +4856,7 @@ function openAssetModal(id) {
     document.getElementById('amName').value = '';
     document.getElementById('amCurrentVal').value = '';
     document.getElementById('amMonthly').value = '';
+    document.getElementById('amAnnualBonus').value = '';
     document.getElementById('amDividendMode').value = 'reinvest';
     document.getElementById('amNisaBasis').value = '';
     document.getElementById('amTargetVal').value = '';
@@ -4862,6 +4896,7 @@ function saveAsset() {
     name: name || (ASSET_TYPES[type] || ASSET_TYPES.other).label,
     currentVal: parseFloat(document.getElementById('amCurrentVal').value) || 0,
     monthly: (ASSET_TYPES[type]?.noNewContrib) ? 0 : (parseFloat(document.getElementById('amMonthly').value) || 0),
+    annualBonus: (ASSET_TYPES[type]?.noNewContrib) ? 0 : (parseFloat(document.getElementById('amAnnualBonus').value) || 0),
     annualReturn: parseFloat(document.getElementById('amReturn').value) || 0,
     taxType: document.getElementById('amTaxType').value,
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
@@ -4986,7 +5021,7 @@ function calcAssetGrowth(a, years, extraContribs = []) {
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
-    let annualContrib = isActive ? (a.monthly || 0) * 12 : 0;
+    let annualContrib = isActive ? (a.monthly || 0) * 12 + (a.annualBonus || 0) : 0;
     let overflow = 0;
 
     if (y > 0) {
@@ -5949,30 +5984,42 @@ function renderFinSummary() {
 
   // アセット積立合計（今年アクティブなもの）
   const currentYear = new Date().getFullYear();
-  const monthlyInvest = (state.assets || []).reduce((s, a) => {
-    const isActive = (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear);
-    return s + (isActive ? (a.monthly || 0) : 0);
-  }, 0);
+  const activeAssets = (state.assets || []).filter(a =>
+    (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear)
+  );
+  const monthlyInvest  = activeAssets.reduce((s, a) => s + (a.monthly || 0), 0);
+  const annualBonusInvest = activeAssets.reduce((s, a) => s + (a.annualBonus || 0), 0);
 
   const annualIncome   = income * 12 + bonus;
-  const monthlyTotal   = expense + monthlyInvest;         // 生活費＋積立
-  const monthlyBalance = income - monthlyTotal;           // 手元余剰
-  const annualBalance  = annualIncome - monthlyTotal * 12;
+  const monthlyTotal   = expense + monthlyInvest;         // 生活費＋月積立
+  const monthlyBalance = income - monthlyTotal;           // 手元余剰（月）
+  // 年間余剰：ボーナス収入からボーナス投資を差し引く
+  const annualBalance  = annualIncome - monthlyTotal * 12 - annualBonusInvest;
   const mColor = monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
   const aColor = annualBalance  >= 0 ? 'var(--secondary)' : 'var(--danger)';
 
   // キャッシュフロー内訳表示
   const breakdown = document.getElementById('finCashflowBreakdown');
   if (breakdown) {
-    const investItems = (state.assets || []).filter(a => (a.monthly||0) > 0 && (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear));
+    const investItems = activeAssets.filter(a => (a.monthly||0) > 0);
+    const bonusItems  = activeAssets.filter(a => (a.annualBonus||0) > 0);
     const investLines = investItems.map(a =>
-      `<span style="color:var(--text-muted);padding-left:8px">└ ${a.name||a.type}：${(a.monthly||0).toLocaleString()}万円/月</span>`
+      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.monthly||0).toLocaleString()}万円/月</span></div>`
+    ).join('');
+    const bonusLines = bonusItems.map(a =>
+      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.annualBonus||0).toLocaleString()}万円/年</span></div>`
     ).join('');
     breakdown.innerHTML = `
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月収（手取り）</span><span style="font-weight:600;color:var(--secondary)">+${income.toLocaleString()}万円</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">生活費</span><span style="font-weight:600;color:var(--danger)">−${expense.toLocaleString()}万円</span></div>
-      ${monthlyInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">積立・投資（自動控除）</span><span style="font-weight:600;color:var(--warning)">−${monthlyInvest.toLocaleString()}万円</span></div>${investLines}` : ''}
+      ${monthlyInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月積立・投資</span><span style="font-weight:600;color:var(--warning)">−${monthlyInvest.toLocaleString()}万円</span></div>${investLines}` : ''}
       <div style="border-top:.5px solid var(--border);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between"><span style="font-weight:600">手元余剰</span><span style="font-weight:700;color:${mColor}">${monthlyBalance >= 0 ? '+' : ''}${monthlyBalance.toLocaleString()}万円/月</span></div>
+      ${bonus > 0 ? `
+      <div style="margin-top:10px;padding-top:8px;border-top:.5px solid var(--border)">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">賞与（年間）</span><span style="font-weight:600;color:var(--secondary)">+${bonus.toLocaleString()}万円</span></div>
+        ${annualBonusInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">ボーナス投資</span><span style="font-weight:600;color:var(--warning)">−${annualBonusInvest.toLocaleString()}万円</span></div>${bonusLines}` : ''}
+        <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--text-muted)">ボーナス余剰</span><span style="font-weight:600;color:${(bonus-annualBonusInvest)>=0?'var(--secondary)':'var(--danger)'}">+${(bonus-annualBonusInvest).toLocaleString()}万円</span></div>
+      </div>` : ''}
     `;
   }
 
