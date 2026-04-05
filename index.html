@@ -3311,10 +3311,14 @@
     <div class="form-group">
       <label>アセット種別</label>
       <select id="amType" onchange="onAssetTypeChange()">
-        <optgroup label="非課税口座">
+        <optgroup label="非課税口座（新NISA）">
           <option value="nisa_tsumitate">🌱 つみたてNISA / 新NISA積立枠</option>
           <option value="nisa_growth">📈 新NISA 成長投資枠</option>
           <option value="ideco">🏛️ iDeCo（個人型確定拠出年金）</option>
+        </optgroup>
+        <optgroup label="非課税口座（旧NISA・運用中）">
+          <option value="nisa_old_tsumitate">🌿 旧つみたてNISA（〜2042年末）</option>
+          <option value="nisa_old_general">📋 旧一般NISA（〜2027年末）</option>
         </optgroup>
         <optgroup label="保険">
           <option value="insurance">🛡️ 積立保険</option>
@@ -3618,8 +3622,10 @@
 <script>
 // ===== DATA =====
 const ASSET_TYPES = {
-  nisa_tsumitate: { label: 'つみたてNISA / 新NISA積立枠', emoji: '🌱', color: '#10B981', bg: '#D1FAE5', defaultReturn: 5,   annualLimit: 120,  monthlyLimit: 10,  lifetimeLimit: 1800, note: '新NISA積立枠：年間120万円まで。成長枠と合わせた生涯非課税枠は1800万円。' },
-  nisa_growth:    { label: '新NISA 成長投資枠',           emoji: '📈', color: '#3B82F6', bg: '#DBEAFE', defaultReturn: 6,   annualLimit: 240,  monthlyLimit: 20,  lifetimeLimit: 1200, note: '新NISA成長投資枠：年間240万円まで。成長枠の生涯上限は1200万円（積立枠と合算で生涯1800万円）。' },
+  nisa_tsumitate:     { label: 'つみたてNISA / 新NISA積立枠', emoji: '🌱', color: '#10B981', bg: '#D1FAE5', defaultReturn: 5,   annualLimit: 120,  monthlyLimit: 10,  lifetimeLimit: 1800, note: '新NISA積立枠：年間120万円まで。成長枠と合わせた生涯非課税枠は1800万円。' },
+  nisa_growth:        { label: '新NISA 成長投資枠',           emoji: '📈', color: '#3B82F6', bg: '#DBEAFE', defaultReturn: 6,   annualLimit: 240,  monthlyLimit: 20,  lifetimeLimit: 1200, note: '新NISA成長投資枠：年間240万円まで。成長枠の生涯上限は1200万円（積立枠と合算で生涯1800万円）。' },
+  nisa_old_tsumitate: { label: '旧つみたてNISA',               emoji: '🌿', color: '#059669', bg: '#D1FAE5', defaultReturn: 5,   noNewContrib: true, endYearDefault: 2042, note: '旧つみたてNISA：2023年末で新規積み立て終了。非課税期間20年のため最長2042年末まで非課税で保有・売却可能。新規積み立ては不可です。' },
+  nisa_old_general:   { label: '旧一般NISA',                   emoji: '📋', color: '#1D4ED8', bg: '#DBEAFE', defaultReturn: 5,   noNewContrib: true, endYearDefault: 2027, note: '旧一般NISA：2023年末で新規投資終了。非課税期間5年のため2023年分は2027年末まで保有可能。期間終了後は課税口座への移管または売却が必要です。' },
   ideco:          { label: 'iDeCo',                       emoji: '🏛️', color: '#8B5CF6', bg: '#EDE9FE', defaultReturn: 4,   monthlyLimit: 2.3, note: '会社員(企業年金なし)：月2.3万円。掛金全額所得控除。60歳まで原則引出不可。' },
   insurance:      { label: '積立保険',                    emoji: '🛡️', color: '#F59E0B', bg: '#FEF3C7', defaultReturn: 1.5, note: '積立型保険。解約返戻金が積立額を上回るまで時間がかかる場合あり。' },
   trust_allworld: { label: '投資信託（全世界・オルカン）', emoji: '🌍', color: '#06B6D4', bg: '#CFFAFE', defaultReturn: 7,   note: 'eMAXIS Slim 全世界株式(オルカン)など。過去実績ベースの期待リターン。' },
@@ -4499,7 +4505,7 @@ function assetCard(a) {
 
 // 口座種別の自動判定（アセットタイプから推定）
 const TAX_TYPE_DEFAULT = {
-  nisa_tsumitate: 'nisa', nisa_growth: 'nisa', ideco: 'ideco',
+  nisa_tsumitate: 'nisa', nisa_growth: 'nisa', nisa_old_tsumitate: 'nisa', nisa_old_general: 'nisa', ideco: 'ideco',
   insurance: 'tokutei', trust_allworld: 'tokutei', trust_sp500: 'tokutei',
   trust_other: 'tokutei', japan_stock: 'tokutei', high_dividend: 'tokutei',
   etf: 'tokutei', cash_emergency: 'cash', cash_special: 'cash',
@@ -4550,9 +4556,41 @@ function onAssetTypeChange() {
   }
   // 配当利回りの値に応じて受取方法セレクトを更新
   onDividendChange();
-  // NISA生涯枠フィールドの表示切替
-  const isNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
-  document.getElementById('amNisaBasisWrap').style.display = isNisa ? '' : 'none';
+  // NISA生涯枠フィールドの表示切替（新NISAのみ）
+  const isNewNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
+  document.getElementById('amNisaBasisWrap').style.display = isNewNisa ? '' : 'none';
+
+  // 旧NISA：新規積み立て不可の専用UI
+  const isOldNisa = (type === 'nisa_old_tsumitate' || type === 'nisa_old_general');
+  const monthlyInput = document.getElementById('amMonthly');
+  const monthlyWrap = monthlyInput?.closest('.form-group') || monthlyInput?.parentElement;
+  // 旧NISA警告バナーの表示制御
+  let oldNisaBanner = document.getElementById('amOldNisaBanner');
+  if (!oldNisaBanner) {
+    oldNisaBanner = document.createElement('div');
+    oldNisaBanner.id = 'amOldNisaBanner';
+    oldNisaBanner.style.cssText = 'background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:10px 12px;font-size:13px;color:#92400E;margin-bottom:8px;display:none;';
+    if (monthlyWrap) monthlyWrap.parentElement.insertBefore(oldNisaBanner, monthlyWrap);
+  }
+  if (isOldNisa) {
+    oldNisaBanner.style.display = '';
+    oldNisaBanner.innerHTML = `⚠️ <strong>旧NISA：新規積み立て不可</strong><br>2023年末で新規投資は終了しています。月積立は <strong>0</strong> のままにしてください。現在の評価額を「現在の評価額（万円）」に入力してください。`;
+    monthlyInput.value = '0';
+    monthlyInput.readOnly = true;
+    monthlyInput.style.background = '#F3F4F6';
+    monthlyInput.style.color = '#9CA3AF';
+    // 終了年を自動設定（まだ空の場合のみ）
+    const endYearInput = document.getElementById('amEndYear');
+    if (endYearInput && !endYearInput.value) {
+      endYearInput.value = t.endYearDefault || '';
+    }
+  } else {
+    if (oldNisaBanner) oldNisaBanner.style.display = 'none';
+    monthlyInput.readOnly = false;
+    monthlyInput.style.background = '';
+    monthlyInput.style.color = '';
+  }
+
   // 目標金額セクション：月積立があるアセット全般で表示
   updateTargetAssetSelect();
   updateTargetNote();
@@ -4652,6 +4690,11 @@ function checkAssetLimit() {
   const warnEl  = document.getElementById('amLimitWarn');
   const warns   = [];
 
+  // 旧NISA：新規積み立て不可チェック
+  if (t.noNewContrib && monthly > 0) {
+    warns.push(`旧NISAへの新規積み立ては2023年末で終了しています。月積立は0にしてください。`);
+  }
+
   // 年間・月額上限チェック
   if (t.annualLimit && monthly * 12 > t.annualLimit) {
     warns.push(`年間積立額 ${(monthly*12).toFixed(1)}万円 が年間非課税枠(${t.annualLimit}万円)を超えます`);
@@ -4724,6 +4767,15 @@ function openAssetModal(id) {
     document.getElementById('amEndAge').value = '';
     document.getElementById('amNote').value = '';
   }
+  // 旧NISAの場合は終了年を自動セット（編集・新規共通）
+  setTimeout(() => {
+    const currentType = document.getElementById('amType').value;
+    const tt = ASSET_TYPES[currentType];
+    if (tt?.noNewContrib && tt.endYearDefault) {
+      const endYearInput = document.getElementById('amEndYear');
+      if (endYearInput && !endYearInput.value) endYearInput.value = tt.endYearDefault;
+    }
+  }, 10);
   // 振替先は onAssetTypeChange → updateTargetAssetSelect() で再構築してから設定
   const savedOverflow = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId || '') : '';
   setTimeout(() => {
@@ -4745,7 +4797,7 @@ function saveAsset() {
     type,
     name: name || (ASSET_TYPES[type] || ASSET_TYPES.other).label,
     currentVal: parseFloat(document.getElementById('amCurrentVal').value) || 0,
-    monthly: parseFloat(document.getElementById('amMonthly').value) || 0,
+    monthly: (ASSET_TYPES[type]?.noNewContrib) ? 0 : (parseFloat(document.getElementById('amMonthly').value) || 0),
     annualReturn: parseFloat(document.getElementById('amReturn').value) || 0,
     taxType: document.getElementById('amTaxType').value,
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
@@ -5360,7 +5412,7 @@ const ALLOC_CATEGORIES = {
 const TYPE_TO_ALLOC = {
   stock: 'stock_jp', us_stock: 'stock_us', global_stock: 'stock_ex',
   bond: 'bond', reit: 'reit', cash: 'cash',
-  nisa_tsumitate: 'stock_us', nisa_growth: 'stock_us',
+  nisa_tsumitate: 'stock_us', nisa_growth: 'stock_us', nisa_old_tsumitate: 'stock_us', nisa_old_general: 'stock_us',
   ideco: 'stock_us', crypto: 'other', other: 'other',
 };
 
