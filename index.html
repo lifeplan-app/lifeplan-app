@@ -1864,13 +1864,21 @@
       </details>
       <div class="form-row">
         <div class="form-group">
-          <label>月支出合計 万円</label>
+          <label>月の生活費 万円
+            <span style="font-size:11px;font-weight:400;color:var(--text-muted)">（投資・積立は除く）</span>
+          </label>
           <input type="number" id="finExpense" placeholder="25" min="0">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
+            💡 食費・家賃・光熱費・通信費・保険料など、生活にかかる費用のみ入力してください。<br>
+            NISAや貯蓄などの積立額はアセット欄で登録すると、シミュレーションで自動的に控除されます。
+          </div>
         </div>
       </div>
-      <div style="margin-top:4px;padding:10px 14px;background:var(--surface2);border-radius:10px;font-size:13px" id="finMonthlySavingsSummary">
-        <span style="color:var(--text-muted)">月間積立合計:</span> <span id="finMonthlySavingsTotal" style="font-weight:700;color:var(--secondary)">—</span>
-        <span id="finMonthlySavingsBreakdown" style="font-size:11px;color:var(--text-muted);margin-left:8px"></span>
+      <div style="margin-top:8px;padding:12px 14px;background:var(--surface2);border-radius:10px;font-size:13px" id="finMonthlySavingsSummary">
+        <div style="font-weight:600;margin-bottom:4px">📊 月間キャッシュフロー内訳</div>
+        <div style="display:flex;flex-direction:column;gap:3px" id="finCashflowBreakdown">
+          <span style="color:var(--text-muted)">アセットを登録すると積立控除後の収支が表示されます</span>
+        </div>
       </div>
     </div>
 
@@ -4116,6 +4124,16 @@ function getExpenseForYear(yr) {
       result = (e.monthlyAmount || 0) * 12;
     }
   }
+
+  // ★ B方式：アセットの月積立合計をキャッシュフローから自動控除
+  // （積立はcalcAssetGrowth側で複利計算されるため、支出側からも差し引く）
+  const assetMonthlyTotal = (state.assets || []).reduce((s, a) => {
+    // 当該年に積立が有効なアセットのみ
+    const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
+    return s + (isActive ? (a.monthly || 0) : 0);
+  }, 0);
+  result += assetMonthlyTotal * 12;
+
   return result;
 }
 
@@ -5799,12 +5817,39 @@ function renderExpenseList() {
 
 function renderFinSummary() {
   const f = state.finance;
-  const income = f.income || 0, bonus = f.bonus || 0, expense = f.expense || 0;
-  const monthlyBalance = income - expense;
-  const annualIncome = income * 12 + bonus;
-  const annualBalance = annualIncome - expense * 12;
+  const income  = f.income  || 0;
+  const bonus   = f.bonus   || 0;
+  const expense = f.expense || 0; // 生活費のみ
+
+  // アセット積立合計（今年アクティブなもの）
+  const currentYear = new Date().getFullYear();
+  const monthlyInvest = (state.assets || []).reduce((s, a) => {
+    const isActive = (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear);
+    return s + (isActive ? (a.monthly || 0) : 0);
+  }, 0);
+
+  const annualIncome   = income * 12 + bonus;
+  const monthlyTotal   = expense + monthlyInvest;         // 生活費＋積立
+  const monthlyBalance = income - monthlyTotal;           // 手元余剰
+  const annualBalance  = annualIncome - monthlyTotal * 12;
   const mColor = monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
-  const aColor = annualBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
+  const aColor = annualBalance  >= 0 ? 'var(--secondary)' : 'var(--danger)';
+
+  // キャッシュフロー内訳表示
+  const breakdown = document.getElementById('finCashflowBreakdown');
+  if (breakdown) {
+    const investItems = (state.assets || []).filter(a => (a.monthly||0) > 0 && (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear));
+    const investLines = investItems.map(a =>
+      `<span style="color:var(--text-muted);padding-left:8px">└ ${a.name||a.type}：${(a.monthly||0).toLocaleString()}万円/月</span>`
+    ).join('');
+    breakdown.innerHTML = `
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月収（手取り）</span><span style="font-weight:600;color:var(--secondary)">+${income.toLocaleString()}万円</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">生活費</span><span style="font-weight:600;color:var(--danger)">−${expense.toLocaleString()}万円</span></div>
+      ${monthlyInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">積立・投資（自動控除）</span><span style="font-weight:600;color:var(--warning)">−${monthlyInvest.toLocaleString()}万円</span></div>${investLines}` : ''}
+      <div style="border-top:.5px solid var(--border);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between"><span style="font-weight:600">手元余剰</span><span style="font-weight:700;color:${mColor}">${monthlyBalance >= 0 ? '+' : ''}${monthlyBalance.toLocaleString()}万円/月</span></div>
+    `;
+  }
+
   document.getElementById('finSummary').innerHTML = `
     <div class="finance-grid">
       <div class="finance-stat">
@@ -5817,19 +5862,19 @@ function renderFinSummary() {
       </div>
       <div class="finance-stat">
         <div class="val" style="color:var(--danger)">${expense.toLocaleString()} 万円</div>
-        <div class="lbl">月支出</div>
+        <div class="lbl">月の生活費</div>
+      </div>
+      <div class="finance-stat">
+        <div class="val" style="color:var(--warning)">${monthlyInvest.toLocaleString()} 万円</div>
+        <div class="lbl">月の積立・投資</div>
       </div>
       <div class="finance-stat">
         <div class="val" style="color:${mColor}">${monthlyBalance >= 0 ? '+' : ''}${monthlyBalance.toLocaleString()} 万円</div>
-        <div class="lbl">月間収支</div>
-      </div>
-      <div class="finance-stat">
-        <div class="val" style="color:var(--secondary)">${annualIncome.toLocaleString()} 万円</div>
-        <div class="lbl">手取り年収（賞与込）</div>
+        <div class="lbl">手元余剰（月）</div>
       </div>
       <div class="finance-stat">
         <div class="val" style="color:${aColor}">${annualBalance >= 0 ? '+' : ''}${annualBalance.toLocaleString()} 万円</div>
-        <div class="lbl">年間収支</div>
+        <div class="lbl">手元余剰（年）</div>
       </div>
     </div>`;
 }
@@ -5839,29 +5884,23 @@ function renderFinCharts() {
   const income = f.income || 0, expense = f.expense || 0;
   const balance = Math.max(0, income - expense);
 
-  // 資産ごとの月積立合計を計算
+  // ★ B方式：アセット月積立合計を計算
   const assets = state.assets || [];
-  const ASSET_LABEL = { nisa_tsumitate:'つみたてNISA', nisa_growth:'成長投資枠NISA', ideco:'iDeCo', investment_trust:'投資信託', stock:'株式', bond:'債券', real_estate:'不動産', savings:'預貯金', other:'その他' };
-  const contribItems = assets.filter(a => (a.monthly||0) > 0).map(a => `${a.name || ASSET_LABEL[a.type] || a.type} ${(a.monthly||0).toLocaleString()}万`);
-  const monthlyContribTotal = assets.reduce((s, a) => s + (a.monthly || 0), 0);
-  const surplus = Math.max(0, balance - monthlyContribTotal);
+  const currentYear = new Date().getFullYear();
+  const monthlyContribTotal = assets.reduce((s, a) => {
+    const isActive = (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear);
+    return s + (isActive ? (a.monthly || 0) : 0);
+  }, 0);
+  // 手元余剰 = 月収 − 生活費 − 積立合計
+  const surplus = Math.max(0, income - expense - monthlyContribTotal);
 
-  // 表示更新
-  const totalEl = document.getElementById('finMonthlySavingsTotal');
-  const breakdownEl = document.getElementById('finMonthlySavingsBreakdown');
-  if (totalEl) totalEl.textContent = monthlyContribTotal > 0 ? `${monthlyContribTotal.toLocaleString()}万円/月` : '積立なし（資産ページで設定）';
-  if (breakdownEl) {
-    const surplusText = surplus > 0 ? ` ＋ 余裕資金 ${surplus.toLocaleString()}万` : '';
-    breakdownEl.textContent = contribItems.length > 0 ? `（${contribItems.join(' + ')}${surplusText}）` : (surplus > 0 ? `（余裕資金 ${surplus.toLocaleString()}万円/月）` : '');
-  }
-
-  // Pie（支出 + 積立 + 余裕資金 = 収入）
+  // Pie（生活費 + 積立 + 手元余剰 = 収入）
   const ctx1 = document.getElementById('finChart').getContext('2d');
   if (finChartObj) finChartObj.destroy();
   finChartObj = new Chart(ctx1, {
     type: 'doughnut',
     data: {
-      labels: ['支出', '積立（資産）', '余裕資金'],
+      labels: ['生活費', '積立・投資', '手元余剰'],
       datasets: [{ data: [expense, monthlyContribTotal, surplus],
         backgroundColor: ['#EF4444','#10B981','#4F46E5'], borderWidth: 0 }]
     },
