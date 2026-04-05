@@ -2403,10 +2403,22 @@
       <div class="form-row">
         <div class="form-group">
           <label>物価上昇率（インフレ率）% / 年</label>
-          <input type="number" id="retInflationRate" placeholder="1.5" min="0" max="10" step="0.1">
+          <input type="number" id="retInflationRate" placeholder="1.5" min="0" max="10" step="0.1" oninput="updateExpenseNetRate()">
           <div style="font-size:11px;color:var(--text-muted);margin-top:3px">支出が毎年この率で増加。直近平均: 約1.5〜2.0%</div>
         </div>
         <div class="form-group">
+          <label>老後の生活費低減率 % / 年</label>
+          <input type="number" id="retExpenseDecayRate" placeholder="0" min="0" max="5" step="0.1" oninput="updateExpenseNetRate()">
+          <div id="retExpenseNetRateNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">加齢に伴う生活費の自然な逓減。0.5〜1.0%が目安</div>
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:-4px">
+        <div class="form-group" style="grid-column:1/-1">
+          <div id="retExpenseNetRateSummary" style="display:none;font-size:11px;padding:6px 10px;background:var(--bg-secondary,#F9FAFB);border-radius:6px;border-left:3px solid #93C5FD;color:var(--text-muted)"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1">
           <label>年金の将来削減率（マクロスライド）</label>
           <!-- シナリオ選択ボタン -->
           <div id="pensionSlideScenarios" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px">
@@ -8173,7 +8185,9 @@ function renderRetirementPage() {
   document.getElementById('penAvgIncome_p').value = penDataP.avgIncome !== undefined ? penDataP.avgIncome : '';
   document.getElementById('penKokumin_p').value = penDataP.kokuminYears !== undefined ? penDataP.kokuminYears : 40;
   // 新フィールド復元
-  document.getElementById('retInflationRate').value = r.inflationRate ?? 1.5;
+  document.getElementById('retInflationRate').value    = r.inflationRate    ?? 1.5;
+  document.getElementById('retExpenseDecayRate').value = r.expenseDecayRate ?? 0;
+  updateExpenseNetRate();
   // マクロスライド: hidden input をセットしてからボタン選択を復元
   document.getElementById('retPensionSlide').value  = r.pensionSlide  ?? 0;
   restorePensionSlideBtn(r.pensionSlide ?? 0);
@@ -8190,6 +8204,31 @@ function renderRetirementPage() {
   renderRetExtraIncomeList();
   updateSeveranceNote();
   runRetirementSim();
+}
+
+// ===== 老後の生活費低減率 ネット変化率プレビュー =====
+function updateExpenseNetRate() {
+  const inf   = parseFloat(document.getElementById('retInflationRate')?.value)    || 0;
+  const decay = parseFloat(document.getElementById('retExpenseDecayRate')?.value) || 0;
+  const summaryEl = document.getElementById('retExpenseNetRateSummary');
+  if (!summaryEl) return;
+
+  if (decay === 0) {
+    summaryEl.style.display = 'none';
+    return;
+  }
+
+  // 実質変化率 = (1+inf/100)*(1-decay/100) - 1
+  const net = ((1 + inf / 100) * (1 - decay / 100) - 1) * 100;
+  const netStr = net >= 0 ? `+${net.toFixed(2)}%` : `${net.toFixed(2)}%`;
+  const color  = net > 0 ? 'var(--warning)' : net < 0 ? 'var(--secondary)' : 'var(--text-muted)';
+  const arrow  = net > 0 ? '📈' : net < 0 ? '📉' : '➡️';
+  const desc   = net > 0 ? '生活費は緩やかに増加します'
+               : net < 0 ? '生活費は緩やかに減少します'
+               : '生活費はほぼ横ばいです';
+
+  summaryEl.style.display = '';
+  summaryEl.innerHTML = `${arrow} インフレ <strong>${inf}%</strong> − 低減 <strong>${decay}%</strong> → 生活費の実質変化率 <strong style="color:${color}">${netStr}/年</strong>（${desc}）`;
 }
 
 // ===== 年金マクロスライド シナリオ選択 =====
@@ -8297,9 +8336,10 @@ function saveRetirement() {
     withdrawalMonthly: parseFloat(document.getElementById('retWithdrawalMonthly').value) || 0,
     extraIncomes: state.retirement.extraIncomes || [],
     // 新フィールド
-    inflationRate: parseFloat(document.getElementById('retInflationRate').value) ?? 1.5,
-    pensionSlide:  parseFloat(document.getElementById('retPensionSlide').value) || 0,
-    medicalModel:  document.getElementById('retMedicalModel').value,
+    inflationRate:    parseFloat(document.getElementById('retInflationRate').value) ?? 1.5,
+    expenseDecayRate: parseFloat(document.getElementById('retExpenseDecayRate').value) || 0,
+    pensionSlide:     parseFloat(document.getElementById('retPensionSlide').value) || 0,
+    medicalModel:     document.getElementById('retMedicalModel').value,
     mortgageDeductStart: parseInt(document.getElementById('leMortgageDeductStart').value) || null,
     mortgageDeductYears: parseInt(document.getElementById('leMortgageDeductYears').value) || 0,
   };
@@ -9226,9 +9266,10 @@ function updateIncomeGrowthPreview() {
 function getRetirementParams() {
   const r = state.retirement || {};
   return {
-    inflationRate: (parseFloat(r.inflationRate) || 1.5) / 100,
-    pensionSlide:  (parseFloat(r.pensionSlide)  || 0)   / 100,
-    medicalModel:  r.medicalModel || 'moderate',
+    inflationRate:     (parseFloat(r.inflationRate)     || 1.5) / 100,
+    expenseDecayRate:  (parseFloat(r.expenseDecayRate)  || 0)   / 100,
+    pensionSlide:      (parseFloat(r.pensionSlide)      || 0)   / 100,
+    medicalModel:      r.medicalModel || 'moderate',
     mortgageDeductStart: parseInt(r.mortgageDeductStart) || null,
     mortgageDeductYears: parseInt(r.mortgageDeductYears) || 0,
   };
@@ -9430,8 +9471,9 @@ function calcRetirementSimWithOpts(opts = {}) {
     const yr = retireYear + i;
     const leCost = calcLECostByYear(yr);
     const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
-    // ① インフレ適用
-    const inflatedExpense = baseMonthlyExpense * 12 * Math.pow(1 + params.inflationRate, i) * (1 + expenseMod);
+    // ① インフレ適用 × 生活費低減（加齢による自然な逓減）
+    const expenseChangeFactor = Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
+    const inflatedExpense = baseMonthlyExpense * 12 * expenseChangeFactor * (1 + expenseMod);
     // ⑥ 医療費増加
     const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
     const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd;
@@ -9581,7 +9623,7 @@ function runMonteCarlo() {
       const age = targetAge + i;
       const yr = retireYear + i;
       const randomReturn = baseReturn + stdDev * randn();
-      const inflatedExpense = baseMonthlyExpense * 12 * Math.pow(1 + params.inflationRate, i);
+      const inflatedExpense = baseMonthlyExpense * 12 * Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
       const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
       const leCost = calcLECostByYear(yr);
       const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
