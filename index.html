@@ -4926,6 +4926,14 @@ function calcAssetGrowth(a, years, extraContribs = []) {
     if (y > 0) {
       const prev = values[y - 1];
 
+      // 旧NISA等（noNewContrib）は endYear 後に成長を停止
+      // 非課税期間終了後は売却・移管が必要なため、値を固定して行動を促す
+      if (t?.noNewContrib && a.endYear && yr > a.endYear) {
+        values.push(prev);
+        overflows.push(0);
+        continue;
+      }
+
       // ① 目標金額チェック：前年末時点で目標達成済みなら積立停止
       if (targetVal > 0 && prev >= targetVal) {
         overflow = annualContrib; // 全額を余剰へ
@@ -4982,7 +4990,9 @@ function calcAllAssetGrowth(assets, years) {
   });
 
   // 振替設定があるアセットを抽出
-  const hasOverflow = firstPass.filter(g => g.asset.overflowTargetId && g.asset.targetVal > 0);
+  // 振替元の条件: overflowTargetId が設定済み かつ 実際にoverflowが発生している
+  // （目標金額到達 OR NISA生涯枠到達 どちらの場合も振替対象）
+  const hasOverflow = firstPass.filter(g => g.asset.overflowTargetId && g.overflows.some(v => v > 0));
   if (hasOverflow.length === 0) return firstPass;
 
   // パス2: 振替先アセットに余剰を上乗せして再計算
