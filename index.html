@@ -3134,10 +3134,18 @@
     <div id="amTaxNote" style="font-size:12px;color:var(--text-muted);margin:-8px 0 8px;padding:6px 10px;background:var(--surface2);border-radius:8px;display:none"></div>
     <div class="form-row">
       <div class="form-group" id="amDividendWrap">
-        <label>配当利回り（%）※参考</label>
-        <input type="number" id="amDividend" placeholder="0" min="0" max="20" step="0.1">
+        <label>配当利回り（%）</label>
+        <input type="number" id="amDividend" placeholder="0" min="0" max="20" step="0.1" oninput="onDividendChange()">
+      </div>
+      <div class="form-group" id="amDividendModeWrap" style="display:none">
+        <label>配当金の受取方法</label>
+        <select id="amDividendMode" onchange="updateTaxNote()">
+          <option value="reinvest">🔄 再投資（複利運用）</option>
+          <option value="cashout">🏦 受取（銀行口座に入金）</option>
+        </select>
       </div>
     </div>
+    <div id="amDividendModeNote" style="display:none;font-size:12px;padding:6px 10px;background:#FFF7ED;border-radius:8px;color:#92400E;margin:-4px 0 8px"></div>
 
     <div class="form-row">
       <div class="form-group">
@@ -4144,6 +4152,7 @@ function assetCard(a) {
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${a.dividendYield}%</div><div class="lbl">配当利回り</div></div>` : ''}
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${fmtMoney(Math.round((a.currentVal||0) * a.dividendYield / 100))}</div><div class="lbl">年間配当(目安)</div></div>` : ''}
           ${a.dividendYield ? `<div class="asset-num"><div class="val" style="color:#F97316">${Math.round((a.currentVal||0) * a.dividendYield / 100 / 12 * 10) / 10}万円/月</div><div class="lbl">月換算</div></div>` : ''}
+          ${a.dividendYield ? `<div class="asset-num"><div class="val" style="font-size:13px">${a.dividendMode === 'cashout' ? '🏦 受取' : '🔄 再投資'}</div><div class="lbl">配当方法</div></div>` : ''}
         </div>
         ${nisaLifetimeHtml}
         ${a.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px">${escHtml(a.note)}</div>` : ''}
@@ -4175,17 +4184,20 @@ function updateTaxNote() {
   const taxType = document.getElementById('amTaxType').value;
   const ret = parseFloat(document.getElementById('amReturn').value) || 0;
   const noteEl = document.getElementById('amTaxNote');
-  if (!ret || taxType === 'cash') { noteEl.style.display = 'none'; return; }
-  noteEl.style.display = 'block';
-  if (taxType === 'nisa') {
-    noteEl.textContent = `✅ NISA非課税：期待年利 ${ret}% がそのまま複利運用されます`;
-  } else if (taxType === 'ideco') {
-    noteEl.textContent = `✅ iDeCo非課税運用：運用益は非課税。受取時に退職所得控除等が適用されます`;
-  } else {
-    const eff = (ret * (1 - TAX_RATE)).toFixed(2);
-    noteEl.textContent = `⚠️ 課税口座：運用益に${(TAX_RATE*100).toFixed(2)}%課税。実効年利 約 ${eff}% で計算されます`;
-    noteEl.style.color = 'var(--warning)';
+  if (!ret || taxType === 'cash') { noteEl.style.display = 'none'; }
+  else {
+    noteEl.style.display = 'block';
+    if (taxType === 'nisa') {
+      noteEl.textContent = `✅ NISA非課税：期待年利 ${ret}% がそのまま複利運用されます`;
+    } else if (taxType === 'ideco') {
+      noteEl.textContent = `✅ iDeCo非課税運用：運用益は非課税。受取時に退職所得控除等が適用されます`;
+    } else {
+      const eff = (ret * (1 - TAX_RATE)).toFixed(2);
+      noteEl.textContent = `⚠️ 課税口座：運用益に${(TAX_RATE*100).toFixed(2)}%課税。実効年利 約 ${eff}% で計算されます`;
+      noteEl.style.color = 'var(--warning)';
+    }
   }
+  updateDividendModeNote();
 }
 
 function onAssetTypeChange() {
@@ -4196,13 +4208,46 @@ function onAssetTypeChange() {
   document.getElementById('amDividend').value = t.dividendYield || '';
   // 口座種別を自動設定
   document.getElementById('amTaxType').value = TAX_TYPE_DEFAULT[type] || 'tokutei';
-  const divWrap = document.getElementById('amDividendWrap');
-  divWrap.style.display = (type === 'high_dividend' || type === 'etf') ? '' : 'none';
+  const showDiv = (type === 'high_dividend' || type === 'etf');
+  document.getElementById('amDividendWrap').style.display = showDiv ? '' : 'none';
+  if (!showDiv) {
+    document.getElementById('amDividend').value = '';
+    document.getElementById('amDividendModeWrap').style.display = 'none';
+    document.getElementById('amDividendModeNote').style.display = 'none';
+  }
   // NISA生涯枠フィールドの表示切替
   const isNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
   document.getElementById('amNisaBasisWrap').style.display = isNisa ? '' : 'none';
   checkAssetLimit();
   updateTaxNote();
+}
+
+function onDividendChange() {
+  const div = parseFloat(document.getElementById('amDividend').value) || 0;
+  const modeWrap = document.getElementById('amDividendModeWrap');
+  const modeNote = document.getElementById('amDividendModeNote');
+  if (div > 0) {
+    modeWrap.style.display = '';
+    updateDividendModeNote();
+  } else {
+    modeWrap.style.display = 'none';
+    modeNote.style.display = 'none';
+  }
+}
+
+function updateDividendModeNote() {
+  const mode    = document.getElementById('amDividendMode').value;
+  const div     = parseFloat(document.getElementById('amDividend').value) || 0;
+  const ret     = parseFloat(document.getElementById('amReturn').value) || 0;
+  const noteEl  = document.getElementById('amDividendModeNote');
+  if (!div) { noteEl.style.display = 'none'; return; }
+  noteEl.style.display = 'block';
+  if (mode === 'cashout') {
+    const growthOnly = Math.max(0, ret - div);
+    noteEl.innerHTML = `🏦 <strong>受取モード</strong>：資産の値上がりは年利 ${growthOnly.toFixed(1)}%（期待年利${ret}% − 配当${div}%）で計算。配当収入（年利 ${div}%相当）はキャッシュフローに毎年加算されます。`;
+  } else {
+    noteEl.innerHTML = `🔄 <strong>再投資モード</strong>：配当を含む期待年利 ${ret}% 全額が複利で再投資されます（DRIP方式）。`;
+  }
 }
 
 function checkAssetLimit() {
@@ -4265,6 +4310,7 @@ function openAssetModal(id) {
     document.getElementById('amReturn').value = a.annualReturn || '';
     document.getElementById('amTaxType').value = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
     document.getElementById('amDividend').value = a.dividendYield || '';
+    document.getElementById('amDividendMode').value = a.dividendMode || 'reinvest';
     document.getElementById('amNisaBasis').value = a.nisaBasis || '';
     document.getElementById('amStartYear').value = a.startYear || '';
     document.getElementById('amEndYear').value = a.endYear || '';
@@ -4275,6 +4321,7 @@ function openAssetModal(id) {
     document.getElementById('amName').value = '';
     document.getElementById('amCurrentVal').value = '';
     document.getElementById('amMonthly').value = '';
+    document.getElementById('amDividendMode').value = 'reinvest';
     document.getElementById('amNisaBasis').value = '';
     document.getElementById('amStartYear').value = new Date().getFullYear();
     document.getElementById('amEndYear').value = '';
@@ -4299,6 +4346,7 @@ function saveAsset() {
     annualReturn: parseFloat(document.getElementById('amReturn').value) || 0,
     taxType: document.getElementById('amTaxType').value,
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
+    dividendMode: document.getElementById('amDividendMode').value || 'reinvest',
     nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
     startYear: parseInt(document.getElementById('amStartYear').value) || null,
     endYear: parseInt(document.getElementById('amEndYear').value) || null,
@@ -4365,7 +4413,12 @@ function calcAssetGrowth(a, years) {
   // 課税口座は税引き後の実効リターンで計算
   const taxType = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
   const nominalRate = (a.annualReturn || 0) / 100;
-  const rate = effectiveReturn(nominalRate, taxType);
+
+  // 配当受取モード：資産成長は値上がり分のみ（配当はキャッシュフロー側へ）
+  const dividendMode = a.dividendMode || 'reinvest';
+  const dividendRate = (dividendMode === 'cashout' && a.dividendYield) ? (a.dividendYield / 100) : 0;
+  const growthRate   = Math.max(0, nominalRate - dividendRate); // 値上がり分のみ
+  const rate = effectiveReturn(growthRate, taxType);
 
   // NISA上限管理
   const t = ASSET_TYPES[a.type];
@@ -7126,6 +7179,11 @@ function calcIntegratedSim(years, opts = {}) {
   // アセット別の成長データを計算
   const growthData = state.assets.map(a => calcAssetGrowth(a, years));
 
+  // 配当受取アセット（cashoutモード）を抽出
+  const cashoutAssets = state.assets.filter(a =>
+    a.dividendMode === 'cashout' && a.dividendYield > 0
+  );
+
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const leCost = calcLECostByYear(yr, opts);
@@ -7136,7 +7194,19 @@ function calcIntegratedSim(years, opts = {}) {
     const oneTime       = getOneTimeForYear(yr);
     // 現在の総資産 = アセット合計のみ。cashFlowは毎年の収支累積
     const assetTotal = growthData.reduce((s, data) => s + (data[y] || 0), 0);
-    const cashFlow = y === 0 ? oneTime : result[y-1].cashFlow + annualIncome - annualExpense - totalLE + oneTime;
+
+    // 配当受取（cashout）アセットの年間配当をキャッシュフローに加算
+    // 配当はその年のアセット評価額（前年末値）に配当利回りをかけて計算
+    const annualDividendCashout = y === 0 ? 0 : cashoutAssets.reduce((s, a, i) => {
+      const assetIdx = state.assets.indexOf(a);
+      const prevVal  = growthData[assetIdx]?.[y - 1] || 0;
+      return s + prevVal * (a.dividendYield / 100);
+    }, 0);
+
+    const cashFlow = y === 0
+      ? oneTime
+      : result[y-1].cashFlow + annualIncome - annualExpense - totalLE + oneTime + annualDividendCashout;
+
     result.push({
       year: yr,
       cashFlow: Math.round(cashFlow),
@@ -7146,6 +7216,7 @@ function calcIntegratedSim(years, opts = {}) {
       annualIncome: Math.round(annualIncome),
       annualExpense: Math.round(annualExpense),
       oneTime: Math.round(oneTime),
+      dividendCashout: Math.round(annualDividendCashout),
     });
   }
   return result;
