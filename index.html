@@ -2382,7 +2382,7 @@
         <div class="form-group">
           <label>セミリタイア後の月収 万円</label>
           <input type="number" id="retSemiIncome" placeholder="10" min="0" step="0.1">
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月収入</div>
+          <div id="retSemiIncomeNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月収入</div>
         </div>
         <div class="form-group">
           <label>セミリタイア終了年齢（フルリタイアへ）</label>
@@ -2393,7 +2393,7 @@
         <div class="form-group">
           <label>退職後の月支出 万円</label>
           <input type="number" id="retMonthlyExpense" placeholder="25" min="0">
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月支出</div>
+          <div id="retMonthlyExpenseNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月支出</div>
         </div>
         <div class="form-group">
           <label>想定余命（年齢）</label>
@@ -2463,7 +2463,7 @@
     <!-- 年金自動試算 -->
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#DBEAFE">🏛️</span>年金自動試算</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">本人・パートナーそれぞれの公的年金受給額を試算します。</div>
+      <div id="pensionEstimateSubtitle" style="font-size:12px;color:var(--text-muted);margin-bottom:12px">本人・パートナーそれぞれの公的年金受給額を試算します。</div>
 
       <!-- 本人 / パートナー タブ -->
       <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
@@ -2575,7 +2575,7 @@
 
       <!-- 世帯合計 -->
       <div id="penHouseholdTotal" style="display:none;margin-top:14px;padding:12px 16px;background:linear-gradient(135deg,#1E293B,#0F172A);border-radius:10px;color:white;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:12px;color:rgba(255,255,255,.7)">🏠 世帯合計（手取り目安）</div>
+        <div id="penHouseholdTotalLabel" style="font-size:12px;color:rgba(255,255,255,.7)">🏠 世帯合計（手取り目安）</div>
         <div><span id="penHouseholdTotalAmt" style="font-size:22px;font-weight:800">—</span><span style="font-size:12px;color:rgba(255,255,255,.6)"> 万円/月</span></div>
       </div>
     </div>
@@ -2583,7 +2583,7 @@
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#D1FAE5">💴</span>リタイア後の収入</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">配当・分配金はアセット一覧の配当利回り設定から自動計算されます</div>
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">👤 本人</div>
+      <div id="retSelfPersonLabel" style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">👤 本人</div>
       <div class="form-row">
         <div class="form-group">
           <label>年金受給開始年齢</label>
@@ -4046,6 +4046,35 @@ function applyMaritalFilter() {
     penTab.style.display = hasParter ? '' : 'none';
     if (!hasParter) switchPenTab('self');
   }
+
+  // ===== テキスト言い換え（独身 ↔ パートナーあり）=====
+  // セミリタイア後の月収 補足
+  const semiNote = document.getElementById('retSemiIncomeNote');
+  if (semiNote) semiNote.textContent = hasParter
+    ? '世帯合計（夫婦二人分）の月収入'
+    : '個人の月収入';
+
+  // 退職後の月支出 補足
+  const expNote = document.getElementById('retMonthlyExpenseNote');
+  if (expNote) expNote.textContent = hasParter
+    ? '世帯合計（夫婦二人分）の月支出'
+    : '個人の月支出';
+
+  // 年金自動試算 サブタイトル
+  const penSubtitle = document.getElementById('pensionEstimateSubtitle');
+  if (penSubtitle) penSubtitle.textContent = hasParter
+    ? '本人・パートナーそれぞれの公的年金受給額を試算します。'
+    : '公的年金受給額を試算します。';
+
+  // 年金合計ラベル
+  const hhLabel = document.getElementById('penHouseholdTotalLabel');
+  if (hhLabel) hhLabel.textContent = hasParter
+    ? '🏠 世帯合計（手取り目安）'
+    : '🏠 年金受取額（手取り目安）';
+
+  // 年金受給欄の「👤 本人」ラベル（パートナーがいる場合のみ区別が必要）
+  const selfPersonLabel = document.getElementById('retSelfPersonLabel');
+  if (selfPersonLabel) selfPersonLabel.style.display = hasParter ? '' : 'none';
 }
 
 function saveProfile() {
