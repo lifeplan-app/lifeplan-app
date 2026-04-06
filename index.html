@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ライフプランアプリ — 人生100年を、自分の手で設計する</title>
   <meta name="description" content="収入・支出・資産・ライフイベントを入力するだけで、リタイアまでの資産シミュレーションが動き始める無料のライフプランニングツールです。データはすべてブラウザ内に保存されます。">
   <!-- OGP -->
@@ -758,6 +758,143 @@
       margin-top: 18px;
     }
 
+    /* フェーズ別支出ヘッダー行 */
+    .phase-expense-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 12px 0 6px;
+      padding: 8px 10px;
+      background: var(--surface2);
+      border-radius: 8px;
+    }
+    @media (max-width: 480px) {
+      .phase-expense-header { flex-direction: column; align-items: flex-start; }
+      .phase-expense-header button { align-self: flex-end; }
+    }
+
+    /* ===== MODAL HEADER / CLOSE ===== */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      margin-bottom: 4px;
+      border-bottom: .5px solid var(--border);
+    }
+    .modal-header .modal-title { margin-bottom: 0; text-align: left; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      line-height: 1;
+      transition: background .12s;
+      flex-shrink: 0;
+    }
+    .modal-close:hover { background: var(--surface2); }
+
+    /* ===== FAQ ITEMS ===== */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .faq-q {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 11px 14px;
+      background: var(--surface2);
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+    }
+    .faq-a {
+      font-size: 12px;
+      line-height: 1.75;
+      padding: 12px 14px;
+      color: var(--text-secondary);
+      display: none;
+    }
+    .faq-a.open { display: block; }
+    .faq-item.open .faq-q { color: var(--primary); background: #EFF6FF; }
+    .faq-a ul { margin: 6px 0 6px 18px; }
+    .faq-a li { margin-bottom: 4px; }
+    .faq-a p { margin-bottom: 6px; }
+    .faq-tip {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #F0FDF4;
+      border-left: 3px solid #34C759;
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: #166534;
+    }
+
+    /* ===== 計算根拠パネル ===== */
+    .basis-section {
+      margin-bottom: 20px;
+    }
+    .basis-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .basis-item {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px 12px;
+      padding: 8px 0;
+      border-bottom: .5px solid var(--border);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    .basis-item:last-child { border-bottom: none; }
+    .basis-label {
+      font-weight: 600;
+      color: var(--text);
+    }
+    .basis-desc {
+      color: var(--text-secondary);
+    }
+    @media (max-width: 520px) {
+      .basis-item { grid-template-columns: 1fr; }
+      .basis-label { margin-bottom: -4px; }
+    }
+
+    /* ===== 診断レポート ===== */
+    .diag-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 14px 0 6px;
+    }
+    .diag-item {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .diag-item .diag-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .diag-item.error   { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+    .diag-item.warn    { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .diag-item.ok      { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+    .diag-item.info    { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+    .diag-link { font-size: 11px; margin-top: 3px; color: var(--primary); cursor: pointer; text-decoration: underline; }
+
     /* ===== CONSENT BANNER ===== */
     #consentBanner {
       display: none;
@@ -942,10 +1079,11 @@
     .welcome-banner::after {
       content: '';
       position: absolute;
-      top: -40px; right: -40px;
+      top: -40px; right: 0;
       width: 160px; height: 160px;
       background: radial-gradient(circle, rgba(0,122,255,.3) 0%, transparent 70%);
       border-radius: 50%;
+      pointer-events: none;
     }
 
     .welcome-banner h2 { font-size: 20px; font-weight: 700; margin-bottom: 5px; letter-spacing: -.4px; }
@@ -1317,6 +1455,8 @@
       backdrop-filter: blur(20px) saturate(180%);
       border-top: .5px solid var(--border);
       padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
     .mob-tab {
       flex: 1;
@@ -1340,15 +1480,20 @@
     .mob-tab .mt-label { font-size: 10px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
     .mob-tab.active .mt-icon { transform: scale(1.08); transition: transform .12s; }
 
-    main { padding: 16px 12px 80px; }
+    main {
+      padding: 16px
+              max(12px, env(safe-area-inset-right))
+              calc(80px + env(safe-area-inset-bottom))
+              max(12px, env(safe-area-inset-left));
+    }
 
     .section-header {
       top: 48px; /* header only, nav is at bottom */
       padding: 8px 0;
       margin-left: -12px;
       margin-right: -12px;
-      padding-left: 12px;
-      padding-right: 12px;
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
       margin-bottom: 12px;
     }
     .section-title { font-size: 19px; }
@@ -1437,6 +1582,23 @@
     [style*="grid-template-columns: 1fr 1fr 1fr"] {
       grid-template-columns: 1fr !important;
     }
+    /* カードの余白を詰める */
+    .card { padding: 14px 12px; }
+    .card-title { font-size: 14px; }
+    /* フォーム入力 タッチターゲット最適化 */
+    input, select, textarea {
+      font-size: 16px !important; /* iOS zoom防止 */
+      min-height: 44px;
+    }
+    label { font-size: 12px; }
+    .btn { min-height: 40px; }
+    .btn-sm { min-height: 34px; }
+    /* 資産カード */
+    .asset-nums { flex-wrap: wrap; gap: 6px; }
+    /* テーブル文字サイズ */
+    table { font-size: 11px; }
+    /* モーダル */
+    .modal { padding: 14px 12px; }
   }
 
   /* ===== 印刷 / PDF出力 ===== */
@@ -1503,6 +1665,12 @@
     <button class="drawer-item" onclick="closeDrawer();document.getElementById('importFileInput').click()">
       <span class="d-icon">📥</span>データ読み込み
     </button>
+    <button class="drawer-item" onclick="closeDrawer();openInputDiagnosis()" style="color:#6366F1;font-weight:600">
+      <span class="d-icon">🔍</span>入力診断
+    </button>
+    <button class="drawer-item" onclick="closeDrawer();openIrregularGuide()" style="color:#0EA5E9">
+      <span class="d-icon">❓</span>よくある疑問・使い方ガイド
+    </button>
     <button class="drawer-item" onclick="closeDrawer();openDataSettings()">
       <span class="d-icon">⚙️</span>データ設定・削除
     </button>
@@ -1533,6 +1701,7 @@
     <button class="header-icon-btn desktop-only" onclick="printLifePlan()">🖨️ PDF出力</button>
     <button class="header-icon-btn desktop-only" onclick="exportData()">📤 書き出し</button>
     <button class="header-icon-btn desktop-only" onclick="document.getElementById('importFileInput').click()">📥 読み込み</button>
+    <button class="header-icon-btn desktop-only" onclick="openInputDiagnosis()" style="color:#6366F1;font-weight:600">🔍 入力診断</button>
     <button class="header-icon-btn desktop-only" onclick="openDataSettings()" style="color:var(--text-muted)">⚙️ データ設定</button>
     <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
   </div>
@@ -1734,7 +1903,7 @@
             <option value="planning">結婚予定あり</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="childrenCountGroup">
           <label>子どもの人数</label>
           <input type="number" id="profileChildren" value="0" min="0" max="20" onchange="syncChildrenCount(this.value)">
         </div>
@@ -1798,13 +1967,13 @@
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#D1FAE5">💰</span>収入・支出</div>
       <!-- ③ 税・社保自動計算トグル -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:rgba(0,122,255,.05);border-radius:10px;border:.5px solid rgba(0,122,255,.15)">
-        <span style="font-size:13px;font-weight:600;color:var(--text)">入力モード</span>
-        <div style="display:flex;gap:4px;margin-left:4px">
-          <button id="finModeNet" class="btn btn-primary btn-sm" onclick="setFinanceInputMode('net')">手取り入力</button>
-          <button id="finModeGross" class="btn btn-secondary btn-sm" onclick="setFinanceInputMode('gross')">額面から自動計算</button>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:10px 14px;background:rgba(0,122,255,.05);border-radius:10px;border:.5px solid rgba(0,122,255,.15)">
+        <span style="font-size:13px;font-weight:600;color:var(--text);flex-shrink:0">入力モード</span>
+        <div style="display:flex;gap:4px">
+          <button id="finModeNet" class="btn btn-primary btn-sm" onclick="setFinanceInputMode('net')" style="white-space:nowrap">手取り入力</button>
+          <button id="finModeGross" class="btn btn-secondary btn-sm" onclick="setFinanceInputMode('gross')" style="white-space:nowrap">額面から自動計算</button>
         </div>
-        <span style="font-size:11px;color:var(--text-muted)">※ 額面入力時は所得税・住民税・社会保険料を自動控除します</span>
+        <span style="font-size:11px;color:var(--text-muted);flex-basis:100%;margin-top:0">※ 額面入力時は所得税・住民税・社会保険料を自動控除します</span>
       </div>
       <!-- 手取り入力（従来） -->
       <div id="finNetInputArea">
@@ -1869,7 +2038,8 @@
           </label>
           <input type="number" id="finExpense" placeholder="25" min="0">
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
-            💡 食費・家賃・光熱費・通信費・保険料など、生活にかかる費用のみ入力してください。<br>
+            💡 食費・光熱費・通信費・保険料など、日常の生活にかかる費用を入力してください。<br>
+            ⚠️ 住宅ローン・家賃はライフイベント「住居計画」で登録してください（ここに含めると二重計上になります）。<br>
             NISAや貯蓄などの積立額はアセット欄で登録すると、シミュレーションで自動的に控除されます。
           </div>
         </div>
@@ -2240,6 +2410,15 @@
             </div>
           </div>
         </div>
+        <!-- 残高推移テーブル -->
+        <div id="mortgageBalanceWrap" style="margin-top:14px;display:none">
+          <button type="button" onclick="toggleMortgageBalance()" style="background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--primary);display:flex;align-items:center;gap:6px;padding:0">
+            <span id="mortgageBalanceArrow">▶</span> 残高推移・返済シミュレーション
+          </button>
+          <div id="mortgageBalancePanel" style="display:none;margin-top:10px">
+            <div id="mortgageBalanceTable"></div>
+          </div>
+        </div>
       </div>
 
       <!-- 賃貸パネル -->
@@ -2389,15 +2568,41 @@
           <input type="number" id="retSemiEndAge" placeholder="65" min="30" max="80">
         </div>
       </div>
+      <div class="phase-expense-header">
+        <span style="font-size:12px;font-weight:600;color:var(--text-secondary)">📊 フェーズ別月支出（未入力の場合は①の値を引き継ぎ）</span>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="autoFillRetirementExpenses()" style="font-size:11px;padding:4px 10px;white-space:nowrap;flex-shrink:0">💡 現役支出から自動入力</button>
+      </div>
+      <div id="retExpenseAutoNote" style="display:none;font-size:11px;line-height:1.6;color:var(--text-secondary);background:#EFF6FF;border-left:3px solid #3B82F6;padding:8px 12px;border-radius:6px;margin-bottom:8px"></div>
       <div class="form-row">
         <div class="form-group">
-          <label>退職後の月支出 万円</label>
+          <label id="retExpenseP1Label">① リタイア直後〜年金前 月支出 万円</label>
           <input type="number" id="retMonthlyExpense" placeholder="25" min="0">
           <div id="retMonthlyExpenseNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月支出</div>
         </div>
         <div class="form-group">
           <label>想定余命（年齢）</label>
           <input type="number" id="retLifeExpectancy" placeholder="90" min="60" max="110">
+        </div>
+      </div>
+      <div class="form-row" id="retExpense2Row" style="display:none">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>② 待機期（セミ終了〜年金前） 月支出 万円</label>
+          <input type="number" id="retMonthlyExpense2" placeholder="25" min="0">
+          <div id="retMonthlyExpense2Note" style="font-size:11px;color:var(--text-muted);margin-top:3px">セミリタイア終了後〜年金受給開始前。未入力の場合は①の値を使用</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1">
+          <label id="retExpenseP3Label">② 年金受給期（年金開始〜） 月支出 万円</label>
+          <input type="number" id="retMonthlyExpense3" placeholder="20" min="0">
+          <div id="retMonthlyExpense3Note" style="font-size:11px;color:var(--text-muted);margin-top:3px">年金受給開始後の月支出。未入力の場合は①の値を使用</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1">
+          <label>老後に最低これだけは残したい額（目標残資産） 万円</label>
+          <input type="number" id="retResidualAssets" placeholder="500" min="0" step="50" value="500">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">死亡時点に残しておきたい資産の下限。必要資産額に上乗せされ、リタイア可能年齢の判定にも反映されます。デフォルト: 500万円</div>
         </div>
       </div>
       <div class="form-row">
@@ -2590,6 +2795,12 @@
         <div id="penHouseholdTotalLabel" style="font-size:12px;color:rgba(255,255,255,.7)">🏠 世帯合計（手取り目安）</div>
         <div><span id="penHouseholdTotalAmt" style="font-size:22px;font-weight:800">—</span><span style="font-size:12px;color:rgba(255,255,255,.6)"> 万円/月</span></div>
       </div>
+
+      <!-- 繰上げ・繰下げ受給シミュレーション -->
+      <div style="margin-top:14px">
+        <button class="btn btn-secondary btn-sm" onclick="calcAndShowDeferralSim()" style="width:100%">📊 繰上げ・繰下げ受給シミュレーション</button>
+      </div>
+      <div id="penDeferralPanel" style="display:none;margin-top:12px"></div>
     </div>
 
     <div class="card">
@@ -2664,6 +2875,9 @@
     </div>
 
     <div id="retResultCard"></div>
+    <div id="retScenarioCompareCard" style="display:none"></div>
+    <div id="retTaxCard" style="display:none"></div>
+    <div id="retStressCard" style="display:none"></div>
     <div class="card" id="retChartCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#EEF2FF">📈</span>資産推移（リタイア後）</div>
       <div style="position:relative;height:300px"><canvas id="retChart"></canvas></div>
@@ -2765,6 +2979,92 @@
       </div>
       <div id="fireTaxResult" style="font-size:13px"></div>
       <div id="fireTaxAdvice" style="margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text-secondary)"></div>
+    </div>
+
+    <!-- ===== B. 計算根拠・前提条件パネル ===== -->
+    <div class="card" id="retBasisCard">
+      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleRetBasis(this)">
+        <span class="icon" style="background:#EEF2FF">📚</span>
+        <span style="flex:1">計算根拠・前提条件</span>
+        <span id="retBasisToggleIcon" style="font-size:12px;color:var(--text-muted)">▼ 展開する</span>
+      </div>
+      <div id="retBasisContent" style="display:none">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">
+          本シミュレーションで使用している計算式・前提・データソースの一覧です。
+        </p>
+
+        <div class="basis-section">
+          <div class="basis-section-title">🏖️ 必要資産額の計算</div>
+          <div class="basis-item">
+            <div class="basis-label">計算方式</div>
+            <div class="basis-desc">3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">インフレ調整</div>
+            <div class="basis-desc">「物価上昇率」設定値（デフォルト 2%）を使用。各年の支出・収入を実質値に変換して計算します。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">ライフイベント費用</div>
+            <div class="basis-desc">ローン返済・教育費・介護費を年別に集計し、シミュレーションに加算します。</div>
+          </div>
+        </div>
+
+        <div class="basis-section">
+          <div class="basis-section-title">📊 資産運用の計算</div>
+          <div class="basis-item">
+            <div class="basis-label">複利計算</div>
+            <div class="basis-desc">元本 × (1 + 年利)^年数 で計算。毎月積立がある場合は月次複利に変換して加算します。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">課税口座の税効果</div>
+            <div class="basis-desc">特定口座・一般口座は実効年利 = 年利 × (1 − 0.20315) で運用益に課税。NISA口座は非課税のため入力年利をそのまま使用します。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">配当課税</div>
+            <div class="basis-desc">課税口座での配当受け取りには 20.315%（所得税15.315% + 住民税5%）を適用。NISA口座は非課税です（2014年〜制度、2024年〜新NISA）。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">4%ルール</div>
+            <div class="basis-desc">Trinity Study（1998年, Cooley・Hubbard・Walz）に基づく。米国株式・債券ポートフォリオで30年間引き出し成功率が約95%とされる年間引き出し率。本ツールでの使用は参考値であり保証値ではありません。</div>
+          </div>
+        </div>
+
+        <div class="basis-section">
+          <div class="basis-section-title">🏛️ 年金の計算</div>
+          <div class="basis-item">
+            <div class="basis-label">厚生年金の概算式</div>
+            <div class="basis-desc">月額 ≒ 平均標準報酬月額 × 5.769/1,000 × 加入月数（令和6年度の乗率。2003年4月以降の加入期間に適用）。<br>出典: 日本年金機構「老齢厚生年金（報酬比例部分）」令和6年度</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">国民年金（基礎年金）</div>
+            <div class="basis-desc">40年（480ヶ月）満額で 816,000円/年（月額 68,000円）・令和6年度。加入月数に比例して増減します。<br>出典: 厚生労働省「令和6年度の年金額改定」</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">繰り下げ受給</div>
+            <div class="basis-desc">1ヶ月繰り下げごとに +0.7%増額（最大75歳・+84%）。繰り上げは1ヶ月ごと −0.4%（2022年4月改正後）。</div>
+          </div>
+        </div>
+
+        <div class="basis-section">
+          <div class="basis-section-title">🏥 医療・介護費用</div>
+          <div class="basis-item">
+            <div class="basis-label">医療費モデル</div>
+            <div class="basis-desc">厚生労働省「国民医療費」統計をベースに年齢帯別の1人あたり医療費を参照。65歳以降に増加傾向で計算します（デフォルトでは支出に月2〜3万円程度として反映）。</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">介護費用</div>
+            <div class="basis-desc">生命保険文化センター「生命保険に関する実態調査」(2021年)より、平均介護期間 5年・月額費用 約8万円を参考値として設定しています。ライフイベントの介護設定で個別に変更できます。</div>
+          </div>
+        </div>
+
+        <div class="basis-section">
+          <div class="basis-section-title">⚠️ 重要な免責事項</div>
+          <div class="basis-item">
+            <div class="basis-label">将来予測について</div>
+            <div class="basis-desc">本シミュレーションは特定の前提・仮定に基づく試算であり、将来の結果を保証するものではありません。市場環境・制度改正・個人の状況変化により実際の結果は大きく異なる可能性があります。重要な財務決定は専門家（FP・税理士等）にご相談ください。</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3012,6 +3312,166 @@
 </div>
 
 <!-- ===== DATA SETTINGS MODAL ===== -->
+<!-- ===== 入力診断モーダル ===== -->
+<div class="modal-overlay" id="inputDiagnosisModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">🔍 入力診断レポート</div>
+      <button class="modal-close" onclick="closeInputDiagnosis()">✕</button>
+    </div>
+    <div style="padding:16px 20px 20px;overflow-y:auto;max-height:70vh">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+        入力内容を自動チェックし、計算に影響する未入力・不整合を報告します。
+      </p>
+      <div id="diagnosisResult"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;align-items:center">
+      <button class="btn btn-secondary btn-sm" onclick="openIrregularGuide()" style="font-size:12px">❓ よくある疑問を見る</button>
+      <button class="btn btn-secondary" onclick="closeInputDiagnosis()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== よくある疑問・イレギュラー対応ガイド ===== -->
+<div class="modal-overlay" id="irregularGuideModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title">❓ よくある疑問・イレギュラー対応ガイド</div>
+      <button class="modal-close" onclick="closeIrregularGuide()">✕</button>
+    </div>
+    <div style="padding:16px 20px 20px;overflow-y:auto;max-height:75vh">
+
+      <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px">
+        <a href="#faq-pension" onclick="event.preventDefault();document.getElementById('faq-pension').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 年金の入力方法は？</a>
+        <a href="#faq-prepay" onclick="event.preventDefault();document.getElementById('faq-prepay').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 繰上返済で一時的に現金がマイナスになる場合は？</a>
+        <a href="#faq-bonus" onclick="event.preventDefault();document.getElementById('faq-bonus').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 ボーナスで積み立てを増やしたい</a>
+        <a href="#faq-retire-expense" onclick="event.preventDefault();document.getElementById('faq-retire-expense').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 退職後の支出はどう入力すればいい？</a>
+        <a href="#faq-parttime" onclick="event.preventDefault();document.getElementById('faq-parttime').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 セミリタイア後のパートタイム収入を入れたい</a>
+        <a href="#faq-dividend" onclick="event.preventDefault();document.getElementById('faq-dividend').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 高配当株の年利はどう入力するの？</a>
+        <a href="#faq-nisa" onclick="event.preventDefault();document.getElementById('faq-nisa').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 NISAと課税口座を使い分けたい</a>
+        <a href="#faq-inheritance" onclick="event.preventDefault();document.getElementById('faq-inheritance').scrollIntoView({behavior:'smooth'})" style="font-size:12px;color:var(--primary)">📌 将来受け取る予定の遺産・贈与を入れたい</a>
+      </div>
+
+      <!-- Q1 -->
+      <div id="faq-pension" class="faq-item">
+        <div class="faq-q">📌 年金の入力方法は？</div>
+        <div class="faq-a">
+          <p>「出口戦略」ページの<b>年金設定</b>欄で入力します。</p>
+          <ul>
+            <li><b>厚生年金加入月数</b>: 会社員として働いた月数（例：22歳〜55歳＝33年×12＝396ヶ月）</li>
+            <li><b>平均標準報酬月額</b>: 在職期間の平均的な月収（税引き前）の目安</li>
+            <li>計算式: 月額≒ 平均報酬月額 × 5.769/1000 × 加入月数（令和6年度水準）</li>
+            <li>55歳以降も就労する場合は、その期間も加算して試算するか、65歳受給時の概算額を「月受給額」に直接入力</li>
+            <li>国民年金: 40年満額で約68,000円/月（2024年度）</li>
+          </ul>
+          <div class="faq-tip">💡 ねんきんネット・ねんきん定期便の「65歳からの受給見込額」をそのまま入力するのが最も正確です。</div>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div id="faq-prepay" class="faq-item">
+        <div class="faq-q">📌 繰上返済で一時的に現金がマイナスになる場合は？</div>
+        <div class="faq-a">
+          <p>繰上返済の資金が現金・預金を上回る年は、グラフの「現金・預金」列が一時的にマイナス（⚠️マーク）になります。</p>
+          <p>これは<b>投資資産から補填が必要</b>なことを意味します。実際の対応方法：</p>
+          <ul>
+            <li>繰上返済前の数年間、投資資産の一部を取り崩して現金を増やしておく</li>
+            <li>繰上返済額を小さく分割し、複数年にわたって実施する（ライフイベントで分割登録）</li>
+            <li>繰上返済の代わりに利回りの高い投資を継続する戦略も有効（利率次第）</li>
+          </ul>
+          <div class="faq-tip">💡 本アプリでは投資→現金への自動換算は計算対象外です。キャッシュフロー的に問題ない構成になるよう入力内容を調整してください。</div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div id="faq-bonus" class="faq-item">
+        <div class="faq-q">📌 ボーナスで積み立てを増やしたい</div>
+        <div class="faq-a">
+          <p>資産カードの<b>ボーナス積み増し設定</b>（「家計・資産」ページ）から設定できます。</p>
+          <ul>
+            <li>年2回（夏・冬）の一時的な追加積立額を万円単位で入力</li>
+            <li>シミュレーション上は毎年同額のボーナス積立として扱われます</li>
+            <li>ボーナス額が変動する場合は平均的な金額で入力してください</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div id="faq-retire-expense" class="faq-item">
+        <div class="faq-q">📌 退職後の支出はどう入力すればいい？</div>
+        <div class="faq-a">
+          <p>「出口戦略」ページの<b>フェーズ別月支出</b>で3段階設定できます。</p>
+          <ul>
+            <li><b>① セミリタイア期</b>: 住宅ローンが残っている場合はローン返済額を含めた月額</li>
+            <li><b>② 待機期（フルリタイア〜年金前）</b>: ローン完済後の生活費のみ</li>
+            <li><b>③ 年金受給期</b>: 年齢とともに活動量が減り支出も減少する傾向あり（目安: ①の75〜80%）</li>
+          </ul>
+          <p>「💡 現役支出から自動入力」ボタンで現役期の支出から按分した初期値を設定できます。</p>
+          <div class="faq-tip">💡 住居費（ローン・家賃）は退職後に終了・変化する場合が多いため、①と②でそれぞれ実態に合わせた値を入れるのが正確です。</div>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div id="faq-parttime" class="faq-item">
+        <div class="faq-q">📌 セミリタイア後のパートタイム収入を入れたい</div>
+        <div class="faq-a">
+          <p>「出口戦略」ページの<b>リタイア形態</b>を「セミリタイア（一部収入あり）」に変更し、<b>セミリタイア後の月収</b>を入力します。</p>
+          <ul>
+            <li>夫婦共働きの場合は世帯合計の月収を入力</li>
+            <li>セミリタイア終了年齢（フルリタイアへ移行する年齢）も設定してください</li>
+            <li>複数の収入源（副業・配当・不動産など）がある場合は「追加収入」欄から登録できます</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div id="faq-dividend" class="faq-item">
+        <div class="faq-q">📌 高配当株の年利はどう入力するの？</div>
+        <div class="faq-a">
+          <p>資産カードの「期待年利」には<b>値上がり益＋配当を含む合計リターン</b>を入力し、「配当利回り」には配当部分のみ入力します。</p>
+          <ul>
+            <li>例：VYM（値上がり4%＋配当3%）→ 期待年利<b>7%</b>・配当利回り<b>3%</b></li>
+            <li>配当モードを「配当受け取り（キャッシュアウト）」にすると配当金が毎年キャッシュフローに加算されます</li>
+            <li>課税口座（特定・一般）は配当に約20.3%の税がかかります。シミュレーションでは自動的に税引き後で計算します</li>
+            <li>NISA口座は配当も非課税です</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div id="faq-nisa" class="faq-item">
+        <div class="faq-q">📌 NISAと課税口座を使い分けたい</div>
+        <div class="faq-a">
+          <p>「家計・資産」ページで資産ごとに<b>口座種類</b>を選択できます。</p>
+          <ul>
+            <li><b>NISA（つみたて・成長投資）</b>: 運用益・配当が非課税</li>
+            <li><b>特定口座・一般口座</b>: 運用益に約20.315%の税（利益確定時）、配当にも同率</li>
+            <li>NISAと課税口座を別々の資産として登録することで、それぞれの税効果を正確に反映できます</li>
+          </ul>
+          <div class="faq-tip">💡 長期では税の複利効果が大きいため、NISA枠を最大活用する前提でシミュレーションするとより正確です。</div>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div id="faq-inheritance" class="faq-item">
+        <div class="faq-q">📌 将来受け取る予定の遺産・贈与を入れたい</div>
+        <div class="faq-a">
+          <p>「相続・贈与」ページから設定できます。または「ライフイベント」の収支変化イベントで「一時収入」として登録する方法もあります。</p>
+          <ul>
+            <li>受取予定年・金額・相手を入力することで税計算の概算が確認できます</li>
+            <li>ライフイベントの一時収入として登録すると資産シミュレーションに直接反映されます</li>
+          </ul>
+          <div class="faq-tip">💡 遺産は不確実なため、楽観シナリオとして別途シナリオ比較で試算するのもおすすめです。</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeIrregularGuide()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="dataSettingsModal">
   <div class="modal" style="max-width:480px">
     <div class="modal-title">⚙️ データ設定・プライバシー</div>
@@ -3448,6 +3908,10 @@
       <div class="form-group">
         <label>期待年利（%）</label>
         <input type="number" id="amReturn" placeholder="5" min="0" max="30" step="0.1" oninput="updateTaxNote()">
+        <div id="amReturnHint" style="font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.5">
+          値上がり益＋配当を含む<b>合計リターン</b>を入力してください。<br>
+          例：VYM（値上がり4%＋配当3%）→ <b>7%</b> と入力し、配当利回りに <b>3%</b> を別途入力
+        </div>
       </div>
       <div class="form-group">
         <label>口座種別（課税区分）</label>
@@ -4057,6 +4521,10 @@ function applyMaritalFilter() {
   const profRow = document.getElementById('partnerProfileRow');
   if (profRow) profRow.style.display = hasParter ? '' : 'none';
 
+  // 家族情報: 子どもの人数（独身時は非表示）
+  const childrenGroup = document.getElementById('childrenCountGroup');
+  if (childrenGroup) childrenGroup.style.display = hasParter ? '' : 'none';
+
   // 家計・資産: パートナー収入行
   const finRow = document.getElementById('partnerFinanceRow');
   if (finRow) finRow.style.display = hasParter ? '' : 'none';
@@ -4081,9 +4549,15 @@ function applyMaritalFilter() {
 
   // 退職後の月支出 補足
   const expNote = document.getElementById('retMonthlyExpenseNote');
-  if (expNote) expNote.textContent = hasParter
-    ? '世帯合計（夫婦二人分）の月支出'
-    : '個人の月支出';
+  if (expNote) expNote.textContent = hasParter ? '世帯合計（夫婦二人分）の月支出' : '個人の月支出';
+  const expNote2 = document.getElementById('retMonthlyExpense2Note');
+  if (expNote2) expNote2.textContent = hasParter
+    ? 'セミリタイア終了後〜年金前（世帯合計）。未入力の場合は①の値を使用'
+    : 'セミリタイア終了後〜年金前。未入力の場合は①の値を使用';
+  const expNote3 = document.getElementById('retMonthlyExpense3Note');
+  if (expNote3) expNote3.textContent = hasParter
+    ? '年金受給開始後（世帯合計）。未入力の場合は①の値を使用'
+    : '年金受給開始後。未入力の場合は①の値を使用';
 
   // 年金自動試算 サブタイトル
   const penSubtitle = document.getElementById('pensionEstimateSubtitle');
@@ -4779,14 +5253,33 @@ function updateDividendModeNote() {
   const mode    = document.getElementById('amDividendMode').value;
   const div     = parseFloat(document.getElementById('amDividend').value) || 0;
   const ret     = parseFloat(document.getElementById('amReturn').value) || 0;
+  const taxType = document.getElementById('amTaxType').value;
   const noteEl  = document.getElementById('amDividendModeNote');
   if (!div) { noteEl.style.display = 'none'; return; }
   noteEl.style.display = 'block';
+
+  const isTaxable = (taxType === 'tokutei' || taxType === 'ippan');
+  const DIV_TAX = 0.20315; // 配当課税率（所得税15.315%＋住民税5%）
+
   if (mode === 'cashout') {
     const growthOnly = Math.max(0, ret - div);
-    noteEl.innerHTML = `🏦 <strong>受取モード</strong>：資産の値上がりは年利 ${growthOnly.toFixed(1)}%（期待年利${ret}% − 配当${div}%）で計算。配当収入（年利 ${div}%相当）はキャッシュフローに毎年加算されます。`;
+    const divAfterTax = isTaxable ? Math.round(div * (1 - DIV_TAX) * 10) / 10 : div;
+    const taxNote = isTaxable
+      ? `<br>　📌 課税口座のため配当に約20.3%課税 → 手取り配当 <b>${divAfterTax}%</b>相当`
+      : `<br>　📌 ${taxType === 'nisa' ? 'NISA非課税：配当も税金ゼロ' : 'iDeCo：受取時課税（運用中は非課税）'}`;
+    noteEl.innerHTML = `🏦 <strong>受取モード</strong>：資産の値上がりは年利 <b>${growthOnly.toFixed(1)}%</b>（期待年利${ret}% − 配当${div}%）で計算。配当収入は毎年キャッシュフローに加算されます。${taxNote}`;
+    noteEl.style.background = '#FFF7ED';
+    noteEl.style.color = '#92400E';
   } else {
-    noteEl.innerHTML = `🔄 <strong>再投資モード</strong>：配当を含む期待年利 ${ret}% 全額が複利で再投資されます（DRIP方式）。`;
+    // 再投資モード
+    const nisaNote = taxType === 'nisa'
+      ? '<br>　📌 NISA：分配金が出ても自動再投資される投資信託の場合、年利にそのまま含まれます。'
+      : isTaxable
+        ? `<br>　⚠️ 課税口座の場合、実際の再投資時に約20.3%の税金がかかります。実効年利は <b>${(ret * (1 - TAX_RATE)).toFixed(2)}%</b> 程度になります。`
+        : '';
+    noteEl.innerHTML = `🔄 <strong>再投資モード</strong>：「期待年利 ${ret}%」に配当再投資分を含めた合計リターンとして計算します（DRIP方式）。配当利回り欄は参考表示です。${nisaNote}`;
+    noteEl.style.background = '#F0FDF4';
+    noteEl.style.color = '#166534';
   }
 }
 
@@ -6004,9 +6497,18 @@ function renderFinSummary() {
   const monthlyInvest  = activeAssets.reduce((s, a) => s + (a.monthly || 0), 0);
   const annualBonusInvest = activeAssets.reduce((s, a) => s + (a.annualBonus || 0), 0);
 
+  // 住宅ローン or 家賃の月額を収支に反映
+  const le = state.lifeEvents || {};
+  let monthlyHousing = 0;
+  if (le.housingType === 'rent' && le.rent?.monthly) {
+    monthlyHousing = parseFloat(le.rent.monthly) || 0;
+  } else if ((le.housingType === 'mortgage' || !le.housingType) && le.mortgage?.monthlyPayment) {
+    monthlyHousing = parseFloat(le.mortgage.monthlyPayment) || 0;
+  }
+
   const annualIncome   = income * 12 + bonus;
-  const monthlyTotal   = expense + monthlyInvest;         // 生活費＋月積立
-  const monthlyBalance = income - monthlyTotal;           // 手元余剰（月）
+  const monthlyTotal   = expense + monthlyInvest + monthlyHousing; // 生活費＋月積立＋住居費
+  const monthlyBalance = income - monthlyTotal;                    // 手元余剰（月）
   // 年間余剰：ボーナス収入からボーナス投資を差し引く
   const annualBalance  = annualIncome - monthlyTotal * 12 - annualBonusInvest;
   const mColor = monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
@@ -6026,6 +6528,7 @@ function renderFinSummary() {
     breakdown.innerHTML = `
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月収（手取り）</span><span style="font-weight:600;color:var(--secondary)">+${income.toLocaleString()}万円</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">生活費</span><span style="font-weight:600;color:var(--danger)">−${expense.toLocaleString()}万円</span></div>
+      ${monthlyHousing > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">${le.housingType === 'rent' ? '家賃' : '住宅ローン返済'}</span><span style="font-weight:600;color:var(--danger)">−${monthlyHousing.toFixed(1)}万円</span></div>` : ''}
       ${monthlyInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月積立・投資</span><span style="font-weight:600;color:var(--warning)">−${monthlyInvest.toLocaleString()}万円</span></div>${investLines}` : ''}
       <div style="border-top:.5px solid var(--border);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between"><span style="font-weight:600">手元余剰</span><span style="font-weight:700;color:${mColor}">${monthlyBalance >= 0 ? '+' : ''}${monthlyBalance.toLocaleString()}万円/月</span></div>
       ${bonus > 0 ? `
@@ -6051,6 +6554,11 @@ function renderFinSummary() {
         <div class="val" style="color:var(--danger)">${expense.toLocaleString()} 万円</div>
         <div class="lbl">月の生活費</div>
       </div>
+      ${monthlyHousing > 0 ? `
+      <div class="finance-stat">
+        <div class="val" style="color:var(--danger)">${monthlyHousing.toFixed(1)} 万円</div>
+        <div class="lbl">${le.housingType === 'rent' ? '家賃' : 'ローン返済'}</div>
+      </div>` : ''}
       <div class="finance-stat">
         <div class="val" style="color:var(--warning)">${monthlyInvest.toLocaleString()} 万円</div>
         <div class="lbl">月の積立・投資</div>
@@ -6094,7 +6602,7 @@ function renderFinCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
 
-  // ===== 現金 vs 投資 の2本線シミュレーション =====
+  // ===== 正確な資産推移シミュレーション（ライフイベント・ローン・繰上返済込み）=====
   const CASH_TYPES = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
   const years = parseInt(document.getElementById('simYears').value) || 10;
   const inflationRate = (state.finance.inflationRate ?? 2) / 100;
@@ -6103,30 +6611,11 @@ function renderFinCharts() {
   const startYear = new Date().getFullYear();
   const currentAge = calcAge();
 
-  // 資産を現金系・投資系に分類
-  const cashAssets  = assets.filter(a => CASH_TYPES.has(a.type));
-  const investAssets = assets.filter(a => !CASH_TYPES.has(a.type));
-
-  // 余裕資金（毎月の収支差額）は現金扱い
-  const cashMonthlyAdd   = cashAssets.reduce((s,a) => s+(a.monthly||0), 0) + surplus;
-  const investMonthlyAdd = investAssets.reduce((s,a) => s+(a.monthly||0), 0);
-
-  let cashCurrent   = cashAssets.reduce((s,a) => s+(a.currentVal||0), 0);
-  let investCurrent = investAssets.reduce((s,a) => s+(a.currentVal||0), 0);
-
-  // 各資産の加重平均リターン
-  const cashReturn   = cashAssets.length > 0
-    ? cashAssets.reduce((s,a) => s+(a.currentVal||0)*(a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn||0.1)), 0)
-      / Math.max(1, cashAssets.reduce((s,a) => s+(a.currentVal||0), 0)) / 100
-    : 0.001;
-  const investReturn = investAssets.length > 0
-    ? investAssets.reduce((s,a) => s+(a.currentVal||0)*(a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn||3)), 0)
-      / Math.max(1, investAssets.reduce((s,a) => s+(a.currentVal||0), 0)) / 100
-    : 0.05;
-
-  const compound = (cur, add, r, y) => r === 0
-    ? cur + add * y
-    : cur * Math.pow(1+r, y) + add * (Math.pow(1+r, y) - 1) / r;
+  // calcIntegratedSim で正確な総資産推移を計算（ローン月払い・繰上返済・ライフイベント全込み）
+  const simData = calcIntegratedSim(years);
+  const growthDataAll = calcAllAssetGrowth(state.assets, years);
+  const cashAssetGrowth   = growthDataAll.filter(g => CASH_TYPES.has(g.asset.type));
+  const investAssetGrowth = growthDataAll.filter(g => !CASH_TYPES.has(g.asset.type));
 
   const labels = [], dataCash = [], dataInvest = [], dataTotal = [];
   const tableRows = [];
@@ -6134,9 +6623,19 @@ function renderFinCharts() {
     const yr = startYear + y;
     const age = currentAge != null ? currentAge + y : null;
     labels.push(`${yr}年`);
-    const cash   = Math.round(compound(cashCurrent,   cashMonthlyAdd * 12,   cashReturn,   y) * realFactor(y));
-    const invest = Math.round(compound(investCurrent, investMonthlyAdd * 12, investReturn, y) * realFactor(y));
-    const total  = cash + invest;
+
+    const d = simData[y] || { assetTotal: 0, cashFlow: 0, totalWealth: 0 };
+    // 現金系資産の複利成長（asset設定ベース）
+    const cashAssetAmt   = cashAssetGrowth.reduce((s, g) => s + (g.data[y] || 0), 0);
+    // 投資系資産の複利成長
+    const investAssetAmt = investAssetGrowth.reduce((s, g) => s + (g.data[y] || 0), 0);
+
+    // 現金・預金 = 現金系資産 + 収支累計（収入 - 生活費 - ローン返済 - 繰上返済など）
+    // d.cashFlow が負 = 繰上返済等で一時的にキャッシュが不足している状態（投資資産の取崩しが必要）
+    const cash   = Math.round((cashAssetAmt + d.cashFlow) * realFactor(y));
+    const invest = Math.round(investAssetAmt * realFactor(y));
+    const total  = Math.round(d.totalWealth * realFactor(y));
+
     dataCash.push(cash);
     dataInvest.push(invest);
     dataTotal.push(total);
@@ -6152,7 +6651,7 @@ function renderFinCharts() {
     data: {
       labels,
       datasets: [
-        { label: '総資産', data: dataTotal, borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,.08)', fill: true, tension: .4, borderWidth: 2 },
+        { label: '純資産合計', data: dataTotal, borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,.08)', fill: true, tension: .4, borderWidth: 2 },
         { label: '📈 投資資産（運用込み）', data: dataInvest, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,.06)', fill: true, tension: .4, borderWidth: 1.5 },
         { label: '💵 現金・預金', data: dataCash, borderColor: '#F59E0B', borderDash: [5,4], fill: false, tension: .3, borderWidth: 1.5 },
       ]
@@ -6165,12 +6664,15 @@ function renderFinCharts() {
     }
   });
 
-  // 年次テーブル
+  // 年次テーブル（ローン・繰上返済反映済み）
   const realNote = showReal ? `<span style="font-size:11px;color:var(--text-muted)">（インフレ${(inflationRate*100).toFixed(1)}%調整後）</span>` : '';
+  const hasCashDip = tableRows.some(r => r.cash < 0);
   const simTableEl = document.getElementById('simTable');
   if (simTableEl) {
     simTableEl.innerHTML = `
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">年次資産内訳 ${realNote}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">年次資産内訳 ${realNote}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">住宅ローン月払い・繰上返済・ライフイベント費用を反映した純資産ベース</div>
+      ${hasCashDip ? `<div style="font-size:11px;color:var(--warning);margin-bottom:8px">⚠️ 繰上返済等で現金・預金がマイナスになる年があります（投資資産の取崩しが必要な時期）</div>` : ''}
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr style="border-bottom:1px solid var(--border);color:var(--text-muted)">
@@ -6178,7 +6680,7 @@ function renderFinCharts() {
             ${currentAge != null ? '<th style="padding:5px 8px">年齢</th>' : ''}
             <th style="text-align:right;padding:5px 8px;color:#F59E0B">💵 現金・預金</th>
             <th style="text-align:right;padding:5px 8px;color:#10B981">📈 投資資産</th>
-            <th style="text-align:right;padding:5px 8px;color:#4F46E5;font-weight:700">合計</th>
+            <th style="text-align:right;padding:5px 8px;color:#4F46E5;font-weight:700">純資産合計</th>
           </tr>
         </thead>
         <tbody>
@@ -6186,7 +6688,7 @@ function renderFinCharts() {
             <tr style="border-bottom:.5px solid var(--border);${i===0?'color:var(--text-muted)':''}">
               <td style="padding:5px 8px">${r.yr}年${r.y===0?' (現在)':''}</td>
               ${currentAge != null ? `<td style="text-align:center;padding:5px 8px">${r.age}歳</td>` : ''}
-              <td style="text-align:right;padding:5px 8px;color:#B45309">${fmtMoney(r.cash)}</td>
+              <td style="text-align:right;padding:5px 8px;${r.cash < 0 ? 'color:#EF4444;font-weight:600' : 'color:#B45309'}">${r.cash < 0 ? '▼' : ''}${fmtMoney(Math.abs(r.cash))}</td>
               <td style="text-align:right;padding:5px 8px;color:#059669">${fmtMoney(r.invest)}</td>
               <td style="text-align:right;padding:5px 8px;font-weight:700;color:#4F46E5">${fmtMoney(r.total)}</td>
             </tr>`).join('')}
@@ -7211,7 +7713,14 @@ function calcMortgage() {
   const monthly = r === 0 ? amount / n : amount * r * Math.pow(1+r,n) / (Math.pow(1+r,n) - 1);
   const total = monthly * n;
   const interest = total - amount;
-  state.lifeEvents.mortgage.monthlyPayment = Math.round(monthly * 100) / 100;
+  // 残高テーブル描画のため state に最新値を先に同期
+  Object.assign(state.lifeEvents.mortgage, {
+    amount,
+    rate: annualRate,
+    term,
+    startYear: document.getElementById('leMortgageStartYear').value || String(new Date().getFullYear()),
+    monthlyPayment: Math.round(monthly * 100) / 100,
+  });
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
       <div class="pf-stat"><div class="val" style="font-size:17px">${monthly.toFixed(1)} 万円/月</div><div class="lbl">当初月額返済</div></div>
@@ -7220,6 +7729,7 @@ function calcMortgage() {
       <div class="pf-stat"><div class="val" style="font-size:17px">${(interest/amount*100).toFixed(1)}%</div><div class="lbl">利息割合</div></div>
     </div>`;
   renderMortgageEventList();
+  renderMortgageBalanceTable();
 }
 
 // ===== ローンイベント UI =====
@@ -7329,11 +7839,125 @@ function saveMortgageEvent(type, btn) {
   }
   modal.remove();
   renderMortgageEventList();
+  renderMortgageBalanceTable();
 }
 
 function deleteMortgageEvent(id) {
   state.lifeEvents.mortgage.events = (state.lifeEvents.mortgage.events || []).filter(e => e.id !== id);
   renderMortgageEventList();
+  renderMortgageBalanceTable();
+}
+
+function toggleMortgageBalance() {
+  const panel = document.getElementById('mortgageBalancePanel');
+  const arrow = document.getElementById('mortgageBalanceArrow');
+  const open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  arrow.textContent = open ? '▼' : '▶';
+  if (open) renderMortgageBalanceTable();
+}
+
+function renderMortgageBalanceTable() {
+  const wrap = document.getElementById('mortgageBalanceWrap');
+  const el = document.getElementById('mortgageBalanceTable');
+  if (!el) return;
+
+  const m = state.lifeEvents.mortgage;
+  if (!m.amount || !m.startYear || !m.term) {
+    if (wrap) wrap.style.display = 'none';
+    return;
+  }
+  if (wrap) wrap.style.display = '';
+
+  const schedule = calcMortgageSchedule();
+  if (!schedule.size) { el.innerHTML = ''; return; }
+
+  const currentYear = new Date().getFullYear();
+  const currentAge  = calcAge();
+  const events = (m.events || []);
+  const eventMap = {};
+  events.forEach(ev => {
+    if (!eventMap[ev.year]) eventMap[ev.year] = [];
+    if (ev.type === 'prepay') {
+      eventMap[ev.year].push(`💰 繰上返済 ${ev.amount}万円（${ev.method === 'payment' ? '返済額軽減' : '期間短縮'}）`);
+    } else {
+      eventMap[ev.year].push(`🔄 借り換え 新金利${ev.newRate}% / ${ev.newTerm}年`);
+    }
+  });
+
+  // サマリー計算
+  let totalInterest = 0;
+  let totalPrepay = 0;
+  schedule.forEach(({ monthlyPayment, principalStart, principalEnd }, year) => {
+    const annualPayment = monthlyPayment * 12;
+    const principalReduced = principalStart - principalEnd;
+    totalInterest += annualPayment - principalReduced;
+  });
+  events.filter(ev => ev.type === 'prepay').forEach(ev => { totalPrepay += parseFloat(ev.amount) || 0; });
+
+  // 完済年
+  const years = [...schedule.keys()].sort((a, b) => a - b);
+  const payoffYear = years[years.length - 1];
+
+  // サマリーバナー
+  let html = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+      <div class="pf-stat">
+        <div class="val" style="font-size:15px;color:var(--danger)">${Math.round(totalInterest + totalPrepay).toLocaleString()} 万円</div>
+        <div class="lbl">総利息（繰上含む）</div>
+      </div>
+      <div class="pf-stat">
+        <div class="val" style="font-size:15px">${payoffYear}年</div>
+        <div class="lbl">完済予定年</div>
+      </div>
+      <div class="pf-stat">
+        <div class="val" style="font-size:15px">${payoffYear - parseInt(m.startYear)} 年</div>
+        <div class="lbl">実際の返済期間</div>
+      </div>
+      ${totalPrepay > 0 ? `<div class="pf-stat"><div class="val" style="font-size:15px;color:var(--primary)">${totalPrepay.toLocaleString()} 万円</div><div class="lbl">繰上返済合計</div></div>` : ''}
+    </div>`;
+
+  // テーブル
+  html += `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="background:var(--surface2);text-align:right">
+          <th style="padding:6px 8px;text-align:left;white-space:nowrap">年</th>
+          <th style="padding:6px 8px;white-space:nowrap">年齢</th>
+          <th style="padding:6px 8px;white-space:nowrap">年初残高</th>
+          <th style="padding:6px 8px;white-space:nowrap">月額返済</th>
+          <th style="padding:6px 8px;white-space:nowrap">年末残高</th>
+          <th style="padding:6px 8px;white-space:nowrap">年間利息</th>
+          <th style="padding:6px 8px;text-align:left;white-space:nowrap">イベント</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  years.forEach(year => {
+    const { monthlyPayment, principalStart, principalEnd } = schedule.get(year);
+    const annualInterest = monthlyPayment * 12 - (principalStart - principalEnd);
+    const age = currentAge != null ? currentAge + (year - currentYear) : null;
+    const isCurrent = year === currentYear;
+    const isPast    = year < currentYear;
+    const rowStyle  = isCurrent
+      ? 'background:rgba(79,70,229,.08);font-weight:700'
+      : isPast ? 'color:var(--text-muted)' : '';
+    const evLabel   = (eventMap[year] || []).join('　');
+
+    html += `
+      <tr style="border-bottom:.5px solid var(--border);${rowStyle}">
+        <td style="padding:5px 8px;white-space:nowrap">${year}年${isCurrent ? ' ◀ 今年' : ''}</td>
+        <td style="padding:5px 8px;text-align:right">${age != null ? age + '歳' : '—'}</td>
+        <td style="padding:5px 8px;text-align:right">${Math.round(principalStart).toLocaleString()} 万</td>
+        <td style="padding:5px 8px;text-align:right">${monthlyPayment.toFixed(1)} 万</td>
+        <td style="padding:5px 8px;text-align:right;color:${principalEnd < 100 ? 'var(--secondary)' : ''}">${Math.round(principalEnd).toLocaleString()} 万</td>
+        <td style="padding:5px 8px;text-align:right;color:var(--danger)">${Math.round(annualInterest).toLocaleString()} 万</td>
+        <td style="padding:5px 8px;font-size:11px;color:var(--primary)">${evLabel}</td>
+      </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  el.innerHTML = html;
 }
 
 // 指定年のライフイベント費用（万円/年）を計算
@@ -7421,6 +8045,12 @@ function calcLECostByYear(year, opts = {}) {
         if (schedule.has(year)) {
           costs.mortgage += Math.round(schedule.get(year).monthlyPayment * 12 * 10) / 10;
         }
+        // 繰上返済の一括出金をキャッシュフローに反映
+        (m.events || []).forEach(ev => {
+          if (ev.type === 'prepay' && parseInt(ev.year) === year) {
+            costs.mortgage += parseFloat(ev.amount) || 0;
+          }
+        });
       }
     }
   }
@@ -7898,10 +8528,16 @@ function calcIntegratedSim(years, opts = {}) {
     const assetTotal = growthData.reduce((s, g) => s + (g.data[y] || 0), 0);
 
     // 配当受取（cashout）アセットの年間配当をキャッシュフローに加算
+    // 課税口座（特定・一般）の場合は約20.315%の配当課税を差し引く
+    const DIV_TAX_RATE = 0.20315;
     const annualDividendCashout = y === 0 ? 0 : cashoutAssets.reduce((s, a) => {
       const gd = growthData.find(g => g.asset.id === a.id);
       const prevVal = gd ? (gd.data[y - 1] || 0) : 0;
-      return s + prevVal * (a.dividendYield / 100);
+      const grossDiv = prevVal * (a.dividendYield / 100);
+      // NISA・iDeCoは非課税、特定口座・一般口座は約20.3%課税
+      const isTaxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
+      const netDiv = isTaxable ? grossDiv * (1 - DIV_TAX_RATE) : grossDiv;
+      return s + netDiv;
     }, 0);
 
     const cashFlow = y === 0
@@ -8158,8 +8794,11 @@ function renderRetirementPage() {
   document.getElementById('retTargetAge').value = r.targetAge || '';
   document.getElementById('retSemiIncome').value = r.semiMonthlyIncome || '';
   document.getElementById('retSemiEndAge').value = r.semiEndAge || '';
-  document.getElementById('retMonthlyExpense').value = r.monthlyExpense || '';
+  document.getElementById('retMonthlyExpense').value  = r.monthlyExpense  || '';
+  document.getElementById('retMonthlyExpense2').value = r.monthlyExpense2 || '';
+  document.getElementById('retMonthlyExpense3').value = r.monthlyExpense3 || '';
   document.getElementById('retLifeExpectancy').value = r.lifeExpectancy || '';
+  updateRetirementTypeUI();
   document.getElementById('retPensionAge').value = r.pensionAge || '';
   document.getElementById('retPensionMonthly').value = r.pensionMonthly || '';
   document.getElementById('retPensionAge_p').value = r.pensionAge_p || '';
@@ -8188,6 +8827,7 @@ function renderRetirementPage() {
   // 新フィールド復元
   document.getElementById('retInflationRate').value    = r.inflationRate    ?? 1.5;
   document.getElementById('retExpenseDecayRate').value = r.expenseDecayRate ?? 0;
+  document.getElementById('retResidualAssets').value   = r.residualAssets   ?? 500;
   updateExpenseNetRate();
   // マクロスライド: hidden input をセットしてからボタン選択を復元
   document.getElementById('retPensionSlide').value  = r.pensionSlide  ?? 0;
@@ -8312,7 +8952,9 @@ function saveRetirement() {
     targetAge: parseFloat(document.getElementById('retTargetAge').value) || null,
     semiMonthlyIncome: parseFloat(document.getElementById('retSemiIncome').value) || 0,
     semiEndAge: parseFloat(document.getElementById('retSemiEndAge').value) || null,
-    monthlyExpense: parseFloat(document.getElementById('retMonthlyExpense').value) || 0,
+    monthlyExpense:  parseFloat(document.getElementById('retMonthlyExpense').value)  || 0,
+    monthlyExpense2: parseFloat(document.getElementById('retMonthlyExpense2').value) || 0,
+    monthlyExpense3: parseFloat(document.getElementById('retMonthlyExpense3').value) || 0,
     lifeExpectancy: parseFloat(document.getElementById('retLifeExpectancy').value) || 90,
     pensionAge: parseFloat(document.getElementById('retPensionAge').value) || 65,
     pensionMonthly: parseFloat(document.getElementById('retPensionMonthly').value) || 0,
@@ -8341,6 +8983,7 @@ function saveRetirement() {
     expenseDecayRate: parseFloat(document.getElementById('retExpenseDecayRate').value) || 0,
     pensionSlide:     parseFloat(document.getElementById('retPensionSlide').value) || 0,
     medicalModel:     document.getElementById('retMedicalModel').value,
+    residualAssets:   parseFloat(document.getElementById('retResidualAssets').value) || 0,
     mortgageDeductStart: parseInt(document.getElementById('leMortgageDeductStart').value) || null,
     mortgageDeductYears: parseInt(document.getElementById('leMortgageDeductYears').value) || 0,
   };
@@ -8352,6 +8995,101 @@ function saveRetirement() {
 function updateRetirementTypeUI() {
   const isSemi = document.getElementById('retType').value === 'semi';
   document.getElementById('retSemiRow').style.display = isSemi ? '' : 'none';
+  // 待機期フィールドはセミリタイア時のみ表示
+  const expense2Row = document.getElementById('retExpense2Row');
+  if (expense2Row) expense2Row.style.display = isSemi ? '' : 'none';
+  // フェーズラベルをリタイア形態に合わせて変更
+  const p1Label = document.getElementById('retExpenseP1Label');
+  const p3Label = document.getElementById('retExpenseP3Label');
+  if (p1Label) p1Label.textContent = isSemi ? '① セミリタイア期（〜セミ終了年齢）月支出 万円' : '① 年金受給前 月支出 万円';
+  if (p3Label) p3Label.textContent = isSemi ? '③ 年金受給期（年金開始〜） 月支出 万円' : '② 年金受給期（年金開始〜） 月支出 万円';
+}
+
+function autoFillRetirementExpenses() {
+  const r = state.retirement || {};
+  const isSemi = document.getElementById('retType').value === 'semi';
+  const fmt = v => Math.round(v * 2) / 2; // 0.5万単位に丸め
+
+  // ===== ベース支出の決定 =====
+  // 優先①：①フィールドに入力済みの値をそのままベースにする
+  // 優先②：未入力なら現役支出（生活費＋住居費）から計算
+
+  const enteredP1 = parseFloat(document.getElementById('retMonthlyExpense').value) || 0;
+
+  let baseMonthly, baseSource;
+
+  if (enteredP1 > 0) {
+    // ① に値が入っている → それをそのままベースとして使い、②③を導出
+    baseMonthly = enteredP1;
+    baseSource = `①入力済みの値 ${enteredP1}万円`;
+  } else {
+    // ① が空 → 現役支出から計算してセット
+    const currentMonthlyLiving = parseFloat(state.finance?.expense) || 0;
+    const le = state.lifeEvents || {};
+    let currentMonthlyHousing = 0;
+    if (le.housingType === 'rent' && le.rent?.monthly) {
+      currentMonthlyHousing = parseFloat(le.rent.monthly) || 0;
+    } else if ((le.housingType === 'mortgage' || !le.housingType) && le.mortgage?.monthlyPayment) {
+      currentMonthlyHousing = parseFloat(le.mortgage.monthlyPayment) || 0;
+    }
+    const targetAge = parseInt(r.targetAge) || 60;
+    const currentYear = new Date().getFullYear();
+    const currentAge = calcAge() || 40;
+    const retireYear = currentYear + (targetAge - currentAge);
+    const le2 = state.lifeEvents || {};
+    const mortgageEndYear = le2.mortgage?.startYear && le2.mortgage?.term
+      ? parseInt(le2.mortgage.startYear) + parseInt(le2.mortgage.term)
+      : 9999;
+    const mortgagePaidOff = retireYear >= mortgageEndYear;
+    const commuteCost = 0.5;
+    const rawBase = mortgagePaidOff
+      ? currentMonthlyLiving - commuteCost
+      : (currentMonthlyLiving + currentMonthlyHousing) - commuteCost;
+    baseMonthly = Math.max(10, rawBase);
+    baseSource = `現役支出 ${(currentMonthlyLiving + currentMonthlyHousing).toFixed(1)}万円から試算`;
+    // ①も自動セット
+    document.getElementById('retMonthlyExpense').value = fmt(baseMonthly * 0.85);
+  }
+
+  // ===== 医療費の加重平均を計算（年金受給期） =====
+  const pensionAge = parseInt(r.pensionAge) || 65;
+  const lifeExp = parseInt(r.lifeExpectancy) || 90;
+  const penYears = lifeExp - pensionAge;
+  const medYears1 = Math.min(10, Math.max(0, Math.min(75, lifeExp) - pensionAge));
+  const medYears2 = Math.min(10, Math.max(0, Math.min(85, lifeExp) - Math.max(75, pensionAge)));
+  const medYears3 = Math.max(0, lifeExp - Math.max(85, pensionAge));
+  const avgMedical = penYears > 0
+    ? (medYears1 * 1 + medYears2 * 5 + medYears3 * 10) / penYears
+    : 3;
+
+  // ===== ②③を導出 =====
+  // ① をベースに「フェーズが進むほど支出が減る」比率で算出
+  // セミリタイア期（①）はユーザーが自分で決めた値 → そのまま
+  // 待機期（②）は ① × 88%（現役比75%/85%）
+  // 年金期（③）は ① × 76% + 医療費（現役比65%/85% + medical）
+  const p2 = fmt(Math.max(10, baseMonthly * (75 / 85)));
+  const p3 = fmt(Math.max(10, baseMonthly * (65 / 85) + avgMedical));
+
+  if (isSemi) document.getElementById('retMonthlyExpense2').value = p2;
+  document.getElementById('retMonthlyExpense3').value = p3;
+
+  // ===== 根拠の説明を表示 =====
+  const noteEl = document.getElementById('retExpenseAutoNote');
+  if (noteEl) {
+    const p1Display = parseFloat(document.getElementById('retMonthlyExpense').value);
+    noteEl.style.display = '';
+    noteEl.innerHTML = `
+      <div style="font-weight:600;margin-bottom:4px">💡 自動入力の根拠（ベース: ${baseSource}）</div>
+      <div>・① ${isSemi ? 'セミリタイア期' : '年金受給前'}：<b>${p1Display}万/月</b>（入力値をそのまま使用）</div>
+      ${isSemi ? `<div>・② 待機期：① × 88% = <b>${p2}万/月</b>（フルリタイア・余暇中心、就労費不要分を減額）</div>` : ''}
+      <div>・${isSemi ? '③' : '②'} 年金受給期：① × 76% + 医療費増加（平均 <b>+${avgMedical.toFixed(1)}万/月</b>）= <b>${p3}万/月</b></div>
+      <div style="margin-top:5px;font-size:10px;color:var(--text-muted)">
+        【医療費の根拠】65〜74歳: +1万/月、75〜84歳: +5万/月、85歳〜: +10万/月（moderate水準）の加重平均<br>
+        【支出逓減の根拠】FP一般基準：退職後は現役比70〜80%、加齢とともに外出・旅行が減少<br>
+        ※ あくまで目安です。実態に合わせて調整し、保存してください。
+      </div>
+    `;
+  }
 }
 
 function updateWithdrawalUI() {
@@ -8419,9 +9157,11 @@ function calcPensionEstimate(who) {
   if (!window._pensionEstimate) window._pensionEstimate = {};
   window._pensionEstimate[who] = { net: netTotal };
 
-  // 世帯合計を更新
+  // 世帯合計を更新（独身の場合はパートナー分を除外）
   const selfNet    = window._pensionEstimate.self?.net || 0;
-  const partnerNet = window._pensionEstimate.partner?.net || 0;
+  const marital    = document.getElementById('profileMarital')?.value ?? state.profile?.marital ?? 'single';
+  const hasParter  = (marital === 'married' || marital === 'planning');
+  const partnerNet = hasParter ? (window._pensionEstimate.partner?.net || 0) : 0;
   if (selfNet + partnerNet > 0) {
     const hhEl = document.getElementById('penHouseholdTotal');
     if (hhEl) {
@@ -8559,25 +9299,64 @@ function calcRetirementSim() {
   const withdrawalType  = r.withdrawalType || 'needs';
   const withdrawalRate  = (parseFloat(r.withdrawalRate) || 4) / 100;
   const simYears        = lifeExpectancy - targetAge;
-  const annualExpense   = (parseFloat(r.monthlyExpense) || 25) * 12;
+  // フェーズ別月支出（未入力の場合は①の値を引き継ぎ）
+  const baseExpense1    = parseFloat(r.monthlyExpense)  || 25;
+  const baseExpense2    = parseFloat(r.monthlyExpense2) || baseExpense1;
+  const baseExpense3    = parseFloat(r.monthlyExpense3) || baseExpense1;
+  const annualExpenseP1 = baseExpense1 * 12;
+  const annualExpenseP2 = baseExpense2 * 12;
+  const annualExpenseP3 = baseExpense3 * 12;
 
-  // Required assets calculation
+  // Required assets calculation（3期間PV・フェーズ別支出）
+  // 期間1: 退職〜セミリタイア終了（セミ収入あり、年金なし）
+  // 期間2: セミリタイア終了〜年金開始（収入なし、年金なし）
+  // 期間3: 年金開始〜余命（年金あり）
   const totalLEOverRetirement = (postData||[]).reduce((s, d) => s + (d.leMortgage||0) + (d.leEducation||0) + (d.leCare||0), 0);
   const avgAnnualLE = postData && postData.length > 0 ? totalLEOverRetirement / postData.length : 0;
-  const netAnnualNeed = Math.max(0, annualExpense + avgAnnualLE - pensionAnnual - pensionAnnual_p - (r.type === 'semi' ? (parseFloat(r.semiMonthlyIncome)||0)*12 : 0));
+  const semiAnnual   = r.type === 'semi' ? (parseFloat(r.semiMonthlyIncome)||0)*12 : 0;
+  const semiEndAge   = r.type === 'semi' ? (parseInt(r.semiEndAge) || pensionAge) : targetAge;
+
+  // 各期間の年数（マイナスにはならない）
+  const p1Years = Math.max(0, Math.min(semiEndAge, pensionAge) - targetAge); // セミ期間（年金前）
+  const p2Years = Math.max(0, pensionAge - Math.max(semiEndAge, targetAge)); // フル退職・年金待機
+  const p3Years = Math.max(0, lifeExpectancy - pensionAge);                  // 年金受給期間
+
+  // 各期間の年間必要取り崩し額（フェーズ別支出を使用）
+  const p1Need = Math.max(0, annualExpenseP1 + avgAnnualLE - semiAnnual);                        // セミ収入で補填
+  const p2Need = Math.max(0, annualExpenseP2 + avgAnnualLE);                                     // 収入なし
+  const p3Need = Math.max(0, annualExpenseP3 + avgAnnualLE - pensionAnnual - pensionAnnual_p);   // 年金で補填
+
+  const pvAnnuity = (annual, years, rate) => {
+    if (years <= 0 || annual <= 0) return 0;
+    return rate > 0.001
+      ? annual * (1 - Math.pow(1 + rate, -years)) / rate
+      : annual * years;
+  };
+  const discount = (pv, years, rate) =>
+    years <= 0 ? pv : pv / Math.pow(1 + Math.max(0, rate), years);
+
   let requiredAssets;
   if (withdrawalType === 'fixed_rate') {
-    requiredAssets = netAnnualNeed / withdrawalRate;
+    // 4%ルール：加重平均年間必要額で試算
+    const totalNeed = p1Need * p1Years + p2Need * p2Years + p3Need * p3Years;
+    const blendedNeed = simYears > 0 ? totalNeed / simYears : p3Need;
+    requiredAssets = blendedNeed / withdrawalRate;
   } else if (withdrawalType === 'dividend') {
-    requiredAssets = weightedReturn > 0 ? netAnnualNeed / weightedReturn : netAnnualNeed * simYears;
+    const totalNeed = p1Need * p1Years + p2Need * p2Years + p3Need * p3Years;
+    const blendedNeed = simYears > 0 ? totalNeed / simYears : p3Need;
+    requiredAssets = weightedReturn > 0 ? blendedNeed / weightedReturn : blendedNeed * simYears;
   } else {
-    // PV of annuity
-    const n = simYears;
-    requiredAssets = weightedReturn > 0.001
-      ? netAnnualNeed * (1 - Math.pow(1 + weightedReturn, -n)) / weightedReturn
-      : netAnnualNeed * n;
+    // 取り崩し（必要額ベース）：3期間PV を退職時点に割り戻す
+    const pv1 = pvAnnuity(p1Need, p1Years, weightedReturn);
+    const pv2 = discount(pvAnnuity(p2Need, p2Years, weightedReturn), p1Years, weightedReturn);
+    const pv3 = discount(pvAnnuity(p3Need, p3Years, weightedReturn), p1Years + p2Years, weightedReturn);
+    requiredAssets = pv1 + pv2 + pv3;
   }
   requiredAssets = Math.round(requiredAssets);
+
+  // 目標残資産（死亡時に残したい額）を必要資産に上乗せ
+  const residualAssets = Math.round(parseFloat(r.residualAssets) || 0);
+  requiredAssets += residualAssets;
 
   // When can you retire? (first year projected assets >= required)
   const longSim = calcIntegratedSim(40);
@@ -8598,6 +9377,7 @@ function calcRetirementSim() {
   return {
     assetsAtRetire: Math.round(assetsAtRetire),
     requiredAssets,
+    residualAssets,
     shortfall: Math.max(0, requiredAssets - Math.round(assetsAtRetire)),
     surplus: Math.max(0, Math.round(assetsAtRetire) - requiredAssets),
     postData,
@@ -8664,7 +9444,21 @@ function runRetirementSim() {
         <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px">
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">リタイア可能年齢（試算）</div>
           <div style="font-size:20px;font-weight:700;color:#60A5FA">${canRetireStr}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">必要資産到達時点</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">目標残資産 ${fmtMoney(result.residualAssets)} を含む</div>
+        </div>
+      </div>
+      <div style="background:${result.finalAssets >= result.residualAssets ? 'rgba(52,199,89,.15)' : 'rgba(255,59,48,.15)'};border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span style="font-size:20px">${result.finalAssets >= result.residualAssets ? '🏦' : '⚠️'}</span>
+        <div style="flex:1">
+          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px">${result.lifeExpectancy}歳（想定余命）時点の残資産</div>
+          <div style="font-size:18px;font-weight:700;color:${result.finalAssets >= result.residualAssets ? '#34C759' : '#FF6B6B'}">${fmtMoney(result.finalAssets)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">
+            目標残資産 ${fmtMoney(result.residualAssets)} に対して
+            ${result.finalAssets >= result.residualAssets
+              ? `<span style="color:#34C759">✅ +${fmtMoney(result.finalAssets - result.residualAssets)} の余裕</span>`
+              : `<span style="color:#FF6B6B">⚠️ ${fmtMoney(result.residualAssets - result.finalAssets)} 不足</span>`
+            }
+          </div>
         </div>
       </div>
       ${monthlyDiv > 0 ? `
@@ -8824,6 +9618,19 @@ function runRetirementSim() {
       simNoteEl.innerHTML = '';
       simNoteEl.style.display = 'none';
     }
+  }
+
+  // 機能2: シナリオ並列比較を自動表示（ボタン追加）
+  // 機能3,4のボタンをresultCardに追記
+  const retResultCardEl = document.getElementById('retResultCard');
+  if (retResultCardEl) {
+    const extraBtns = document.createElement('div');
+    extraBtns.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
+    extraBtns.innerHTML = `
+      <button class="btn btn-secondary btn-sm" id="btnShowScenarios" onclick="calcAndShowScenarios()" style="flex:1;min-width:140px">🔢 シナリオ比較を表示</button>
+      <button class="btn btn-secondary btn-sm" id="btnShowTax" onclick="showRetirementTaxCard()" style="flex:1;min-width:140px">💰 税金・社保を試算</button>
+      <button class="btn btn-secondary btn-sm" id="btnStressTest" onclick="runStressTest()" style="flex:1;min-width:140px">📉 暴落ストレステスト</button>`;
+    retResultCardEl.appendChild(extraBtns);
   }
 }
 
@@ -9456,7 +10263,10 @@ function calcRetirementSimWithOpts(opts = {}) {
     : 0.03;
   const weightedReturn = baseWeightedReturn + returnMod;
 
-  const baseMonthlyExpense = parseFloat(r.monthlyExpense) || 25;
+  // フェーズ別月支出（未入力の場合は①の値を引き継ぎ）
+  const baseMonthlyExpense  = parseFloat(r.monthlyExpense)  || 25;
+  const baseMonthlyExpense2 = parseFloat(r.monthlyExpense2) || baseMonthlyExpense;
+  const baseMonthlyExpense3 = parseFloat(r.monthlyExpense3) || baseMonthlyExpense;
   const pensionAge = parseInt(r.pensionAge) || 65;
   const basePensionAnnual = (parseFloat(r.pensionMonthly) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
   const pensionAge_p = parseInt(r.pensionAge_p) || 65;
@@ -9478,7 +10288,11 @@ function calcRetirementSimWithOpts(opts = {}) {
     const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
     // ① インフレ適用 × 生活費低減（加齢による自然な逓減）
     const expenseChangeFactor = Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
-    const inflatedExpense = baseMonthlyExpense * 12 * expenseChangeFactor * (1 + expenseMod);
+    // フェーズ別支出：セミ期→待機期→年金期
+    const phaseExpense = age < semiEndAge ? baseMonthlyExpense
+      : age < pensionAge ? baseMonthlyExpense2
+      : baseMonthlyExpense3;
+    const inflatedExpense = phaseExpense * 12 * expenseChangeFactor * (1 + expenseMod);
     // ⑥ 医療費増加
     const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
     const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd;
@@ -9554,6 +10368,514 @@ function calcRetirementSimWithOpts(opts = {}) {
   return postData;
 }
 
+// ===== 機能1: 繰上げ・繰下げ受給シミュレーション =====
+function calcAndShowDeferralSim() {
+  const panel = document.getElementById('penDeferralPanel');
+  if (!panel) return;
+
+  // toggle
+  if (panel.style.display !== 'none') {
+    panel.style.display = 'none';
+    return;
+  }
+
+  const r = state.retirement || {};
+  const baseMonthly = parseFloat(r.pensionMonthly) || 0;
+  const baseMonthly_p = parseFloat(r.pensionMonthly_p) || 0;
+
+  if (!baseMonthly && !baseMonthly_p) {
+    panel.innerHTML = '<div style="color:var(--text-muted);font-size:12px;padding:8px">年金月額（本人）を設定してください。</div>';
+    panel.style.display = '';
+    return;
+  }
+
+  const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+  const ages = [60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75];
+  const BASE_AGE = 65;
+
+  // 調整率: 繰上げ -0.4%/月、繰下げ +0.7%/月
+  function adjustRate(startAge) {
+    const months = (startAge - BASE_AGE) * 12;
+    return months < 0 ? 1 + months * 0.004 : 1 + months * 0.007;
+  }
+
+  // 損益分岐年齢: 65歳開始との累計受給額が交差する年齢
+  function breakEven(baseAmt, startAge) {
+    if (startAge === BASE_AGE) return '—';
+    const rate = adjustRate(startAge);
+    const monthlyAtAge = baseAmt * rate;
+    const base65Monthly = baseAmt; // 65歳基準
+    if (startAge < BASE_AGE) {
+      // 繰上げ: 早く受け取るが少ない。65歳開始と交差する年齢
+      // cumAtAge(t) = monthlyAtAge*12*(t-startAge), cum65(t) = base65Monthly*12*(t-65)
+      // 交差: monthlyAtAge*(t-startAge) = base65Monthly*(t-65)
+      // t*(monthlyAtAge-base65Monthly) = base65Monthly*(-65) - monthlyAtAge*(-startAge)
+      // t = (base65Monthly*65 - monthlyAtAge*startAge) / (base65Monthly - monthlyAtAge)
+      const t = (base65Monthly * 65 - monthlyAtAge * startAge) / (base65Monthly - monthlyAtAge);
+      return isFinite(t) ? Math.ceil(t) + '歳' : '—';
+    } else {
+      // 繰下げ: 後から受け取るが多い。65歳開始と交差する年齢
+      // cum65(t) = base65Monthly*12*(t-65), cumAtAge(t) = monthlyAtAge*12*(t-startAge) (t>=startAge)
+      // 交差: base65Monthly*(t-65) = monthlyAtAge*(t-startAge)
+      // t*(base65Monthly - monthlyAtAge) = base65Monthly*65 - monthlyAtAge*startAge... 符号に注意
+      // t*(base65Monthly - monthlyAtAge) = -(monthlyAtAge*startAge - base65Monthly*65)
+      const denom = base65Monthly - monthlyAtAge; // 負の値
+      const t = (base65Monthly * 65 - monthlyAtAge * startAge) / denom;
+      return isFinite(t) ? Math.ceil(t) + '歳' : '—';
+    }
+  }
+
+  function buildTable(label, baseAmt) {
+    if (!baseAmt) return '';
+    const rows = ages.map(age => {
+      const rate = adjustRate(age);
+      const monthly = Math.round(baseAmt * rate * 10) / 10;
+      const pct = Math.round((rate - 1) * 1000) / 10;
+      const be = breakEven(baseAmt, age);
+      const highlight = age === BASE_AGE ? 'background:rgba(0,122,255,.15);font-weight:700' : '';
+      return `<tr style="border-bottom:.5px solid var(--border);${highlight}">
+        <td style="padding:5px 8px;text-align:center">${age}歳</td>
+        <td style="padding:5px 8px;text-align:right;color:${pct<0?'#FF9500':pct>0?'#34C759':'inherit'}">${pct>=0?'+':''}${pct}%</td>
+        <td style="padding:5px 8px;text-align:right;font-weight:600">${monthly}万円/月</td>
+        <td style="padding:5px 8px;text-align:center;color:var(--text-secondary)">${be}</td>
+      </tr>`;
+    }).join('');
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px">${label}（65歳基準: ${baseAmt}万円/月）</div>
+      <div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:5px 8px;text-align:center;color:var(--text-muted)">受給開始</th>
+          <th style="padding:5px 8px;text-align:right;color:var(--text-muted)">増減率</th>
+          <th style="padding:5px 8px;text-align:right;color:var(--text-muted)">月額</th>
+          <th style="padding:5px 8px;text-align:center;color:var(--text-muted)">損益分岐</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+  }
+
+  const selfTable = buildTable('👤 本人', baseMonthly);
+  const partnerTable = buildTable('👫 パートナー', baseMonthly_p);
+
+  panel.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:12px;padding:16px;color:white">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">📊 繰上げ・繰下げ受給シミュレーション</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:12px">
+        繰上げ: −0.4%/月（最大−24%）｜繰下げ: +0.7%/月（最大+84%）｜「損益分岐」= 65歳受給と累計が同じになる年齢（想定余命${lifeExpectancy}歳）
+      </div>
+      ${selfTable}
+      ${partnerTable}
+    </div>`;
+  panel.style.display = '';
+}
+
+// ===== 機能2: 複数シナリオ並列比較 =====
+function calcAndShowScenarios() {
+  const card = document.getElementById('retScenarioCompareCard');
+  if (!card) return;
+
+  const r = state.retirement || {};
+  if (!r.targetAge || !r.monthlyExpense) {
+    card.style.display = 'none';
+    return;
+  }
+
+  const inflationRates = [1.0, 2.0, 3.0];
+  const pensionCuts    = [0, 10, 20]; // マクロスライド削減率%
+
+  // 現在のベース設定値
+  const baseInflation = parseFloat(r.inflationRate) || 1.5;
+  const basePensionCut = parseFloat(r.pensionSlide) || 0;
+
+  // 各パターンでシミュレーション（state.retirement を一時差し替え）
+  function runWithParams(inflation, pensionCut) {
+    const origInflation = r.inflationRate;
+    const origSlide = r.pensionSlide;
+    r.inflationRate = inflation;
+    r.pensionSlide = pensionCut;
+    const postData = calcRetirementSimWithOpts({});
+    r.inflationRate = origInflation;
+    r.pensionSlide = origSlide;
+    if (!postData || postData.length === 0) return null;
+    const lastD = postData[postData.length - 1];
+    const depleted = postData.find(d => d.depleted);
+    const targetAge = parseInt(r.targetAge);
+    const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+    return {
+      finalAssets: lastD.endAssets,
+      depletionAge: depleted ? depleted.age : null,
+      sustained: !depleted,
+    };
+  }
+
+  const results = {};
+  for (const inf of inflationRates) {
+    results[inf] = {};
+    for (const pc of pensionCuts) {
+      results[inf][pc] = runWithParams(inf, pc);
+    }
+  }
+
+  // テーブル生成
+  const headerCols = pensionCuts.map(pc => `<th style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.7);text-align:center">年金削減<br>${pc}%</th>`).join('');
+  const bodyRows = inflationRates.map(inf => {
+    const cols = pensionCuts.map(pc => {
+      const res = results[inf][pc];
+      if (!res) return '<td style="padding:8px;text-align:center;font-size:11px;color:rgba(255,255,255,.5)">—</td>';
+      const isBase = (Math.abs(inf - baseInflation) < 0.01) && (Math.abs(pc - basePensionCut) < 0.01);
+      const border = isBase ? 'border:2px solid #FBBF24;' : '';
+      const color = res.sustained ? '#34C759' : '#FF3B30';
+      const status = res.depletionAge ? `${res.depletionAge}歳枯渇` : '維持';
+      return `<td style="padding:8px 10px;text-align:center;${border}border-radius:4px">
+        <div style="font-size:12px;font-weight:700;color:${color}">${status}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7)">${res.finalAssets.toLocaleString()}万</div>
+      </td>`;
+    }).join('');
+    return `<tr style="border-bottom:.5px solid rgba(255,255,255,.1)">
+      <td style="padding:8px 10px;font-size:11px;color:rgba(255,255,255,.7);font-weight:600">インフレ${inf}%</td>
+      ${cols}
+    </tr>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:20px;color:white;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">🔢 シナリオ並列比較（インフレ率 × 年金削減）</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:14px">枠線ハイライト = 現在の設定値</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="border-bottom:1px solid rgba(255,255,255,.2)">
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:rgba(255,255,255,.7)">シナリオ</th>
+          ${headerCols}
+        </tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table></div>
+    </div>`;
+  card.style.display = '';
+}
+
+// ===== 機能3: 退職後の税金・社会保険料概算 =====
+function calcRetirementTax(annualPension, annualWithdrawal, age) {
+  // 公的年金等控除後の課税所得（65歳以上簡易版）
+  let pensionTaxableIncome = 0;
+  if (age >= 65) {
+    if (annualPension <= 330) {
+      pensionTaxableIncome = 0;
+    } else if (annualPension <= 410) {
+      pensionTaxableIncome = annualPension * 0.25 - 27.5;
+    } else if (annualPension <= 770) {
+      pensionTaxableIncome = annualPension * 0.15 - 68.5;
+    } else if (annualPension <= 1000) {
+      pensionTaxableIncome = annualPension * 0.05 - 145.5;
+    } else {
+      pensionTaxableIncome = annualPension - 195.5;
+    }
+  } else {
+    // 65歳未満: 控除60万（130万以下全額控除）
+    if (annualPension <= 130) {
+      pensionTaxableIncome = 0;
+    } else if (annualPension <= 410) {
+      pensionTaxableIncome = annualPension * 0.75 - 37.5;
+    } else if (annualPension <= 770) {
+      pensionTaxableIncome = annualPension * 0.85 - 78.5;
+    } else {
+      pensionTaxableIncome = annualPension - 155.5;
+    }
+  }
+  // 基礎控除48万
+  const taxableAfterBasic = Math.max(0, pensionTaxableIncome - 48);
+
+  // 所得税
+  let incomeTax = 0;
+  if (taxableAfterBasic <= 195) {
+    incomeTax = taxableAfterBasic * 0.05;
+  } else if (taxableAfterBasic <= 330) {
+    incomeTax = taxableAfterBasic * 0.10 - 9.75;
+  } else if (taxableAfterBasic <= 695) {
+    incomeTax = taxableAfterBasic * 0.20 - 42.75;
+  } else if (taxableAfterBasic <= 900) {
+    incomeTax = taxableAfterBasic * 0.23 - 63.6;
+  } else {
+    incomeTax = taxableAfterBasic * 0.33 - 153.6;
+  }
+  incomeTax = Math.max(0, Math.round(incomeTax * 10) / 10);
+
+  // 住民税（課税所得の10%）
+  const residentTax = Math.max(0, Math.round(taxableAfterBasic * 0.10 * 10) / 10);
+
+  // 資産取り崩しへの課税（課税口座分）
+  const taxableAssets = (state.assets || []).filter(a => {
+    const tp = (a.type || '').toLowerCase();
+    return tp !== 'nisa' && tp !== 'ideco' && tp !== 'nisa_growth' && tp !== 'nisa_tsumitate';
+  });
+  const totalAssetVal = (state.assets || []).reduce((s, a) => s + (a.currentVal || 0), 0);
+  const taxableAssetVal = taxableAssets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const taxableRatio = totalAssetVal > 0 ? taxableAssetVal / totalAssetVal : 0.5;
+  const withdrawalTax = Math.round(annualWithdrawal * taxableRatio * 0.2 * 10) / 10;
+
+  // 国民健康保険料（概算）
+  const nhBase = Math.max(0, annualPension - 33);
+  const nhInsurance = Math.max(5, Math.round(nhBase * 0.07 + 5));
+
+  // 介護保険料（65歳以上は年7万固定）
+  const careInsurance = age >= 65 ? 7 : 0;
+
+  const total = Math.round((incomeTax + residentTax + withdrawalTax + nhInsurance + careInsurance) * 10) / 10;
+
+  return { incomeTax, residentTax, withdrawalTax, nhInsurance, careInsurance, total, taxableRatio: Math.round(taxableRatio * 100) };
+}
+
+function showRetirementTaxCard() {
+  const card = document.getElementById('retTaxCard');
+  if (!card) return;
+
+  const r = state.retirement || {};
+  if (!r.targetAge || !r.monthlyExpense) {
+    card.style.display = 'none';
+    return;
+  }
+
+  const params = getRetirementParams();
+  const targetAge = parseInt(r.targetAge);
+  const retireAge = targetAge;
+  const simAge = Math.max(retireAge, 65); // 65歳時点で代表計算
+  const pensionAge = parseInt(r.pensionAge) || 65;
+  const annualPension = pensionAge <= simAge
+    ? ((parseFloat(r.pensionMonthly) || 0) + (parseFloat(r.pensionMonthly_p) || 0)) * 12 * (1 - params.pensionSlide)
+    : 0;
+  const annualExpense = (parseFloat(r.monthlyExpense) || 25) * 12;
+  // 年金で賄えない分が取り崩し額
+  const annualWithdrawal = Math.max(0, annualExpense - annualPension);
+
+  const tax = calcRetirementTax(annualPension, annualWithdrawal, simAge);
+  const afterTaxTakeHome = annualPension + annualWithdrawal - tax.total;
+
+  card.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:20px;color:white;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">💰 税金・社会保険料の概算（退職後）</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:14px">
+        ${simAge}歳時点・年金収入${Math.round(annualPension).toLocaleString()}万円 + 取り崩し${Math.round(annualWithdrawal).toLocaleString()}万円/年の場合（参考値）。課税口座比率: ${tax.taxableRatio}%
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px">
+        <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">所得税（概算）</div>
+          <div style="font-size:18px;font-weight:700;color:#FBBF24">${tax.incomeTax.toLocaleString()}万円/年</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">住民税（概算）</div>
+          <div style="font-size:18px;font-weight:700;color:#FBBF24">${tax.residentTax.toLocaleString()}万円/年</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">取り崩し課税（概算）</div>
+          <div style="font-size:18px;font-weight:700;color:#FF9500">${tax.withdrawalTax.toLocaleString()}万円/年</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">社会保険料（概算）</div>
+          <div style="font-size:18px;font-weight:700;color:#60A5FA">${(tax.nhInsurance + tax.careInsurance).toLocaleString()}万円/年</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">健康保険${tax.nhInsurance}万 + 介護${tax.careInsurance}万</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6)">合計負担（税+社保）</div>
+          <div style="font-size:20px;font-weight:700;color:#FF6B6B">${tax.total.toLocaleString()}万円/年</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,.6)">税引後の実質手取り（参考）</div>
+          <div style="font-size:20px;font-weight:700;color:#34C759">${Math.round(afterTaxTakeHome).toLocaleString()}万円/年</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5)">${Math.round(afterTaxTakeHome / 12 * 10) / 10}万円/月</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:8px">
+        ※ 税額は簡易試算です。実際の税額は確定申告や源泉徴収の状況により異なります。専門家にご相談ください。
+      </div>
+    </div>`;
+  card.style.display = '';
+}
+
+// ===== 機能4: ストレステスト（暴落シナリオ）=====
+function calcRetirementSimWithStress(stressShock) {
+  const opts = {};
+  const { returnMod = 0, expenseMod = 0, pensionMod = 0 } = opts;
+  const r = state.retirement || {};
+  const currentAge = calcAge();
+  if (!currentAge || !r.targetAge) return null;
+
+  const currentYear = new Date().getFullYear();
+  const targetAge = parseInt(r.targetAge);
+  const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+  const yearsToRetire = Math.max(0, targetAge - currentAge);
+  const retireYear = currentYear + yearsToRetire;
+  const params = getRetirementParams();
+
+  const preRetireSim = calcIntegratedSim(Math.max(yearsToRetire, 1));
+  const severance = parseFloat(r.severance) || 0;
+  const severanceAge = parseFloat(r.severanceAge) || null;
+  const severanceAtRetire = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
+  let assetsAtRetire = (preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire;
+
+  const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const baseWeightedReturn = totalVal > 0
+    ? state.assets.reduce((s, a) => s + (a.currentVal || 0) * ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn || 3)) / 100), 0) / totalVal
+    : 0.03;
+  const weightedReturn = baseWeightedReturn + returnMod;
+
+  // フェーズ別月支出（未入力の場合は①の値を引き継ぎ）
+  const baseMonthlyExpense  = parseFloat(r.monthlyExpense)  || 25;
+  const baseMonthlyExpense2 = parseFloat(r.monthlyExpense2) || baseMonthlyExpense;
+  const baseMonthlyExpense3 = parseFloat(r.monthlyExpense3) || baseMonthlyExpense;
+  const pensionAge = parseInt(r.pensionAge) || 65;
+  const basePensionAnnual = (parseFloat(r.pensionMonthly) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
+  const pensionAge_p = parseInt(r.pensionAge_p) || 65;
+  const basePensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
+  const semiEndAge = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
+  const extraIncomes = r.extraIncomes || [];
+  const withdrawalType = r.withdrawalType || 'needs';
+  const withdrawalRate = (parseFloat(r.withdrawalRate) || 4) / 100;
+  const withdrawalAnnual = (parseFloat(r.withdrawalMonthly) || 0) * 12;
+
+  const simYears = lifeExpectancy - targetAge;
+  const postData = [];
+  let assets = assetsAtRetire;
+
+  // 1年目に暴落を適用
+  if (stressShock && stressShock.rate > 0) {
+    assets = assets * (1 - stressShock.rate);
+  }
+
+  for (let i = 0; i <= simYears; i++) {
+    const age = targetAge + i;
+    const yr = retireYear + i;
+    const leCost = calcLECostByYear(yr);
+    const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
+    const expenseChangeFactor = Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
+    const phaseExpense = age < semiEndAge ? baseMonthlyExpense
+      : age < pensionAge ? baseMonthlyExpense2
+      : baseMonthlyExpense3;
+    const inflatedExpense = phaseExpense * 12 * expenseChangeFactor * (1 + expenseMod);
+    const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
+    const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd;
+
+    const severanceThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
+    if (severanceThisYear > 0) assets += severanceThisYear;
+
+    const pension = age >= pensionAge ? basePensionAnnual : 0;
+    const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
+    const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
+    const extra = extraIncomes.reduce((s, inc) => {
+      const ok = (!inc.startAge || age >= inc.startAge) && (!inc.endAge || age <= inc.endAge);
+      return s + (ok ? (parseFloat(inc.monthly) || 0) * 12 : 0);
+    }, 0);
+    const mortgageBalance = (() => {
+      const m = state.lifeEvents?.mortgage || {};
+      const principal = parseFloat(m.amount) || 0;
+      const startYr = parseInt(m.startYear) || currentYear;
+      const term = parseInt(m.term) || 35;
+      const elapsed = yr - startYr;
+      if (elapsed < 0 || elapsed >= term || !principal) return 0;
+      return principal * (1 - elapsed / term);
+    })();
+    const mortgageDeduct = calcMortgageDeduction(yr, mortgageBalance);
+
+    // 暴落後 crashYears 年間は通常の半分のリターン
+    let effectiveReturn = weightedReturn;
+    if (stressShock && i < (stressShock.years || 2)) {
+      effectiveReturn = weightedReturn * 0.5;
+    }
+
+    const totalNonAssetIncome = pension + pension_p + semi + extra + mortgageDeduct;
+    const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
+
+    let assetWithdrawal;
+    switch (withdrawalType) {
+      case 'fixed_rate':   assetWithdrawal = assets * withdrawalRate; break;
+      case 'fixed_amount': assetWithdrawal = withdrawalAnnual; break;
+      case 'dividend':     assetWithdrawal = Math.max(0, netExpense - assets * effectiveReturn); break;
+      default:             assetWithdrawal = netExpense;
+    }
+    const actualDeduction = (withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount')
+      ? assetWithdrawal : Math.max(assetWithdrawal, netExpense);
+
+    const endAssets = Math.max(0, assets * (1 + effectiveReturn) - actualDeduction);
+    postData.push({ year: yr, age, endAssets: Math.round(endAssets), depleted: endAssets <= 0 });
+    assets = endAssets;
+    if (endAssets <= 0) break;
+  }
+  return postData;
+}
+
+function runStressTest() {
+  const card = document.getElementById('retStressCard');
+  if (!card) return;
+
+  const r = state.retirement || {};
+  if (!r.targetAge || !r.monthlyExpense) {
+    card.style.display = 'none';
+    return;
+  }
+
+  const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+  const CRASH_RATE = 0.30;
+  const CRASH_YEARS = 2;
+
+  // 通常シナリオ
+  const normalData = calcRetirementSimWithOpts({});
+  // 暴落シナリオ
+  const stressData = calcRetirementSimWithStress({ rate: CRASH_RATE, years: CRASH_YEARS });
+
+  if (!normalData || !stressData) {
+    card.innerHTML = '<div class="card" style="padding:16px;color:var(--text-muted)">シミュレーションデータが不足しています。</div>';
+    card.style.display = '';
+    return;
+  }
+
+  const normalLast = normalData[normalData.length - 1];
+  const stressLast = stressData[stressData.length - 1];
+  const normalDepleted = normalData.find(d => d.depleted);
+  const stressDepleted = stressData.find(d => d.depleted);
+
+  const normalStatus = normalDepleted
+    ? `<span style="color:#FF3B30;font-weight:700">${normalDepleted.age}歳で枯渇</span>`
+    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳まで維持</span>`;
+  const stressStatus = stressDepleted
+    ? `<span style="color:#FF3B30;font-weight:700">${stressDepleted.age}歳で枯渇</span>`
+    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳まで維持</span>`;
+
+  const diff = Math.round(stressLast.endAssets) - Math.round(normalLast.endAssets);
+  const diffColor = diff >= 0 ? '#34C759' : '#FF3B30';
+
+  card.innerHTML = `
+    <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:20px;color:white;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">📉 暴落ストレステスト</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:14px">
+        退職直後に${Math.round(CRASH_RATE*100)}%暴落 → その後${CRASH_YEARS}年間は通常リターンの50%で推移するシナリオ
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:rgba(52,199,89,.12);border-radius:10px;padding:14px;border:1px solid rgba(52,199,89,.3)">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">通常シナリオ</div>
+          <div style="font-size:14px;margin:4px 0">${normalStatus}</div>
+          <div style="font-size:16px;font-weight:700;color:#34C759;margin-top:4px">${(normalLast.endAssets||0).toLocaleString()}万円</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">${lifeExpectancy}歳時点残高</div>
+        </div>
+        <div style="background:rgba(255,59,48,.12);border-radius:10px;padding:14px;border:1px solid rgba(255,59,48,.3)">
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">暴落シナリオ（−30%）</div>
+          <div style="font-size:14px;margin:4px 0">${stressStatus}</div>
+          <div style="font-size:16px;font-weight:700;color:#FF6B6B;margin-top:4px">${(stressLast.endAssets||0).toLocaleString()}万円</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">${lifeExpectancy}歳時点残高</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:24px">⚡</span>
+        <div>
+          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">暴落による影響額（${lifeExpectancy}歳時点）</div>
+          <div style="font-size:18px;font-weight:700;color:${diffColor}">${diff >= 0 ? '+' : ''}${diff.toLocaleString()}万円</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">
+            退職直後の暴落は「sequence of returns risk」と呼ばれ、長期的な影響が特に大きくなります
+          </div>
+        </div>
+      </div>
+    </div>`;
+  card.style.display = '';
+}
+
 // ===== ⑫ 感度分析 =====
 function updateSensitivity() {
   const rV = parseFloat(document.getElementById('sensReturn').value) || 0;
@@ -9602,11 +10924,14 @@ function runMonteCarlo() {
   const targetAge = parseInt(r.targetAge);
   const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
   const simYears = lifeExpectancy - targetAge;
-  const baseMonthlyExpense = parseFloat(r.monthlyExpense) || 25;
+  const baseMonthlyExpense  = parseFloat(r.monthlyExpense)  || 25;
+  const baseMonthlyExpense2 = parseFloat(r.monthlyExpense2) || baseMonthlyExpense;
+  const baseMonthlyExpense3 = parseFloat(r.monthlyExpense3) || baseMonthlyExpense;
   const pensionAge = parseInt(r.pensionAge) || 65;
   const pensionAnnual = (parseFloat(r.pensionMonthly) || 0) * 12 * (1 - params.pensionSlide);
   const pensionAge_p = parseInt(r.pensionAge_p) || 65;
   const pensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 - params.pensionSlide);
+  const semiEndAgeScen = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
 
   // Box-Muller法で正規乱数
   function randn() {
@@ -9628,7 +10953,10 @@ function runMonteCarlo() {
       const age = targetAge + i;
       const yr = retireYear + i;
       const randomReturn = baseReturn + stdDev * randn();
-      const inflatedExpense = baseMonthlyExpense * 12 * Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
+      const phaseExpScen = age < semiEndAgeScen ? baseMonthlyExpense
+        : age < pensionAge ? baseMonthlyExpense2
+        : baseMonthlyExpense3;
+      const inflatedExpense = phaseExpScen * 12 * Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
       const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
       const leCost = calcLECostByYear(yr);
       const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
@@ -10026,6 +11354,275 @@ function openWizard() {
   wizardRender();
   document.getElementById('wizardOverlay').classList.add('open');
 }
+
+// ===== B. 計算根拠パネル =====
+function toggleRetBasis(titleEl) {
+  const content = document.getElementById('retBasisContent');
+  const icon    = document.getElementById('retBasisToggleIcon');
+  if (!content || !icon) return;
+  const isOpen = content.style.display !== 'none';
+  content.style.display = isOpen ? 'none' : '';
+  icon.textContent = isOpen ? '▼ 展開する' : '▲ 閉じる';
+}
+
+// ===== A. 入力診断機能 =====
+function openInputDiagnosis() {
+  const el = document.getElementById('inputDiagnosisModal');
+  if (!el) return;
+  runInputDiagnosis();
+  el.classList.add('open');
+}
+function closeInputDiagnosis() {
+  document.getElementById('inputDiagnosisModal').classList.remove('open');
+}
+
+function runInputDiagnosis() {
+  const p   = state.profile    || {};
+  const f   = state.finance    || {};
+  const le  = state.lifeEvents || {};
+  const ret = state.retirement || {};
+  const assets = state.assets  || [];
+
+  const errors = [];  // 🔴 未入力・計算不能
+  const warns  = [];  // 🟡 要確認
+  const oks    = [];  // ✅ 良好
+
+  // ---- プロフィール ----
+  if (!p.name)  errors.push({ text: '名前が未入力です（表示名に影響します）', page: 'profile' });
+  else          oks.push({ text: `名前: ${p.name}` });
+
+  if (!p.birth) errors.push({ text: '生年月日が未入力です。年齢計算ができないため、シミュレーションが正確に動作しません。', page: 'profile' });
+  else          oks.push({ text: `生年月日: ${p.birth}` });
+
+  // ---- 家計 ----
+  const income  = parseFloat(f.income)  || 0;
+  const expense = parseFloat(f.expense) || 0;
+  if (income === 0)  errors.push({ text: '月収（収入）が未入力です。資産シミュレーションに使用されます。', page: 'finance' });
+  else               oks.push({ text: `月収: ${income}万円` });
+
+  if (expense === 0) errors.push({ text: '月支出が未入力です。キャッシュフロー計算に使用されます。', page: 'finance' });
+  else {
+    if (income > 0 && expense > income) {
+      warns.push({ text: `月支出（${expense}万円）が月収（${income}万円）を超えています。住宅費・ローン等の二重計上がないか確認してください。`, page: 'finance' });
+    } else {
+      oks.push({ text: `月支出: ${expense}万円（月収比 ${Math.round(expense/income*100)}%）` });
+    }
+  }
+
+  // ---- 資産 ----
+  if (assets.length === 0) {
+    errors.push({ text: '資産が1件も登録されていません。資産シミュレーションに影響します。', page: 'finance' });
+  } else {
+    const totalAssets = assets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+    oks.push({ text: `資産 ${assets.length}件・合計 ${totalAssets.toLocaleString()}万円` });
+
+    // 年利が異常に高い資産
+    assets.forEach(a => {
+      const r = parseFloat(a.expectedReturn) || 0;
+      if (r > 15) warns.push({ text: `「${a.name}」の期待年利が${r}%と高い設定です。現実的な値か確認してください（一般的な株式インデックス: 5〜7%）。`, page: 'finance' });
+    });
+
+    // 配当利回りの整合性チェック
+    assets.filter(a => a.dividendYield > 0).forEach(a => {
+      const d = parseFloat(a.dividendYield) || 0;
+      const r = parseFloat(a.expectedReturn) || 0;
+      if (d > r) warns.push({ text: `「${a.name}」の配当利回り（${d}%）が期待年利（${r}%）を超えています。期待年利は値上がり益＋配当の合計を入力してください。`, page: 'finance' });
+    });
+  }
+
+  // ---- 住居 ----
+  const housingType = le.housingType || 'mortgage';
+  if (housingType === 'mortgage') {
+    const mp = parseFloat(le.mortgage?.principal) || 0;
+    if (mp === 0) warns.push({ text: '住宅ローンの借入額が未入力です。月々のローン返済額がキャッシュフローに反映されていない可能性があります。', page: 'lifeevents' });
+    else oks.push({ text: `住宅ローン: 借入${mp.toLocaleString()}万円` });
+    // 繰上返済チェック
+    const prepayEvents = (le.mortgage?.events || []).filter(e => e.type === 'prepay');
+    if (prepayEvents.length > 0) {
+      const prepayTotal = prepayEvents.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+      // 繰上返済総額 vs 資産チェック
+      const cashAssets = assets.filter(a => ['cash', 'savings', 'bank'].includes(a.type));
+      const cashTotal  = cashAssets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+      if (prepayTotal > cashTotal * 2) {
+        warns.push({ text: `繰上返済の合計（${prepayTotal.toLocaleString()}万円）が現金・預金（${cashTotal.toLocaleString()}万円）を大きく上回っています。繰上返済年に投資資産からの補填が必要になる場合があります。`, page: 'lifeevents', guide: 'prepay' });
+      }
+    }
+  } else if (housingType === 'rent') {
+    const rm = parseFloat(le.rent?.monthly) || 0;
+    if (rm === 0) warns.push({ text: '家賃が未入力です。支出として反映されていません。', page: 'lifeevents' });
+    else oks.push({ text: `家賃: ${rm}万円/月` });
+  }
+
+  // ---- 出口戦略 ----
+  if (!ret.targetAge) {
+    errors.push({ text: 'リタイア目標年齢が未設定です。出口戦略シミュレーションに必要です。', page: 'retirement' });
+  } else {
+    oks.push({ text: `リタイア目標: ${ret.targetAge}歳` });
+  }
+
+  if (!ret.monthlyExpense) {
+    errors.push({ text: '退職後の月支出（①）が未入力です。必要資産額の計算に使用されます。', page: 'retirement' });
+  } else {
+    oks.push({ text: `退職後月支出①: ${ret.monthlyExpense}万円` });
+  }
+
+  // 年金チェック
+  const pensionMonthly  = parseFloat(ret.pensionMonthly)  || 0;
+  const pensionMonthlyP = parseFloat(ret.pensionMonthly_p) || 0;
+  if (pensionMonthly === 0 && pensionMonthlyP === 0) {
+    warns.push({ text: '年金受給額が未設定です。年金があると必要資産額が大きく変わります。ねんきん定期便等で確認して入力してください。', page: 'retirement', guide: 'pension' });
+  } else {
+    oks.push({ text: `年金: 本人${pensionMonthly}万円/月${pensionMonthlyP > 0 ? '・パートナー'+pensionMonthlyP+'万円/月' : ''}` });
+  }
+
+  // 想定利回り（退職後）
+  const retReturn = parseFloat(ret.expectedReturn) || 0;
+  if (retReturn === 0) warns.push({ text: '退職後の想定利回りが0%です。実際に資産運用する場合は想定利回りを設定すると正確な試算ができます。', page: 'retirement' });
+  else if (retReturn > 10) warns.push({ text: `退職後の想定利回りが${retReturn}%と高い設定です（一般的な目安: 3〜6%）。`, page: 'retirement' });
+  else oks.push({ text: `退職後想定利回り: ${retReturn}%` });
+
+  // フェーズ別支出
+  if (ret.monthlyExpense && !ret.monthlyExpense2 && !ret.monthlyExpense3) {
+    warns.push({ text: 'フェーズ別月支出（②③）が未設定です。すべて①の値を引き継ぎます。「💡 現役支出から自動入力」で初期値を設定できます。', page: 'retirement' });
+  }
+
+  // ---- 子ども教育費 ----
+  const children = le.children || [];
+  if (children.length > 0) {
+    children.forEach(c => {
+      if (!c.educationPhases || Object.values(c.educationPhases || {}).every(v => !v)) {
+        warns.push({ text: `${c.name || 'お子さん'}の教育費フェーズが未設定です（公立・私立の選択）。教育費の計算に使用されます。`, page: 'lifeevents' });
+      }
+    });
+  }
+
+  // ---- レポートHTML生成 ----
+  const resultEl = document.getElementById('diagnosisResult');
+  if (!resultEl) return;
+
+  const errorScore = errors.length;
+  const warnScore  = warns.length;
+
+  let html = '';
+
+  // スコアバナー
+  if (errorScore === 0 && warnScore === 0) {
+    html += `<div style="text-align:center;padding:20px;background:#F0FDF4;border-radius:12px;margin-bottom:14px">
+      <div style="font-size:32px;margin-bottom:8px">🎉</div>
+      <div style="font-size:15px;font-weight:700;color:#166534">すべての入力が完了しています</div>
+      <div style="font-size:12px;color:#15803D;margin-top:4px">シミュレーションを安心してご利用いただけます</div>
+    </div>`;
+  } else {
+    const totalIssues = errorScore + warnScore;
+    html += `<div style="display:flex;gap:10px;margin-bottom:14px">
+      ${errorScore > 0 ? `<div style="flex:1;text-align:center;padding:12px;background:#FEE2E2;border-radius:10px">
+        <div style="font-size:20px;font-weight:700;color:#991B1B">${errorScore}</div>
+        <div style="font-size:11px;color:#B91C1C">要対応</div>
+      </div>` : ''}
+      ${warnScore > 0 ? `<div style="flex:1;text-align:center;padding:12px;background:#FEF3C7;border-radius:10px">
+        <div style="font-size:20px;font-weight:700;color:#92400E">${warnScore}</div>
+        <div style="font-size:11px;color:#B45309">確認推奨</div>
+      </div>` : ''}
+      <div style="flex:1;text-align:center;padding:12px;background:#F0FDF4;border-radius:10px">
+        <div style="font-size:20px;font-weight:700;color:#166534">${oks.length}</div>
+        <div style="font-size:11px;color:#15803D">良好</div>
+      </div>
+    </div>`;
+  }
+
+  // エラー項目
+  if (errors.length > 0) {
+    html += `<div class="diag-section-title">🔴 要対応（未入力・計算不能）</div>`;
+    html += errors.map(e => `
+      <div class="diag-item error">
+        <span class="diag-icon">🔴</span>
+        <div>
+          <div>${e.text}</div>
+          ${e.page ? `<div class="diag-link" onclick="closeInputDiagnosis();showPage('${e.page}')">→ ${pageLabel(e.page)}で修正する</div>` : ''}
+          ${e.guide ? `<div class="diag-link" onclick="closeInputDiagnosis();openIrregularGuide('${e.guide}')">→ 対応方法を見る</div>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  // 警告項目
+  if (warns.length > 0) {
+    html += `<div class="diag-section-title">🟡 確認推奨</div>`;
+    html += warns.map(w => `
+      <div class="diag-item warn">
+        <span class="diag-icon">⚠️</span>
+        <div>
+          <div>${w.text}</div>
+          ${w.page ? `<div class="diag-link" onclick="closeInputDiagnosis();showPage('${w.page}')">→ ${pageLabel(w.page)}で確認する</div>` : ''}
+          ${w.guide ? `<div class="diag-link" onclick="closeInputDiagnosis();openIrregularGuide('${w.guide}')">→ 対応方法を見る</div>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  // OK項目（折りたたみ）
+  if (oks.length > 0) {
+    html += `<div class="diag-section-title" style="cursor:pointer" onclick="toggleDiagOk(this)">✅ 良好な項目 (${oks.length}件) ▼</div>`;
+    html += `<div id="diagOkList" style="display:none">` + oks.map(o => `
+      <div class="diag-item ok">
+        <span class="diag-icon">✅</span>
+        <div>${o.text}</div>
+      </div>`).join('') + `</div>`;
+  }
+
+  resultEl.innerHTML = html;
+}
+
+function toggleDiagOk(el) {
+  const list = document.getElementById('diagOkList');
+  if (!list) return;
+  const open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : '';
+  el.textContent = el.textContent.replace(open ? '▲' : '▼', open ? '▼' : '▲');
+}
+
+function pageLabel(page) {
+  const map = { profile: 'プロフィール', finance: '家計・資産', lifeevents: 'ライフイベント', retirement: '出口戦略', goals: '目標管理', insurance: '保険管理', inheritance: '相続・贈与' };
+  return map[page] || page;
+}
+
+// ===== C. イレギュラー対応ガイド =====
+function openIrregularGuide(anchor) {
+  const diagEl = document.getElementById('inputDiagnosisModal');
+  if (diagEl) diagEl.classList.remove('open');
+  const el = document.getElementById('irregularGuideModal');
+  if (!el) return;
+  el.classList.add('open');
+  // FAQ アコーディオン初期化（全部閉じてから対象を開く）
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.classList.remove('open');
+    const a = item.querySelector('.faq-a');
+    if (a) a.classList.remove('open');
+  });
+  if (anchor) {
+    const target = document.getElementById('faq-' + anchor);
+    if (target) {
+      target.classList.add('open');
+      const a = target.querySelector('.faq-a');
+      if (a) a.classList.add('open');
+      setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    }
+  }
+}
+function closeIrregularGuide() {
+  document.getElementById('irregularGuideModal').classList.remove('open');
+}
+
+// FAQアコーディオン（クリック）
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.faq-q').forEach(qEl => {
+    qEl.addEventListener('click', () => {
+      const item = qEl.closest('.faq-item');
+      const aEl  = item.querySelector('.faq-a');
+      const isOpen = item.classList.contains('open');
+      item.classList.toggle('open', !isOpen);
+      if (aEl) aEl.classList.toggle('open', !isOpen);
+    });
+  });
+});
 
 // ===== INIT =====
 load();
