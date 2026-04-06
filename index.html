@@ -2864,7 +2864,7 @@
           <option value="needs">🎯 最低限取り崩し（支出に合わせて補填・資産最大保全）</option>
           <option value="fixed_rate">📈 定率取り崩し（毎年資産の一定%を使う・4%ルール等）</option>
           <option value="fixed_amount">💴 定額取り崩し（毎月一定額を追加で使う）</option>
-          <option value="hybrid">🔄 切替型（前半は定率・後半は必要額補填）</option>
+          <option value="hybrid" selected>🔄 切替型（前半は定率・後半は必要額補填）</option>
         </select>
         <div style="margin-top:8px;padding:10px 12px;background:rgba(79,70,229,.06);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.7">
           💡 <b>取り崩し方式について</b>：方式の違いは「<b>毎年いくら引き出すか</b>」の戦略です。どの方式でも毎年の生活費は必ず確保します。<br>
@@ -9579,7 +9579,7 @@ function renderRetirementPage() {
   document.getElementById('retPensionMonthly_p').value = r.pensionMonthly_p || '';
   document.getElementById('retSeverance').value = r.severance || '';
   document.getElementById('retSeveranceAge').value = r.severanceAge || '';
-  document.getElementById('retWithdrawalType').value = r.withdrawalType || 'needs';
+  document.getElementById('retWithdrawalType').value = r.withdrawalType || 'hybrid';
   document.getElementById('retWithdrawalRate').value = r.withdrawalRate || 4;
   document.getElementById('retWithdrawalMonthly').value = r.withdrawalMonthly || '';
   document.getElementById('retHybridRate').value = r.withdrawalHybridRate || 4;
@@ -10146,7 +10146,7 @@ function calcRetirementSim() {
   const pensionAge = parseInt(r.pensionAge) || 65;
   const pensionAnnual   = (parseFloat(r.pensionMonthly)   || 0) * 12 * (1 - params.pensionSlide / 100);
   const pensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 - params.pensionSlide / 100);
-  const withdrawalType  = r.withdrawalType || 'needs';
+  const withdrawalType  = r.withdrawalType || 'hybrid';
   const withdrawalRate  = (parseFloat(r.withdrawalRate) || 4) / 100;
   const simYears        = lifeExpectancy - targetAge;
   // フェーズ別月支出（未入力の場合は①の値を引き継ぎ）
@@ -10365,7 +10365,7 @@ function runRetirementSim() {
   const reqLine = result.postData.map(() => result.requiredAssets);
 
   // ハイブリッドモード: フェーズ切替インデックスを検出（DOM優先で保存前の選択も反映）
-  const withdrawalTypeNow = document.getElementById('retWithdrawalType')?.value || (state.retirement || {}).withdrawalType || 'needs';
+  const withdrawalTypeNow = document.getElementById('retWithdrawalType')?.value || (state.retirement || {}).withdrawalType || 'hybrid';
   const hybridSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
   const hybridSwitchIdx = withdrawalTypeNow === 'hybrid'
     ? result.postData.findIndex(d => d.hybridPhase === 2)
@@ -10505,7 +10505,7 @@ function runRetirementSim() {
   breakdownCard.style.display = '';
   const showEvery = result.postData.length > 20 ? 5 : 1;
   const keyRows = result.postData.filter((d, i) => i % showEvery === 0 || d.depleted);
-  const withdrawalType = (state.retirement || {}).withdrawalType || 'needs';
+  const withdrawalType = (state.retirement || {}).withdrawalType || 'hybrid';
   const isFixedMode = withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount';
   const isHybridMode = withdrawalType === 'hybrid';
   // 余剰取り崩しが発生するモード
@@ -11257,7 +11257,7 @@ function calcRetirementSimWithOpts(opts = {}) {
   const basePensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
   const semiEndAge = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
   const extraIncomes = r.extraIncomes || [];
-  const withdrawalType = r.withdrawalType || 'needs';
+  const withdrawalType = r.withdrawalType || 'hybrid';
   const withdrawalRate = (parseFloat(r.withdrawalRate) || 4) / 100;
   const withdrawalAnnual = (parseFloat(r.withdrawalMonthly) || 0) * 12;
   const hybridP1Type = r.withdrawalHybridP1Type || 'rate';
@@ -11779,7 +11779,7 @@ function calcRetirementSimWithStress(stressShock) {
   const basePensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
   const semiEndAge = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
   const extraIncomes = r.extraIncomes || [];
-  const withdrawalType = r.withdrawalType || 'needs';
+  const withdrawalType = r.withdrawalType || 'hybrid';
   const withdrawalRate = (parseFloat(r.withdrawalRate) || 4) / 100;
   const withdrawalAnnual = (parseFloat(r.withdrawalMonthly) || 0) * 12;
   const hybridP1Type = r.withdrawalHybridP1Type || 'rate';
