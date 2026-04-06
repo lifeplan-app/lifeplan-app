@@ -7243,7 +7243,15 @@ function renderFinSummary() {
 function renderFinCharts() {
   const f = state.finance;
   const income = f.income || 0, expense = f.expense || 0;
-  const balance = Math.max(0, income - expense);
+
+  // ローン返済 / 家賃を取得（finSummaryと同じロジック）
+  const le = state.lifeEvents || {};
+  let monthlyHousing = 0;
+  if (le.housingType === 'rent' && le.rent?.monthly) {
+    monthlyHousing = parseFloat(le.rent.monthly) || 0;
+  } else if ((le.housingType === 'mortgage' || !le.housingType) && le.mortgage?.monthlyPayment) {
+    monthlyHousing = parseFloat(le.mortgage.monthlyPayment) || 0;
+  }
 
   // ★ B方式：アセット月積立合計を計算
   const assets = state.assets || [];
@@ -7252,18 +7260,29 @@ function renderFinCharts() {
     const isActive = (!a.startYear || currentYear >= a.startYear) && (!a.endYear || currentYear <= a.endYear);
     return s + (isActive ? (a.monthly || 0) : 0);
   }, 0);
-  // 手元余剰 = 月収 − 生活費 − 積立合計
-  const surplus = Math.max(0, income - expense - monthlyContribTotal);
+  // 手元余剰 = 月収 − 生活費 − ローン返済 − 積立合計
+  const surplus = Math.max(0, income - expense - monthlyHousing - monthlyContribTotal);
 
-  // Pie（生活費 + 積立 + 手元余剰 = 収入）
+  // Pie（生活費 + ローン返済 + 積立 + 手元余剰 = 収入）
   const ctx1 = document.getElementById('finChart').getContext('2d');
   if (finChartObj) finChartObj.destroy();
+  const chartLabels = ['生活費'];
+  const chartData   = [expense];
+  const chartColors = ['#EF4444'];
+  if (monthlyHousing > 0) {
+    chartLabels.push(le.housingType === 'rent' ? '家賃' : 'ローン返済');
+    chartData.push(monthlyHousing);
+    chartColors.push('#F97316');
+  }
+  chartLabels.push('積立・投資', '手元余剰');
+  chartData.push(monthlyContribTotal, surplus);
+  chartColors.push('#10B981', '#4F46E5');
+
   finChartObj = new Chart(ctx1, {
     type: 'doughnut',
     data: {
-      labels: ['生活費', '積立・投資', '手元余剰'],
-      datasets: [{ data: [expense, monthlyContribTotal, surplus],
-        backgroundColor: ['#EF4444','#10B981','#4F46E5'], borderWidth: 0 }]
+      labels: chartLabels,
+      datasets: [{ data: chartData, backgroundColor: chartColors, borderWidth: 0 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
