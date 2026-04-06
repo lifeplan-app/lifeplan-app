@@ -10374,7 +10374,9 @@ function runRetirementSim() {
   // ハイブリッドモード: スライダーを表示・初期値セット
   const sliderArea = document.getElementById('retChartSliderArea');
   if (sliderArea) {
-    const isHybridNow = (state.retirement || {}).withdrawalType === 'hybrid';
+    // DOM優先（保存前の選択中状態も正しく反映）、なければstateで判断
+    const domType = document.getElementById('retWithdrawalType')?.value;
+    const isHybridNow = (domType || (state.retirement || {}).withdrawalType) === 'hybrid';
     sliderArea.style.display = isHybridNow ? '' : 'none';
     if (isHybridNow) {
       const slider = document.getElementById('retChartSwitchSlider');
