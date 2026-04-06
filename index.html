@@ -2519,8 +2519,10 @@
       <div class="chart-wrap-tall"><canvas id="leStackedChart"></canvas></div>
       <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:20px 0 6px">年間キャッシュフロー（黒字 / 赤字）</div>
       <div class="chart-wrap-tall"><canvas id="leCashFlowChart"></canvas></div>
-      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:20px 0 6px">子どもあり vs なし の貯蓄比較</div>
-      <div class="chart-wrap-tall"><canvas id="leCompareChart"></canvas></div>
+      <div id="leCompareSection">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:20px 0 6px">子どもあり vs なし の貯蓄比較</div>
+        <div class="chart-wrap-tall"><canvas id="leCompareChart"></canvas></div>
+      </div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
       <button class="btn btn-primary" onclick="saveLifeEvents();showPage('goals')" style="padding:11px 28px;font-size:14px;border-radius:12px">
@@ -9261,8 +9263,13 @@ function renderLifeEventCharts() {
     wo = Math.round((wo + annualBase - cNoChild.mortgage - cNoChild.care) * 10) / 10;
     withArr.push(w); withoutArr.push(wo);
   }
+  // 子どもが1人以上登録されている場合のみ比較チャートを表示
+  const hasChildren = (state.lifeEvents?.children || []).length > 0;
+  const leCompareSection = document.getElementById('leCompareSection');
+  if (leCompareSection) leCompareSection.style.display = hasChildren ? '' : 'none';
+
   const ctx2 = document.getElementById('leCompareChart')?.getContext('2d');
-  if (ctx2) {
+  if (ctx2 && hasChildren) {
     if (leCompareChartObj) leCompareChartObj.destroy();
     leCompareChartObj = new Chart(ctx2, {
       type: 'line',
