@@ -3923,6 +3923,18 @@
       </div>
     </div>
 
+    <!-- NISA枠上限到達後の振替先 -->
+    <div id="amNisaOverflowWrap" style="display:none;background:#EEF2FF;border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:#3730A3;margin-bottom:6px">🔄 NISA枠が埋まったら</div>
+      <div id="amNisaFillEstimate" style="font-size:12px;color:#4338CA;margin-bottom:8px;line-height:1.6"></div>
+      <div class="form-group" style="margin:0">
+        <label>積立先を変更する <span style="font-size:11px;color:var(--text-muted);font-weight:400">NISA上限到達後の余剰分を振替</span></label>
+        <select id="amNisaOverflowTarget">
+          <option value="">振替なし（積立停止のみ）</option>
+        </select>
+      </div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>期待年利（%）</label>
@@ -5414,6 +5426,8 @@ function onAssetTypeChange() {
   // NISA生涯枠フィールドの表示切替（新NISAのみ）
   const isNewNisa = (type === 'nisa_tsumitate' || type === 'nisa_growth');
   document.getElementById('amNisaBasisWrap').style.display = isNewNisa ? '' : 'none';
+  document.getElementById('amNisaOverflowWrap').style.display = isNewNisa ? '' : 'none';
+  if (isNewNisa) { updateNisaOverflowSelect(); checkAssetLimit(); }
 
   // 旧NISA：新規積み立て不可の専用UI
   const isOldNisa = (type === 'nisa_old_tsumitate' || type === 'nisa_old_general');
@@ -5482,6 +5496,24 @@ function onDividendChange() {
     modeWrap.style.display = 'none';
     modeNote.style.display = 'none';
   }
+}
+
+function updateNisaOverflowSelect() {
+  const sel = document.getElementById('amNisaOverflowTarget');
+  if (!sel) return;
+  const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">振替なし（積立停止のみ）</option>';
+  (state.assets || [])
+    .filter(a => a.id !== editingId && !['nisa_tsumitate', 'nisa_growth'].includes(a.type))
+    .forEach(a => {
+      const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = `${t.emoji} ${a.name || t.label}`;
+      sel.appendChild(opt);
+    });
+  if (current) sel.value = current;
 }
 
 function updateTargetAssetSelect() {
@@ -5616,6 +5648,23 @@ function checkAssetLimit() {
           : `<span>上限到達（${totalUsed.toLocaleString()}万円 / 1,800万円）</span>`;
         remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
       }
+      // NISA枠完了年の試算
+      const otherNisaAnnual = (state.assets || [])
+        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId)
+        .reduce((s, a) => s + (a.monthly || 0) * 12 + (a.annualBonus || 0), 0);
+      const totalNisaAnnual = monthly * 12 + annualBonus + otherNisaAnnual;
+      const estimateEl = document.getElementById('amNisaFillEstimate');
+      if (estimateEl) {
+        if (remaining <= 0) {
+          estimateEl.innerHTML = '✅ NISA生涯枠はすでに使用済みです。積立は停止されます。';
+        } else if (totalNisaAnnual > 0) {
+          const yearsLeft = Math.ceil(remaining / totalNisaAnnual);
+          const fillYear = new Date().getFullYear() + yearsLeft;
+          estimateEl.innerHTML = `📅 現在のペースで <strong>約${yearsLeft}年後（${fillYear}年頃）</strong> にNISA枠が埋まります。<br><span style="font-size:11px;color:var(--text-muted)">全NISAアセット合計 年${totalNisaAnnual.toLocaleString()}万円の積立</span>`;
+        } else {
+          estimateEl.innerHTML = '';
+        }
+      }
       if (totalUsed >= combinedLimit) {
         warns.push(`積立枠＋成長枠の累計元本合計 ${totalUsed.toLocaleString()}万円 が生涯非課税枠(1,800万円)に達しています`);
       }
@@ -5705,10 +5754,16 @@ function openAssetModal(id) {
     }
   }, 10);
   // 振替先は onAssetTypeChange → updateTargetAssetSelect() で再構築してから設定
-  const savedOverflow = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId || '') : '';
+  const savedOverflow      = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId     || '') : '';
+  const savedNisaOverflow  = id ? (state.assets.find(x=>x.id===id)?.nisaOverflowTargetId || '') : '';
   setTimeout(() => {
     const sel = document.getElementById('amOverflowTarget');
     if (sel && savedOverflow) sel.value = savedOverflow;
+    if (savedNisaOverflow) {
+      updateNisaOverflowSelect();
+      const nSel = document.getElementById('amNisaOverflowTarget');
+      if (nSel) nSel.value = savedNisaOverflow;
+    }
     updateTargetNote();
   }, 0);
   updateEndYearPreview();
@@ -5732,6 +5787,7 @@ function saveAsset() {
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
     dividendMode: document.getElementById('amDividendMode').value || 'reinvest',
     nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
+    nisaOverflowTargetId: document.getElementById('amNisaOverflowTarget')?.value || '',
     targetVal: parseFloat(document.getElementById('amTargetVal').value) || 0,
     overflowTargetId: document.getElementById('amOverflowTarget').value || '',
     startYear: parseInt(document.getElementById('amStartYear').value) || null,
@@ -5908,32 +5964,109 @@ function calcAssetGrowth(a, years, extraContribs = []) {
 }
 
 // 全アセットの成長データを2パスで計算（振替元→振替先の依存を解決）
+// 新NISA（積立枠・成長枠）は合算1800万円プールで年ごとに制御
 // 戻り値: [{ asset, data: values[], overflows: [] }, ...]
 function calcAllAssetGrowth(assets, years) {
   years = Math.max(1, parseInt(years) || (state.finance?.simYears || 20));
-  // パス1: 全アセットを個別に計算（extraContribs なし）
-  const firstPass = assets.map(a => {
+  const currentYear = new Date().getFullYear();
+  const NISA_NEW = ['nisa_tsumitate', 'nisa_growth'];
+  const NISA_COMBINED_LIMIT = 1800;
+
+  // 新NISAと非NISAに分離
+  const nisaAssets  = assets.filter(a => NISA_NEW.includes(a.type));
+  const otherAssets = assets.filter(a => !NISA_NEW.includes(a.type));
+
+  // 非NISAアセット：従来通り個別計算
+  const otherPass = otherAssets.map(a => {
     const r = calcAssetGrowth(a, years);
     return { asset: a, data: r.values, overflows: r.overflows };
   });
 
-  // 振替設定があるアセットを抽出
-  // 振替元の条件: overflowTargetId が設定済み かつ 実際にoverflowが発生している
-  // （目標金額到達 OR NISA生涯枠到達 どちらの場合も振替対象）
-  const hasOverflow = firstPass.filter(g => g.asset.overflowTargetId && g.overflows.some(v => v > 0));
+  // 新NISAアセット：合算プールを年ごとに按分
+  const combinedBasis0 = nisaAssets.reduce((s, a) => s + (a.nisaBasis || 0), 0);
+  let nisaPoolRemaining = Math.max(0, NISA_COMBINED_LIMIT - combinedBasis0);
+
+  const nisaStates = nisaAssets.map(a => {
+    const t = ASSET_TYPES[a.type] || {};
+    const divRate = (a.dividendMode === 'cashout' && a.dividendYield) ? a.dividendYield / 100 : 0;
+    return {
+      asset: a,
+      values: [a.currentVal || 0],
+      overflows: [0],
+      growthRate: Math.max(0, (a.annualReturn || 0) / 100 - divRate),
+      annualLimit: t.annualLimit || null,
+      targetVal: a.targetVal || 0,
+    };
+  });
+
+  for (let y = 1; y <= years; y++) {
+    const yr = currentYear + y;
+
+    // 各NISAアセットの「希望積立額」（プール・年間上限・目標・稼働期間 考慮前）
+    const desired = nisaStates.map(s => {
+      const a = s.asset;
+      const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
+      if (!isActive) return 0;
+      if (s.targetVal > 0 && s.values[y - 1] >= s.targetVal) return 0; // 目標達成済み
+      let c = (a.monthly || 0) * 12 + (a.annualBonus || 0);
+      if (c > 0 && s.annualLimit) c = Math.min(c, s.annualLimit); // 年間上限
+      return c;
+    });
+
+    const totalDesired = desired.reduce((s, v) => s + v, 0);
+
+    // 合算プールで按分キャップ
+    const actual = desired.map(d => {
+      if (d <= 0 || nisaPoolRemaining <= 0) return 0;
+      return totalDesired <= nisaPoolRemaining ? d : (d / totalDesired) * nisaPoolRemaining;
+    });
+    nisaPoolRemaining = Math.max(0, nisaPoolRemaining - actual.reduce((s, v) => s + v, 0));
+
+    // 成長計算
+    nisaStates.forEach((s, i) => {
+      const prev = s.values[y - 1];
+      const rate = effectiveReturn(s.growthRate, 'nisa');
+      const contrib = actual[i];
+      const overflow = Math.max(0, Math.round((desired[i] - contrib) * 10) / 10);
+      let finalVal = Math.round((rate === 0 ? prev + contrib : prev * (1 + rate) + contrib) * 10) / 10;
+      // 目標達成の年：超過分をoverflowへ
+      if (s.targetVal > 0 && prev < s.targetVal && finalVal > s.targetVal) {
+        s.overflows.push(Math.round((overflow + finalVal - s.targetVal) * 10) / 10);
+        finalVal = s.targetVal;
+      } else {
+        s.overflows.push(overflow);
+      }
+      s.values.push(finalVal);
+    });
+  }
+
+  const nisaPass = nisaStates.map(s => ({ asset: s.asset, data: s.values, overflows: s.overflows }));
+
+  // 元の順序に戻して結合
+  const firstPass = assets.map(a =>
+    nisaPass.find(r => r.asset === a) || otherPass.find(r => r.asset === a)
+  );
+
+  // パス2: 振替先アセットへ余剰を上乗せして再計算
+  // NISAアセット → nisaOverflowTargetId を優先、それ以外 → overflowTargetId
+  const hasOverflow = firstPass.filter(g => {
+    const tid = NISA_NEW.includes(g.asset.type)
+      ? (g.asset.nisaOverflowTargetId || g.asset.overflowTargetId)
+      : g.asset.overflowTargetId;
+    return tid && g.overflows.some(v => v > 0);
+  });
   if (hasOverflow.length === 0) return firstPass;
 
-  // パス2: 振替先アセットに余剰を上乗せして再計算
-  // 振替先ごとに累積extraContribsを構築
-  const extraMap = {}; // assetId -> extraContribs[]
+  const extraMap = {};
   hasOverflow.forEach(g => {
-    const tid = g.asset.overflowTargetId;
+    const tid = NISA_NEW.includes(g.asset.type)
+      ? (g.asset.nisaOverflowTargetId || g.asset.overflowTargetId)
+      : g.asset.overflowTargetId;
     if (!tid) return;
     if (!extraMap[tid]) extraMap[tid] = new Array(years + 1).fill(0);
     g.overflows.forEach((v, y) => { extraMap[tid][y] += v; });
   });
 
-  // 振替先アセットを再計算
   return firstPass.map(g => {
     const extra = extraMap[g.asset.id];
     if (!extra) return g;
