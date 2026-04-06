@@ -3065,7 +3065,7 @@
           <div class="basis-section-title">🏖️ 必要資産額の計算</div>
           <div class="basis-item">
             <div class="basis-label">計算方式</div>
-            <div class="basis-desc">3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。</div>
+            <div class="basis-desc" id="retBasisCalcMethod">3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。</div>
           </div>
           <div class="basis-item">
             <div class="basis-label">インフレ調整</div>
@@ -10185,24 +10185,59 @@ function calcRetirementSim() {
   const discount = (pv, years, rate) =>
     years <= 0 ? pv : pv / Math.pow(1 + Math.max(0, rate), years);
 
+  // 目標残資産（死亡時に残したい額）
+  const residualAssets = Math.round(parseFloat(r.residualAssets) || 0);
   let requiredAssets;
+  let requiredAssetsLabel;
+
   if (withdrawalType === 'fixed_rate') {
-    // 4%ルール：加重平均年間必要額で試算
-    const totalNeed = p1Need * p1Years + p2Need * p2Years + p3Need * p3Years;
-    const blendedNeed = simYears > 0 ? totalNeed / simYears : p3Need;
-    requiredAssets = blendedNeed / withdrawalRate;
+    // 定率: 年間支出の加重平均 ÷ 取り崩し率（4%ルール等）
+    // ※ 以下の blendedNeed で実際に計算するため totalNeed は不使用（削除可能だが残す）
+    const blendedNeed = simYears > 0
+      ? (p1Need * p1Years + p2Need * p2Years + p3Need * p3Years) / simYears
+      : p3Need;
+    requiredAssets = Math.round(blendedNeed / withdrawalRate) + residualAssets;
+    const rateLabel = Math.round(withdrawalRate * 100);
+    requiredAssetsLabel = `定率${rateLabel}%ルール目標額（年支出÷${rateLabel}%）`;
+
+  } else if (withdrawalType === 'hybrid') {
+    // 切替型: フェーズ②（補填期）の必要資産をフェーズ①（定率期）の純成長率で逆算
+    const hybridSwitchAge = parseInt(document.getElementById('retHybridSwitchAge')?.value)
+      || parseInt(r.withdrawalHybridSwitchAge) || 75;
+    const hybridRate   = (parseFloat(r.withdrawalHybridRate) || 4) / 100;
+    const hybridP1Type = r.withdrawalHybridP1Type || 'rate';
+    const switchYears  = Math.max(0, hybridSwitchAge - targetAge);
+
+    // フェーズ②（hybridSwitchAge〜余命）の必要資産PVを切替時点で算出
+    const ph2NoPensionYrs = Math.max(0, Math.min(pensionAge, lifeExpectancy) - hybridSwitchAge);
+    const ph2PensionYrs   = Math.max(0, lifeExpectancy - Math.max(pensionAge, hybridSwitchAge));
+    const pv_nopension = pvAnnuity(p2Need, ph2NoPensionYrs, weightedReturn);
+    const pv_pension   = discount(pvAnnuity(p3Need, ph2PensionYrs, weightedReturn), ph2NoPensionYrs, weightedReturn);
+    const pv_at_switch = pv_nopension + pv_pension + residualAssets;
+
+    if (hybridP1Type === 'rate' && switchYears > 0) {
+      // フェーズ①の純成長率（利回り − 取り崩し率）でリタイア時点まで割り戻す
+      const netGrowthFactor = Math.pow(1 + weightedReturn - hybridRate, switchYears);
+      requiredAssets = netGrowthFactor > 0.05
+        ? Math.round(pv_at_switch / netGrowthFactor)
+        : Math.round(pv_at_switch); // 純成長率が極端に低い場合は切替時点PVをそのまま使用
+    } else {
+      // 定額フェーズ①: 全期間PV法にフォールバック
+      const pv1 = pvAnnuity(p1Need, p1Years, weightedReturn);
+      const pv2 = discount(pvAnnuity(p2Need, p2Years, weightedReturn), p1Years, weightedReturn);
+      const pv3 = discount(pvAnnuity(p3Need, p3Years, weightedReturn), p1Years + p2Years, weightedReturn);
+      requiredAssets = Math.round(pv1 + pv2 + pv3) + residualAssets;
+    }
+    requiredAssetsLabel = `切替型必要資産（${hybridSwitchAge}歳切替・逆算）`;
+
   } else {
-    // 取り崩し（必要額ベース）：3期間PV を退職時点に割り戻す
+    // needs / fixed_amount: 3期間PV法
     const pv1 = pvAnnuity(p1Need, p1Years, weightedReturn);
     const pv2 = discount(pvAnnuity(p2Need, p2Years, weightedReturn), p1Years, weightedReturn);
     const pv3 = discount(pvAnnuity(p3Need, p3Years, weightedReturn), p1Years + p2Years, weightedReturn);
-    requiredAssets = pv1 + pv2 + pv3;
+    requiredAssets = Math.round(pv1 + pv2 + pv3) + residualAssets;
+    requiredAssetsLabel = '必要資産ライン（3期間PV法）';
   }
-  requiredAssets = Math.round(requiredAssets);
-
-  // 目標残資産（死亡時に残したい額）を必要資産に上乗せ
-  const residualAssets = Math.round(parseFloat(r.residualAssets) || 0);
-  requiredAssets += residualAssets;
 
   // When can you retire? (first year projected assets >= required)
   const longSim = calcIntegratedSim(40);
@@ -10223,6 +10258,7 @@ function calcRetirementSim() {
   return {
     assetsAtRetire: Math.round(assetsAtRetire),
     requiredAssets,
+    requiredAssetsLabel,
     residualAssets,
     shortfall: Math.max(0, requiredAssets - Math.round(assetsAtRetire)),
     surplus: Math.max(0, Math.round(assetsAtRetire) - requiredAssets),
@@ -10424,7 +10460,7 @@ function runRetirementSim() {
             : '#4F46E5',
         },
         {
-          label: '必要資産ライン',
+          label: result.requiredAssetsLabel || '必要資産ライン',
           data: reqLine,
           borderColor: '#FF9500',
           borderDash: [6, 4],
@@ -10473,6 +10509,18 @@ function runRetirementSim() {
       if (slider) slider.value = switchAge;
       if (label)  label.textContent = `${switchAge}歳`;
     }
+  }
+
+  // 算出根拠の説明文をモード別に更新
+  const basisCalcMethodEl = document.getElementById('retBasisCalcMethod');
+  if (basisCalcMethodEl) {
+    const methodDescMap = {
+      fixed_rate:   `定率取り崩し（${Math.round((parseFloat(state.retirement?.withdrawalRate)||4)}%ルール）。年間必要額の加重平均 ÷ 取り崩し率 で必要資産を算出します。資産残高に比例して取り崩すため理論上は枯渇しませんが、生活費を下回る場合は補填します。`,
+      hybrid:       `切替型（前半定率→後半補填）。後半フェーズ（補填期）の必要資産PVを切替年齢時点で算出し、前半フェーズの純成長率（利回り－取り崩し率）でリタイア時点まで割り戻します。`,
+      needs:        `3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。`,
+      fixed_amount: `3フェーズ現在価値（PV）法 ＋ 定額上乗せ。基本生活費に毎月の追加取り崩し額を加えた総支出を3期間に分けてPV計算します。`,
+    };
+    basisCalcMethodEl.textContent = methodDescMap[withdrawalTypeNow] || methodDescMap.needs;
   }
 
   // ④ 年金損益分岐 + ⑤ シナリオ比較 + ⑫ 感度分析 + ⑩ モンテカルロ
