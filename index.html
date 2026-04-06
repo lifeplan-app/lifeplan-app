@@ -11346,7 +11346,9 @@ function calcRetirementSimWithOpts(opts = {}) {
     const inflatedExpense = phaseExpense * 12 * expenseChangeFactor * (1 + expenseMod);
     // ⑥ 医療費増加
     const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
-    const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd;
+    // ⑦ 繰り返し支出（excludeYears 除外済み）
+    const recurringCost = getRecurringExpenseForYear(yr);
+    const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd + recurringCost;
 
     const severanceThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
     if (severanceThisYear > 0) assets += severanceThisYear;
@@ -11427,6 +11429,7 @@ function calcRetirementSimWithOpts(opts = {}) {
       medicalAdd: Math.round(medicalAdd),
       mortgageDeduct: Math.round(mortgageDeduct),
       leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care),
+      recurringCost: Math.round(recurringCost),
       monthlyBalance,
       annualSurplus,
       annualDeficit,
