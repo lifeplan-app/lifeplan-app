@@ -1602,21 +1602,10 @@
   }
 
   /* ===== 印刷 / PDF出力 ===== */
+  /* PDF出力は別ウィンドウで行うため、メインページの @media print は最小限 */
   @media print {
-    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    body { background: white !important; color: #000 !important; font-size: 11pt; }
-    header, nav, .header-actions, #dashAlerts,
-    .btn, button, input, select, textarea,
-    #dbAssetChartCard, .modal-overlay { display: none !important; }
-    main { padding: 0 !important; margin: 0 !important; }
-    .page { display: none !important; }
-    .page.active { display: block !important; }
-    #print-report { display: block !important; }
-    .page.active > *:not(#print-report) { display: none !important; }
-    .card { border: 1px solid #ddd !important; background: white !important; box-shadow: none !important; break-inside: avoid; }
-    .print-page-break { page-break-before: always; }
+    body { display: none !important; }
   }
-  #print-report { display: none; }
   </style>
 </head>
 <body>
@@ -1798,10 +1787,10 @@
           <div style="font-size:22px;font-weight:700;color:#4ADE80" id="dbRetireYears">—</div>
         </div>
       </div>
-      <!-- FIRE達成率プログレスバー -->
+      <!-- リタイア積立進捗プログレスバー -->
       <div id="dbFireWrap" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;color:rgba(255,255,255,.7)" id="dbFireLabel">FIRE達成率</span>
+          <span style="font-size:12px;color:rgba(255,255,255,.7)" id="dbFireLabel">リタイア積立進捗</span>
           <span style="font-size:14px;font-weight:700;color:#4ADE80" id="dbFirePct">0%</span>
         </div>
         <div style="height:8px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden">
@@ -2872,23 +2861,72 @@
       <div class="form-group">
         <label>取り崩し方式</label>
         <select id="retWithdrawalType" onchange="updateWithdrawalUI()">
-          <option value="needs">必要額のみ取り崩し（収入不足分を補填）</option>
-          <option value="fixed_rate">定率取り崩し（4%ルールなど）</option>
-          <option value="fixed_amount">定額取り崩し</option>
-          <option value="dividend">配当・運用益のみ生活（元本温存）</option>
+          <option value="needs">🎯 最低限取り崩し（支出に合わせて補填・資産最大保全）</option>
+          <option value="fixed_rate">📈 定率取り崩し（毎年資産の一定%を使う・4%ルール等）</option>
+          <option value="fixed_amount">💴 定額取り崩し（毎月一定額を追加で使う）</option>
+          <option value="hybrid">🔄 切替型（前半は定率・後半は必要額補填）</option>
         </select>
+        <div style="margin-top:8px;padding:10px 12px;background:rgba(79,70,229,.06);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.7">
+          💡 <b>取り崩し方式について</b>：方式の違いは「<b>毎年いくら引き出すか</b>」の戦略です。どの方式でも毎年の生活費は必ず確保します。<br>
+          シミュレーションの目的は「<b>いつ枯渇するか／しないか</b>」「<b>どの生活水準なら長期間維持できるか</b>」を把握することです。資産が余命を超えて持続するのも、もちろんOKです。
+        </div>
       </div>
       <div id="retWithdrawalRateRow" style="display:none" class="form-row">
         <div class="form-group">
           <label>年間取り崩し率 %</label>
           <input type="number" id="retWithdrawalRate" value="4" min="0.5" max="20" step="0.1">
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">4%ルール：毎年資産の4%を取り崩す（Trinity Study）</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">4%ルール：毎年資産の4%を取り崩す（Trinity Study）。生活費より多ければ余剰は自由に使えます</div>
         </div>
       </div>
       <div id="retWithdrawalAmountRow" style="display:none" class="form-row">
         <div class="form-group">
-          <label>月間取り崩し額 万円</label>
+          <label>月間追加取り崩し額 万円</label>
           <input type="number" id="retWithdrawalMonthly" placeholder="10" min="0">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">生活費補填に加えて、毎月この額を追加で取り崩します（旅行・趣味など余裕資金）</div>
+        </div>
+      </div>
+      <input type="hidden" id="retHybridP1TypeHidden" value="rate">
+      <div id="retHybridRow" style="display:none;background:#F5F3FF;border-radius:12px;padding:12px 14px;margin-top:8px">
+        <div style="font-size:12px;font-weight:600;color:#5B21B6;margin-bottom:10px">🔄 切替型 取り崩し設定</div>
+        <div style="font-size:12px;color:#6D28D9;margin-bottom:10px;line-height:1.7">
+          <b>フェーズ①（〜切替年齢）</b>：定率または定額で積極的に取り崩す（体が動くうちに充実した生活）<br>
+          <b>フェーズ②（切替年齢〜）</b>：必要額のみ補填に切替（枯渇リスクを抑えて安定）
+        </div>
+        <!-- フェーズ①の方式選択 -->
+        <div class="form-group" style="margin-bottom:10px">
+          <label>① 前半の取り崩し方式</label>
+          <div style="display:flex;gap:8px">
+            <button id="hybridP1BtnRate" class="btn btn-sm"
+              style="flex:1;background:#7C3AED;color:white;border:none"
+              onclick="setHybridP1Type('rate')">📈 定率取り崩し</button>
+            <button id="hybridP1BtnAmount" class="btn btn-sm"
+              style="flex:1;background:white;color:#7C3AED;border:1.5px solid #7C3AED"
+              onclick="setHybridP1Type('amount')">💴 定額取り崩し</button>
+          </div>
+        </div>
+        <!-- 定率入力（デフォルト表示） -->
+        <div id="hybridP1RateRow" class="form-row" style="margin-bottom:0">
+          <div class="form-group">
+            <label>取り崩し率 %</label>
+            <input type="number" id="retHybridRate" value="4" min="0.5" max="20" step="0.1" oninput="saveRetirementField()">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">毎年 資産×この率 を取り崩し（例：4%）</div>
+          </div>
+        </div>
+        <!-- 定額入力（切替時表示） -->
+        <div id="hybridP1AmountRow" class="form-row" style="display:none;margin-bottom:0">
+          <div class="form-group">
+            <label>月間取り崩し額 万円</label>
+            <input type="number" id="retHybridMonthly" value="20" min="0" step="1" oninput="saveRetirementField()">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">毎月この額を取り崩し（生活費補填 + この額が引き出し総額）</div>
+          </div>
+        </div>
+        <!-- 切替年齢 -->
+        <div class="form-row" style="margin-top:10px;margin-bottom:0">
+          <div class="form-group">
+            <label>② 切替年齢（歳）</label>
+            <input type="number" id="retHybridSwitchAge" value="75" min="60" max="100" step="1" oninput="saveRetirementField()">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">この年齢から必要額補填モードに切替</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2899,6 +2937,17 @@
     <div id="retStressCard" style="display:none"></div>
     <div class="card" id="retChartCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#EEF2FF">📈</span>資産推移（リタイア後）</div>
+      <!-- ハイブリッドモード専用: スライダーでリアルタイムに切替年齢を調整 -->
+      <div id="retChartSliderArea" style="display:none;background:#F5F3FF;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:600;color:#5B21B6;white-space:nowrap">🔄 切替年齢</span>
+          <input type="range" id="retChartSwitchSlider" min="60" max="100" step="1" value="75"
+            style="flex:1;min-width:120px;accent-color:#8B5CF6"
+            oninput="onHybridSliderChange(this.value)">
+          <span id="retChartSliderLabel" style="font-size:14px;font-weight:700;color:#5B21B6;min-width:50px;text-align:center">75歳</span>
+        </div>
+        <div style="font-size:11px;color:#6D28D9;margin-top:4px">スライダーを動かすとリアルタイムで結果が更新されます</div>
+      </div>
       <div style="position:relative;height:300px"><canvas id="retChart"></canvas></div>
     </div>
     <div class="card" id="retBreakdownCard" style="display:none">
@@ -4388,100 +4437,251 @@ function printLifePlan() {
   const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
   const totalAssets = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const currentYear = now.getFullYear();
-  const monthlyCF = Math.round((getIncomeForYear(currentYear) - getExpenseForYear(currentYear)) / 12);
+  const annualIncome = getIncomeForYear(currentYear);
+  const annualExpense = getExpenseForYear(currentYear);
+  const monthlyCF = Math.round((annualIncome - annualExpense) / 12);
   const annualDiv = state.assets.reduce((s, a) => s + (a.dividendYield ? Math.round((a.currentVal||0)*a.dividendYield/100) : 0), 0);
 
   let retResult = null;
   try { retResult = calcRetirementSim(); } catch(e) {}
 
   // 目標サマリー
-  const goalsHtml = state.goals.slice(0, 8).map(g => {
+  const goalsHtml = state.goals.slice(0, 10).map(g => {
     const pct = calcGoalProgress(g);
     const cat = CATS[g.category] || { label: g.category, emoji: '🎯' };
-    return `<tr><td>${cat.emoji} ${escHtml(g.title)}</td><td>${g.year || '—'}年</td><td><div style="width:100px;height:8px;background:#eee;border-radius:4px;display:inline-block"><div style="width:${pct}%;height:100%;background:#3B82F6;border-radius:4px"></div></div> ${pct}%</td></tr>`;
+    const barW = Math.min(100, pct);
+    return `<tr>
+      <td style="padding:6px 10px">${cat.emoji} ${escHtml(g.title)}</td>
+      <td style="padding:6px 10px;text-align:center">${g.year || '—'}年</td>
+      <td style="padding:6px 10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:8px;background:#E2E8F0;border-radius:4px">
+            <div style="width:${barW}%;height:100%;background:${barW>=100?'#16A34A':'#3B82F6'};border-radius:4px"></div>
+          </div>
+          <span style="font-size:9pt;color:#475569;width:32px;text-align:right">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
   }).join('');
 
-  // 資産サマリー
-  const assetsHtml = state.assets.slice(0, 6).map(a => {
+  // 資産一覧
+  const assetsHtml = state.assets.map(a => {
     const t = ASSET_TYPES[a.type] || { label: a.type, emoji: '💰' };
-    return `<tr><td>${t.emoji} ${escHtml(a.name)}</td><td style="text-align:right">${fmtMoney(a.currentVal || 0)}</td><td style="text-align:right">${a.annualReturn ?? '—'}%</td></tr>`;
+    return `<tr>
+      <td style="padding:6px 10px">${t.emoji} ${escHtml(a.name)}</td>
+      <td style="padding:6px 10px;text-align:center">${t.label || a.type}</td>
+      <td style="padding:6px 10px;text-align:right;font-weight:600">${fmtMoney(a.currentVal || 0)}</td>
+      <td style="padding:6px 10px;text-align:right">${a.annualReturn != null ? a.annualReturn+'%' : '—'}</td>
+    </tr>`;
   }).join('');
 
-  // 保険サマリー
-  const insHtml = (state.insurance?.items || []).slice(0, 5).map(i => {
-    return `<tr><td>${INS_TYPE_ICONS[i.type]||'📋'} ${escHtml(i.name || INS_TYPE_LABELS[i.type])}</td><td style="text-align:right">${i.coverage ? fmtMoney(i.coverage) : '—'}</td><td style="text-align:right">${i.premium}万円/月</td></tr>`;
+  // 収支サマリー
+  const incomes = (state.income?.items || []);
+  const expenses = (state.expenses?.items || []);
+  const incomeHtml = incomes.slice(0, 6).map(i =>
+    `<tr><td style="padding:5px 10px">${escHtml(i.name||i.type||'収入')}</td><td style="padding:5px 10px;text-align:right">${fmtMoney(i.annualAmount||0)}/年</td></tr>`
+  ).join('');
+  const expenseHtml = expenses.slice(0, 6).map(i =>
+    `<tr><td style="padding:5px 10px">${escHtml(i.name||i.category||'支出')}</td><td style="padding:5px 10px;text-align:right">${fmtMoney(i.annualAmount||i.monthlyAmount*12||0)}/年</td></tr>`
+  ).join('');
+
+  // 保険一覧
+  const insHtml = (state.insurance?.items || []).map(i => {
+    return `<tr>
+      <td style="padding:6px 10px">${INS_TYPE_ICONS[i.type]||'📋'} ${escHtml(i.name || INS_TYPE_LABELS[i.type] || i.type)}</td>
+      <td style="padding:6px 10px;text-align:right">${i.coverage ? fmtMoney(i.coverage) : '—'}</td>
+      <td style="padding:6px 10px;text-align:right">${i.premium != null ? i.premium+'万円/月' : '—'}</td>
+    </tr>`;
   }).join('');
 
-  const reportEl = document.getElementById('print-report');
-  reportEl.innerHTML = `
-    <div style="font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px">
-      <div style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #3B82F6">
-        <h1 style="font-size:22pt;margin:0;color:#1E293B">ライフプランレポート</h1>
-        <p style="color:#64748B;margin:6px 0 0">${escHtml(p.name || '')}${age ? ` (${age}歳)` : ''} ／ 作成日: ${dateStr}</p>
-      </div>
+  // リタイア取り崩し方式ラベル
+  const withdrawalLabels = {
+    needs: '最低限取り崩し（支出補填）',
+    fixed_rate: `定率取り崩し（${state.retirement?.withdrawalRate || 4}%）`,
+    fixed_amount: `定額取り崩し（月${state.retirement?.withdrawalMonthly || 0}万円）`,
+    hybrid: '切替型（前半定率→後半補填）',
+  };
+  const withdrawalLabel = withdrawalLabels[state.retirement?.withdrawalType] || '—';
 
-      <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px;margin:20px 0 10px">財務サマリー</h2>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
-        <tr style="background:#F1F5F9">
-          <td style="padding:8px 12px;width:50%"><strong>現在の総資産</strong></td>
-          <td style="padding:8px 12px;font-size:14pt;font-weight:700;color:#1E293B">${fmtMoney(totalAssets)}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 12px">月間キャッシュフロー</td>
-          <td style="padding:8px 12px;color:${monthlyCF >= 0 ? '#16A34A' : '#DC2626'};font-weight:700">${(monthlyCF >= 0 ? '+' : '')}${fmtMoney(Math.abs(monthlyCF))}/月</td>
-        </tr>
-        <tr style="background:#F1F5F9">
-          <td style="padding:8px 12px">年間配当収入</td>
-          <td style="padding:8px 12px;font-weight:700">${annualDiv > 0 ? fmtMoney(annualDiv)+'/年' : '—'}</td>
-        </tr>
-        ${retResult ? `
-        <tr>
-          <td style="padding:8px 12px">目標リタイア年齢</td>
-          <td style="padding:8px 12px;font-weight:700">${state.retirement?.targetAge || '—'}歳</td>
-        </tr>
-        <tr style="background:#F1F5F9">
-          <td style="padding:8px 12px">リタイア時の想定資産</td>
-          <td style="padding:8px 12px;font-weight:700">${fmtMoney(retResult.assetsAtRetire)}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 12px">必要資産額</td>
-          <td style="padding:8px 12px;font-weight:700">${fmtMoney(retResult.requiredAssets)}</td>
-        </tr>
-        <tr style="background:#F1F5F9">
-          <td style="padding:8px 12px">FIRE達成率</td>
-          <td style="padding:8px 12px;font-weight:700;color:${retResult.requiredAssets > 0 ? (totalAssets/retResult.requiredAssets >= 1 ? '#16A34A' : '#D97706') : '#16A34A'}">${retResult.requiredAssets > 0 ? Math.min(100,Math.round(totalAssets/retResult.requiredAssets*100)) : 100}%</td>
-        </tr>` : ''}
-      </table>
+  // リタイア後キャッシュフロー表（先頭10行）
+  const retTableHtml = retResult?.postData?.slice(0, 20).map((d, i) => {
+    const bg = i % 2 === 0 ? '#F8FAFC' : '#FFFFFF';
+    const assetColor = d.endAssets <= 0 ? '#DC2626' : d.endAssets < 1000 ? '#D97706' : '#1E293B';
+    return `<tr style="background:${bg}">
+      <td style="padding:4px 8px;text-align:center">${d.age}歳</td>
+      <td style="padding:4px 8px;text-align:right">${fmtMoney(d.endAssets)}</td>
+      <td style="padding:4px 8px;text-align:right">${fmtMoney(d.assetWithdrawal||0)}</td>
+      <td style="padding:4px 8px;text-align:right">${fmtMoney(d.netExpense||0)}</td>
+      <td style="padding:4px 8px;text-align:right;color:${(d.annualSurplus||0)>0?'#16A34A':'#94A3B8'}">${(d.annualSurplus||0)>0?'+'+fmtMoney(d.annualSurplus):'—'}</td>
+    </tr>`;
+  }).join('') || '';
 
-      ${state.assets.length ? `
-      <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px;margin:20px 0 10px">資産一覧</h2>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt">
-        <thead><tr style="background:#3B82F6;color:white"><th style="padding:6px 10px;text-align:left">資産名</th><th style="padding:6px 10px;text-align:right">評価額</th><th style="padding:6px 10px;text-align:right">想定利回り</th></tr></thead>
-        <tbody>${assetsHtml}</tbody>
-        <tfoot><tr style="background:#F1F5F9;font-weight:700"><td style="padding:6px 10px">合計</td><td style="padding:6px 10px;text-align:right">${fmtMoney(totalAssets)}</td><td></td></tr></tfoot>
-      </table>` : ''}
+  const retSection = retResult ? `
+    <div style="page-break-before:always"></div>
+    <h2 style="font-size:13pt;color:#7C3AED;border-left:4px solid #7C3AED;padding-left:10px;margin:24px 0 12px">出口戦略シミュレーション</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <tr style="background:#F5F3FF">
+        <td style="padding:8px 12px;width:50%"><strong>目標リタイア年齢</strong></td>
+        <td style="padding:8px 12px;font-weight:700">${state.retirement?.targetAge || '—'}歳</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px">リタイア時の想定総資産</td>
+        <td style="padding:8px 12px;font-weight:700;font-size:12pt">${fmtMoney(retResult.assetsAtRetire)}</td>
+      </tr>
+      <tr style="background:#F5F3FF">
+        <td style="padding:8px 12px">取り崩し方式</td>
+        <td style="padding:8px 12px">${withdrawalLabel}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px">想定余命</td>
+        <td style="padding:8px 12px">${retResult.lifeExpectancy || '—'}歳</td>
+      </tr>
+      ${retResult.depletionAge ? `
+      <tr style="background:#FEF2F2">
+        <td style="padding:8px 12px;color:#DC2626"><strong>⚠️ 資産枯渇リスク</strong></td>
+        <td style="padding:8px 12px;color:#DC2626;font-weight:700">${retResult.depletionAge}歳頃に枯渇の可能性</td>
+      </tr>` : `
+      <tr style="background:#F0FDF4">
+        <td style="padding:8px 12px;color:#16A34A"><strong>✅ 資産持続性</strong></td>
+        <td style="padding:8px 12px;color:#16A34A;font-weight:700">想定余命内で枯渇しない見込み</td>
+      </tr>`}
+    </table>
 
-      ${state.goals.length ? `
-      <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px;margin:20px 0 10px">目標一覧</h2>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt">
-        <thead><tr style="background:#3B82F6;color:white"><th style="padding:6px 10px;text-align:left">目標</th><th style="padding:6px 10px">達成年</th><th style="padding:6px 10px">進捗</th></tr></thead>
-        <tbody>${goalsHtml}</tbody>
-      </table>` : ''}
+    ${retTableHtml ? `
+    <h3 style="font-size:11pt;color:#475569;margin:16px 0 8px">リタイア後 年次推移（前半20年）</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:16px">
+      <thead><tr style="background:#7C3AED;color:white">
+        <th style="padding:5px 8px">年齢</th>
+        <th style="padding:5px 8px;text-align:right">期末資産</th>
+        <th style="padding:5px 8px;text-align:right">取り崩し額</th>
+        <th style="padding:5px 8px;text-align:right">生活支出</th>
+        <th style="padding:5px 8px;text-align:right">余剰資金</th>
+      </tr></thead>
+      <tbody>${retTableHtml}</tbody>
+    </table>` : ''}
+  ` : '';
 
-      ${(state.insurance?.items?.length) ? `
-      <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px;margin:20px 0 10px">保険一覧</h2>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10pt">
-        <thead><tr style="background:#3B82F6;color:white"><th style="padding:6px 10px;text-align:left">保険名</th><th style="padding:6px 10px;text-align:right">保障額</th><th style="padding:6px 10px;text-align:right">保険料</th></tr></thead>
-        <tbody>${insHtml}</tbody>
-      </table>` : ''}
+  const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ライフプランレポート - ${escHtml(p.name || 'あなた')}</title>
+  <style>
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-family: -apple-system, 'Helvetica Neue', Arial, 'Hiragino Sans', sans-serif; font-size: 10pt; color: #1E293B; margin: 0; padding: 0; background: white; }
+    .wrap { max-width: 780px; margin: 0 auto; padding: 24px 20px; }
+    h2 { font-size: 12pt; margin: 20px 0 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { vertical-align: middle; }
+    @media print {
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { font-size: 9.5pt; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
 
-      <div style="margin-top:30px;padding-top:12px;border-top:1px solid #ddd;font-size:9pt;color:#94A3B8;text-align:center">
-        このレポートはライフプランアプリにより自動生成されました ／ ${dateStr}
-      </div>
-    </div>`;
+  <!-- ヘッダー -->
+  <div style="text-align:center;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #3B82F6">
+    <div style="font-size:9pt;color:#94A3B8;margin-bottom:4px">ライフプランレポート</div>
+    <h1 style="font-size:20pt;margin:0;color:#1E293B">${escHtml(p.name || 'あなた')} のライフプラン</h1>
+    <p style="color:#64748B;margin:6px 0 0;font-size:10pt">${age ? `${age}歳` : ''} ／ 作成日: ${dateStr}</p>
+  </div>
 
-  // 印刷ダイアログを開く
-  window.print();
+  <!-- 財務サマリー -->
+  <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">財務サマリー</h2>
+  <table style="margin-bottom:20px">
+    <tr style="background:#EFF6FF">
+      <td style="padding:10px 14px;width:50%"><strong>現在の総資産</strong></td>
+      <td style="padding:10px 14px;font-size:15pt;font-weight:700;color:#1E293B">${fmtMoney(totalAssets)}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 14px">年間収入（概算）</td>
+      <td style="padding:8px 14px;font-weight:600;color:#16A34A">${fmtMoney(annualIncome)}/年</td>
+    </tr>
+    <tr style="background:#EFF6FF">
+      <td style="padding:8px 14px">年間支出（概算）</td>
+      <td style="padding:8px 14px;font-weight:600;color:#DC2626">${fmtMoney(annualExpense)}/年</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 14px">月間キャッシュフロー</td>
+      <td style="padding:8px 14px;font-weight:700;color:${monthlyCF >= 0 ? '#16A34A' : '#DC2626'}">${(monthlyCF >= 0 ? '+' : '')}${fmtMoney(Math.abs(monthlyCF))}/月</td>
+    </tr>
+    ${annualDiv > 0 ? `
+    <tr style="background:#EFF6FF">
+      <td style="padding:8px 14px">年間配当収入</td>
+      <td style="padding:8px 14px;font-weight:600">${fmtMoney(annualDiv)}/年</td>
+    </tr>` : ''}
+  </table>
+
+  <!-- 資産一覧 -->
+  ${state.assets.length ? `
+  <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">資産一覧</h2>
+  <table style="margin-bottom:20px;font-size:9.5pt">
+    <thead><tr style="background:#3B82F6;color:white">
+      <th style="padding:6px 10px;text-align:left">資産名</th>
+      <th style="padding:6px 10px;text-align:center">種別</th>
+      <th style="padding:6px 10px;text-align:right">評価額</th>
+      <th style="padding:6px 10px;text-align:right">想定利回り</th>
+    </tr></thead>
+    <tbody>${assetsHtml}</tbody>
+    <tfoot><tr style="background:#DBEAFE;font-weight:700">
+      <td style="padding:7px 10px" colspan="2">合計</td>
+      <td style="padding:7px 10px;text-align:right">${fmtMoney(totalAssets)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>` : ''}
+
+  <!-- 目標一覧 -->
+  ${state.goals.length ? `
+  <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">目標一覧</h2>
+  <table style="margin-bottom:20px;font-size:9.5pt">
+    <thead><tr style="background:#3B82F6;color:white">
+      <th style="padding:6px 10px;text-align:left">目標</th>
+      <th style="padding:6px 10px;text-align:center">達成年</th>
+      <th style="padding:6px 10px;text-align:left">進捗</th>
+    </tr></thead>
+    <tbody>${goalsHtml}</tbody>
+  </table>` : ''}
+
+  <!-- 保険一覧 -->
+  ${(state.insurance?.items?.length) ? `
+  <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">保険一覧</h2>
+  <table style="margin-bottom:20px;font-size:9.5pt">
+    <thead><tr style="background:#3B82F6;color:white">
+      <th style="padding:6px 10px;text-align:left">保険名</th>
+      <th style="padding:6px 10px;text-align:right">保障額</th>
+      <th style="padding:6px 10px;text-align:right">保険料</th>
+    </tr></thead>
+    <tbody>${insHtml}</tbody>
+  </table>` : ''}
+
+  <!-- 出口戦略シミュレーション -->
+  ${retSection}
+
+  <!-- フッター -->
+  <div style="margin-top:40px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:8.5pt;color:#94A3B8;text-align:center">
+    このレポートはライフプランアプリにより自動生成されました ／ ${dateStr}
+  </div>
+
+</div>
+<script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`;
+
+  // Blob URL方式（ポップアップブロックを回避）
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const blobUrl = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 }
 
 function exportData() {
@@ -4526,6 +4726,9 @@ function importData(event) {
         cashFlowEvents: [],
         actuals: [],
         retirement: {},
+        insurance: { items: [], needs: {} },
+        inheritance: { giftPlans: [] },
+        recurringExpenses: [],
         ...imported,
       };
       if (!state.assets) state.assets = [];
@@ -4538,6 +4741,12 @@ function importData(event) {
       if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
       if (!state.lifeEvents.care) state.lifeEvents.care = {};
       if (!state.retirement) state.retirement = {};
+      if (!state.insurance) state.insurance = { items: [], needs: {} };
+      if (!state.insurance.items) state.insurance.items = [];
+      if (!state.insurance.needs) state.insurance.needs = {};
+      if (!state.inheritance) state.inheritance = { giftPlans: [] };
+      if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
+      if (!state.recurringExpenses) state.recurringExpenses = [];
       state.goals = (state.goals || []).map(g => ({ tasks: [], progressMode: 'manual', ...g }));
       save();
       showPage('dashboard');
@@ -6130,10 +6339,10 @@ function renderPortfolio() {
     <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px">
       <div style="font-weight:600;color:#166534;margin-bottom:6px">🌱 NISA生涯投資枠の状況</div>
       <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div>積立枠 累計元本: <strong>${nisaTsumiTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1800-nisaTsumiTotal).toLocaleString()}万円</div>
+        <div>積立枠 累計元本: <strong>${nisaTsumiTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1800-nisaCombined).toLocaleString()}万円</div>
         <div>成長枠 累計元本: <strong>${nisaGrowthTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1200-nisaGrowthTotal).toLocaleString()}万円</div>
-        <div style="font-weight:600;color:${nisaCombined > 1800 ? '#DC2626' : '#166534'}">合計: ${nisaCombined.toLocaleString()}万円 / 1800万円
-          ${nisaCombined > 1800 ? ' ⚠️ 生涯上限超過' : ` (残り ${(1800-nisaCombined).toLocaleString()}万円)`}
+        <div style="font-weight:600;color:${nisaCombined > 1800 ? '#DC2626' : '#166534'}">合計: ${nisaCombined.toLocaleString()}万円 / 1,800万円
+          ${nisaCombined > 1800 ? ' ⚠️ 生涯上限超過' : ` (残り ${Math.max(0,1800-nisaCombined).toLocaleString()}万円)`}
         </div>
       </div>
       <div style="height:6px;background:#D1FAE5;border-radius:3px;margin-top:8px;overflow:hidden">
@@ -7617,25 +7826,29 @@ function renderDashboard() {
       document.getElementById('dbRetireYears').textContent = '—';
     }
 
-    // FIRE達成率バー
+    // リタイア積立進捗バー
     const fireWrap = document.getElementById('dbFireWrap');
     const retResult = calcRetirementSim();
     if (retResult) {
       fireWrap.style.display = '';
+      document.getElementById('dbFireLabel').textContent = 'リタイア積立進捗';
       if (retResult.requiredAssets <= 0) {
-        // 収入が支出を上回るため必要資産ゼロ → FIRE達成済み
+        // 必要資産ゼロ → 達成済み
         document.getElementById('dbFireBar').style.width = '100%';
         document.getElementById('dbFirePct').textContent = '100%';
-        document.getElementById('dbFireNote').textContent = '収入が支出を上回っており、FIRE条件を満たしています';
+        document.getElementById('dbFireNote').textContent = '収入が支出を上回っており、リタイア条件を満たしています';
       } else {
-        const pct = Math.min(100, Math.round(totalAssets / retResult.requiredAssets * 100));
+        // リタイア時点の予測資産 vs 必要資産で進捗を表示
+        const projectedAssets = retResult.assetsAtRetire || 0;
+        const pct = Math.min(100, Math.round(projectedAssets / retResult.requiredAssets * 100));
         document.getElementById('dbFireBar').style.width = pct + '%';
         document.getElementById('dbFirePct').textContent = pct + '%';
-        const shortfall = retResult.requiredAssets - totalAssets;
+        const shortfall = retResult.requiredAssets - projectedAssets;
+        const targetAge = state.retirement?.targetAge || '—';
         document.getElementById('dbFireNote').textContent =
           shortfall > 0
-            ? `目標額 ${fmtMoney(retResult.requiredAssets)} まであと ${fmtMoney(shortfall)}`
-            : `目標額 ${fmtMoney(retResult.requiredAssets)} 達成！`;
+            ? `${targetAge}歳時点 予測 ${fmtMoney(projectedAssets)} ／ 目標 ${fmtMoney(retResult.requiredAssets)}（あと ${fmtMoney(shortfall)}）`
+            : `${targetAge}歳時点 予測 ${fmtMoney(projectedAssets)} ／ 目標 ${fmtMoney(retResult.requiredAssets)} 達成見込み 🎉`;
       }
     } else {
       fireWrap.style.display = 'none';
@@ -7734,9 +7947,10 @@ function renderDashboard() {
       const ret = calcRetirementSim();
       const totalAssets2 = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
       if (ret && ret.requiredAssets > 0) {
-        const pct = Math.round(totalAssets2 / ret.requiredAssets * 100);
+        const projectedAssets = ret.assetsAtRetire || 0;
+        const pct = Math.round(projectedAssets / ret.requiredAssets * 100);
         if (pct < 50) {
-          alerts.push({ level: 'warn', icon: '📊', text: `FIRE達成率が${pct}%です。目標額まであと ${fmtMoney(ret.requiredAssets - totalAssets2)} 必要です。` });
+          alerts.push({ level: 'warn', icon: '📊', text: `リタイア積立進捗が${pct}%です。リタイア時点の予測資産 ${fmtMoney(projectedAssets)} に対し、目標額まであと ${fmtMoney(ret.requiredAssets - projectedAssets)} 不足しています。` });
         }
       }
     } catch(e) {}
@@ -9283,6 +9497,13 @@ function renderRetirementPage() {
   document.getElementById('retWithdrawalType').value = r.withdrawalType || 'needs';
   document.getElementById('retWithdrawalRate').value = r.withdrawalRate || 4;
   document.getElementById('retWithdrawalMonthly').value = r.withdrawalMonthly || '';
+  document.getElementById('retHybridRate').value = r.withdrawalHybridRate || 4;
+  document.getElementById('retHybridMonthly').value = r.withdrawalHybridMonthly || 20;
+  document.getElementById('retHybridSwitchAge').value = r.withdrawalHybridSwitchAge || 75;
+  const p1type = r.withdrawalHybridP1Type || 'rate';
+  const p1hidden = document.getElementById('retHybridP1TypeHidden');
+  if (p1hidden) p1hidden.value = p1type;
+  setHybridP1Type(p1type, true); // UI復元（シミュ再実行しない・後続のrunRetirementSimで統一実行）
   // 年金試算フォームの復元（初回は現在の家計情報から自動補完）
   const penData = r.pension || {};
   const penDataP = r.pension_p || {};
@@ -9452,6 +9673,10 @@ function saveRetirement() {
     withdrawalType: document.getElementById('retWithdrawalType').value,
     withdrawalRate: parseFloat(document.getElementById('retWithdrawalRate').value) || 4,
     withdrawalMonthly: parseFloat(document.getElementById('retWithdrawalMonthly').value) || 0,
+    withdrawalHybridP1Type: document.getElementById('retHybridP1TypeHidden')?.value || 'rate',
+    withdrawalHybridRate: parseFloat(document.getElementById('retHybridRate').value) || 4,
+    withdrawalHybridMonthly: parseFloat(document.getElementById('retHybridMonthly').value) || 20,
+    withdrawalHybridSwitchAge: parseInt(document.getElementById('retHybridSwitchAge').value) || 75,
     extraIncomes: state.retirement.extraIncomes || [],
     // 新フィールド
     inflationRate:    parseFloat(document.getElementById('retInflationRate').value) ?? 1.5,
@@ -9571,6 +9796,53 @@ function updateWithdrawalUI() {
   const t = document.getElementById('retWithdrawalType').value;
   document.getElementById('retWithdrawalRateRow').style.display = t === 'fixed_rate' ? '' : 'none';
   document.getElementById('retWithdrawalAmountRow').style.display = t === 'fixed_amount' ? '' : 'none';
+  document.getElementById('retHybridRow').style.display = t === 'hybrid' ? '' : 'none';
+}
+
+// ===== ハイブリッドモード: フェーズ①方式切替 =====
+function setHybridP1Type(type, noSim) {
+  const isRate = type !== 'amount';
+  // ボタンのアクティブ状態
+  const btnRate   = document.getElementById('hybridP1BtnRate');
+  const btnAmount = document.getElementById('hybridP1BtnAmount');
+  if (btnRate) {
+    btnRate.style.background   = isRate  ? '#7C3AED' : 'white';
+    btnRate.style.color        = isRate  ? 'white'   : '#7C3AED';
+    btnRate.style.border       = isRate  ? 'none'    : '1.5px solid #7C3AED';
+  }
+  if (btnAmount) {
+    btnAmount.style.background = !isRate ? '#7C3AED' : 'white';
+    btnAmount.style.color      = !isRate ? 'white'   : '#7C3AED';
+    btnAmount.style.border     = !isRate ? 'none'    : '1.5px solid #7C3AED';
+  }
+  // 入力行の表示切替
+  const rateRow   = document.getElementById('hybridP1RateRow');
+  const amountRow = document.getElementById('hybridP1AmountRow');
+  if (rateRow)   rateRow.style.display   = isRate  ? '' : 'none';
+  if (amountRow) amountRow.style.display = !isRate ? '' : 'none';
+  // hidden inputに値を保持（saveRetirementがDOMに依存しないための確実な方法）
+  const hidden = document.getElementById('retHybridP1TypeHidden');
+  if (hidden) hidden.value = type;
+  // stateに即反映してシミュ再実行
+  if (!noSim) {
+    if (state.retirement) state.retirement.withdrawalHybridP1Type = type;
+    runRetirementSim();
+  }
+}
+
+// ===== ハイブリッドモード: グラフスライダー =====
+function onHybridSliderChange(val) {
+  const age = parseInt(val);
+  const label = document.getElementById('retChartSliderLabel');
+  if (label) label.textContent = `${age}歳`;
+  // フォームの入力値もリアルタイム同期
+  const switchAgeInput = document.getElementById('retHybridSwitchAge');
+  if (switchAgeInput) switchAgeInput.value = age;
+  // stateを更新して再シミュレーション＆自動保存
+  if (!state.retirement) state.retirement = {};
+  state.retirement.withdrawalHybridSwitchAge = age;
+  runRetirementSim();
+  save(); // スライダー操作を即時永続化
 }
 
 // ===== 年金自動試算 =====
@@ -9816,10 +10088,6 @@ function calcRetirementSim() {
     const totalNeed = p1Need * p1Years + p2Need * p2Years + p3Need * p3Years;
     const blendedNeed = simYears > 0 ? totalNeed / simYears : p3Need;
     requiredAssets = blendedNeed / withdrawalRate;
-  } else if (withdrawalType === 'dividend') {
-    const totalNeed = p1Need * p1Years + p2Need * p2Years + p3Need * p3Years;
-    const blendedNeed = simYears > 0 ? totalNeed / simYears : p3Need;
-    requiredAssets = weightedReturn > 0 ? blendedNeed / weightedReturn : blendedNeed * simYears;
   } else {
     // 取り崩し（必要額ベース）：3期間PV を退職時点に割り戻す
     const pv1 = pvAnnuity(p1Need, p1Years, weightedReturn);
@@ -9887,13 +10155,25 @@ function runRetirementSim() {
   const result = calcRetirementSim();
   if (!result) return;
 
-  // KPI cards
-  const hasShortfall = result.shortfall > 0;
+  // 枯渇しない場合: 推定持続年齢を試算
+  let sustainableAge = null;
+  let sustainableNote = '';
+  if (!result.depletionAge && result.finalAssets > 0) {
+    const lastD = result.postData[result.postData.length - 1];
+    const netDrain = (lastD?.assetWithdrawal || 0) - (lastD?.annualReturn || 0);
+    if (netDrain > 0 && lastD?.endAssets > 0) {
+      const extraYears = Math.round(lastD.endAssets / netDrain);
+      sustainableAge = result.lifeExpectancy + extraYears;
+      sustainableNote = `推定 約${sustainableAge}歳頃まで持続`;
+    } else {
+      // 資産が減少していない（運用益 >= 取り崩し）→ 理論上は無限持続
+      sustainableNote = '運用益が取り崩しを上回るため長期持続';
+    }
+  }
+
   const depletionStr = result.depletionAge
-    ? `<span style="color:#FF3B30;font-weight:700">${result.depletionAge}歳で枯渇</span>`
-    : `<span style="color:#34C759;font-weight:700">${result.lifeExpectancy}歳まで維持</span>`;
-  const canRetireStr = result.canRetireAge
-    ? `${result.canRetireAge}歳` : '試算期間内に達成困難';
+    ? `<span style="color:#FF3B30;font-weight:700">${result.depletionAge}歳で枯渇⚠️</span>`
+    : `<span style="color:#34C759;font-weight:700">${result.lifeExpectancy}歳時点で持続✅</span>`;
   const monthlyDiv = result.annualDividendYield > 0
     ? Math.round(result.assetsAtRetire * result.annualDividendYield / 12) : 0;
 
@@ -9907,31 +10187,36 @@ function runRetirementSim() {
           <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">${result.targetAge}歳時点（${result.retireYear}年）</div>
         </div>
         <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px">
-          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">必要資産額（試算）</div>
-          <div style="font-size:20px;font-weight:700;color:${hasShortfall?'#FF9500':'#34C759'}">${fmtMoney(result.requiredAssets)}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">${hasShortfall?'⚠️ 不足 '+fmtMoney(result.shortfall):'✅ 余裕 '+fmtMoney(result.surplus)}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px">
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">資産の持続性</div>
           <div style="font-size:16px;font-weight:700;margin-top:4px">${depletionStr}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">最終資産：${fmtMoney(result.finalAssets)}</div>
-        </div>
-        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:14px">
-          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">リタイア可能年齢（試算）</div>
-          <div style="font-size:20px;font-weight:700;color:#60A5FA">${canRetireStr}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">目標残資産 ${fmtMoney(result.residualAssets)} を含む</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">
+            ${result.depletionAge
+              ? `${result.lifeExpectancy}歳の想定余命より${Math.abs(result.depletionAge - result.lifeExpectancy)}年早く枯渇`
+              : sustainableNote ? `<span style="color:rgba(52,199,89,.8)">${sustainableNote}</span>` : `想定余命 ${result.lifeExpectancy}歳以降も余力あり`
+            }
+          </div>
         </div>
       </div>
-      <div style="background:${result.finalAssets >= result.residualAssets ? 'rgba(52,199,89,.15)' : 'rgba(255,59,48,.15)'};border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <span style="font-size:20px">${result.finalAssets >= result.residualAssets ? '🏦' : '⚠️'}</span>
+      <div style="background:${result.depletionAge ? 'rgba(255,59,48,.15)' : result.finalAssets >= result.residualAssets ? 'rgba(52,199,89,.15)' : 'rgba(255,149,0,.15)'};border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span style="font-size:20px">${result.depletionAge ? '💸' : result.finalAssets >= result.residualAssets ? '🏦' : '⚠️'}</span>
         <div style="flex:1">
-          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px">${result.lifeExpectancy}歳（想定余命）時点の残資産</div>
-          <div style="font-size:18px;font-weight:700;color:${result.finalAssets >= result.residualAssets ? '#34C759' : '#FF6B6B'}">${fmtMoney(result.finalAssets)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px">
+            ${result.depletionAge
+              ? `${result.depletionAge}歳で資産枯渇（想定余命 ${result.lifeExpectancy}歳まで ${result.lifeExpectancy - result.depletionAge}年分の資金不足）`
+              : `${result.lifeExpectancy}歳（想定余命）時点の残資産`
+            }
+          </div>
+          <div style="font-size:18px;font-weight:700;color:${result.depletionAge ? '#FF6B6B' : result.finalAssets >= result.residualAssets ? '#34C759' : '#FBBF24'}">${fmtMoney(result.finalAssets)}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">
-            目標残資産 ${fmtMoney(result.residualAssets)} に対して
-            ${result.finalAssets >= result.residualAssets
-              ? `<span style="color:#34C759">✅ +${fmtMoney(result.finalAssets - result.residualAssets)} の余裕</span>`
-              : `<span style="color:#FF6B6B">⚠️ ${fmtMoney(result.residualAssets - result.finalAssets)} 不足</span>`
+            ${result.depletionAge
+              ? `<span style="color:#FF6B6B">⚠️ 支出削減・積立増・リタイア年齢の見直しを検討してください</span>`
+              : result.residualAssets > 0
+                ? `目標残資産 ${fmtMoney(result.residualAssets)} に対して ` + (result.finalAssets >= result.residualAssets
+                    ? `<span style="color:#34C759">✅ +${fmtMoney(result.finalAssets - result.residualAssets)} の余裕</span>`
+                    : `<span style="color:#FBBF24">⚠️ ${fmtMoney(result.residualAssets - result.finalAssets)} 不足</span>`)
+                : sustainableNote
+                  ? `<span style="color:rgba(52,199,89,.8)">📊 ${sustainableNote}</span>`
+                  : `<span style="color:#34C759">✅ 想定余命を超えて資産が持続します</span>`
             }
           </div>
         </div>
@@ -9958,6 +10243,12 @@ function runRetirementSim() {
       </div>` : ''}
     </div>`;
 
+  // 詳細分析パネルをリセット（シミュレーション再実行時に閉じる）
+  ['retScenarioCompareCard', 'retTaxCard', 'retStressCard'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c) { c.style.display = 'none'; c.innerHTML = ''; }
+  });
+
   // Chart
   chartCard.style.display = '';
   const ctx = document.getElementById('retChart').getContext('2d');
@@ -9969,6 +10260,45 @@ function runRetirementSim() {
   });
   const assetsData = result.postData.map(d => d.endAssets);
   const reqLine = result.postData.map(() => result.requiredAssets);
+
+  // ハイブリッドモード: フェーズ切替インデックスを検出
+  const withdrawalTypeNow = (state.retirement || {}).withdrawalType || 'needs';
+  const hybridSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
+  const hybridSwitchIdx = withdrawalTypeNow === 'hybrid'
+    ? result.postData.findIndex(d => d.hybridPhase === 2)
+    : -1;
+
+  // フェーズ①（定率）とフェーズ②（不足補填）で線の色を変える
+  const assetsBorderColor = withdrawalTypeNow === 'hybrid'
+    ? result.postData.map((d, i) => d.hybridPhase === 2 ? 'rgba(239,68,68,0.9)' : 'rgba(79,70,229,0.9)')
+    : '#4F46E5';
+
+  // ハイブリッド切替ラインを垂直線で描画するカスタムプラグイン
+  const hybridMarkerPlugin = {
+    id: 'hybridMarker',
+    afterDraw(chart) {
+      if (hybridSwitchIdx < 0) return;
+      const xScale = chart.scales.x;
+      const x = xScale.getPixelForValue(hybridSwitchIdx);
+      const { top, bottom } = chart.chartArea;
+      const c = chart.ctx;
+      c.save();
+      c.strokeStyle = 'rgba(139,92,246,0.85)';
+      c.lineWidth = 2;
+      c.setLineDash([6, 3]);
+      c.beginPath();
+      c.moveTo(x, top);
+      c.lineTo(x, bottom);
+      c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = 'rgba(139,92,246,0.85)';
+      c.font = '11px sans-serif';
+      c.textAlign = 'center';
+      c.fillText(`${hybridSwitchAgeNow}歳～不足補填`, x, top + 14);
+      c.restore();
+    }
+  };
+
   retChartObj = new Chart(ctx, {
     type: 'line',
     data: {
@@ -9977,9 +10307,18 @@ function runRetirementSim() {
         {
           label: '総資産',
           data: assetsData,
-          borderColor: '#4F46E5',
+          borderColor: withdrawalTypeNow === 'hybrid' ? '#4F46E5' : '#4F46E5',
+          segment: withdrawalTypeNow === 'hybrid' ? {
+            borderColor: ctx2 => {
+              const idx = ctx2.p1DataIndex;
+              return result.postData[idx]?.hybridPhase === 2 ? 'rgba(239,68,68,0.85)' : 'rgba(79,70,229,0.85)';
+            }
+          } : undefined,
           backgroundColor: 'rgba(79,70,229,.12)',
           fill: true, tension: .4, pointRadius: 3,
+          pointBackgroundColor: withdrawalTypeNow === 'hybrid'
+            ? result.postData.map(d => d.hybridPhase === 2 ? 'rgba(239,68,68,0.85)' : 'rgba(79,70,229,0.85)')
+            : '#4F46E5',
         },
         {
           label: '必要資産ライン',
@@ -10005,11 +10344,31 @@ function runRetirementSim() {
             const d = result.postData[items[0].dataIndex];
             return ageTooltipTitle(d.year);
           },
-          label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}`
+          label: ctx => {
+            const d = result.postData[ctx.dataIndex];
+            const phaseLabel = withdrawalTypeNow === 'hybrid' && d?.hybridPhase
+              ? ` [P${d.hybridPhase}]` : '';
+            return ` ${ctx.dataset.label}${phaseLabel}: ${fmtMoney(ctx.parsed.y)}`;
+          }
         }}
       }
-    }
+    },
+    plugins: [hybridMarkerPlugin],
   });
+
+  // ハイブリッドモード: スライダーを表示・初期値セット
+  const sliderArea = document.getElementById('retChartSliderArea');
+  if (sliderArea) {
+    const isHybridNow = (state.retirement || {}).withdrawalType === 'hybrid';
+    sliderArea.style.display = isHybridNow ? '' : 'none';
+    if (isHybridNow) {
+      const slider = document.getElementById('retChartSwitchSlider');
+      const label  = document.getElementById('retChartSliderLabel');
+      const switchAge = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
+      if (slider) slider.value = switchAge;
+      if (label)  label.textContent = `${switchAge}歳`;
+    }
+  }
 
   // ④ 年金損益分岐 + ⑤ シナリオ比較 + ⑫ 感度分析 + ⑩ モンテカルロ
   renderPensionBreakeven();
@@ -10043,17 +10402,40 @@ function runRetirementSim() {
   const keyRows = result.postData.filter((d, i) => i % showEvery === 0 || d.depleted);
   const withdrawalType = (state.retirement || {}).withdrawalType || 'needs';
   const isFixedMode = withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount';
-  const hasDeficit = isFixedMode && result.postData.some(d => (d.annualDeficit || 0) > 0);
-  // シミュレーション方式の注記
-  const simNoteHtml = isFixedMode
-    ? `<div style="margin-bottom:8px;padding:8px 12px;background:#FEF3C7;border-radius:8px;font-size:12px;color:#92400E;border-left:3px solid #F59E0B">
-        ⚠️ <b>定率・定額取り崩し</b>：取り崩し額を固定し、支出が上回る場合は「年間不足額」に表示します。不足分は別途現預金等で補填が必要です。
-       </div>`
+  const isHybridMode = withdrawalType === 'hybrid';
+  // 余剰取り崩しが発生するモード
+  const hasSurplus = result.postData.some(d => (d.annualSurplus || 0) > 0);
+  const hybridSwitchAgeTable = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
+  const hybridRateTable = parseFloat((state.retirement || {}).withdrawalHybridRate) || 4;
+  const withdrawalRateTable = parseFloat((state.retirement || {}).withdrawalRate) || 4;
+
+  // 方式別の補足説明
+  const modeDescMap = {
+    needs:        `🎯 <b>最低限取り崩し</b>：生活費の不足分だけ補填。毎年の引き出しを最小限に抑えるため、資産が最も長く持続します。余裕があれば資産は増え続ける可能性も。`,
+    fixed_rate:   `📈 <b>定率取り崩し ${withdrawalRateTable}%</b>：毎年資産の${withdrawalRateTable}%を引き出します。資産が大きいうちは多く使え、生活費を超えた分は「余剰自由資金」として追加で使えます。`,
+    fixed_amount: `💴 <b>定額取り崩し</b>：生活費補填に加え、毎月${((state.retirement||{}).withdrawalMonthly||0)}万円を上乗せして引き出します。毎年一定の余裕資金を確保できます。`,
+    hybrid:       (() => {
+      const p1type = (state.retirement || {}).withdrawalHybridP1Type || 'rate';
+      const p1desc = p1type === 'amount'
+        ? `定額 ${(state.retirement||{}).withdrawalHybridMonthly||20}万円/月`
+        : `定率 ${hybridRateTable}%`;
+      return `🔄 <b>切替型</b>：<b>${hybridSwitchAgeTable}歳まで</b>は${p1desc}で積極的に活用 → <b>${hybridSwitchAgeTable}歳以降</b>は必要額のみ補填に切替（枯渇リスクを抑えた安定運用）。`;
+    })(),
+  };
+  // 繰り返し支出・一時支出が含まれていれば注記
+  const recurringCount = (state.recurringExpenses || []).length;
+  const recurringNote = recurringCount > 0
+    ? `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📌 定期的な支出 ${recurringCount}件・一時支出が生活費に加算されています</div>`
     : '';
+  const simNoteHtml = `<div style="margin-bottom:8px;padding:8px 12px;background:rgba(79,70,229,.06);border-radius:8px;font-size:12px;color:var(--text-secondary);border-left:3px solid var(--primary)">
+    ${modeDescMap[withdrawalType] || modeDescMap.needs}
+    ${recurringNote}
+  </div>`;
   document.getElementById('retBreakdownTable').innerHTML = `
     <thead>
       <tr style="border-bottom:1px solid var(--border);text-align:right">
         <th style="text-align:left;padding:6px 8px;font-weight:600;color:var(--text-secondary)">年齢/年</th>
+        ${isHybridMode ? `<th style="padding:6px 4px;color:#8B5CF6;font-size:11px">モード</th>` : ''}
         <th style="padding:6px 8px;color:var(--text-secondary)">総資産</th>
         <th style="padding:6px 8px;color:var(--text-secondary)">年金</th>
         <th style="padding:6px 8px;color:var(--text-secondary)">その他収入</th>
@@ -10061,16 +10443,26 @@ function runRetirementSim() {
         <th style="padding:6px 8px;color:var(--text-secondary)">生活支出</th>
         <th style="padding:6px 8px;color:var(--danger)">ローン</th>
         <th style="padding:6px 8px;color:var(--danger)">教育費</th>
-        ${hasDeficit ? `<th style="padding:6px 8px;color:var(--danger)">年間不足</th>` : ''}
-        <th style="padding:6px 8px;color:var(--text-secondary)">月間収支</th>
+        ${hasSurplus ? `<th style="padding:6px 8px;color:var(--secondary);font-size:11px">うち余剰<br>自由資金</th>` : ''}
+        <th style="padding:6px 8px;color:var(--text-secondary)">月間余剰</th>
       </tr>
     </thead>
     <tbody>
       ${keyRows.map(d => {
-        const balColor = d.monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
-        const rowBg = d.depleted ? 'background:rgba(255,59,48,.06)' : (d.annualDeficit > 0) ? 'background:rgba(255,149,0,.05)' : (d.leMortgage || d.leEducation) ? 'background:rgba(255,149,0,.04)' : '';
+        const surplusColor = (d.annualSurplus || 0) > 0 ? 'var(--secondary)' : 'var(--text-muted)';
+        const rowBg = d.depleted ? 'background:rgba(255,59,48,.06)'
+          : (isHybridMode && d.hybridPhase === 2) ? 'background:rgba(139,92,246,.04)'
+          : (d.annualSurplus > 0) ? 'background:rgba(52,199,89,.03)'
+          : (d.leMortgage || d.leEducation) ? 'background:rgba(255,149,0,.04)' : '';
+        const phaseBadge = d.hybridPhase === 1
+          ? `<span style="background:#EDE9FE;color:#5B21B6;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600">P①</span>`
+          : d.hybridPhase === 2
+          ? `<span style="background:#DBEAFE;color:#1D4ED8;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:600">P②</span>`
+          : '';
+        const monthlySurplus = Math.round((d.annualSurplus || 0) / 12 * 10) / 10;
         return `<tr style="border-bottom:.5px solid var(--border);${rowBg}">
           <td style="padding:6px 8px;font-weight:600">${d.age}歳 <span style="font-weight:400;color:var(--text-muted);font-size:11px">${d.year}年</span></td>
+          ${isHybridMode ? `<td style="text-align:center;padding:6px 4px">${phaseBadge}</td>` : ''}
           <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.endAssets)}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${d.pension ? d.pension.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.semi+d.extra) ? (d.semi+d.extra).toLocaleString()+'万' : '－'}</td>
@@ -10078,8 +10470,8 @@ function runRetirementSim() {
           <td style="text-align:right;padding:6px 8px;color:var(--danger)">${Math.round(d.baseExpense).toLocaleString()}万</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leMortgage?'var(--danger)':'var(--text-muted)'}">${d.leMortgage ? d.leMortgage.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leEducation?'var(--danger)':'var(--text-muted)'}">${d.leEducation ? d.leEducation.toLocaleString()+'万' : '－'}</td>
-          ${hasDeficit ? `<td style="text-align:right;padding:6px 8px;font-weight:600;color:${d.annualDeficit>0?'var(--danger)':'var(--text-muted)'}">${d.annualDeficit>0?'-'+d.annualDeficit.toLocaleString()+'万':'－'}</td>` : ''}
-          <td style="text-align:right;padding:6px 8px;font-weight:700;color:${balColor}">${d.monthlyBalance>=0?'+':''}${d.monthlyBalance}万/月</td>
+          ${hasSurplus ? `<td style="text-align:right;padding:6px 8px;font-weight:600;color:${surplusColor}">${(d.annualSurplus||0)>0?'+'+d.annualSurplus.toLocaleString()+'万':'－'}</td>` : ''}
+          <td style="text-align:right;padding:6px 8px;font-weight:700;color:${monthlySurplus>0?'var(--secondary)':'var(--text-muted)'}">${monthlySurplus>0?'+'+monthlySurplus+'万/月':'－'}</td>
         </tr>`;
       }).join('')}
     </tbody>`;
@@ -10100,11 +10492,23 @@ function runRetirementSim() {
   const retResultCardEl = document.getElementById('retResultCard');
   if (retResultCardEl) {
     const extraBtns = document.createElement('div');
-    extraBtns.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:8px';
+    extraBtns.style.cssText = 'margin-top:12px;border-top:.5px solid var(--border);padding-top:12px';
     extraBtns.innerHTML = `
-      <button class="btn btn-secondary btn-sm" id="btnShowScenarios" onclick="calcAndShowScenarios()" style="flex:1;min-width:140px">🔢 シナリオ比較を表示</button>
-      <button class="btn btn-secondary btn-sm" id="btnShowTax" onclick="showRetirementTaxCard()" style="flex:1;min-width:140px">💰 税金・社保を試算</button>
-      <button class="btn btn-secondary btn-sm" id="btnStressTest" onclick="runStressTest()" style="flex:1;min-width:140px">📉 暴落ストレステスト</button>`;
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">詳細分析</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="retAnalysisTabs">
+        <button id="btnShowScenarios" onclick="toggleRetirementPanel('scenarios')"
+          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
+          🔢 シナリオ比較
+        </button>
+        <button id="btnShowTax" onclick="toggleRetirementPanel('tax')"
+          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
+          💰 税金・社保
+        </button>
+        <button id="btnStressTest" onclick="toggleRetirementPanel('stress')"
+          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
+          📉 ストレステスト
+        </button>
+      </div>`;
     retResultCardEl.appendChild(extraBtns);
   }
 }
@@ -10751,6 +11155,10 @@ function calcRetirementSimWithOpts(opts = {}) {
   const withdrawalType = r.withdrawalType || 'needs';
   const withdrawalRate = (parseFloat(r.withdrawalRate) || 4) / 100;
   const withdrawalAnnual = (parseFloat(r.withdrawalMonthly) || 0) * 12;
+  const hybridP1Type = r.withdrawalHybridP1Type || 'rate';
+  const hybridRate = (parseFloat(r.withdrawalHybridRate) || 4) / 100;
+  const hybridMonthlyAnnual = (parseFloat(r.withdrawalHybridMonthly) || 20) * 12;
+  const hybridSwitchAge = parseInt(r.withdrawalHybridSwitchAge) || 75;
 
   const simYears = lifeExpectancy - targetAge;
   const postData = [];
@@ -10797,24 +11205,44 @@ function calcRetirementSimWithOpts(opts = {}) {
     const totalNonAssetIncome = pension + pension_p + semi + extra + mortgageDeduct;
     const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
 
-    let assetWithdrawal;
+    // ===== 資産使い切り哲学: 全モードで生活費は必ず確保 =====
+    // 各モードは「いくら多めに取り崩すか」の戦略であり、不足は発生しない
+    let baseWithdrawal; // 方式ごとの取り崩し基準額
+    let hybridPhase = null; // null | 1 | 2
     switch (withdrawalType) {
-      case 'fixed_rate':   assetWithdrawal = assets * withdrawalRate; break;
-      case 'fixed_amount': assetWithdrawal = withdrawalAnnual; break;
-      case 'dividend':     assetWithdrawal = Math.max(0, netExpense - assets * weightedReturn); break;
-      default:             assetWithdrawal = netExpense;
+      case 'fixed_rate':
+        baseWithdrawal = assets * withdrawalRate;
+        break;
+      case 'fixed_amount':
+        // 定額は「生活費 + 追加取り崩し額」
+        baseWithdrawal = netExpense + withdrawalAnnual;
+        break;
+      case 'hybrid':
+        if (age < hybridSwitchAge) {
+          // フェーズ①: 定率 or 定額（選択に応じて）
+          baseWithdrawal = hybridP1Type === 'amount'
+            ? netExpense + hybridMonthlyAnnual  // 定額: 生活費 + 毎月固定額
+            : assets * hybridRate;              // 定率: 資産×率
+          hybridPhase = 1;
+        } else {
+          baseWithdrawal = netExpense; // フェーズ②: 必要額のみ
+          hybridPhase = 2;
+        }
+        break;
+      default: // needs: 最低限（生活費補填のみ）
+        baseWithdrawal = netExpense;
     }
 
-    // 定率・定額取り崩しは取り崩し額を固定し、不足分を別途記録する
-    // 必要額方式は支出に合わせて取り崩す（Math.maxで下限保証）
-    const actualDeduction = (withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount')
-      ? assetWithdrawal                             // 定率・定額: 設定額を厳守
-      : Math.max(assetWithdrawal, netExpense);      // 必要額・配当: 支出を必ず賄う
+    // 全モード共通: 最低でも生活費（netExpense）は確保する
+    const assetWithdrawal = Math.max(baseWithdrawal, netExpense);
+    const actualDeduction = assetWithdrawal;
 
-    // 収支: 非資産収入 + 取り崩し額 - 支出（取り崩し額が支出を下回る場合は赤字）
-    const monthlyBalance = Math.round((totalNonAssetIncome + assetWithdrawal - totalAnnualExpense) / 12 * 10) / 10;
-    // 定率・定額で取り崩しが支出に足りない場合の年間不足額
-    const annualDeficit = Math.max(0, netExpense - assetWithdrawal);
+    // 余剰取り崩し = 生活費を超えて引き出した額（使える余裕資金）
+    const annualSurplus = Math.round(Math.max(0, assetWithdrawal - netExpense));
+    const annualDeficit = 0; // 使い切り哲学では不足は発生しない
+
+    // 収支: 余剰取り崩し分が「余裕資金」として毎月使える額
+    const monthlyBalance = Math.round(annualSurplus / 12 * 10) / 10;
     const endAssets = Math.max(0, assets * (1 + weightedReturn) - actualDeduction);
 
     postData.push({
@@ -10832,7 +11260,9 @@ function calcRetirementSimWithOpts(opts = {}) {
       mortgageDeduct: Math.round(mortgageDeduct),
       leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care),
       monthlyBalance,
-      annualDeficit: Math.round(annualDeficit),
+      annualSurplus,
+      annualDeficit,
+      hybridPhase,
       depleted: endAssets <= 0,
     });
 
@@ -10945,6 +11375,47 @@ function calcAndShowDeferralSim() {
 }
 
 // ===== 機能2: 複数シナリオ並列比較 =====
+// ===== 詳細分析パネル: トグル制御 =====
+function toggleRetirementPanel(type) {
+  const map = {
+    scenarios: { cardId: 'retScenarioCompareCard', btnId: 'btnShowScenarios', fn: () => calcAndShowScenarios(true) },
+    tax:       { cardId: 'retTaxCard',             btnId: 'btnShowTax',       fn: () => showRetirementTaxCard(true) },
+    stress:    { cardId: 'retStressCard',          btnId: 'btnStressTest',    fn: () => runStressTest(true) },
+  };
+  const current = map[type];
+  if (!current) return;
+
+  const card = document.getElementById(current.cardId);
+  const isOpen = card && card.style.display !== 'none' && card.innerHTML.trim() !== '';
+
+  // すべて閉じてボタンをリセット
+  Object.values(map).forEach(({ cardId, btnId }) => {
+    const c = document.getElementById(cardId);
+    if (c) c.style.display = 'none';
+    const b = document.getElementById(btnId);
+    if (b) {
+      b.style.background = 'white';
+      b.style.color = 'var(--text-secondary)';
+      b.style.borderColor = 'var(--border)';
+      b.style.fontWeight = '400';
+    }
+  });
+
+  // 同じタブを押した場合はそのまま閉じる（トグル）
+  if (isOpen) return;
+
+  // 開く
+  current.fn();
+  // ボタンをアクティブ状態に
+  const btn = document.getElementById(current.btnId);
+  if (btn) {
+    btn.style.background = 'var(--primary)';
+    btn.style.color = 'white';
+    btn.style.borderColor = 'var(--primary)';
+    btn.style.fontWeight = '600';
+  }
+}
+
 function calcAndShowScenarios() {
   const card = document.getElementById('retScenarioCompareCard');
   if (!card) return;
@@ -11206,6 +11677,10 @@ function calcRetirementSimWithStress(stressShock) {
   const withdrawalType = r.withdrawalType || 'needs';
   const withdrawalRate = (parseFloat(r.withdrawalRate) || 4) / 100;
   const withdrawalAnnual = (parseFloat(r.withdrawalMonthly) || 0) * 12;
+  const hybridP1Type = r.withdrawalHybridP1Type || 'rate';
+  const hybridRate = (parseFloat(r.withdrawalHybridRate) || 4) / 100;
+  const hybridMonthlyAnnual = (parseFloat(r.withdrawalHybridMonthly) || 20) * 12;
+  const hybridSwitchAge = parseInt(r.withdrawalHybridSwitchAge) || 75;
 
   const simYears = lifeExpectancy - targetAge;
   const postData = [];
@@ -11259,15 +11734,20 @@ function calcRetirementSimWithStress(stressShock) {
     const totalNonAssetIncome = pension + pension_p + semi + extra + mortgageDeduct;
     const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
 
-    let assetWithdrawal;
+    // ストレステスト: 使い切り哲学同様、全モードで生活費確保
+    let _baseWithdrawal;
     switch (withdrawalType) {
-      case 'fixed_rate':   assetWithdrawal = assets * withdrawalRate; break;
-      case 'fixed_amount': assetWithdrawal = withdrawalAnnual; break;
-      case 'dividend':     assetWithdrawal = Math.max(0, netExpense - assets * effectiveReturn); break;
-      default:             assetWithdrawal = netExpense;
+      case 'fixed_rate':   _baseWithdrawal = assets * withdrawalRate; break;
+      case 'fixed_amount': _baseWithdrawal = netExpense + withdrawalAnnual; break;
+      case 'hybrid':
+        _baseWithdrawal = age < hybridSwitchAge
+          ? (hybridP1Type === 'amount' ? netExpense + hybridMonthlyAnnual : assets * hybridRate)
+          : netExpense;
+        break;
+      default:             _baseWithdrawal = netExpense;
     }
-    const actualDeduction = (withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount')
-      ? assetWithdrawal : Math.max(assetWithdrawal, netExpense);
+    const assetWithdrawal = Math.max(_baseWithdrawal, netExpense);
+    const actualDeduction = assetWithdrawal;
 
     const endAssets = Math.max(0, assets * (1 + effectiveReturn) - actualDeduction);
     postData.push({ year: yr, age, endAssets: Math.round(endAssets), depleted: endAssets <= 0 });
