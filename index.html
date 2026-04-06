@@ -10515,7 +10515,7 @@ function runRetirementSim() {
   const basisCalcMethodEl = document.getElementById('retBasisCalcMethod');
   if (basisCalcMethodEl) {
     const methodDescMap = {
-      fixed_rate:   `定率取り崩し（${Math.round((parseFloat(state.retirement?.withdrawalRate)||4)}%ルール）。年間必要額の加重平均 ÷ 取り崩し率 で必要資産を算出します。資産残高に比例して取り崩すため理論上は枯渇しませんが、生活費を下回る場合は補填します。`,
+      fixed_rate:   `定率取り崩し（${Math.round((parseFloat(state.retirement?.withdrawalRate)||4))}%ルール）。年間必要額の加重平均 ÷ 取り崩し率 で必要資産を算出します。資産残高に比例して取り崩すため理論上は枯渇しませんが、生活費を下回る場合は補填します。`,
       hybrid:       `切替型（前半定率→後半補填）。後半フェーズ（補填期）の必要資産PVを切替年齢時点で算出し、前半フェーズの純成長率（利回り－取り崩し率）でリタイア時点まで割り戻します。`,
       needs:        `3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。`,
       fixed_amount: `3フェーズ現在価値（PV）法 ＋ 定額上乗せ。基本生活費に毎月の追加取り崩し額を加えた総支出を3期間に分けてPV計算します。`,
