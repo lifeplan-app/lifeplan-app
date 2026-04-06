@@ -5020,6 +5020,7 @@ function getRecurringExpenseForYear(year) {
     const iv = parseInt(e.intervalYears) || 1;
     if (year < sy) return total;
     if (ey !== null && year > ey) return total;
+    if ((e.excludeYears || []).includes(year)) return total; // その年だけ削除済み
     if ((year - sy) % iv === 0) return total + (parseFloat(e.amount) || 0);
     return total;
   }, 0);
@@ -7475,12 +7476,13 @@ function renderTimeline() {
     const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
     // 開始年から終了年まで全発生年をループ
     for (let yr = sy; yr <= ey; yr += iv) {
+      if ((e.excludeYears || []).includes(yr)) continue; // その年だけ削除済み
       items.push({ year: yr, month: 0,
         icon: e.emoji || '🔁', color: '#8B5CF6', tag: '繰り返し支出',
         title: e.name,
         desc: `${Number(e.amount).toLocaleString()}万円 / ${intervalLabel}`,
         done: yr < thisYear,
-        id: e.id, editType: 'recurring' });
+        id: e.id, editType: 'recurring', itemYear: yr });
     }
   });
 
@@ -7624,7 +7626,7 @@ function renderTimeline() {
         ${item.editType ? `
         <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
           <button onclick="tlEditItem('${item.editType}','${item.id}')" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;color:var(--text-secondary)" title="編集">✏️</button>
-          <button onclick="tlDeleteItem('${item.editType}','${item.id}')" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;color:#EF4444" title="削除">🗑</button>
+          <button onclick="tlDeleteItem('${item.editType}','${item.id}'${item.itemYear != null ? ',' + item.itemYear : ''})" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;color:#EF4444" title="削除">🗑</button>
         </div>` : ''}
       </div>`).join('');
     return `
@@ -7647,10 +7649,23 @@ function tlEditItem(type, id) {
   else if (type === 'cfe')  openCFEModal(id);
 }
 
-function tlDeleteItem(type, id) {
-  if (type === 'expense')   deleteExpense(id);
-  else if (type === 'recurring') deleteRecurringExpense(id);
-  else if (type === 'cfe')  deleteCFEvent(id);
+function tlDeleteItem(type, id, year) {
+  if (type === 'expense') { deleteExpense(id); return; }
+  if (type === 'cfe')     { deleteCFEvent(id); return; }
+  if (type === 'recurring') {
+    if (year != null) {
+      // その年だけ除外（全期間削除ではない）
+      const entry = (state.recurringExpenses || []).find(e => e.id === id);
+      if (!entry) return;
+      if (!confirm(`${year}年の「${entry.name}」を削除しますか？\n（この年のみ削除。全期間を削除するにはイベントページから行ってください）`)) return;
+      if (!entry.excludeYears) entry.excludeYears = [];
+      if (!entry.excludeYears.includes(year)) entry.excludeYears.push(year);
+      save();
+      renderTimeline();
+    } else {
+      deleteRecurringExpense(id);
+    }
+  }
 }
 
 function tlFilter(tag, btn) {
