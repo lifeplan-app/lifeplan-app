@@ -7208,20 +7208,21 @@ function renderTimeline() {
       title: e.name, desc: `${Number(e.amount).toLocaleString()}万円`, done: false });
   });
 
-  // ② 繰り返し支出（次回実施年のみ表示）
+  // ② 繰り返し支出（全発生年を表示）
   const thisYear = currentYear;
+  const tlHorizon = thisYear + 40; // タイムラインの表示上限（40年先まで）
   (state.recurringExpenses || []).forEach(e => {
     const sy = parseInt(e.startYear) || thisYear;
-    const ey = e.endYear ? parseInt(e.endYear) : thisYear + 50;
+    const ey = e.endYear ? Math.min(parseInt(e.endYear), tlHorizon) : tlHorizon;
     const iv = parseInt(e.intervalYears) || 1;
-    // 今年以降の最初の発生年を探す
-    let nextYear = sy;
-    while (nextYear < thisYear && nextYear <= ey) nextYear += iv;
-    if (nextYear <= ey) {
-      const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
-      items.push({ year: nextYear, month: 0,
+    const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
+    // 開始年から終了年まで全発生年をループ
+    for (let yr = sy; yr <= ey; yr += iv) {
+      items.push({ year: yr, month: 0,
         icon: e.emoji || '🔁', color: '#8B5CF6', tag: '繰り返し支出',
-        title: e.name, desc: `${Number(e.amount).toLocaleString()}万円 / ${intervalLabel}`, done: false });
+        title: e.name,
+        desc: `${Number(e.amount).toLocaleString()}万円 / ${intervalLabel}`,
+        done: yr < thisYear });
     }
   });
 
