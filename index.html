@@ -4219,7 +4219,7 @@
 
 <div class="modal-overlay" id="expenseModal">
   <div class="modal">
-    <div class="modal-title">大きな支出を追加</div>
+    <div class="modal-title" id="expenseModalTitle">大きな支出を追加</div>
     <div class="form-group">
       <label>支出の名称</label>
       <input type="text" id="emName" placeholder="例: マイホーム購入、車の買い替え">
@@ -4240,7 +4240,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeExpenseModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveExpense()">追加する</button>
+      <button class="btn btn-primary" id="expenseModalSaveBtn" onclick="saveExpense()">追加する</button>
     </div>
   </div>
 </div>
@@ -7382,28 +7382,55 @@ function renderFinCharts() {
   }
 }
 
-function openExpenseModal() { document.getElementById('expenseModal').classList.add('open'); }
+let editingExpenseId = null;
+
+function openExpenseModal(id) {
+  editingExpenseId = id || null;
+  const isEdit = !!id;
+  const titleEl = document.getElementById('expenseModalTitle');
+  const saveBtnEl = document.getElementById('expenseModalSaveBtn');
+  if (titleEl) titleEl.textContent = isEdit ? '支出計画を編集' : '大きな支出を追加';
+  if (saveBtnEl) saveBtnEl.textContent = isEdit ? '保存する' : '追加する';
+  if (isEdit) {
+    const e = (state.expenses || []).find(x => x.id === id);
+    if (e) {
+      document.getElementById('emName').value = e.name || '';
+      document.getElementById('emAmount').value = e.amount || '';
+      document.getElementById('emYear').value = e.year || '';
+      document.getElementById('emNote').value = e.note || '';
+    }
+  }
+  document.getElementById('expenseModal').classList.add('open');
+}
 function closeExpenseModal() {
   document.getElementById('expenseModal').classList.remove('open');
   document.getElementById('emName').value = '';
   document.getElementById('emAmount').value = '';
   document.getElementById('emYear').value = '';
   document.getElementById('emNote').value = '';
+  editingExpenseId = null;
 }
 
 function saveExpense() {
   const name = document.getElementById('emName').value.trim();
   if (!name) { alert('支出の名称を入力してください'); return; }
-  state.expenses.push({
-    id: uid(),
+  const obj = {
+    id: editingExpenseId || uid(),
     name,
     amount: parseFloat(document.getElementById('emAmount').value) || 0,
     year: document.getElementById('emYear').value,
     note: document.getElementById('emNote').value,
-  });
+  };
+  if (editingExpenseId) {
+    const idx = state.expenses.findIndex(e => e.id === editingExpenseId);
+    if (idx >= 0) state.expenses[idx] = obj; else state.expenses.push(obj);
+  } else {
+    state.expenses.push(obj);
+  }
   save();
   closeExpenseModal();
   renderExpenseList();
+  if (document.getElementById('timelineContent')) renderTimeline();
 }
 
 function deleteExpense(id) {
@@ -7411,6 +7438,7 @@ function deleteExpense(id) {
   state.expenses = state.expenses.filter(e => e.id !== id);
   save();
   renderExpenseList();
+  if (document.getElementById('timelineContent')) renderTimeline();
 }
 
 // ===== TIMELINE =====
@@ -7433,7 +7461,8 @@ function renderTimeline() {
   (state.expenses || []).filter(e => e.year).forEach(e => {
     items.push({ year: parseInt(e.year), month: 0,
       icon: '💴', color: '#F59E0B', tag: '支出計画',
-      title: e.name, desc: `${Number(e.amount).toLocaleString()}万円`, done: false });
+      title: e.name, desc: `${Number(e.amount).toLocaleString()}万円`, done: false,
+      id: e.id, editType: 'expense' });
   });
 
   // ② 繰り返し支出（全発生年を表示）
@@ -7450,7 +7479,8 @@ function renderTimeline() {
         icon: e.emoji || '🔁', color: '#8B5CF6', tag: '繰り返し支出',
         title: e.name,
         desc: `${Number(e.amount).toLocaleString()}万円 / ${intervalLabel}`,
-        done: yr < thisYear });
+        done: yr < thisYear,
+        id: e.id, editType: 'recurring' });
     }
   });
 
@@ -7466,7 +7496,8 @@ function renderTimeline() {
     if (e.endAge) desc += ` 〜 ${e.endAge}歳まで`;
     items.push({ year, month: 0,
       icon: meta.icon, color: meta.color, tag: meta.label,
-      title: e.title || e.label || meta.label, desc, done: false, note: e.note });
+      title: e.title || e.label || meta.label, desc, done: false, note: e.note,
+      id: e.id, editType: 'cfe' });
   });
 
   // ④ ライフイベント: 住宅
@@ -7536,9 +7567,25 @@ function renderTimeline() {
   items.sort((a, b) => a.year - b.year || a.month - b.month);
 
   if (!items.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🗓</div><p>プロフィール・ライフイベント・目標を入力するとここに表示されます</p></div>`;
+    el.innerHTML = `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+        <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">＋ 追加：</span>
+        <button class="btn btn-sm btn-primary" onclick="openExpenseModal()">💴 支出計画</button>
+        <button class="btn btn-sm btn-secondary" onclick="openRecurringExpenseModal()">🔁 繰り返し支出</button>
+        <button class="btn btn-sm btn-secondary" onclick="openCFEModal()">📌 収支イベント</button>
+      </div>
+      <div class="empty"><div class="empty-icon">🗓</div><p>プロフィール・ライフイベント・目標を入力するとここに表示されます</p></div>`;
     return;
   }
+
+  // 追加ボタンバー
+  const addBarHtml = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)">
+      <span style="font-size:12px;font-weight:600;color:var(--text-secondary);white-space:nowrap">＋ 追加：</span>
+      <button class="btn btn-sm btn-primary" onclick="openExpenseModal()">💴 支出計画</button>
+      <button class="btn btn-sm btn-secondary" onclick="openRecurringExpenseModal()">🔁 繰り返し支出</button>
+      <button class="btn btn-sm btn-secondary" onclick="openCFEModal()">📌 収支イベント</button>
+    </div>`;
 
   // フィルタータグ
   const allTags = [...new Set(items.map(i => i.tag))];
@@ -7574,6 +7621,11 @@ function renderTimeline() {
           ${item.desc ? `<div style="font-size:12px;color:var(--text-muted)">${escHtml(item.desc)}${item.month ? '（' + item.month + '月）' : ''}</div>` : ''}
           ${item.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(item.note)}</div>` : ''}
         </div>
+        ${item.editType ? `
+        <div style="display:flex;gap:4px;align-items:center;flex-shrink:0">
+          <button onclick="tlEditItem('${item.editType}','${item.id}')" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;color:var(--text-secondary)" title="編集">✏️</button>
+          <button onclick="tlDeleteItem('${item.editType}','${item.id}')" style="background:none;border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;color:#EF4444" title="削除">🗑</button>
+        </div>` : ''}
       </div>`).join('');
     return `
       <div class="tl-year-group" data-year="${year}">
@@ -7586,7 +7638,19 @@ function renderTimeline() {
       </div>`;
   }).join('');
 
-  el.innerHTML = filterHtml + timelineHtml;
+  el.innerHTML = addBarHtml + filterHtml + timelineHtml;
+}
+
+function tlEditItem(type, id) {
+  if (type === 'expense')   openExpenseModal(id);
+  else if (type === 'recurring') openRecurringExpenseModal(id);
+  else if (type === 'cfe')  openCFEModal(id);
+}
+
+function tlDeleteItem(type, id) {
+  if (type === 'expense')   deleteExpense(id);
+  else if (type === 'recurring') deleteRecurringExpense(id);
+  else if (type === 'cfe')  deleteCFEvent(id);
 }
 
 function tlFilter(tag, btn) {
@@ -8924,6 +8988,7 @@ function saveCFEvent() {
   save();
   closeCFEModal();
   renderCFEvents();
+  if (document.getElementById('timelineContent')) renderTimeline();
   showNotification('収支変化イベントを保存しました');
 }
 
@@ -8931,6 +8996,7 @@ function deleteCFEvent(id) {
   state.cashFlowEvents = state.cashFlowEvents.filter(e => e.id !== id);
   save();
   renderCFEvents();
+  if (document.getElementById('timelineContent')) renderTimeline();
   showNotification('削除しました');
 }
 
