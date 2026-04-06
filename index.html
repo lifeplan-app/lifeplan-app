@@ -9794,9 +9794,24 @@ function autoFillRetirementExpenses() {
 
 function updateWithdrawalUI() {
   const t = document.getElementById('retWithdrawalType').value;
-  document.getElementById('retWithdrawalRateRow').style.display = t === 'fixed_rate' ? '' : 'none';
+  document.getElementById('retWithdrawalRateRow').style.display   = t === 'fixed_rate'   ? '' : 'none';
   document.getElementById('retWithdrawalAmountRow').style.display = t === 'fixed_amount' ? '' : 'none';
-  document.getElementById('retHybridRow').style.display = t === 'hybrid' ? '' : 'none';
+  document.getElementById('retHybridRow').style.display           = t === 'hybrid'       ? '' : 'none';
+
+  // スライダーエリア: 切替型のときだけ表示
+  const sliderArea = document.getElementById('retChartSliderArea');
+  if (sliderArea) {
+    const isHybrid = t === 'hybrid';
+    sliderArea.style.display = isHybrid ? '' : 'none';
+    if (isHybrid) {
+      // スライダーの表示値を現在の設定と同期
+      const switchAge = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || parseInt(document.getElementById('retHybridSwitchAge')?.value) || 75;
+      const slider = document.getElementById('retChartSwitchSlider');
+      const label  = document.getElementById('retChartSliderLabel');
+      if (slider) slider.value = switchAge;
+      if (label)  label.textContent = `${switchAge}歳`;
+    }
+  }
 }
 
 // ===== ハイブリッドモード: フェーズ①方式切替 =====
