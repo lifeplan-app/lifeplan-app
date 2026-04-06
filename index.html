@@ -2052,10 +2052,33 @@
       </div>
     </div>
 
-    <!-- ⑦ 周期的大支出テンプレート -->
+    <!-- ⑦ 繰り返し支出の計画 -->
     <div class="card">
-      <div class="card-title"><span class="icon" style="background:#FEF3C7">🔄</span>周期的大支出テンプレート</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">車・住宅リフォームなど繰り返し発生する大きな支出をライフイベントとして一括登録します</div>
+      <div class="card-title">
+        <span class="icon" style="background:#EDE9FE">🔁</span>繰り返し支出の計画
+        <button class="btn btn-secondary btn-sm" onclick="openRecurringExpenseModal()" style="margin-left:auto;white-space:nowrap">＋ 追加</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        車検・旅行・帰省など毎年または定期的に発生する支出を登録します。資産シミュレーションに自動反映されます。
+      </div>
+      <div id="recurringExpenseList"></div>
+      <!-- クイックテンプレート -->
+      <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">クイック登録：</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('shaken')">🚗 車検（2年毎）</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('travel_dom')">🎌 国内旅行（毎年）</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('homecoming')">🏡 実家帰省（毎年）</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('special')">💴 特別費（毎年）</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('travel_int')">✈️ 海外旅行（3年毎）</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑧ 周期的大支出テンプレート（大型） -->
+    <div class="card">
+      <div class="card-title"><span class="icon" style="background:#FEF3C7">🔄</span>大型周期的支出テンプレート</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">車の買い替え・住宅リフォームなど大型の支出をライフイベントとして一括登録します</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap" id="periodicExpenseTemplates">
         <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('car')">🚗 車の買い替え（10年毎）</button>
         <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('renovation')">🏠 住宅リフォーム（20年後）</button>
@@ -2066,7 +2089,7 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="icon" style="background:#EEF2FF">🏦</span>大きな支出の計画</div>
+      <div class="card-title"><span class="icon" style="background:#EEF2FF">🏦</span>大きな支出の計画（一時的）</div>
       <div id="bigExpenseList"></div>
       <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openExpenseModal()">＋ 大きな支出を追加</button>
     </div>
@@ -4073,6 +4096,70 @@
 </div>
 
 <!-- ===== EXPENSE MODAL ===== -->
+<!-- ===== 繰り返し支出モーダル ===== -->
+<div class="modal-overlay" id="recurringExpenseModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="recurringExpenseModalTitle">繰り返し支出を追加</div>
+      <button class="modal-close" onclick="closeRecurringExpenseModal()">✕</button>
+    </div>
+    <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:12px">
+      <input type="hidden" id="reId">
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div class="form-group" style="margin:0;flex-shrink:0">
+          <label>アイコン</label>
+          <select id="reEmoji" style="font-size:18px;width:60px;text-align:center;padding:8px 4px">
+            <option>🚗</option><option>✈️</option><option>🎌</option><option>🏡</option>
+            <option>🎉</option><option>🍽️</option><option>🎵</option><option>📱</option>
+            <option>🐾</option><option>🔧</option><option>🏥</option><option>🎓</option>
+            <option>💴</option><option>⛽</option><option>🛒</option><option>🎯</option>
+            <option>🏋️</option><option>📚</option><option>🎨</option><option>🌿</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;flex:1">
+          <label>支出の名称</label>
+          <input type="text" id="reName" placeholder="例: 国内旅行、車検、実家帰省" oninput="updateRePreview()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <label>1回あたりの金額 万円</label>
+          <input type="number" id="reAmount" placeholder="30" min="0" step="1" oninput="updateRePreview()">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>繰り返し間隔</label>
+          <select id="reInterval" onchange="updateRePreview()">
+            <option value="1">毎年（1年毎）</option>
+            <option value="2">2年毎</option>
+            <option value="3">3年毎</option>
+            <option value="5">5年毎</option>
+            <option value="10">10年毎</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <label>初回実施年</label>
+          <input type="number" id="reStartYear" placeholder="2026" min="2020" max="2100" oninput="updateRePreview()">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>終了年（空欄=ずっと続く）</label>
+          <input type="number" id="reEndYear" placeholder="未設定" min="2020" max="2100" oninput="updateRePreview()">
+        </div>
+      </div>
+      <div id="rePreview" style="display:none;font-size:12px;padding:8px 12px;background:#EEF2FF;border-radius:8px;color:#3730A3;line-height:1.7"></div>
+      <div class="form-group" style="margin:0">
+        <label>メモ</label>
+        <textarea id="reNote" rows="2" placeholder="例: 家族全員分・温泉旅行" style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeRecurringExpenseModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveRecurringExpense()">保存する</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="expenseModal">
   <div class="modal">
     <div class="modal-title">大きな支出を追加</div>
@@ -4190,6 +4277,7 @@ let state = {
   retirement: {},
   insurance: { items: [], needs: {} },
   inheritance: { giftPlans: [] },
+  recurringExpenses: [],
 };
 
 let editingGoalId = null;
@@ -4224,6 +4312,7 @@ function load() {
     if (!state.insurance.needs) state.insurance.needs = {};
     if (!state.inheritance) state.inheritance = { giftPlans: [] };
     if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
+    if (!state.recurringExpenses) state.recurringExpenses = [];
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
     // cashFlowEventsのlabelのみでtitleがないエントリを修正
@@ -4706,9 +4795,22 @@ function getExpenseForYear(yr) {
   return result;
 }
 
+// 繰り返し支出：特定の暦年にヒットする合計（万円）
+function getRecurringExpenseForYear(year) {
+  return (state.recurringExpenses || []).reduce((total, e) => {
+    const sy = parseInt(e.startYear) || 0;
+    const ey = e.endYear ? parseInt(e.endYear) : null;
+    const iv = parseInt(e.intervalYears) || 1;
+    if (year < sy) return total;
+    if (ey !== null && year > ey) return total;
+    if ((year - sy) % iv === 0) return total + (parseFloat(e.amount) || 0);
+    return total;
+  }, 0);
+}
+
 // 特定の暦年における一時的な収支（正=収入、負=支出、万円）
 function getOneTimeForYear(yr) {
-  return (state.cashFlowEvents || []).reduce((total, e) => {
+  const cfTotal = (state.cashFlowEvents || []).reduce((total, e) => {
     const eYr = ageToYear(e.startAge);
     if (eYr === yr) {
       if (e.type === 'one_time_income')  return total + (e.amount || 0);
@@ -4716,6 +4818,175 @@ function getOneTimeForYear(yr) {
     }
     return total;
   }, 0);
+  return cfTotal - getRecurringExpenseForYear(yr);
+}
+
+// ===== 繰り返し支出 CRUD =====
+
+function renderRecurringExpenseList() {
+  const el = document.getElementById('recurringExpenseList');
+  if (!el) return;
+  const list = state.recurringExpenses || [];
+  if (list.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:16px 0;color:var(--text-muted);font-size:13px">まだ登録されていません。クイック登録または「＋ 追加」から登録してください。</div>`;
+    return;
+  }
+  el.innerHTML = list.map(e => {
+    const iv = parseInt(e.intervalYears) || 1;
+    const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
+    const endLabel = e.endYear ? `〜${e.endYear}年` : '〜ずっと';
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)">
+      <span style="font-size:22px;flex-shrink:0">${e.emoji || '🔁'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600">${e.name}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">
+          ${Number(e.amount).toLocaleString()}万円 ／ ${intervalLabel} ／ ${e.startYear}年${endLabel}
+          ${e.note ? `<span style="color:var(--text-muted)"> — ${e.note}</span>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="editRecurringExpense('${e.id}')">編集</button>
+        <button class="btn btn-sm" style="font-size:11px;padding:4px 8px;background:#FFF1F2;color:#E11D48;border-color:#FECDD3" onclick="deleteRecurringExpense('${e.id}')">削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openRecurringExpenseModal(id) {
+  const thisYear = new Date().getFullYear();
+  document.getElementById('reId').value = '';
+  document.getElementById('reEmoji').value = '🔁';
+  document.getElementById('reName').value = '';
+  document.getElementById('reAmount').value = '';
+  document.getElementById('reInterval').value = '1';
+  document.getElementById('reStartYear').value = thisYear;
+  document.getElementById('reEndYear').value = '';
+  document.getElementById('reNote').value = '';
+  document.getElementById('rePreview').style.display = 'none';
+  document.getElementById('recurringExpenseModalTitle').textContent = '繰り返し支出を追加';
+
+  if (id) {
+    const e = (state.recurringExpenses || []).find(x => x.id === id);
+    if (e) {
+      document.getElementById('reId').value = e.id;
+      document.getElementById('reEmoji').value = e.emoji || '🔁';
+      document.getElementById('reName').value = e.name || '';
+      document.getElementById('reAmount').value = e.amount || '';
+      document.getElementById('reInterval').value = e.intervalYears || '1';
+      document.getElementById('reStartYear').value = e.startYear || thisYear;
+      document.getElementById('reEndYear').value = e.endYear || '';
+      document.getElementById('reNote').value = e.note || '';
+      document.getElementById('recurringExpenseModalTitle').textContent = '繰り返し支出を編集';
+      updateRePreview();
+    }
+  }
+  document.getElementById('recurringExpenseModal').classList.add('active');
+}
+
+function closeRecurringExpenseModal() {
+  document.getElementById('recurringExpenseModal').classList.remove('active');
+}
+
+function saveRecurringExpense() {
+  const name = document.getElementById('reName').value.trim();
+  const amount = parseFloat(document.getElementById('reAmount').value);
+  const startYear = parseInt(document.getElementById('reStartYear').value);
+
+  if (!name) { alert('支出の名称を入力してください。'); return; }
+  if (isNaN(amount) || amount <= 0) { alert('金額を正しく入力してください。'); return; }
+  if (isNaN(startYear)) { alert('初回実施年を入力してください。'); return; }
+
+  const existingId = document.getElementById('reId').value;
+  const endYearRaw = document.getElementById('reEndYear').value;
+  const entry = {
+    id: existingId || ('re_' + Date.now()),
+    emoji: document.getElementById('reEmoji').value,
+    name,
+    amount,
+    intervalYears: parseInt(document.getElementById('reInterval').value) || 1,
+    startYear,
+    endYear: endYearRaw ? parseInt(endYearRaw) : null,
+    note: document.getElementById('reNote').value.trim(),
+  };
+
+  if (!state.recurringExpenses) state.recurringExpenses = [];
+  if (existingId) {
+    const idx = state.recurringExpenses.findIndex(x => x.id === existingId);
+    if (idx !== -1) state.recurringExpenses[idx] = entry;
+    else state.recurringExpenses.push(entry);
+  } else {
+    state.recurringExpenses.push(entry);
+  }
+
+  save();
+  renderRecurringExpenseList();
+  closeRecurringExpenseModal();
+  renderTimeline && renderTimeline();
+}
+
+function deleteRecurringExpense(id) {
+  if (!confirm('この繰り返し支出を削除しますか？')) return;
+  state.recurringExpenses = (state.recurringExpenses || []).filter(x => x.id !== id);
+  save();
+  renderRecurringExpenseList();
+  renderTimeline && renderTimeline();
+}
+
+function editRecurringExpense(id) {
+  openRecurringExpenseModal(id);
+}
+
+function updateRePreview() {
+  const name = document.getElementById('reName').value.trim();
+  const amount = parseFloat(document.getElementById('reAmount').value);
+  const iv = parseInt(document.getElementById('reInterval').value) || 1;
+  const sy = parseInt(document.getElementById('reStartYear').value);
+  const eyRaw = document.getElementById('reEndYear').value;
+  const ey = eyRaw ? parseInt(eyRaw) : null;
+  const previewEl = document.getElementById('rePreview');
+
+  if (!name || isNaN(amount) || amount <= 0 || isNaN(sy)) {
+    previewEl.style.display = 'none';
+    return;
+  }
+
+  const thisYear = new Date().getFullYear();
+  const limitYear = ey ? Math.min(ey, thisYear + 29) : thisYear + 29;
+  const years = [];
+  for (let y = sy; y <= limitYear; y++) {
+    if ((y - sy) % iv === 0) years.push(y);
+  }
+
+  const ivLabel = iv === 1 ? '毎年' : `${iv}年毎`;
+  const endLabel = ey ? `${ey}年まで` : 'ずっと続く';
+  const yearStr = years.length > 0 ? years.join('・') + (ey && ey <= thisYear + 29 ? '' : '…') : '—';
+  const total30 = years.length * amount;
+
+  previewEl.style.display = 'block';
+  previewEl.innerHTML = `
+    <strong>${name}</strong>　${Number(amount).toLocaleString()}万円 / ${ivLabel}　${endLabel}<br>
+    📅 実施年：${yearStr}<br>
+    💰 30年間の合計支出見込み：<strong>${Number(total30).toLocaleString()}万円</strong>（${years.length}回）`;
+}
+
+function addRecurringTemplate(type) {
+  const thisYear = new Date().getFullYear();
+  const templates = {
+    shaken:     { emoji: '🚗', name: '車検',     amount: 15, intervalYears: 2, startYear: thisYear, endYear: null, note: '車検費用（法定費用+工賃）' },
+    travel_dom: { emoji: '🎌', name: '国内旅行',  amount: 30, intervalYears: 1, startYear: thisYear, endYear: null, note: '家族旅行・温泉など' },
+    homecoming: { emoji: '🏡', name: '実家帰省',  amount: 10, intervalYears: 1, startYear: thisYear, endYear: null, note: '交通費・手土産など' },
+    special:    { emoji: '💴', name: '特別費',    amount: 60, intervalYears: 1, startYear: thisYear, endYear: null, note: '年間の予備費・まとめ支出' },
+    travel_int: { emoji: '✈️', name: '海外旅行',  amount: 50, intervalYears: 3, startYear: thisYear, endYear: null, note: '家族での海外旅行' },
+  };
+  const t = templates[type];
+  if (!t) return;
+
+  if (!state.recurringExpenses) state.recurringExpenses = [];
+  state.recurringExpenses.push({ id: 're_' + Date.now(), ...t });
+  save();
+  renderRecurringExpenseList();
+  renderTimeline && renderTimeline();
 }
 
 // ===== GOALS =====
@@ -5940,6 +6211,7 @@ function renderFinance() {
   setFinanceInputMode(f._inputMode || 'net');
 
   renderExpenseList();
+  renderRecurringExpenseList();
   renderFinSummary();
   renderFinCharts();
   renderAssets();
@@ -6749,6 +7021,23 @@ function renderTimeline() {
     items.push({ year: parseInt(e.year), month: 0,
       icon: '💴', color: '#F59E0B', tag: '支出計画',
       title: e.name, desc: `${Number(e.amount).toLocaleString()}万円`, done: false });
+  });
+
+  // ② 繰り返し支出（次回実施年のみ表示）
+  const thisYear = currentYear;
+  (state.recurringExpenses || []).forEach(e => {
+    const sy = parseInt(e.startYear) || thisYear;
+    const ey = e.endYear ? parseInt(e.endYear) : thisYear + 50;
+    const iv = parseInt(e.intervalYears) || 1;
+    // 今年以降の最初の発生年を探す
+    let nextYear = sy;
+    while (nextYear < thisYear && nextYear <= ey) nextYear += iv;
+    if (nextYear <= ey) {
+      const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
+      items.push({ year: nextYear, month: 0,
+        icon: e.emoji || '🔁', color: '#8B5CF6', tag: '繰り返し支出',
+        title: e.name, desc: `${Number(e.amount).toLocaleString()}万円 / ${intervalLabel}`, done: false });
+    }
   });
 
   // ③ キャッシュフローイベント（startAgeから年を逆算）
