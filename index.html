@@ -9853,9 +9853,12 @@ function onHybridSliderChange(val) {
   // フォームの入力値もリアルタイム同期
   const switchAgeInput = document.getElementById('retHybridSwitchAge');
   if (switchAgeInput) switchAgeInput.value = age;
-  // stateを更新して再シミュレーション＆自動保存
+  // stateを更新（withdrawalTypeも現在のDOM値で同期してから再シミュレーション）
   if (!state.retirement) state.retirement = {};
   state.retirement.withdrawalHybridSwitchAge = age;
+  // スライダーはhybridモード専用なのでwithdrawalTypeを確実にhybridに同期
+  const domType = document.getElementById('retWithdrawalType')?.value;
+  if (domType) state.retirement.withdrawalType = domType;
   runRetirementSim();
   save(); // スライダー操作を即時永続化
 }
@@ -10276,8 +10279,8 @@ function runRetirementSim() {
   const assetsData = result.postData.map(d => d.endAssets);
   const reqLine = result.postData.map(() => result.requiredAssets);
 
-  // ハイブリッドモード: フェーズ切替インデックスを検出
-  const withdrawalTypeNow = (state.retirement || {}).withdrawalType || 'needs';
+  // ハイブリッドモード: フェーズ切替インデックスを検出（DOM優先で保存前の選択も反映）
+  const withdrawalTypeNow = document.getElementById('retWithdrawalType')?.value || (state.retirement || {}).withdrawalType || 'needs';
   const hybridSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
   const hybridSwitchIdx = withdrawalTypeNow === 'hybrid'
     ? result.postData.findIndex(d => d.hybridPhase === 2)
