@@ -5598,14 +5598,46 @@ function checkAssetLimit() {
 
   // 生涯上限チェック
   if (t.lifetimeLimit) {
-    const remaining = Math.max(0, t.lifetimeLimit - basis);
+    const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
     const remEl = document.getElementById('amNisaRemaining');
-    if (remEl) {
-      remEl.textContent = remaining > 0 ? `${remaining.toLocaleString()}万円 残り` : '上限到達';
-      remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
-    }
-    if (basis >= t.lifetimeLimit) {
-      warns.push(`累計投資元本 ${basis.toLocaleString()}万円 が生涯非課税枠(${t.lifetimeLimit.toLocaleString()}万円)に達しています`);
+
+    if (type === 'nisa_tsumitate' || type === 'nisa_growth') {
+      // 積立枠・成長枠は合算で生涯1800万円が上限
+      const usedByOthers = (state.assets || [])
+        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId)
+        .reduce((s, a) => s + (a.nisaBasis || 0), 0);
+      const totalUsed     = usedByOthers + basis;
+      const combinedLimit = 1800;
+      const remaining     = Math.max(0, combinedLimit - totalUsed);
+      if (remEl) {
+        const otherNote = usedByOthers > 0 ? `（他アセットで${usedByOthers.toLocaleString()}万円使用済み）` : '';
+        remEl.innerHTML = remaining > 0
+          ? `<span style="font-size:16px">${remaining.toLocaleString()}万円 残り</span><br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">合計使用済 ${totalUsed.toLocaleString()}万円 / 1,800万円${otherNote}</span>`
+          : `<span>上限到達（${totalUsed.toLocaleString()}万円 / 1,800万円）</span>`;
+        remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
+      }
+      if (totalUsed >= combinedLimit) {
+        warns.push(`積立枠＋成長枠の累計元本合計 ${totalUsed.toLocaleString()}万円 が生涯非課税枠(1,800万円)に達しています`);
+      }
+      // 成長枠単独の上限(1200万円)チェック
+      if (type === 'nisa_growth') {
+        const growthOthers = (state.assets || [])
+          .filter(a => a.type === 'nisa_growth' && a.id !== editingId)
+          .reduce((s, a) => s + (a.nisaBasis || 0), 0);
+        if (growthOthers + basis > 1200) {
+          warns.push(`成長投資枠の累計元本 ${(growthOthers + basis).toLocaleString()}万円 が成長枠上限(1,200万円)を超えています`);
+        }
+      }
+    } else {
+      // iDeCo・旧NISAなど：アセット単体で上限チェック
+      const remaining = Math.max(0, t.lifetimeLimit - basis);
+      if (remEl) {
+        remEl.textContent = remaining > 0 ? `${remaining.toLocaleString()}万円 残り` : '上限到達';
+        remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
+      }
+      if (basis >= t.lifetimeLimit) {
+        warns.push(`累計投資元本 ${basis.toLocaleString()}万円 が生涯非課税枠(${t.lifetimeLimit.toLocaleString()}万円)に達しています`);
+      }
     }
   }
 
