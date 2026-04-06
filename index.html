@@ -2055,43 +2055,39 @@
     <!-- ⑦ 繰り返し支出の計画 -->
     <div class="card">
       <div class="card-title">
-        <span class="icon" style="background:#EDE9FE">🔁</span>繰り返し支出の計画
+        <span class="icon" style="background:#EDE9FE">🔁</span>定期的な支出の計画
         <button class="btn btn-secondary btn-sm" onclick="openRecurringExpenseModal()" style="margin-left:auto;white-space:nowrap">＋ 追加</button>
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
-        車検・旅行・帰省など毎年または定期的に発生する支出を登録します。資産シミュレーションに自動反映されます。
+        車検・旅行・帰省・車の買い替えなど、一定の周期で繰り返す支出を登録します。資産シミュレーションに自動反映されます。
       </div>
       <div id="recurringExpenseList"></div>
       <!-- クイックテンプレート -->
       <div style="margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)">
-        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">クイック登録：</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">クイック登録（タップして金額・年を確認）：</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('shaken')">🚗 車検</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('car_replace')">🚙 車の買い替え</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('appliance')">📺 家電まとめ買い</button>
           <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('travel_dom')">🎌 国内旅行</button>
+          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('travel_int')">✈️ 海外旅行</button>
           <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('homecoming')">🏡 実家帰省</button>
           <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('special')">💴 特別費</button>
-          <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="addRecurringTemplate('travel_int')">✈️ 海外旅行</button>
         </div>
       </div>
     </div>
 
-    <!-- ⑧ 周期的大支出テンプレート（大型） -->
+    <!-- ⑧ 一時的な大きな支出 -->
     <div class="card">
-      <div class="card-title"><span class="icon" style="background:#FEF3C7">🔄</span>大型周期的支出テンプレート</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">車の買い替え・住宅リフォームなど大型の支出をライフイベントとして一括登録します</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap" id="periodicExpenseTemplates">
-        <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('car')">🚗 車の買い替え（10年毎）</button>
-        <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('renovation')">🏠 住宅リフォーム（20年後）</button>
-        <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('appliance')">📺 家電まとめ買い（10年毎）</button>
-        <button class="btn btn-secondary btn-sm" onclick="addPeriodicExpense('travel')">✈️ 旅行・趣味（5年毎）</button>
-      </div>
-      <div id="periodicExpenseNote" style="font-size:11px;color:var(--text-secondary);margin-top:10px"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon" style="background:#EEF2FF">🏦</span>大きな支出の計画（一時的）</div>
+      <div class="card-title"><span class="icon" style="background:#EEF2FF">🏦</span>一時的な大きな支出</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">マイホーム購入・住宅リフォームなど、1回限りの大きな支出を登録します。</div>
       <div id="bigExpenseList"></div>
-      <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="openExpenseModal()">＋ 大きな支出を追加</button>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="openExpenseModal()">＋ 追加</button>
+        <span style="font-size:11px;color:var(--text-muted)">クイック：</span>
+        <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openExpenseModalWithPreset('renovation')">🏠 住宅リフォーム</button>
+        <button class="btn btn-secondary btn-sm" style="font-size:11px" onclick="openExpenseModalWithPreset('home')">🏡 マイホーム購入</button>
+      </div>
     </div>
 
     <div class="two-col">
@@ -4973,20 +4969,44 @@ function updateRePreview() {
 function addRecurringTemplate(type) {
   const thisYear = new Date().getFullYear();
   const templates = {
-    shaken:     { emoji: '🚗', name: '車検',     amount: 15, intervalYears: 2, startYear: thisYear, endYear: null, note: '車検費用（法定費用+工賃）' },
-    travel_dom: { emoji: '🎌', name: '国内旅行',  amount: 30, intervalYears: 1, startYear: thisYear, endYear: null, note: '家族旅行・温泉など' },
-    homecoming: { emoji: '🏡', name: '実家帰省',  amount: 10, intervalYears: 1, startYear: thisYear, endYear: null, note: '交通費・手土産など' },
-    special:    { emoji: '💴', name: '特別費',    amount: 60, intervalYears: 1, startYear: thisYear, endYear: null, note: '年間の予備費・まとめ支出' },
-    travel_int: { emoji: '✈️', name: '海外旅行',  amount: 50, intervalYears: 3, startYear: thisYear, endYear: null, note: '家族での海外旅行' },
+    shaken:      { emoji: '🚗', name: '車検',          amount: 15,  intervalYears: 2,  startYear: thisYear, endYear: null, note: '車検費用（法定費用+工賃）' },
+    car_replace: { emoji: '🚙', name: '車の買い替え',  amount: 300, intervalYears: 10, startYear: thisYear, endYear: null, note: '車両代・諸費用' },
+    appliance:   { emoji: '📺', name: '家電まとめ買い',amount: 100, intervalYears: 10, startYear: thisYear, endYear: null, note: '冷蔵庫・洗濯機・エアコン等' },
+    travel_dom:  { emoji: '🎌', name: '国内旅行',      amount: 30,  intervalYears: 1,  startYear: thisYear, endYear: null, note: '家族旅行・温泉など' },
+    travel_int:  { emoji: '✈️', name: '海外旅行',      amount: 50,  intervalYears: 3,  startYear: thisYear, endYear: null, note: '家族での海外旅行' },
+    homecoming:  { emoji: '🏡', name: '実家帰省',      amount: 10,  intervalYears: 1,  startYear: thisYear, endYear: null, note: '交通費・手土産など' },
+    special:     { emoji: '💴', name: '特別費',        amount: 60,  intervalYears: 1,  startYear: thisYear, endYear: null, note: '年間の予備費・まとめ支出' },
   };
   const t = templates[type];
   if (!t) return;
 
-  if (!state.recurringExpenses) state.recurringExpenses = [];
-  state.recurringExpenses.push({ id: 're_' + Date.now(), ...t });
-  save();
-  renderRecurringExpenseList();
-  renderTimeline && renderTimeline();
+  // モーダルにプリセット値をセットして開く（直接保存はしない）
+  document.getElementById('reId').value = '';
+  document.getElementById('reEmoji').value = t.emoji;
+  document.getElementById('reName').value = t.name;
+  document.getElementById('reAmount').value = t.amount;
+  document.getElementById('reInterval').value = t.intervalYears;
+  document.getElementById('reStartYear').value = t.startYear;
+  document.getElementById('reEndYear').value = t.endYear || '';
+  document.getElementById('reNote').value = t.note;
+  document.getElementById('recurringExpenseModalTitle').textContent = '繰り返し支出を追加';
+  updateRePreview();
+  document.getElementById('recurringExpenseModal').classList.add('open');
+}
+
+function openExpenseModalWithPreset(type) {
+  const thisYear = new Date().getFullYear();
+  const presets = {
+    renovation: { name: '住宅リフォーム', amount: 500, year: thisYear + 20, note: '大規模修繕・外壁塗装など' },
+    home:       { name: 'マイホーム購入', amount: 4000, year: thisYear + 3, note: '物件代・諸費用' },
+  };
+  const p = presets[type];
+  if (!p) return;
+  openExpenseModal();
+  document.getElementById('emName').value  = p.name;
+  document.getElementById('emAmount').value = p.amount;
+  document.getElementById('emYear').value   = p.year;
+  document.getElementById('emNote').value   = p.note;
 }
 
 // ===== GOALS =====
