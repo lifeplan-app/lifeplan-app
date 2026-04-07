@@ -1592,6 +1592,9 @@
     <button class="drawer-item" data-page="inheritance" onclick="closeDrawer();showPage('inheritance')">
       <span class="d-icon">🏛️</span>相続・贈与
     </button>
+    <button class="drawer-item" data-page="scenarios" onclick="closeDrawer();showPage('scenarios')">
+      <span class="d-icon">🔀</span>シナリオ
+    </button>
   </div>
 
   <div class="drawer-divider"></div>
@@ -1686,6 +1689,7 @@
   <button data-page="retirement" onclick="showPage('retirement')">🏖️ 出口戦略</button>
   <button data-page="insurance" onclick="showPage('insurance')">🛡️ 保険管理</button>
   <button data-page="inheritance" onclick="showPage('inheritance')">🏛️ 相続・贈与</button>
+  <button data-page="scenarios" onclick="showPage('scenarios')">🔀 シナリオ</button>
 </nav>
 
 <main>
@@ -3384,6 +3388,31 @@
 
   </div>
 
+<!-- ===== SCENARIOS ===== -->
+<div id="page-scenarios" class="page">
+
+  <div class="section-header">
+    <h1 class="section-title">🔀 ライフシナリオ比較</h1>
+    <p style="color:var(--text-muted);font-size:14px;margin:4px 0 0;">人生の選択肢を並べて比較し、それぞれの影響を確認します。</p>
+  </div>
+
+  <!-- テーマ選択 -->
+  <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;">
+    <button id="ls_btn_retireAge" onclick="switchLifeScenarioTheme('retireAge')"
+      style="padding:10px 18px;border-radius:20px;border:2px solid #4F46E5;background:#4F46E5;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">
+      🎯 退職年齢で比べる
+    </button>
+    <button id="ls_btn_expense" onclick="switchLifeScenarioTheme('expense')"
+      style="padding:10px 18px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;">
+      💰 生活費水準で比べる
+    </button>
+  </div>
+
+  <!-- テーマごとのコンテンツ -->
+  <div id="ls_themeContent"></div>
+
+</div>
+
 </main>
 
 <!-- ===== SETUP WIZARD ===== -->
@@ -4380,6 +4409,23 @@ let state = {
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオC', retireAge: null, monthlyExpense: null, returnMod: 0 },
   ],
+  lifeScenario: {
+    activeTheme: 'retireAge',
+    retireAge: {
+      scenarios: [
+        { label: '早めリタイア', retireAge: null },
+        { label: '標準',        retireAge: null },
+        { label: '長く働く',    retireAge: null },
+      ]
+    },
+    expense: {
+      scenarios: [
+        { label: '節約型',   monthlyExpense: null },
+        { label: '標準',     monthlyExpense: null },
+        { label: 'ゆとり型', monthlyExpense: null },
+      ]
+    },
+  },
 };
 
 let editingGoalId = null;
@@ -4433,6 +4479,19 @@ function load() {
       { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
       { name: 'シナリオC', retireAge: null, monthlyExpense: null, returnMod: 0 },
     ];
+    if (!state.lifeScenario) state.lifeScenario = {
+      activeTheme: 'retireAge',
+      retireAge: { scenarios: [
+        { label: '早めリタイア', retireAge: null },
+        { label: '標準',        retireAge: null },
+        { label: '長く働く',    retireAge: null },
+      ]},
+      expense: { scenarios: [
+        { label: '節約型',   monthlyExpense: null },
+        { label: '標準',     monthlyExpense: null },
+        { label: 'ゆとり型', monthlyExpense: null },
+      ]},
+    };
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
     // cashFlowEventsのlabelのみでtitleがないエントリを修正
@@ -4968,6 +5027,7 @@ function showPage(id) {
   if (id === 'retirement')  { renderRetirementPage(); applyMaritalFilter(); setTimeout(() => renderScenarioComp(), 100); }
   if (id === 'insurance')   renderInsurancePage();
   if (id === 'inheritance') renderInheritancePage();
+  if (id === 'scenarios')   renderScenariosPage();
   if (id === 'finance')     applyMaritalFilter();
 }
 
@@ -14574,6 +14634,398 @@ function renderScenarioComp() {
   renderScenarioCards();
   renderScenarioChart();
   renderScenarioTable();
+}
+
+// ===== ライフシナリオ比較 =====
+
+// テーマ切り替え
+function switchLifeScenarioTheme(theme) {
+  if (!state.lifeScenario) return;
+  state.lifeScenario.activeTheme = theme;
+  // ボタンのスタイル更新
+  ['retireAge','expense'].forEach(t => {
+    const btn = document.getElementById('ls_btn_' + t);
+    if (!btn) return;
+    const active = t === theme;
+    btn.style.background = active ? '#4F46E5' : '#fff';
+    btn.style.color = active ? '#fff' : '#666';
+    btn.style.borderColor = active ? '#4F46E5' : '#e0e0e0';
+  });
+  renderLifeScenarioTheme(theme);
+}
+
+// シナリオのデフォルト値を取得（stateのベース値から自動設定）
+function getLsDefaults() {
+  const { baseRetireAge, baseExpense } = getScenarioBase();
+  return {
+    retireAges: [
+      Math.max(45, baseRetireAge - 5),
+      baseRetireAge,
+      Math.min(75, baseRetireAge + 5),
+    ],
+    expenses: [
+      Math.max(10, baseExpense - 5),
+      baseExpense,
+      baseExpense + 5,
+    ],
+  };
+}
+
+// テーマ別コンテンツのレンダリング
+function renderLifeScenarioTheme(theme) {
+  const container = document.getElementById('ls_themeContent');
+  if (!container) return;
+  const ls = state.lifeScenario || {};
+  const defs = getLsDefaults();
+
+  if (theme === 'retireAge') {
+    // 退職年齢シナリオのデフォルト初期化
+    const scs = ls.retireAge.scenarios;
+    if (scs[0].retireAge === null) scs[0].retireAge = defs.retireAges[0];
+    if (scs[1].retireAge === null) scs[1].retireAge = defs.retireAges[1];
+    if (scs[2].retireAge === null) scs[2].retireAge = defs.retireAges[2];
+
+    container.innerHTML = `
+      <div class="card" style="margin-bottom:16px;padding:16px;background:#f0f0ff;border:1px solid #c7c7f1;">
+        <div style="font-size:13px;color:#4F46E5;font-weight:600;margin-bottom:4px;">🎯 退職年齢で比べる</div>
+        <div style="font-size:12px;color:#666;line-height:1.6;">
+          3つの退職年齢パターンで、老後の資産推移がどう変わるかを比較します。<br>
+          現在入力済みの資産・年金・支出データをベースに計算します。
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_retireAge_cards"></div>
+      <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
+      </div>
+      <div id="ls_insights" style="margin-bottom:16px;"></div>
+      <div style="overflow-x:auto;"><table id="ls_table" style="width:100%;border-collapse:collapse;font-size:13px;"></table></div>
+      <p style="font-size:11px;color:#bbb;margin:10px 0 0;line-height:1.5;">※ 現在入力済みの資産・年金データをベースにした試算です。実際の結果を保証するものではありません。</p>
+    `;
+    renderLsRetireAgeCards();
+
+  } else if (theme === 'expense') {
+    // 生活費シナリオのデフォルト初期化
+    const scs = ls.expense.scenarios;
+    if (scs[0].monthlyExpense === null) scs[0].monthlyExpense = defs.expenses[0];
+    if (scs[1].monthlyExpense === null) scs[1].monthlyExpense = defs.expenses[1];
+    if (scs[2].monthlyExpense === null) scs[2].monthlyExpense = defs.expenses[2];
+
+    container.innerHTML = `
+      <div class="card" style="margin-bottom:16px;padding:16px;background:#f0fff8;border:1px solid #a7f3d0;">
+        <div style="font-size:13px;color:#059669;font-weight:600;margin-bottom:4px;">💰 生活費水準で比べる</div>
+        <div style="font-size:12px;color:#666;line-height:1.6;">
+          老後の月々の生活費を3パターン設定して、資産の減り方の違いを比較します。<br>
+          退職年齢・年金・資産は現在の設定をベースに計算します。
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_expense_cards"></div>
+      <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
+      </div>
+      <div id="ls_insights" style="margin-bottom:16px;"></div>
+      <div style="overflow-x:auto;"><table id="ls_table" style="width:100%;border-collapse:collapse;font-size:13px;"></table></div>
+      <p style="font-size:11px;color:#bbb;margin:10px 0 0;line-height:1.5;">※ 現在入力済みの資産・年金データをベースにした試算です。実際の結果を保証するものではありません。</p>
+    `;
+    renderLsExpenseCards();
+  }
+}
+
+// 退職年齢カードのレンダリング
+function renderLsRetireAgeCards() {
+  const container = document.getElementById('ls_retireAge_cards');
+  if (!container) return;
+  const scs = state.lifeScenario.retireAge.scenarios;
+  container.innerHTML = scs.map((sc, i) => {
+    const color = SCENARIO_COLORS[i];
+    return `
+    <div style="border:2px solid ${color};border-radius:12px;padding:14px;background:#fff;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
+        <input type="text" value="${sc.label}"
+          onchange="state.lifeScenario.retireAge.scenarios[${i}].label=this.value;renderLsTable('retireAge');"
+          style="flex:1;border:none;font-weight:700;font-size:14px;color:#333;outline:none;background:transparent;">
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+        <span>退職年齢</span>
+        <span style="font-weight:700;color:${color};" id="ls_ra_disp_${i}">${sc.retireAge}歳</span>
+      </div>
+      <input type="range" min="45" max="75" step="1" value="${sc.retireAge}" class="sc-slider"
+        oninput="updateLsScenario('retireAge',${i},'retireAge',+this.value);scTrack(this,45,75,'${color}')"
+        style="--sc-color:${color};${scTrackStyle(sc.retireAge,45,75,color)}">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>45歳</span><span>75歳</span></div>
+    </div>
+    `;
+  }).join('');
+  renderLsChart('retireAge');
+  renderLsTable('retireAge');
+}
+
+// 生活費カードのレンダリング
+function renderLsExpenseCards() {
+  const container = document.getElementById('ls_expense_cards');
+  if (!container) return;
+  const scs = state.lifeScenario.expense.scenarios;
+  container.innerHTML = scs.map((sc, i) => {
+    const color = SCENARIO_COLORS[i];
+    return `
+    <div style="border:2px solid ${color};border-radius:12px;padding:14px;background:#fff;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
+        <input type="text" value="${sc.label}"
+          onchange="state.lifeScenario.expense.scenarios[${i}].label=this.value;renderLsTable('expense');"
+          style="flex:1;border:none;font-weight:700;font-size:14px;color:#333;outline:none;background:transparent;">
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+        <span>老後生活費</span>
+        <span style="font-weight:700;color:${color};" id="ls_ex_disp_${i}">${sc.monthlyExpense}万円/月</span>
+      </div>
+      <input type="range" min="10" max="80" step="1" value="${sc.monthlyExpense}" class="sc-slider"
+        oninput="updateLsScenario('expense',${i},'monthlyExpense',+this.value);scTrack(this,10,80,'${color}')"
+        style="--sc-color:${color};${scTrackStyle(sc.monthlyExpense,10,80,color)}">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>10万</span><span>80万</span></div>
+    </div>
+    `;
+  }).join('');
+  renderLsChart('expense');
+  renderLsTable('expense');
+}
+
+// シナリオ値更新
+function updateLsScenario(theme, idx, field, value) {
+  if (!state.lifeScenario) return;
+  state.lifeScenario[theme].scenarios[idx][field] = value;
+  // 表示ラベル更新
+  const suffix = field === 'retireAge' ? '歳' : '万円/月';
+  const prefix = theme === 'retireAge' ? 'ls_ra_disp_' : 'ls_ex_disp_';
+  const el = document.getElementById(prefix + idx);
+  if (el) el.textContent = value + suffix;
+  renderLsChart(theme);
+  renderLsTable(theme);
+  // デバウンス保存
+  clearTimeout(window._lsSaveTimer);
+  window._lsSaveTimer = setTimeout(() => save(), 800);
+}
+
+// シナリオをcalcScenarioSimの形式に変換
+function lsToSimScenario(theme, sc) {
+  if (theme === 'retireAge') {
+    return { retireAge: sc.retireAge, monthlyExpense: null, returnMod: 0 };
+  } else {
+    return { retireAge: null, monthlyExpense: sc.monthlyExpense, returnMod: 0 };
+  }
+}
+
+// チャート描画
+let _lsChartObj = null;
+function renderLsChart(theme) {
+  const canvas = document.getElementById('ls_chart');
+  if (!canvas) return;
+  const scs = state.lifeScenario[theme].scenarios;
+  const sims = scs.map(sc => calcScenarioSim(lsToSimScenario(theme, sc)));
+  if (sims.every(s => !s || s.length === 0)) return;
+
+  const allAges = sims.flatMap(s => (s || []).map(r => r.age));
+  const minAge = Math.min(...allAges);
+  const maxAge = Math.max(...allAges);
+  const labels = [];
+  for (let a = minAge; a <= maxAge; a++) labels.push(a + '歳');
+
+  const datasets = scs.map((sc, i) => {
+    const sim = sims[i];
+    if (!sim) return null;
+    const ageMap = {};
+    sim.forEach(r => { ageMap[r.age] = r.endAssets; });
+    return {
+      label: sc.label,
+      data: labels.map((_, j) => ageMap[minAge + j] ?? null),
+      borderColor: SCENARIO_COLORS[i],
+      backgroundColor: SCENARIO_COLORS[i] + '15',
+      borderWidth: 2.5,
+      fill: false,
+      tension: 0.3,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+    };
+  }).filter(Boolean);
+
+  datasets.push({
+    label: '',
+    data: labels.map(() => 0),
+    borderColor: 'rgba(200,0,0,0.2)',
+    borderWidth: 1,
+    borderDash: [4, 4],
+    pointRadius: 0,
+    fill: false,
+  });
+
+  if (_lsChartObj) { _lsChartObj.destroy(); _lsChartObj = null; }
+  _lsChartObj = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { filter: item => item.text !== '', boxWidth: 12, font: { size: 11 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label
+              ? `${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+              : null
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxTicksLimit: 8, font: { size: 11 }, color: '#aaa',
+            callback: (v, i) => { const a = minAge + i; return a % 5 === 0 ? a + '歳' : ''; }
+          },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { font: { size: 11 }, color: '#aaa', callback: v => Math.round(v).toLocaleString() + '万' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      }
+    }
+  });
+
+  // インサイト生成
+  renderLsInsights(theme, scs, sims);
+}
+
+// インサイト（気づき）生成
+function renderLsInsights(theme, scs, sims) {
+  const el = document.getElementById('ls_insights');
+  if (!el) return;
+
+  // 100歳時点の資産を取得
+  const endAssets = sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null);
+  const validAssets = endAssets.filter(v => v !== null);
+  if (validAssets.length < 2) { el.innerHTML = ''; return; }
+
+  const maxVal = Math.max(...validAssets);
+  const minVal = Math.min(...validAssets);
+  const diff = Math.round(maxVal - minVal);
+  const maxIdx = endAssets.indexOf(maxVal);
+  const minIdx = endAssets.indexOf(minVal);
+
+  let insightText = '';
+  if (theme === 'retireAge') {
+    const maxAge = scs[maxIdx].retireAge;
+    const minAge = scs[minIdx].retireAge;
+    const ageDiff = maxAge - minAge;
+    insightText = `<strong>${scs[maxIdx].label}（${maxAge}歳退職）</strong>は、<strong>${scs[minIdx].label}（${minAge}歳退職）</strong>と比べて100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。${ageDiff > 0 ? `${ageDiff}年長く働くことで積み上がる資産の差です。` : ''}`;
+  } else {
+    const maxExp = scs[maxIdx].monthlyExpense;
+    const minExp = scs[minIdx].monthlyExpense;
+    const expDiff = maxExp - minExp;
+    insightText = `月々の生活費を<strong>${minExp}万円</strong>に抑えると、<strong>${maxExp}万円</strong>の場合と比べて100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。月<strong>${expDiff}万円</strong>の差が長期間で大きな差となります。`;
+  }
+
+  el.innerHTML = `
+    <div style="background:#fffbe6;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 試算からの気づき</div>
+      <div style="font-size:13px;color:#78350f;line-height:1.6;">${insightText}</div>
+    </div>
+  `;
+}
+
+// 比較表
+function renderLsTable(theme) {
+  const table = document.getElementById('ls_table');
+  if (!table) return;
+  const scs = state.lifeScenario[theme].scenarios;
+  const sims = scs.map(sc => calcScenarioSim(lsToSimScenario(theme, sc)));
+  const { baseRetireAge, baseExpense } = getScenarioBase();
+
+  const fmtA = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
+  const colorA = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
+
+  const headerCells = scs.map((sc, i) =>
+    `<th style="padding:10px 8px;background:${SCENARIO_COLORS[i]}18;color:${SCENARIO_COLORS[i]};font-weight:700;border-bottom:2px solid ${SCENARIO_COLORS[i]};text-align:center;">${sc.label}</th>`
+  ).join('');
+
+  const rows = [
+    theme === 'retireAge' ? {
+      label: '退職年齢',
+      vals: scs.map(sc => `${sc.retireAge}歳`),
+    } : {
+      label: '老後生活費',
+      vals: scs.map(sc => `月${sc.monthlyExpense}万円`),
+    },
+    {
+      label: '退職時点の推計資産',
+      vals: sims.map((sim, i) => {
+        if (!sim) return '−';
+        const retAge = theme === 'retireAge'
+          ? scs[i].retireAge
+          : (parseInt(state.retirement?.targetAge) || 65);
+        const row = sim.find(r => r.age === retAge) || sim[0];
+        return row ? `${Math.round(row.startAssets).toLocaleString()}万円` : '−';
+      }),
+    },
+    {
+      label: '100歳時点の推計残高',
+      vals: sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null),
+      isAsset: true,
+    },
+    {
+      label: '残高ゼロの試算',
+      vals: sims.map(sim => {
+        if (!sim) return '計算不可';
+        const zero = sim.find(r => r.endAssets <= 0);
+        return zero ? `${zero.age}歳で残高ゼロ` : '100歳時点で残高あり';
+      }),
+      colors: sims.map(sim => {
+        if (!sim) return '#aaa';
+        return sim.find(r => r.endAssets <= 0) ? '#c62828' : '#2e7d32';
+      }),
+    },
+  ];
+
+  const rowsHtml = rows.map(row => {
+    const cells = row.vals.map((v, i) => {
+      const color = row.isAsset ? colorA(v) : (row.colors ? row.colors[i] : '#333');
+      const display = row.isAsset ? fmtA(v) : v;
+      return `<td style="padding:10px 8px;text-align:center;font-weight:600;color:${color};">${display}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid #f0f0f0;">
+      <td style="padding:10px 8px;font-size:12px;color:#888;white-space:nowrap;">${row.label}</td>${cells}
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `
+    <thead><tr>
+      <th style="padding:10px 8px;text-align:left;font-size:12px;color:#aaa;font-weight:400;border-bottom:1px solid #e0e0e0;"></th>
+      ${headerCells}
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  `;
+}
+
+// シナリオページのメインレンダリング
+function renderScenariosPage() {
+  const theme = state.lifeScenario?.activeTheme || 'retireAge';
+  // ボタン状態を初期化
+  ['retireAge','expense'].forEach(t => {
+    const btn = document.getElementById('ls_btn_' + t);
+    if (!btn) return;
+    const active = t === theme;
+    btn.style.background = active ? '#4F46E5' : '#fff';
+    btn.style.color = active ? '#fff' : '#666';
+    btn.style.borderColor = active ? '#4F46E5' : '#e0e0e0';
+  });
+  renderLifeScenarioTheme(theme);
 }
 </script>
 
