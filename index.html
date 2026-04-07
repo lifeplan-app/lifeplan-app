@@ -2764,7 +2764,7 @@
         </select>
         <div style="margin-top:8px;padding:10px 12px;background:rgba(79,70,229,.06);border-radius:10px;font-size:11px;color:var(--text-muted);line-height:1.7">
           💡 <b>取り崩し方式について</b>：方式の違いは「<b>毎年いくら引き出すか</b>」の戦略です。どの方式でも毎年の生活費は必ず確保します。<br>
-          シミュレーションの目的は「<b>いつ枯渇するか／しないか</b>」「<b>どの生活水準なら長期間維持できるか</b>」を把握することです。資産が余命を超えて持続するのも、もちろんOKです。
+          シミュレーションの目的は「<b>いつ残高がゼロになるか／ならないか</b>」「<b>どの生活水準なら長期間維持できるか</b>」を把握することです。資産が余命を超えて持続するのも、もちろんOKです。
         </div>
       </div>
       <div id="retWithdrawalRateRow" style="display:none" class="form-row">
@@ -2808,7 +2808,7 @@
         <div style="font-size:12px;font-weight:600;color:#5B21B6;margin-bottom:10px">🔄 切替型 取り崩し設定</div>
         <div style="font-size:12px;color:#6D28D9;margin-bottom:10px;line-height:1.7">
           <b>フェーズ①（〜切替年齢）</b>：定率または定額で積極的に取り崩す（体が動くうちに充実した生活）<br>
-          <b>フェーズ②（切替年齢〜）</b>：必要額のみ補填に切替（枯渇リスクを抑えて安定）
+          <b>フェーズ②（切替年齢〜）</b>：必要額のみ補填に切替（残高の変動を抑えた運用）
         </div>
         <!-- フェーズ①の方式選択 -->
         <div class="form-group" style="margin-bottom:10px">
@@ -2930,7 +2930,7 @@
     <div class="card" id="retMonteCarloCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#FCE7F3">🎲</span>モンテカルロシミュレーション</div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
-        運用利回りをランダム変動（正規分布）させて1,000回シミュレーション。資産が枯渇しない確率を求めます。
+        運用利回りをランダム変動（正規分布）させて1,000回シミュレーション。想定余命時点で資産残高がゼロを下回らない確率を求めます。
       </div>
       <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
         <div class="form-group" style="flex:1;min-width:140px;margin:0">
@@ -4425,12 +4425,12 @@ function printLifePlan() {
       </tr>
       ${retResult.depletionAge ? `
       <tr style="background:#FEF2F2">
-        <td style="padding:8px 12px;color:#DC2626"><strong>⚠️ 資産枯渇リスク</strong></td>
-        <td style="padding:8px 12px;color:#DC2626;font-weight:700">${retResult.depletionAge}歳頃に枯渇の可能性</td>
+        <td style="padding:8px 12px;color:#DC2626"><strong>資産残高の推移（試算）</strong></td>
+        <td style="padding:8px 12px;color:#DC2626;font-weight:700">${retResult.depletionAge}歳時点で残高ゼロの試算</td>
       </tr>` : `
       <tr style="background:#F0FDF4">
-        <td style="padding:8px 12px;color:#16A34A"><strong>✅ 資産持続性</strong></td>
-        <td style="padding:8px 12px;color:#16A34A;font-weight:700">想定余命内で枯渇しない見込み</td>
+        <td style="padding:8px 12px;color:#16A34A"><strong>資産残高の推移（試算）</strong></td>
+        <td style="padding:8px 12px;color:#16A34A;font-weight:700">想定余命内での残高あり（試算）</td>
       </tr>`}
     </table>
 
@@ -7866,8 +7866,8 @@ function renderDashboard() {
           ? `<span style="color:#10B981;font-weight:700">余剰 +${fmtMoney(gap)}</span>`
           : `<span style="color:#EF4444;font-weight:700">不足 ${fmtMoney(Math.abs(gap))}</span>`;
         const depStr = rs.depletionAge
-          ? `<span style="color:#EF4444">⚠️ ${rs.depletionAge}歳で資産枯渇リスク</span>`
-          : `<span style="color:#10B981">✅ ${rs.lifeExpectancy}歳まで資産維持の見込み</span>`;
+          ? `<span style="color:#EF4444">${rs.depletionAge}歳で残高ゼロの試算</span>`
+          : `<span style="color:#10B981">${rs.lifeExpectancy}歳時点の推計残高: あり</span>`;
         retireContent.innerHTML = `
           <div style="margin-bottom:10px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
@@ -8013,14 +8013,14 @@ function renderDashboard() {
     const leTot   = leCost.childcare + leCost.education + leCost.mortgage + leCost.care;
     const annualCF = income - expense - leTot;
     if (income > 0 && annualCF < 0) {
-      alerts.push({ level: 'danger', icon: '🔴', text: `今年の収支が赤字です（年間 ${fmtMoney(Math.abs(annualCF))} の不足）。支出の見直しを検討してください。` });
+      alerts.push({ level: 'danger', icon: '🔴', text: `今年の年間収支: ${fmtMoney(annualCF)}（収入 - 支出の差引）` });
     }
 
     // ② 資産枯渇リスク（退職シミュレーションで資産が途中で尽きる）
     try {
       const ret = calcRetirementSim();
       if (ret && ret.depletionAge && ret.depletionAge < (parseInt(state.retirement?.lifeExpectancy) || 90)) {
-        alerts.push({ level: 'danger', icon: '⚠️', text: `${ret.depletionAge}歳頃に資産が枯渇するリスクがあります。積立額の増加やリタイア年齢の見直しを検討してください。` });
+        alerts.push({ level: 'danger', icon: '⚠️', text: `現在の試算では${ret.depletionAge}歳時点で資産残高がゼロになります。` });
       }
     } catch(e) {}
 
@@ -8032,7 +8032,7 @@ function renderDashboard() {
         const projectedAssets = ret.assetsAtRetire || 0;
         const pct = Math.round(projectedAssets / ret.requiredAssets * 100);
         if (pct < 50) {
-          alerts.push({ level: 'warn', icon: '📊', text: `リタイア積立進捗が${pct}%です。リタイア時点の予測資産 ${fmtMoney(projectedAssets)} に対し、目標額まであと ${fmtMoney(ret.requiredAssets - projectedAssets)} 不足しています。` });
+          alerts.push({ level: 'warn', icon: '📊', text: `リタイア積立進捗が${pct}%です。リタイア時点の予測資産 ${fmtMoney(projectedAssets)} に対し、目標額まであと ${fmtMoney(ret.requiredAssets - projectedAssets)} の差があります。` });
         }
       }
     } catch(e) {}
@@ -8040,7 +8040,7 @@ function renderDashboard() {
     // ④ 月間キャッシュフローが-5万以下
     const monthlyCF = Math.round(annualCF / 12);
     if (income > 0 && monthlyCF < -5) {
-      alerts.push({ level: 'warn', icon: '💸', text: `月間キャッシュフローが ${fmtMoney(Math.abs(monthlyCF))}/月 の赤字状態です。` });
+      alerts.push({ level: 'warn', icon: '💸', text: `月間収支: ${fmtMoney(monthlyCF)}/月` });
     }
 
     // ⑤ 生命保険の保障不足
@@ -8054,7 +8054,7 @@ function renderDashboard() {
         const survivorTotal = (n.survivorPension || 0) * 12 * n.needYears;
         const needed = Math.max(0, livingTotal + debtTotal - survivorTotal - (n.currentAssets || 0));
         if (needed > 0 && lifeCoverage < needed * 0.7) {
-          alerts.push({ level: 'warn', icon: '🛡️', text: `死亡保障が不足しています（必要額 ${fmtMoney(needed)} に対して現在 ${fmtMoney(lifeCoverage)}）。保険管理ページを確認してください。` });
+          alerts.push({ level: 'warn', icon: '🛡️', text: `必要保障額の試算: ${fmtMoney(needed)} に対して現在の保障額: ${fmtMoney(lifeCoverage)}` });
         }
       }
     } catch(e) {}
@@ -9320,11 +9320,11 @@ function renderLifeEventCharts() {
     if (deficitYrs > 0) {
       const wStr = worstAge != null ? `${worstYear}年(${worstAge}歳)` : `${worstYear}年`;
       cfSummaryEl.innerHTML =
-        `<span style="color:#EF4444">🔴 赤字年 ${deficitYrs}年</span>` +
-        ` ／ 黒字年 ${surplusYrs}年` +
-        ` ／ <span style="color:#EF4444">最大赤字 ${wStr} ${worstAnnual.toLocaleString()}万円</span>`;
+        `<span style="color:#EF4444">収支マイナス ${deficitYrs}年</span>` +
+        ` ／ 収支プラス ${surplusYrs}年` +
+        ` ／ <span style="color:#EF4444">最大マイナス ${wStr} ${worstAnnual.toLocaleString()}万円</span>`;
     } else {
-      cfSummaryEl.innerHTML = `<span style="color:#22C55E">✅ 全${surplusYrs}年 黒字</span>`;
+      cfSummaryEl.innerHTML = `<span style="color:#22C55E">全${surplusYrs}年 収支プラス</span>`;
     }
   }
 
@@ -9581,7 +9581,7 @@ function updateInsuranceGap(neededAmount) {
       <div style="font-size:13px;font-weight:600;color:${color}">
         ${gap <= 0
           ? `✅ 保障は十分です（${Math.abs(gap).toLocaleString()}万円の余裕があります）`
-          : `⚠️ 不足額: ${gap.toLocaleString()}万円（追加の死亡保障を検討してください）`}
+          : `試算上の差額: ${gap.toLocaleString()}万円`}
       </div>`;
   } else {
     gapCard.style.display = 'none';
@@ -10485,8 +10485,8 @@ function runRetirementSim() {
   }
 
   const depletionStr = result.depletionAge
-    ? `<span style="color:#FF3B30;font-weight:700">${result.depletionAge}歳で枯渇⚠️</span>`
-    : `<span style="color:#34C759;font-weight:700">${result.lifeExpectancy}歳時点で持続✅</span>`;
+    ? `<span style="color:#FF3B30;font-weight:700">${result.depletionAge}歳で残高ゼロ（試算）</span>`
+    : `<span style="color:#34C759;font-weight:700">${result.lifeExpectancy}歳時点の推計残高: あり</span>`;
   const monthlyDiv = result.annualDividendYield > 0
     ? Math.round(result.assetsAtRetire * result.annualDividendYield / 12) : 0;
 
@@ -10522,14 +10522,14 @@ function runRetirementSim() {
           <div style="font-size:18px;font-weight:700;color:${result.depletionAge ? '#FF6B6B' : result.finalAssets >= result.residualAssets ? '#34C759' : '#FBBF24'}">${fmtMoney(result.finalAssets)}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">
             ${result.depletionAge
-              ? `<span style="color:#FF6B6B">⚠️ 支出削減・積立増・リタイア年齢の見直しを検討してください</span>`
+              ? ``
               : result.residualAssets > 0
                 ? `目標残資産 ${fmtMoney(result.residualAssets)} に対して ` + (result.finalAssets >= result.residualAssets
-                    ? `<span style="color:#34C759">✅ +${fmtMoney(result.finalAssets - result.residualAssets)} の余裕</span>`
-                    : `<span style="color:#FBBF24">⚠️ ${fmtMoney(result.residualAssets - result.finalAssets)} 不足</span>`)
+                    ? `<span style="color:#34C759">${result.lifeExpectancy}歳時点の推計残高: +${fmtMoney(result.finalAssets - result.residualAssets)}</span>`
+                    : `<span style="color:#FBBF24">${result.lifeExpectancy}歳時点の推計残高: -${fmtMoney(result.residualAssets - result.finalAssets)}</span>`)
                 : sustainableNote
                   ? `<span style="color:rgba(52,199,89,.8)">📊 ${sustainableNote}</span>`
-                  : `<span style="color:#34C759">✅ 想定余命を超えて資産が持続します</span>`
+                  : `<span style="color:#34C759">${result.lifeExpectancy}歳時点の推計残高: ${fmtMoney(result.finalAssets)}</span>`
             }
           </div>
         </div>
@@ -10746,7 +10746,7 @@ function runRetirementSim() {
       const p1desc = p1type === 'amount'
         ? `定額 ${(state.retirement||{}).withdrawalHybridMonthly||20}万円/月`
         : `定率 ${hybridRateTable}%`;
-      return `🔄 <b>切替型</b>：<b>${hybridSwitchAgeTable}歳まで</b>は${p1desc}で積極的に活用 → <b>${hybridSwitchAgeTable}歳以降</b>は必要額のみ補填に切替（枯渇リスクを抑えた安定運用）。`;
+      return `🔄 <b>切替型</b>：<b>${hybridSwitchAgeTable}歳まで</b>は${p1desc}で積極的に活用 → <b>${hybridSwitchAgeTable}歳以降</b>は必要額のみ補填に切替（残高の変動を抑えた運用）。`;
     })(),
   };
   // 繰り返し支出・一時支出が含まれていれば注記
@@ -11020,7 +11020,7 @@ function calcInheritance() {
     const effectiveRate = (totalTax / netAssets * 100).toFixed(1);
     note += `実効税率は約${effectiveRate}%です。`;
     if (realEstate > 0) note += ' 小規模宅地特例の適用で不動産評価額を最大80%減額できる場合があります（要件あり）。';
-    if (totalTax > 500) note += ' 相続税の節税対策（生前贈与・生命保険の活用・遺言書作成）を早期に検討することをお勧めします。';
+    if (totalTax > 500) note += ' 詳細は税理士等の専門家にご相談ください。';
   }
   document.getElementById('inhNote').textContent = note;
   document.getElementById('inhResult').style.display = 'flex';
@@ -11248,9 +11248,9 @@ function renderInheritanceChecklist() {
       done: totalAssets > 0,
       text: '相続税の課税対象かどうか確認している',
       tip: totalAssets > deduction
-        ? `⚠️ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）超 → 相続税対策が必要です`
+        ? `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）を上回っています`
         : totalAssets > 0
-        ? `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）以下 → 相続税はかかりません`
+        ? `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除額（${deduction.toLocaleString()}万円）の範囲内です`
         : '→ 資産を登録すると自動判定されます',
       linkHint: '資産登録で自動更新',
     },
@@ -11282,7 +11282,7 @@ function renderInheritanceChecklist() {
       key: 'trust', type: 'manual',
       done: manual['trust'] || false,
       text: '家族信託・成年後見を検討している',
-      tip: '認知症対策として家族信託や成年後見制度の活用を検討しましょう。',
+      tip: '家族信託や成年後見制度については、司法書士等の専門家にご相談ください。',
     },
   ];
 
@@ -12027,7 +12027,7 @@ function calcAndShowScenarios() {
       const isBase = (Math.abs(inf - baseInflation) < 0.01) && (Math.abs(pc - basePensionCut) < 0.01);
       const border = isBase ? 'border:2px solid #FBBF24;' : '';
       const color = res.sustained ? '#34C759' : '#FF3B30';
-      const status = res.depletionAge ? `${res.depletionAge}歳枯渇` : '維持';
+      const status = res.depletionAge ? `${res.depletionAge}歳で残高ゼロ` : '残高あり';
       return `<td style="padding:8px 10px;text-align:center;${border}border-radius:4px">
         <div style="font-size:12px;font-weight:700;color:${color}">${status}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7)">${res.finalAssets.toLocaleString()}万</div>
@@ -12344,11 +12344,11 @@ function runStressTest() {
   const stressDepleted = stressData.find(d => d.depleted);
 
   const normalStatus = normalDepleted
-    ? `<span style="color:#FF3B30;font-weight:700">${normalDepleted.age}歳で枯渇</span>`
-    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳まで維持</span>`;
+    ? `<span style="color:#FF3B30;font-weight:700">${normalDepleted.age}歳で残高ゼロ</span>`
+    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳時点の残高: あり</span>`;
   const stressStatus = stressDepleted
-    ? `<span style="color:#FF3B30;font-weight:700">${stressDepleted.age}歳で枯渇</span>`
-    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳まで維持</span>`;
+    ? `<span style="color:#FF3B30;font-weight:700">${stressDepleted.age}歳で残高ゼロ</span>`
+    : `<span style="color:#34C759;font-weight:700">${lifeExpectancy}歳時点の残高: あり</span>`;
 
   const diff = Math.round(stressLast.endAssets) - Math.round(normalLast.endAssets);
   const diffColor = diff >= 0 ? '#34C759' : '#FF3B30';
