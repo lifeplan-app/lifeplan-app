@@ -4430,8 +4430,8 @@ function calcPensionEstimate() {
   const retireAge = parseFloat(state.retirement?.targetAge) || 65;
   const startWorkAge = 22;
   const workingMonths = Math.min(480, Math.max(0, (retireAge - startWorkAge)) * 12);
-  // 厚生年金（報酬比例部分）
-  const kosei = grossMonthly * 5.481 / 1000 * workingMonths; // 万円/月
+  // 厚生年金（報酬比例部分）: 係数×加入月数 = 年額 → /12 で月額
+  const kosei = grossMonthly * 5.481 / 1000 * workingMonths / 12; // 万円/月
   // 基礎年金（満額を加入期間で按分）
   const kiso = 6.625 * (workingMonths / 480); // 万円/月
   return Math.round((kosei + kiso) * 10) / 10;
