@@ -3406,6 +3406,10 @@
       style="padding:10px 18px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;">
       💰 生活費水準で比べる
     </button>
+    <button id="ls_btn_housing" onclick="switchLifeScenarioTheme('housing')"
+      style="padding:10px 18px;border-radius:20px;border:2px solid #e0e0e0;background:#fff;color:#666;font-size:13px;font-weight:600;cursor:pointer;">
+      🏠 住宅選択で比べる
+    </button>
   </div>
 
   <!-- テーマごとのコンテンツ -->
@@ -4425,6 +4429,13 @@ let state = {
         { label: 'ゆとり型', monthlyExpense: null },
       ]
     },
+    housing: {
+      scenarios: [
+        { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
+        { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
+        { label: '持ち家（ローン）',monthlyRent: 0,  purchasePrice: 3000, downPayment: 500, loanYears: 35, loanRate: 1.0, type: 'buy_loan' },
+      ]
+    },
   },
 };
 
@@ -4491,7 +4502,17 @@ function load() {
         { label: '標準',     monthlyExpense: null },
         { label: 'ゆとり型', monthlyExpense: null },
       ]},
+      housing: { scenarios: [
+        { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
+        { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
+        { label: '持ち家（ローン）',monthlyRent: 0,  purchasePrice: 3000, downPayment: 500, loanYears: 35, loanRate: 1.0, type: 'buy_loan' },
+      ]},
     };
+    if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
+      { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
+      { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
+      { label: '持ち家（ローン）',monthlyRent: 0,  purchasePrice: 3000, downPayment: 500, loanYears: 35, loanRate: 1.0, type: 'buy_loan' },
+    ]};
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
     // cashFlowEventsのlabelのみでtitleがないエントリを修正
@@ -14643,7 +14664,7 @@ function switchLifeScenarioTheme(theme) {
   if (!state.lifeScenario) return;
   state.lifeScenario.activeTheme = theme;
   // ボタンのスタイル更新
-  ['retireAge','expense'].forEach(t => {
+  ['retireAge','expense','housing'].forEach(t => {
     const btn = document.getElementById('ls_btn_' + t);
     if (!btn) return;
     const active = t === theme;
@@ -14731,6 +14752,26 @@ function renderLifeScenarioTheme(theme) {
       <p style="font-size:11px;color:#bbb;margin:10px 0 0;line-height:1.5;">※ 現在入力済みの資産・年金データをベースにした試算です。実際の結果を保証するものではありません。</p>
     `;
     renderLsExpenseCards();
+
+  } else if (theme === 'housing') {
+    container.innerHTML = `
+      <div class="card" style="margin-bottom:16px;padding:16px;background:#fff8f0;border:1px solid #fed7aa;">
+        <div style="font-size:13px;color:#c2410c;font-weight:600;margin-bottom:4px;">🏠 住宅選択で比べる</div>
+        <div style="font-size:12px;color:#666;line-height:1.6;">
+          賃貸・持ち家（一括）・持ち家（ローン）の3パターンで、老後の資産推移の違いを比較します。<br>
+          収入・資産・年金は現在の設定をベースに、住宅コスト差分を老後生活費に加算して計算します。
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_housing_cards"></div>
+      <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
+      </div>
+      <div id="ls_insights" style="margin-bottom:16px;"></div>
+      <div style="overflow-x:auto;"><table id="ls_table" style="width:100%;border-collapse:collapse;font-size:13px;"></table></div>
+      <p style="font-size:11px;color:#bbb;margin:10px 0 0;line-height:1.5;">※ 住宅コスト以外の条件は現在の設定をベースにした試算です。実際の結果を保証するものではありません。</p>
+    `;
+    renderLsHousingCards();
   }
 }
 
@@ -15013,11 +15054,344 @@ function renderLsTable(theme) {
   `;
 }
 
+// ===== 住宅シナリオ比較 =====
+
+// 住宅シナリオの月々コストを計算（万円/月）
+function calcHousingMonthlyCost(sc) {
+  if (sc.type === 'rent') {
+    return parseFloat(sc.monthlyRent) || 0;
+  } else if (sc.type === 'buy_cash') {
+    // 一括購入: コストゼロ（購入時に資産から一括支払い済みとして扱う）
+    return 0;
+  } else if (sc.type === 'buy_loan') {
+    // ローン: 元利均等返済の月額計算
+    const P = (parseFloat(sc.purchasePrice) - parseFloat(sc.downPayment)) * 10000; // 円
+    const r = parseFloat(sc.loanRate) / 100 / 12;
+    const n = parseFloat(sc.loanYears) * 12;
+    if (P <= 0 || r <= 0 || n <= 0) return 0;
+    const monthly = P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    return Math.round(monthly / 10000 * 10) / 10; // 万円/月
+  }
+  return 0;
+}
+
+// 住宅シナリオのシミュレーション（資産調整込み）
+function calcHousingScenarioSim(sc) {
+  const ret = state.retirement;
+  if (!ret) return null;
+  const { baseExpense } = getScenarioBase();
+  const monthlyCost = calcHousingMonthlyCost(sc);
+
+  const origExpense = ret.monthlyExpense;
+  ret.monthlyExpense = String(baseExpense + monthlyCost);
+
+  let result = null;
+  try {
+    result = calcRetirementSimWithOpts({ returnMod: 0 });
+    // 一括購入・頭金: 退職時点の資産から控除
+    if (result && result.length > 0) {
+      let deduction = 0;
+      if (sc.type === 'buy_cash') deduction = parseFloat(sc.purchasePrice) || 0;
+      else if (sc.type === 'buy_loan') deduction = parseFloat(sc.downPayment) || 0;
+      if (deduction > 0) {
+        result = result.map((r, i) => ({
+          ...r,
+          startAssets: i === 0 ? r.startAssets - deduction : r.startAssets,
+          endAssets: r.endAssets - deduction,
+        }));
+        // 残高がマイナスにならないよう調整（デプリートフラグ）
+        let depleted = false;
+        result = result.map(r => {
+          if (depleted || r.endAssets <= 0) { depleted = true; }
+          return { ...r, depleted };
+        });
+      }
+    }
+  } catch(e) {
+    console.warn('calcHousingScenarioSim error:', e);
+  }
+
+  ret.monthlyExpense = origExpense;
+  return result;
+}
+
+// 住宅シナリオカードのレンダリング
+function renderLsHousingCards() {
+  const container = document.getElementById('ls_housing_cards');
+  if (!container) return;
+  const scs = state.lifeScenario.housing.scenarios;
+
+  container.innerHTML = scs.map((sc, i) => {
+    const color = SCENARIO_COLORS[i];
+    const monthlyCost = calcHousingMonthlyCost(sc);
+
+    const rentInputs = sc.type === 'rent' ? `
+      <div style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+          <span>月々の家賃</span>
+          <span style="font-weight:700;color:${color};" id="ls_h_rent_${i}">${sc.monthlyRent}万円/月</span>
+        </div>
+        <input type="range" min="5" max="40" step="0.5" value="${sc.monthlyRent}" class="sc-slider"
+          oninput="updateLsHousing(${i},'monthlyRent',+this.value);scTrack(this,5,40,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(sc.monthlyRent,5,40,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>5万</span><span>40万</span></div>
+      </div>
+    ` : `
+      <div style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:6px;">
+          <span>物件価格</span>
+          <span style="font-weight:700;color:${color};" id="ls_h_price_${i}">${sc.purchasePrice}万円</span>
+        </div>
+        <input type="range" min="1000" max="10000" step="100" value="${sc.purchasePrice}" class="sc-slider"
+          oninput="updateLsHousing(${i},'purchasePrice',+this.value);scTrack(this,1000,10000,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(sc.purchasePrice,1000,10000,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>1,000万</span><span>1億</span></div>
+      </div>
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:6px;">
+          <span>頭金</span>
+          <span style="font-weight:700;color:${color};" id="ls_h_down_${i}">${sc.downPayment}万円</span>
+        </div>
+        <input type="range" min="0" max="3000" step="100" value="${sc.downPayment}" class="sc-slider"
+          oninput="updateLsHousing(${i},'downPayment',+this.value);scTrack(this,0,3000,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(sc.downPayment,0,3000,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>0万</span><span>3,000万</span></div>
+      </div>
+      ${sc.type === 'buy_loan' ? `
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:6px;">
+          <span>返済期間</span>
+          <span style="font-weight:700;color:${color};" id="ls_h_years_${i}">${sc.loanYears}年</span>
+        </div>
+        <input type="range" min="10" max="35" step="1" value="${sc.loanYears}" class="sc-slider"
+          oninput="updateLsHousing(${i},'loanYears',+this.value);scTrack(this,10,35,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(sc.loanYears,10,35,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>10年</span><span>35年</span></div>
+      </div>
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:6px;">
+          <span>金利（年）</span>
+          <span style="font-weight:700;color:${color};" id="ls_h_rate_${i}">${sc.loanRate}%</span>
+        </div>
+        <input type="range" min="0.1" max="5" step="0.1" value="${sc.loanRate}" class="sc-slider"
+          oninput="updateLsHousing(${i},'loanRate',+this.value);scTrack(this,0.1,5,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(sc.loanRate,0.1,5,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>0.1%</span><span>5%</span></div>
+      </div>` : ''}
+    `;
+
+    return `
+    <div style="border:2px solid ${color};border-radius:12px;padding:14px;background:#fff;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
+        <div style="font-weight:700;font-size:14px;color:#333;">${sc.label}</div>
+      </div>
+      <div style="font-size:12px;color:#888;background:#f8f9fa;border-radius:6px;padding:6px 8px;margin-bottom:4px;">
+        月々コスト: <strong style="color:${color};" id="ls_h_cost_${i}">${monthlyCost > 0 ? monthlyCost + '万円/月' : '−'}</strong>
+        ${sc.type === 'buy_cash' ? `　初期支出: <strong style="color:${color};">${sc.purchasePrice}万円</strong>` : ''}
+        ${sc.type === 'buy_loan' ? `　頭金: <strong style="color:${color};">${sc.downPayment}万円</strong>` : ''}
+      </div>
+      ${rentInputs}
+    </div>
+    `;
+  }).join('');
+
+  renderLsHousingChart();
+  renderLsHousingTable();
+}
+
+// 住宅スライダー更新
+function updateLsHousing(idx, field, value) {
+  if (!state.lifeScenario?.housing) return;
+  state.lifeScenario.housing.scenarios[idx][field] = value;
+  // 表示更新
+  const dispMap = {
+    monthlyRent:   { id: `ls_h_rent_${idx}`,  fmt: v => v + '万円/月' },
+    purchasePrice: { id: `ls_h_price_${idx}`, fmt: v => v.toLocaleString() + '万円' },
+    downPayment:   { id: `ls_h_down_${idx}`,  fmt: v => v.toLocaleString() + '万円' },
+    loanYears:     { id: `ls_h_years_${idx}`, fmt: v => v + '年' },
+    loanRate:      { id: `ls_h_rate_${idx}`,  fmt: v => v + '%' },
+  };
+  const dm = dispMap[field];
+  if (dm) { const el = document.getElementById(dm.id); if (el) el.textContent = dm.fmt(value); }
+  // 月々コスト表示更新
+  const sc = state.lifeScenario.housing.scenarios[idx];
+  const costEl = document.getElementById(`ls_h_cost_${idx}`);
+  if (costEl) {
+    const cost = calcHousingMonthlyCost(sc);
+    costEl.textContent = cost > 0 ? cost + '万円/月' : '−';
+  }
+  renderLsHousingChart();
+  renderLsHousingTable();
+  clearTimeout(window._lsSaveTimer);
+  window._lsSaveTimer = setTimeout(() => save(), 800);
+}
+
+// 住宅比較チャート
+let _lsHousingChartObj = null;
+function renderLsHousingChart() {
+  const canvas = document.getElementById('ls_chart');
+  if (!canvas) return;
+  const scs = state.lifeScenario.housing.scenarios;
+  const sims = scs.map(sc => calcHousingScenarioSim(sc));
+  if (sims.every(s => !s || s.length === 0)) return;
+
+  const allAges = sims.flatMap(s => (s || []).map(r => r.age));
+  const minAge = Math.min(...allAges);
+  const maxAge = Math.max(...allAges);
+  const labels = [];
+  for (let a = minAge; a <= maxAge; a++) labels.push(a + '歳');
+
+  const datasets = scs.map((sc, i) => {
+    const sim = sims[i];
+    if (!sim) return null;
+    const ageMap = {};
+    sim.forEach(r => { ageMap[r.age] = r.endAssets; });
+    return {
+      label: sc.label,
+      data: labels.map((_, j) => ageMap[minAge + j] ?? null),
+      borderColor: SCENARIO_COLORS[i],
+      backgroundColor: SCENARIO_COLORS[i] + '15',
+      borderWidth: 2.5,
+      fill: false,
+      tension: 0.3,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+    };
+  }).filter(Boolean);
+
+  datasets.push({
+    label: '',
+    data: labels.map(() => 0),
+    borderColor: 'rgba(200,0,0,0.2)',
+    borderWidth: 1,
+    borderDash: [4, 4],
+    pointRadius: 0,
+    fill: false,
+  });
+
+  if (_lsHousingChartObj) { _lsHousingChartObj.destroy(); _lsHousingChartObj = null; }
+  _lsHousingChartObj = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, labels: { filter: item => item.text !== '', boxWidth: 12, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label ? `${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()}万円` : null } }
+      },
+      scales: {
+        x: {
+          ticks: { maxTicksLimit: 8, font: { size: 11 }, color: '#aaa', callback: (v, i) => { const a = minAge + i; return a % 5 === 0 ? a + '歳' : ''; } },
+          grid: { display: false }
+        },
+        y: {
+          ticks: { font: { size: 11 }, color: '#aaa', callback: v => Math.round(v).toLocaleString() + '万' },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        }
+      }
+    }
+  });
+
+  renderLsHousingInsights(scs, sims);
+}
+
+// 住宅インサイト
+function renderLsHousingInsights(scs, sims) {
+  const el = document.getElementById('ls_insights');
+  if (!el) return;
+  const endAssets = sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null);
+  const validVals = endAssets.filter(v => v !== null);
+  if (validVals.length < 2) { el.innerHTML = ''; return; }
+
+  const maxVal = Math.max(...validVals);
+  const minVal = Math.min(...validVals);
+  const diff = Math.round(maxVal - minVal);
+  const maxIdx = endAssets.indexOf(maxVal);
+  const minIdx = endAssets.indexOf(minVal);
+
+  el.innerHTML = `
+    <div style="background:#fffbe6;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 試算からの気づき</div>
+      <div style="font-size:13px;color:#78350f;line-height:1.6;">
+        <strong>${scs[maxIdx].label}</strong>は<strong>${scs[minIdx].label}</strong>と比べて、100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。
+        住宅コストの差が長期の資産形成に与える影響を示しています。
+      </div>
+    </div>
+  `;
+}
+
+// 住宅比較表
+function renderLsHousingTable() {
+  const table = document.getElementById('ls_table');
+  if (!table) return;
+  const scs = state.lifeScenario.housing.scenarios;
+  const sims = scs.map(sc => calcHousingScenarioSim(sc));
+
+  const fmtA = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
+  const colorA = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
+
+  const headerCells = scs.map((sc, i) =>
+    `<th style="padding:10px 8px;background:${SCENARIO_COLORS[i]}18;color:${SCENARIO_COLORS[i]};font-weight:700;border-bottom:2px solid ${SCENARIO_COLORS[i]};text-align:center;">${sc.label}</th>`
+  ).join('');
+
+  const rows = [
+    {
+      label: '月々コスト',
+      vals: scs.map(sc => { const c = calcHousingMonthlyCost(sc); return c > 0 ? `${c}万円/月` : '−'; }),
+    },
+    {
+      label: '初期支出',
+      vals: scs.map(sc => {
+        if (sc.type === 'buy_cash') return `${(sc.purchasePrice||0).toLocaleString()}万円（一括）`;
+        if (sc.type === 'buy_loan') return `${(sc.downPayment||0).toLocaleString()}万円（頭金）`;
+        return '−';
+      }),
+    },
+    {
+      label: '100歳時点の推計残高',
+      vals: sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null),
+      isAsset: true,
+    },
+    {
+      label: '残高ゼロの試算',
+      vals: sims.map(sim => {
+        if (!sim) return '計算不可';
+        const zero = sim.find(r => r.endAssets <= 0);
+        return zero ? `${zero.age}歳で残高ゼロ` : '100歳時点で残高あり';
+      }),
+      colors: sims.map(sim => {
+        if (!sim) return '#aaa';
+        return sim.find(r => r.endAssets <= 0) ? '#c62828' : '#2e7d32';
+      }),
+    },
+  ];
+
+  const rowsHtml = rows.map(row => {
+    const cells = row.vals.map((v, i) => {
+      const color = row.isAsset ? colorA(v) : (row.colors ? row.colors[i] : '#333');
+      const display = row.isAsset ? fmtA(v) : v;
+      return `<td style="padding:10px 8px;text-align:center;font-weight:600;color:${color};">${display}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid #f0f0f0;"><td style="padding:10px 8px;font-size:12px;color:#888;white-space:nowrap;">${row.label}</td>${cells}</tr>`;
+  }).join('');
+
+  table.innerHTML = `
+    <thead><tr>
+      <th style="padding:10px 8px;text-align:left;font-size:12px;color:#aaa;font-weight:400;border-bottom:1px solid #e0e0e0;"></th>
+      ${headerCells}
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  `;
+}
+
 // シナリオページのメインレンダリング
 function renderScenariosPage() {
   const theme = state.lifeScenario?.activeTheme || 'retireAge';
   // ボタン状態を初期化
-  ['retireAge','expense'].forEach(t => {
+  ['retireAge','expense','housing'].forEach(t => {
     const btn = document.getElementById('ls_btn_' + t);
     if (!btn) return;
     const active = t === theme;
