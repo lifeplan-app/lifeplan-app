@@ -6520,18 +6520,27 @@ function renderPortfolio() {
     });
 
     // アセット別配当（税引き後）
+    // アセットごとに growthData 上のインデックスで色を決定（メインチャートと同じパレット）
+    // NISA=不透明（FF）、課税口座=やや透明（AA）で区別
     const divDatasets = dividendAssets.map(a => {
       const at = ASSET_TYPES[a.type] || ASSET_TYPES.other;
       const gd = growthData.find(g => g.asset.id === a.id);
+      const assetIdx = state.assets.findIndex(x => x.id === a.id);
+      const baseColor = assetColor(assetIdx >= 0 ? assetIdx : 0);
       const isNisaTax = (a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei') === 'nisa';
       const taxBadge = isNisaTax ? ' 🌱非課税' : ' 📋課税後';
+      // NISA: 不透明（FF）、課税: ハッチング代わりに少し薄め（99）
+      const bgColor = baseColor + (isNisaTax ? 'EE' : '88');
       return {
-        label: at.emoji + ' ' + (a.name || at.label).slice(0, 12) + taxBadge,
+        label: at.emoji + ' ' + (a.name || at.label).slice(0, 14) + taxBadge,
         data: Array.from({ length: years + 1 }, (_, y) => {
           const val = gd ? gd.data[y] : (a.currentVal || 0);
           return Math.round(val * (a.dividendYield / 100) * _divNetRate(a) * 10) / 10;
         }),
-        backgroundColor: isNisaTax ? '#10B981CC' : at.color + 'CC',
+        backgroundColor: bgColor,
+        borderColor: baseColor,
+        borderWidth: isNisaTax ? 0 : 1.5,
+        borderDash: isNisaTax ? [] : [4, 2],
         stack: 'div',
       };
     });
