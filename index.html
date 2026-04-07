@@ -5258,7 +5258,9 @@ function loadProfileForm() {
 
 // ===== 婚姻状況フィルター =====
 function applyMaritalFilter() {
-  const marital = document.getElementById('profileMarital')?.value
+  // プロフィールページ表示中はDOM値（未保存の変更を反映）、それ以外はstateを優先
+  const profilePageVisible = document.getElementById('page-profile')?.classList.contains('active');
+  const marital = (profilePageVisible ? document.getElementById('profileMarital')?.value : null)
                   || state.profile?.marital
                   || 'single';
   const hasParter = (marital === 'married' || marital === 'planning');
