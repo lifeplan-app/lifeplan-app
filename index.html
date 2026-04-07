@@ -3804,6 +3804,16 @@
       <input type="text" id="amName" placeholder="例: eMAXIS Slim 全世界株式(オルカン)">
     </div>
 
+    <!-- 名義（パートナーがいる場合のみ表示） -->
+    <div class="form-group" id="amOwnerWrap" style="display:none">
+      <label>名義（口座の名義人）</label>
+      <select id="amOwner" onchange="checkAssetLimit()">
+        <option value="self">👤 本人</option>
+        <option value="partner">👫 パートナー</option>
+      </select>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px">NISAは一人一口座。名義を分けるとNISA枠を正確に管理できます</div>
+    </div>
+
     <div class="form-row">
       <div class="form-group">
         <label>現在の評価額（万円）</label>
@@ -5423,7 +5433,14 @@ function assetCard(a) {
       <div class="asset-icon" style="background:${t.bg}">${t.emoji}</div>
       <div class="asset-info">
         <div class="asset-name">${escHtml(a.name || t.label)}</div>
-        <div class="asset-type-label" style="color:${t.color}">${t.label}</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="asset-type-label" style="color:${t.color}">${t.label}</span>
+          ${(state.profile?.marital === 'married' || state.profile?.marital === 'planning') && a.owner === 'partner'
+            ? `<span style="font-size:10px;font-weight:700;color:#7C3AED;background:#EDE9FE;border-radius:4px;padding:1px 5px">👫 パートナー</span>`
+            : (state.profile?.marital === 'married' || state.profile?.marital === 'planning') && a.owner !== 'partner'
+            ? `<span style="font-size:10px;font-weight:700;color:#1D4ED8;background:#DBEAFE;border-radius:4px;padding:1px 5px">👤 本人</span>`
+            : ''}
+        </div>
         ${startStr || endStr ? `<div style="font-size:11px;color:var(--text-muted)">${startStr}${endStr}</div>` : ''}
         ${limitWarn}${monthLimitWarn}
         <div class="asset-nums">
@@ -5718,49 +5735,52 @@ function checkAssetLimit() {
   if (t.lifetimeLimit) {
     const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
     const remEl = document.getElementById('amNisaRemaining');
+    // 名義：現在編集中のアセットの名義でフィルタリング
+    const currentOwner = document.getElementById('amOwner')?.value || 'self';
 
     if (type === 'nisa_tsumitate' || type === 'nisa_growth') {
-      // 積立枠・成長枠は合算で生涯1800万円が上限
+      // 積立枠・成長枠は【同名義】で合算して生涯1800万円が上限
       const usedByOthers = (state.assets || [])
-        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId)
+        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId && (a.owner || 'self') === currentOwner)
         .reduce((s, a) => s + (a.nisaBasis || 0), 0);
       const totalUsed     = usedByOthers + basis;
       const combinedLimit = 1800;
       const remaining     = Math.max(0, combinedLimit - totalUsed);
+      const ownerLabel    = currentOwner === 'partner' ? 'パートナー' : '本人';
       if (remEl) {
-        const otherNote = usedByOthers > 0 ? `（他アセットで${usedByOthers.toLocaleString()}万円使用済み）` : '';
+        const otherNote = usedByOthers > 0 ? `（${ownerLabel}の他アセットで${usedByOthers.toLocaleString()}万円使用済み）` : '';
         remEl.innerHTML = remaining > 0
-          ? `<span style="font-size:16px">${remaining.toLocaleString()}万円 残り</span><br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">合計使用済 ${totalUsed.toLocaleString()}万円 / 1,800万円${otherNote}</span>`
-          : `<span>上限到達（${totalUsed.toLocaleString()}万円 / 1,800万円）</span>`;
+          ? `<span style="font-size:16px">${remaining.toLocaleString()}万円 残り</span><br><span style="font-size:11px;font-weight:400;color:var(--text-muted)">${ownerLabel} 合計使用済 ${totalUsed.toLocaleString()}万円 / 1,800万円${otherNote}</span>`
+          : `<span>上限到達（${ownerLabel} ${totalUsed.toLocaleString()}万円 / 1,800万円）</span>`;
         remEl.style.color = remaining > 500 ? 'var(--secondary)' : remaining > 0 ? 'var(--warning)' : 'var(--danger)';
       }
-      // NISA枠完了年の試算
+      // NISA枠完了年の試算（同名義のみ集計）
       const otherNisaAnnual = (state.assets || [])
-        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId)
+        .filter(a => (a.type === 'nisa_tsumitate' || a.type === 'nisa_growth') && a.id !== editingId && (a.owner || 'self') === currentOwner)
         .reduce((s, a) => s + (a.monthly || 0) * 12 + (a.annualBonus || 0), 0);
       const totalNisaAnnual = monthly * 12 + annualBonus + otherNisaAnnual;
       const estimateEl = document.getElementById('amNisaFillEstimate');
       if (estimateEl) {
         if (remaining <= 0) {
-          estimateEl.innerHTML = '✅ NISA生涯枠はすでに使用済みです。積立は停止されます。';
+          estimateEl.innerHTML = `✅ ${ownerLabel}のNISA生涯枠はすでに使用済みです。積立は停止されます。`;
         } else if (totalNisaAnnual > 0) {
           const yearsLeft = Math.ceil(remaining / totalNisaAnnual);
           const fillYear = new Date().getFullYear() + yearsLeft;
-          estimateEl.innerHTML = `📅 現在のペースで <strong>約${yearsLeft}年後（${fillYear}年頃）</strong> にNISA枠が埋まります。<br><span style="font-size:11px;color:var(--text-muted)">全NISAアセット合計 年${totalNisaAnnual.toLocaleString()}万円の積立</span>`;
+          estimateEl.innerHTML = `📅 現在のペースで <strong>約${yearsLeft}年後（${fillYear}年頃）</strong> に${ownerLabel}のNISA枠が埋まります。<br><span style="font-size:11px;color:var(--text-muted)">${ownerLabel}のNISAアセット合計 年${totalNisaAnnual.toLocaleString()}万円の積立</span>`;
         } else {
           estimateEl.innerHTML = '';
         }
       }
       if (totalUsed >= combinedLimit) {
-        warns.push(`積立枠＋成長枠の累計元本合計 ${totalUsed.toLocaleString()}万円 が生涯非課税枠(1,800万円)に達しています`);
+        warns.push(`【${ownerLabel}】積立枠＋成長枠の累計元本合計 ${totalUsed.toLocaleString()}万円 が生涯非課税枠(1,800万円)に達しています`);
       }
-      // 成長枠単独の上限(1200万円)チェック
+      // 成長枠単独の上限(1200万円)チェック（同名義のみ）
       if (type === 'nisa_growth') {
         const growthOthers = (state.assets || [])
-          .filter(a => a.type === 'nisa_growth' && a.id !== editingId)
+          .filter(a => a.type === 'nisa_growth' && a.id !== editingId && (a.owner || 'self') === currentOwner)
           .reduce((s, a) => s + (a.nisaBasis || 0), 0);
         if (growthOthers + basis > 1200) {
-          warns.push(`成長投資枠の累計元本 ${(growthOthers + basis).toLocaleString()}万円 が成長枠上限(1,200万円)を超えています`);
+          warns.push(`【${ownerLabel}】成長投資枠の累計元本 ${(growthOthers + basis).toLocaleString()}万円 が成長枠上限(1,200万円)を超えています`);
         }
       }
     } else {
@@ -5776,13 +5796,14 @@ function checkAssetLimit() {
     }
   }
 
-  // 積立枠＋成長枠の合算1800万円チェック
+  // 積立枠＋成長枠の合算1800万円チェック（同名義のみ）
   const combinedWarnEl = document.getElementById('amNisaCombinedWarn');
   if (combinedWarnEl) {
     const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
-    const tsumiBasis = (state.assets||[]).filter(a => a.type === 'nisa_tsumitate' && a.id !== editingId).reduce((s,a) => s+(a.nisaBasis||0),0)
+    const _cOwner = document.getElementById('amOwner')?.value || 'self';
+    const tsumiBasis = (state.assets||[]).filter(a => a.type === 'nisa_tsumitate' && a.id !== editingId && (a.owner||'self') === _cOwner).reduce((s,a) => s+(a.nisaBasis||0),0)
       + (type === 'nisa_tsumitate' ? basis : 0);
-    const growthBasis = (state.assets||[]).filter(a => a.type === 'nisa_growth' && a.id !== editingId).reduce((s,a) => s+(a.nisaBasis||0),0)
+    const growthBasis = (state.assets||[]).filter(a => a.type === 'nisa_growth' && a.id !== editingId && (a.owner||'self') === _cOwner).reduce((s,a) => s+(a.nisaBasis||0),0)
       + (type === 'nisa_growth' ? basis : 0);
     const combinedOver = (tsumiBasis + growthBasis) > 1800;
     combinedWarnEl.style.display = combinedOver ? '' : 'none';
@@ -5799,10 +5820,15 @@ function checkAssetLimit() {
 function openAssetModal(id) {
   editingAssetId = id || null;
   document.getElementById('assetModalTitle').textContent = id ? 'アセットを編集' : 'アセットを追加';
+  // 名義フィールド：パートナーがいる場合のみ表示
+  const _hasPartner = state.profile?.marital === 'married' || state.profile?.marital === 'planning';
+  const _ownerWrap = document.getElementById('amOwnerWrap');
+  if (_ownerWrap) _ownerWrap.style.display = _hasPartner ? '' : 'none';
   if (id) {
     const a = state.assets.find(x => x.id === id);
     document.getElementById('amType').value = a.type;
     document.getElementById('amName').value = a.name || '';
+    if (document.getElementById('amOwner')) document.getElementById('amOwner').value = a.owner || 'self';
     document.getElementById('amCurrentVal').value = a.currentVal || '';
     document.getElementById('amMonthly').value = a.monthly || '';
     document.getElementById('amAnnualBonus').value = a.annualBonus || '';
@@ -5829,6 +5855,7 @@ function openAssetModal(id) {
     document.getElementById('amEndYear').value = '';
     document.getElementById('amEndAge').value = '';
     document.getElementById('amNote').value = '';
+    if (document.getElementById('amOwner')) document.getElementById('amOwner').value = 'self';
   }
   // 旧NISAの場合は終了年を自動セット（編集・新規共通）
   setTimeout(() => {
@@ -5872,6 +5899,7 @@ function saveAsset() {
     taxType: document.getElementById('amTaxType').value,
     dividendYield: parseFloat(document.getElementById('amDividend').value) || 0,
     dividendMode: document.getElementById('amDividendMode').value || 'reinvest',
+    owner: document.getElementById('amOwner')?.value || 'self',
     nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
     nisaOverflowTargetId: document.getElementById('amNisaOverflowTarget')?.value || '',
     targetVal: parseFloat(document.getElementById('amTargetVal').value) || 0,
@@ -6208,22 +6236,52 @@ function renderPortfolio() {
   }, 0);
 
   // NISA合算チェック（積立枠＋成長枠の累計元本が1800万円を超えないか）
-  const nisaTsumiTotal  = state.assets.filter(a => a.type === 'nisa_tsumitate').reduce((s,a) => s+(a.nisaBasis||0), 0);
-  const nisaGrowthTotal = state.assets.filter(a => a.type === 'nisa_growth').reduce((s,a) => s+(a.nisaBasis||0), 0);
+  const _hasPartnerNisa = (state.profile?.marital === 'married' || state.profile?.marital === 'planning');
+  // 名義別に集計
+  const _nisaByOwner = ['self', 'partner'].map(own => {
+    const tsumi  = state.assets.filter(a => a.type === 'nisa_tsumitate' && (a.owner||'self') === own).reduce((s,a) => s+(a.nisaBasis||0), 0);
+    const growth = state.assets.filter(a => a.type === 'nisa_growth'    && (a.owner||'self') === own).reduce((s,a) => s+(a.nisaBasis||0), 0);
+    return { own, tsumi, growth, combined: tsumi + growth };
+  });
+  const nisaTsumiTotal  = _nisaByOwner.reduce((s,x) => s + x.tsumi, 0);
+  const nisaGrowthTotal = _nisaByOwner.reduce((s,x) => s + x.growth, 0);
   const nisaCombined    = nisaTsumiTotal + nisaGrowthTotal;
+  const _renderNisaRow = ({ own, tsumi, growth, combined }) => {
+    if (tsumi === 0 && growth === 0) return '';
+    const lbl   = own === 'partner' ? `👫 ${state.profile?.partnername || 'パートナー'}` : '👤 本人';
+    const color = combined > 1800 ? '#DC2626' : '#166534';
+    const bar   = Math.min(100, Math.round(combined / 1800 * 100));
+    return `
+      <div style="background:white;border-radius:8px;padding:10px 12px;margin-top:8px;border:1px solid #86EFAC">
+        <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px">${lbl}</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px">
+          <div>積立枠: <strong>${tsumi.toLocaleString()}万円</strong></div>
+          <div>成長枠: <strong>${growth.toLocaleString()}万円</strong></div>
+          <div style="font-weight:700;color:${color}">合計: ${combined.toLocaleString()} / 1,800万円
+            ${combined > 1800 ? ' ⚠️ 超過' : ` (残り ${Math.max(0,1800-combined).toLocaleString()}万円)`}
+          </div>
+        </div>
+        <div style="height:4px;background:#D1FAE5;border-radius:2px;margin-top:6px;overflow:hidden">
+          <div style="height:100%;width:${bar}%;background:${combined>1800?'#DC2626':'#10B981'};border-radius:2px"></div>
+        </div>
+      </div>`;
+  };
   const nisaBannerHtml  = (nisaTsumiTotal > 0 || nisaGrowthTotal > 0) ? `
     <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px">
-      <div style="font-weight:600;color:#166534;margin-bottom:6px">🌱 NISA生涯投資枠の状況</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div>積立枠 累計元本: <strong>${nisaTsumiTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1800-nisaCombined).toLocaleString()}万円</div>
-        <div>成長枠 累計元本: <strong>${nisaGrowthTotal.toLocaleString()}万円</strong> / 残り ${Math.max(0,1200-nisaGrowthTotal).toLocaleString()}万円</div>
-        <div style="font-weight:600;color:${nisaCombined > 1800 ? '#DC2626' : '#166534'}">合計: ${nisaCombined.toLocaleString()}万円 / 1,800万円
-          ${nisaCombined > 1800 ? ' ⚠️ 生涯上限超過' : ` (残り ${Math.max(0,1800-nisaCombined).toLocaleString()}万円)`}
+      <div style="font-weight:600;color:#166534;margin-bottom:4px">🌱 NISA生涯投資枠の状況</div>
+      ${_hasPartnerNisa ? _nisaByOwner.map(_renderNisaRow).join('') : (() => {
+        const { tsumi, growth, combined } = _nisaByOwner[0];
+        return `<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px">
+          <div>積立枠 累計元本: <strong>${tsumi.toLocaleString()}万円</strong> / 残り ${Math.max(0,1800-combined).toLocaleString()}万円</div>
+          <div>成長枠 累計元本: <strong>${growth.toLocaleString()}万円</strong> / 残り ${Math.max(0,1200-growth).toLocaleString()}万円</div>
+          <div style="font-weight:600;color:${combined > 1800 ? '#DC2626' : '#166534'}">合計: ${combined.toLocaleString()}万円 / 1,800万円
+            ${combined > 1800 ? ' ⚠️ 生涯上限超過' : ` (残り ${Math.max(0,1800-combined).toLocaleString()}万円)`}
+          </div>
         </div>
-      </div>
-      <div style="height:6px;background:#D1FAE5;border-radius:3px;margin-top:8px;overflow:hidden">
-        <div style="height:100%;width:${Math.min(100,Math.round(nisaCombined/1800*100))}%;background:${nisaCombined>1800?'#DC2626':'#10B981'};border-radius:3px"></div>
-      </div>
+        <div style="height:6px;background:#D1FAE5;border-radius:3px;margin-top:8px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(100,Math.round(combined/1800*100))}%;background:${combined>1800?'#DC2626':'#10B981'};border-radius:3px"></div>
+        </div>`;
+      })()}
     </div>` : '';
 
   el.innerHTML = nisaBannerHtml + `
