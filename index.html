@@ -1563,6 +1563,24 @@
   @media print {
     body { display: none !important; }
   }
+
+/* ===== 出口戦略 タブ・アコーディオン ===== */
+.ret-main-tabs { display:flex; gap:6px; margin-bottom:20px; background:#f0f0f5; border-radius:12px; padding:4px; }
+.ret-main-tab { flex:1; padding:10px 8px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:transparent; color:#888; transition:all .2s; }
+.ret-main-tab.active { background:#fff; color:#4F46E5; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+.ret-acc-group { border:1.5px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+.ret-acc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface); cursor:pointer; font-size:14px; font-weight:700; color:var(--text); user-select:none; }
+.ret-acc-header:hover { background:var(--surface2); }
+.ret-acc-icon { font-size:12px; color:var(--text-muted); transition:transform .2s; }
+.ret-acc-group.open .ret-acc-icon { transform:rotate(180deg); }
+.ret-acc-body { display:none; }
+.ret-acc-group.open .ret-acc-body { display:block; }
+.ret-acc-body .card { margin:8px; border:1px solid var(--border); }
+.ret-sub-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+.ret-sub-tab { padding:8px 16px; border:1.5px solid var(--border); border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; background:#fff; color:var(--text-secondary); transition:all .15s; }
+.ret-sub-tab.active { background:#4F46E5; color:#fff; border-color:#4F46E5; }
+.ret-run-btn { width:100%; padding:16px; background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; margin-top:16px; box-shadow:0 4px 16px rgba(79,70,229,.3); }
+.ret-run-btn:active { transform:scale(.98); }
   </style>
 </head>
 <body>
@@ -2537,6 +2555,21 @@
       <button class="btn btn-primary" onclick="saveRetirement()">💾 保存する</button>
     </div>
 
+    <!-- メインタブ -->
+    <div class="ret-main-tabs">
+      <button class="ret-main-tab active" id="retMainTab_settings" onclick="switchRetTab('settings')">📝 設定</button>
+      <button class="ret-main-tab" id="retMainTab_results" onclick="switchRetTab('results')">📊 結果</button>
+    </div>
+
+    <!-- ===== 設定タブ ===== -->
+    <div id="retTabContent_settings">
+
+    <!-- アコーディオン 1: リタイア目標と支出 -->
+    <div class="ret-acc-group open" id="retAcc1">
+      <div class="ret-acc-header" onclick="toggleRetAcc('retAcc1')">
+        <span>🎯 リタイア目標と支出</span><span class="ret-acc-icon">▼</span>
+      </div>
+      <div class="ret-acc-body">
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#FEF3C7">🏖️</span>リタイア目標</div>
       <div class="form-row">
@@ -2672,6 +2705,15 @@
       </div>
     </div>
 
+      </div><!-- /ret-acc-body -->
+    </div><!-- /retAcc1 -->
+
+    <!-- アコーディオン 2: 年金・収入計画 -->
+    <div class="ret-acc-group" id="retAcc2">
+      <div class="ret-acc-header" onclick="toggleRetAcc('retAcc2')">
+        <span>💰 年金・収入計画</span><span class="ret-acc-icon">▼</span>
+      </div>
+      <div class="ret-acc-body">
     <!-- 年金自動試算 -->
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#DBEAFE">🏛️</span>年金自動試算</div>
@@ -2842,7 +2884,15 @@
       <div id="retExtraIncomeList"></div>
       <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addRetExtraIncome()">＋ 収入を追加</button>
     </div>
+      </div><!-- /ret-acc-body -->
+    </div><!-- /retAcc2 -->
 
+    <!-- アコーディオン 3: 取り崩し戦略 -->
+    <div class="ret-acc-group" id="retAcc3">
+      <div class="ret-acc-header" onclick="toggleRetAcc('retAcc3')">
+        <span>⚙️ 取り崩し戦略</span><span class="ret-acc-icon">▼</span>
+      </div>
+      <div class="ret-acc-body">
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#EDE9FE">📉</span>取り崩し戦略</div>
       <div class="form-group">
@@ -2938,6 +2988,25 @@
           </div>
         </div>
       </div>
+    </div>
+
+      </div><!-- /ret-acc-body -->
+    </div><!-- /retAcc3 -->
+
+    <!-- 実行ボタン -->
+    <button class="ret-run-btn" onclick="runAndShowResults()">📊 シミュレーションを実行する →</button>
+
+    </div><!-- /retTabContent_settings -->
+
+    <!-- ===== 結果タブ ===== -->
+    <div id="retTabContent_results" style="display:none">
+
+    <!-- 結果サブタブ -->
+    <div class="ret-sub-tabs">
+      <button class="ret-sub-tab active" id="retSubTab_overview" onclick="switchRetSubTab('overview')">📊 概要</button>
+      <button class="ret-sub-tab" id="retSubTab_cashflow" onclick="switchRetSubTab('cashflow')">📋 キャッシュフロー</button>
+      <button class="ret-sub-tab" id="retSubTab_scenario" onclick="switchRetSubTab('scenario')">🔀 シナリオ比較</button>
+      <button class="ret-sub-tab" id="retSubTab_advanced" onclick="switchRetSubTab('advanced')">🎛️ 詳細分析</button>
     </div>
 
     <div id="retResultCard"></div>
@@ -3179,6 +3248,8 @@
         ※ 現在入力済みの資産・年金データをベースに、各シナリオのパラメータ差分を適用した試算です。実際の結果を保証するものではありません。
       </p>
     </div>
+
+    </div><!-- /retTabContent_results -->
   </div>
 
   <!-- ===== INSURANCE ===== -->
@@ -11211,35 +11282,8 @@ function runRetirementSim() {
     }
   }
 
-  // 機能2: シナリオ並列比較を自動表示（ボタン追加）
-  // 機能3,4のボタンをresultCardに追記
-  const retResultCardEl = document.getElementById('retResultCard');
-  if (retResultCardEl) {
-    const extraBtns = document.createElement('div');
-    extraBtns.style.cssText = 'margin-top:12px;border-top:.5px solid var(--border);padding-top:12px';
-    extraBtns.innerHTML = `
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">詳細分析</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="retAnalysisTabs">
-        <button id="btnShowScenarios" onclick="toggleRetirementPanel('scenarios')"
-          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
-          🔢 シナリオ比較
-        </button>
-        <button id="btnShowTax" onclick="toggleRetirementPanel('tax')"
-          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
-          💰 税金・社保
-        </button>
-        <button id="btnStressTest" onclick="toggleRetirementPanel('stress')"
-          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
-          📉 ストレステスト
-        </button>
-        <button id="btnPrepay" onclick="toggleRetirementPanel('prepay')"
-          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
-          🏠 繰上返済比較
-        </button>
-      </div>`;
-    retResultCardEl.appendChild(extraBtns);
-  }
   renderDrawdownCompare();
+  switchRetSubTab('overview');
 }
 
 let _retDrawdownChartObj = null;
@@ -15528,6 +15572,60 @@ function ackDisclaimer() {
   state.disclaimerAck.rateHash = calcRateHash();
   save();
   closeDisclaimerModal();
+}
+
+// ===== 出口戦略 タブ・アコーディオン =====
+function switchRetTab(tab) {
+  ['settings', 'results'].forEach(t => {
+    const content = document.getElementById('retTabContent_' + t);
+    const btn = document.getElementById('retMainTab_' + t);
+    if (content) content.style.display = t === tab ? '' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+
+function toggleRetAcc(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+
+const _RET_SUBTAB_CARDS = {
+  overview:  ['retDrawdownCard', 'retChartCard'],
+  cashflow:  ['retBreakdownCard', 'retPensionBreakevenCard'],
+  scenario:  ['retScenarioCard', 'scenarioCompSection'],
+  advanced:  ['retScenarioCompareCard','retTaxCard','retStressCard','retPrepayCard',
+              'retSensitivityCard','retMonteCarloCard','retFireTaxCard','retBasisCard'],
+};
+
+function switchRetSubTab(tab) {
+  // ボタン更新
+  Object.keys(_RET_SUBTAB_CARDS).forEach(t => {
+    const btn = document.getElementById('retSubTab_' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  // 全カード非表示
+  const allCards = Object.values(_RET_SUBTAB_CARDS).flat();
+  allCards.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // 対象サブタブのカードを表示
+  (_RET_SUBTAB_CARDS[tab] || []).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = '';
+  });
+  // 詳細分析: 未描画のカードを自動レンダリング
+  if (tab === 'advanced') {
+    try { calcAndShowScenarios(true); } catch(e) {}
+    try { showRetirementTaxCard(true); } catch(e) {}
+    try { runStressTest(true); } catch(e) {}
+    try { renderPrepaymentSim(); } catch(e) {}
+  }
+}
+
+function runAndShowResults() {
+  runRetirementSim();
+  switchRetTab('results');
 }
 
 // シナリオページのメインレンダリング
