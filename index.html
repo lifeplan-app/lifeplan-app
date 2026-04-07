@@ -289,25 +289,6 @@
       color: white;
       font-weight: 600;
     }
-    .nav-sep {
-      width: 1px;
-      height: 20px;
-      background: var(--border);
-      margin: 0 4px;
-      flex-shrink: 0;
-      align-self: center;
-    }
-    .nav-group-label {
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      padding: 0 4px;
-      white-space: nowrap;
-      align-self: center;
-      opacity: .7;
-    }
 
     /* ===== MAIN ===== */
     main {
@@ -348,39 +329,6 @@
     }
 
     /* ===== DASHBOARD ===== */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      padding: 18px 20px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .stat-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      letter-spacing: .1px;
-    }
-    .stat-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -.5px;
-    }
-    .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
-    .stat-card.blue   .stat-value { color: var(--primary); }
-    .stat-card.green  .stat-value { color: var(--secondary); }
-    .stat-card.orange .stat-value { color: var(--warning); }
-    .stat-card.red    .stat-value { color: var(--danger); }
 
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
@@ -1049,22 +997,6 @@
     }
 
     /* ===== LIFE SCORE ===== */
-    .life-score-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-    }
-
-    .score-item { text-align: center; }
-    .score-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: .1px; }
-    .score-bar-wrap {
-      background: var(--surface3);
-      border-radius: 999px;
-      height: 6px;
-      overflow: hidden;
-    }
-    .score-bar { height: 100%; border-radius: 999px; background: var(--primary); }
-    .score-val { font-size: 17px; font-weight: 700; margin-top: 4px; letter-spacing: -.3px; }
 
     .welcome-banner {
       background: linear-gradient(145deg, #1C1C1E 0%, #2C2C2E 100%);
@@ -1500,12 +1432,6 @@
 
     .card { padding: 15px 14px; }
 
-    .dashboard-grid {
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .stat-card { padding: 13px 14px; }
-    .stat-value { font-size: 22px; }
 
     .welcome-banner { padding: 16px; }
     .welcome-banner h2 { font-size: 17px; }
@@ -1573,11 +1499,9 @@
   }
 
   @media (max-width: 480px) {
-    .dashboard-grid { grid-template-columns: 1fr; }
     .finance-grid   { grid-template-columns: 1fr; }
     .pf-summary-grid { grid-template-columns: 1fr 1fr; }
     .integrated-kpi { grid-template-columns: 1fr; }
-    .stat-value { font-size: 20px; }
     .phase-grid { grid-template-columns: 1fr; }
     [style*="grid-template-columns: 1fr 1fr 1fr"] {
       grid-template-columns: 1fr !important;
@@ -1628,9 +1552,6 @@
     </button>
     <button class="drawer-item" data-page="profile" onclick="closeDrawer();showPage('profile')">
       <span class="d-icon">👤</span>プロフィール
-    </button>
-    <button class="drawer-item" data-page="goals" onclick="closeDrawer();showPage('goals')">
-      <span class="d-icon">🎯</span>目標管理
     </button>
     <button class="drawer-item" data-page="insurance" onclick="closeDrawer();showPage('insurance')">
       <span class="d-icon">🛡️</span>保険管理
@@ -1725,20 +1646,11 @@
 </div>
 <nav id="mainNav">
   <button class="active" data-page="dashboard" onclick="showPage('dashboard')">🏠 ダッシュボード</button>
-  <div class="nav-sep"></div>
-  <span class="nav-group-label">①現状把握</span>
   <button data-page="profile" onclick="showPage('profile')">👤 プロフィール</button>
   <button data-page="finance" onclick="showPage('finance')">💰 家計・資産</button>
-  <div class="nav-sep"></div>
-  <span class="nav-group-label">②人生設計</span>
   <button data-page="lifeevents" onclick="showPage('lifeevents')">📅 ライフイベント</button>
-  <button data-page="goals" onclick="showPage('goals')">🎯 目標管理</button>
   <button data-page="timeline" onclick="showPage('timeline')">📊 タイムライン</button>
-  <div class="nav-sep"></div>
-  <span class="nav-group-label">③戦略</span>
   <button data-page="retirement" onclick="showPage('retirement')">🏖️ 出口戦略</button>
-  <div class="nav-sep"></div>
-  <span class="nav-group-label">補足</span>
   <button data-page="insurance" onclick="showPage('insurance')">🛡️ 保険管理</button>
   <button data-page="inheritance" onclick="showPage('inheritance')">🏛️ 相続・贈与</button>
 </nav>
@@ -1749,7 +1661,7 @@
   <div id="page-dashboard" class="page active">
     <div id="welcomeBanner" class="welcome-banner">
       <h2 id="welcomeName">あなたのライフプランへようこそ</h2>
-      <p id="welcomeSub">目標を設定して、理想の人生を計画しましょう</p>
+      <p id="welcomeSub">ライフプランを整理して、理想の未来を描きましょう</p>
     </div>
 
     <!-- セットアップ進捗（コントロールタワー） -->
@@ -1805,21 +1717,6 @@
     <!-- PDF印刷レポート（通常は非表示、印刷時のみ表示） -->
     <div id="print-report"></div>
 
-    <div class="dashboard-grid" id="dashStats"></div>
-    <div class="two-col">
-      <div class="card">
-        <div class="card-title">
-          <span class="icon" style="background:#EEF2FF">🎯</span>目標の進捗
-        </div>
-        <div id="dashGoalList"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <span class="icon" style="background:#D1FAE5">✅</span>直近のタスク
-        </div>
-        <div id="dashActionList"></div>
-      </div>
-    </div>
     <!-- 資産推移ミニグラフ -->
     <div class="card" id="dbAssetChartCard" style="display:none">
       <div class="card-title" style="justify-content:space-between">
@@ -1830,11 +1727,36 @@
       </div>
       <div style="height:160px"><canvas id="dbAssetChart"></canvas></div>
     </div>
-    <div class="card">
-      <div class="card-title">
-        <span class="icon" style="background:#FEF3C7">⚖️</span>人生のバランス
+    <!-- リタイア進捗カード -->
+    <div class="card" id="dbRetireCard" style="display:none">
+      <div class="card-title" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="background:#D1FAE5">🏖️</span>リタイア目標進捗
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="showPage('retirement')">詳細 →</button>
       </div>
-      <div class="life-score-grid" id="lifeScoreGrid"></div>
+      <div id="dbRetireContent"></div>
+    </div>
+    <!-- 直近ライフイベント・年金概算 -->
+    <div class="two-col" id="dbBottomCards" style="display:none">
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="icon" style="background:#FEF3C7">📅</span>直近のライフイベント
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="showPage('timeline')">タイムライン →</button>
+        </div>
+        <div id="dbNextEventsContent"></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="icon" style="background:#EEF2FF">💰</span>年金受給予測
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="showPage('retirement')">詳細 →</button>
+        </div>
+        <div id="dbPensionContent"></div>
+      </div>
     </div>
   </div>
 
@@ -1914,14 +1836,21 @@
     </div>
 
     <div class="card">
-      <div class="card-title"><span class="icon" style="background:#FEF3C7">💭</span>人生の価値観・ビジョン</div>
-      <div class="form-group">
-        <label>人生で最も大切にしていること</label>
-        <textarea id="profileValues" placeholder="例: 家族との時間、自己成長、社会への貢献..."></textarea>
+      <div class="card-title" onclick="toggleVisionSection()" style="cursor:pointer;user-select:none">
+        <span class="icon" style="background:#FEF3C7">💭</span>
+        人生の価値観・ビジョン
+        <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-weight:400">任意</span>
+        <span id="visionToggleIcon" style="margin-left:8px;font-size:12px;color:var(--text-muted)">▶</span>
       </div>
-      <div class="form-group">
-        <label>10年後の理想の姿</label>
-        <textarea id="profileVision" placeholder="例: 独立して好きな仕事をしながら、家族と充実した生活を送っている..."></textarea>
+      <div id="visionSection" style="display:none">
+        <div class="form-group">
+          <label>人生で最も大切にしていること</label>
+          <textarea id="profileValues" placeholder="例: 家族との時間、自己成長、社会への貢献..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>10年後の理想の姿</label>
+          <textarea id="profileVision" placeholder="例: 独立して好きな仕事をしながら、家族と充実した生活を送っている..."></textarea>
+        </div>
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
@@ -1931,20 +1860,6 @@
     </div>
   </div>
 
-  <!-- ===== GOALS ===== -->
-  <div id="page-goals" class="page">
-    <div class="section-header">
-      <h1 class="section-title">目標管理</h1>
-      <button class="btn btn-primary" onclick="openGoalModal()">＋ 目標を追加</button>
-    </div>
-    <div class="category-tabs" id="catTabs"></div>
-    <div id="goalList" class="goal-list"></div>
-    <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
-      <button class="btn btn-primary" onclick="showPage('retirement')" style="padding:11px 28px;font-size:14px;border-radius:12px">
-        次のステップ：出口戦略へ →
-      </button>
-    </div>
-  </div>
 
   <!-- ===== FINANCE ===== -->
   <div id="page-finance" class="page">
@@ -2079,14 +1994,15 @@
       </div>
     </div>
 
-    <div class="two-col">
+    <div class="two-col" style="grid-template-columns: 2fr 3fr">
       <div class="card">
         <div class="card-title"><span class="icon" style="background:#FEF3C7">📊</span>収支バランス</div>
         <div id="finSummary"></div>
         <div class="chart-wrap"><canvas id="finChart"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title"><span class="icon" style="background:#D1FAE5">📈</span>貯蓄シミュレーション（簡易）</div>
+        <div class="card-title"><span class="icon" style="background:#D1FAE5">📈</span>資産推移シミュレーション</div>
+        <div id="simAssetSummary" style="margin-bottom:10px"></div>
         <div id="simConfig" style="margin-bottom:12px">
           <div class="form-row">
             <div class="form-group">
@@ -2094,22 +2010,16 @@
               <input type="number" id="simYears" value="10" min="1" max="50" onchange="renderFinCharts()">
             </div>
             <div class="form-group">
-              <label>年利 (%)</label>
-              <input type="number" id="simRate" value="3" min="0" max="20" step="0.1" onchange="renderFinCharts()">
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
               <label>想定インフレ率 (%/年)</label>
               <input type="number" id="inflationRate" value="2" min="0" max="10" step="0.1" onchange="saveFinance();renderPortfolio()">
             </div>
-            <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px">
-              <label class="toggle-wrap" for="showRealValue">
-                <input type="checkbox" id="showRealValue" onchange="renderFinCharts();renderPortfolio()">
-                <div class="toggle-track"><div class="toggle-thumb"></div></div>
-                実質値（インフレ調整後）で表示
-              </label>
-            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <label class="toggle-wrap" for="showRealValue">
+              <input type="checkbox" id="showRealValue" onchange="renderFinCharts();renderPortfolio()">
+              <div class="toggle-track"><div class="toggle-thumb"></div></div>
+              実質値（インフレ調整後）で表示
+            </label>
           </div>
         </div>
         <div class="chart-wrap"><canvas id="simChart"></canvas></div>
@@ -2299,24 +2209,6 @@
       </div>
     </div>
 
-    <!-- 月次実績トラッキング -->
-    <div class="card">
-      <div class="card-title" style="justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="icon" style="background:#FEE2E2">📊</span>月次実績トラッキング
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="openActualModal()">＋ 実績を追加</button>
-      </div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">毎月の実際の収支を記録し、計画値との差異を確認します。</div>
-      <div id="actualList">
-        <p style="font-size:13px;color:var(--text-muted);padding:8px 0">まだ実績が記録されていません</p>
-      </div>
-      <!-- 計画 vs 実績 チャート -->
-      <div id="actualChartWrap" style="display:none;margin-top:16px">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px">収入・支出：計画 vs 実績</div>
-        <div style="height:240px"><canvas id="actualChart"></canvas></div>
-      </div>
-    </div>
     <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
       <button class="btn btn-primary" onclick="saveFinance();showPage('lifeevents')" style="padding:11px 28px;font-size:14px;border-radius:12px">
         次のステップ：ライフイベントへ →
@@ -2515,18 +2407,20 @@
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin:0">現在登録中のイベントを「保存する」後にグラフへ反映されます</p>
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px">年間ライフイベント費用（積み上げ）</div>
-      <div class="chart-wrap-tall"><canvas id="leStackedChart"></canvas></div>
-      <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:20px 0 6px">年間キャッシュフロー（黒字 / 赤字）</div>
-      <div class="chart-wrap-tall"><canvas id="leCashFlowChart"></canvas></div>
-      <div id="leCompareSection">
-        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin:20px 0 6px">子どもあり vs なし の貯蓄比較</div>
-        <div class="chart-wrap-tall"><canvas id="leCompareChart"></canvas></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted)">年間ライフイベント費用（積み上げ）</div>
+        <div id="leStackedSummary" style="font-size:11px;color:var(--text-secondary);font-weight:600"></div>
       </div>
+      <div class="chart-wrap-tall"><canvas id="leStackedChart"></canvas></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 6px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted)">年間キャッシュフロー（収入 / 支出）</div>
+        <div id="leCFSummary" style="font-size:11px;font-weight:600"></div>
+      </div>
+      <div class="chart-wrap-tall"><canvas id="leCashFlowChart"></canvas></div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
-      <button class="btn btn-primary" onclick="saveLifeEvents();showPage('goals')" style="padding:11px 28px;font-size:14px;border-radius:12px">
-        次のステップ：目標管理へ →
+      <button class="btn btn-primary" onclick="saveLifeEvents();showPage('retirement')" style="padding:11px 28px;font-size:14px;border-radius:12px">
+        次のステップ：出口戦略へ →
       </button>
     </div>
   </div>
@@ -2887,6 +2781,28 @@
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px">生活費補填に加えて、毎月この額を追加で取り崩します（旅行・趣味など余裕資金）</div>
         </div>
       </div>
+      <!-- 資産取り崩し順序 -->
+      <div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">💵 資産取り崩し順序</div>
+        <div class="form-group">
+          <label>どの資産から先に使うか</label>
+          <select id="retDrawdownOrder" onchange="updateDrawdownOrderUI();saveRetirement()">
+            <option value="cash_first">💵 現金優先（現金を使い切ってから投資資産を売却）</option>
+            <option value="invest_first">📈 投資優先（投資資産から先に売却・現金は温存）</option>
+            <option value="proportional" selected>⚖️ 按分（現金・投資を保有比率で同時に取り崩す）</option>
+          </select>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.6" id="retDrawdownOrderNote">
+            現金と投資資産を保有比率に応じて同時に取り崩します（標準的なアプローチ）。
+          </div>
+        </div>
+        <div id="retCashFloorRow" style="display:none" class="form-row">
+          <div class="form-group">
+            <label>現金最低維持額 万円</label>
+            <input type="number" id="retCashFloor" placeholder="100" min="0" step="10" oninput="saveRetirement()">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">現金がこの残高を下回ったら、不足分を投資資産の売却で補填します</div>
+          </div>
+        </div>
+      </div>
       <input type="hidden" id="retHybridP1TypeHidden" value="rate">
       <div id="retHybridRow" style="display:none;background:#F5F3FF;border-radius:12px;padding:12px 14px;margin-top:8px">
         <div style="font-size:12px;font-weight:600;color:#5B21B6;margin-bottom:10px">🔄 切替型 取り崩し設定</div>
@@ -2934,9 +2850,11 @@
     </div>
 
     <div id="retResultCard"></div>
+    <div id="retDrawdownCard" style="display:none"></div>
     <div id="retScenarioCompareCard" style="display:none"></div>
     <div id="retTaxCard" style="display:none"></div>
     <div id="retStressCard" style="display:none"></div>
+    <div id="retPrepayCard" style="display:none"></div>
     <div class="card" id="retChartCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#EEF2FF">📈</span>資産推移（リタイア後）</div>
       <!-- ハイブリッドモード専用: スライダーでリアルタイムに切替年齢を調整 -->
@@ -3684,50 +3602,6 @@
   </div>
 </div>
 
-<!-- ===== ACTUAL MODAL ===== -->
-<div class="modal-overlay" id="actualModal">
-  <div class="modal" style="max-width:460px">
-    <div class="modal-header">
-      <div class="modal-title" id="actualModalTitle">月次実績を追加</div>
-      <button class="modal-close" onclick="closeActualModal()">✕</button>
-    </div>
-    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
-      <div class="form-row">
-        <div class="form-group">
-          <label>年</label>
-          <input type="number" id="actualYear" min="2000" max="2100" placeholder="例: 2026">
-        </div>
-        <div class="form-group">
-          <label>月</label>
-          <select id="actualMonth">
-            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>実際の収入（手取り）万円</label>
-          <input type="number" id="actualIncome" placeholder="例: 45" min="0" step="0.1">
-        </div>
-        <div class="form-group">
-          <label>実際の支出 万円</label>
-          <input type="number" id="actualExpense" placeholder="例: 28" min="0" step="0.1">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>メモ（任意）</label>
-        <input type="text" id="actualMemo" placeholder="例: ボーナス月、旅行あり">
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
-        <button class="btn btn-secondary" onclick="closeActualModal()">キャンセル</button>
-        <button class="btn btn-primary" onclick="saveActual()">保存する</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ===== CHILD MODAL ===== -->
 <div class="modal-overlay" id="childModal">
@@ -4792,7 +4666,6 @@ function showPage(id) {
   });
 
   if (id === 'dashboard')   renderDashboard();
-  if (id === 'goals')       renderGoals();
   if (id === 'finance')     renderFinance();
   if (id === 'timeline')    renderTimeline();
   if (id === 'profile')     loadProfileForm();
@@ -4816,6 +4689,7 @@ function loadProfileForm() {
   if (ch) ch.value = actualCount;
   if (p) p.children = actualCount;
   applyMaritalFilter();
+  initVisionSection();
 }
 
 // ===== 婚姻状況フィルター =====
@@ -6020,7 +5894,6 @@ function saveAsset() {
     bonus:                parseFloat(document.getElementById('finBonus')?.value) || undefined,
     expense:              parseFloat(document.getElementById('finExpense')?.value) || undefined,
     simYears:             parseInt(document.getElementById('simYears')?.value) || undefined,
-    simRate:              parseFloat(document.getElementById('simRate')?.value) || undefined,
     inflationRate:        parseFloat(document.getElementById('inflationRate')?.value) ?? undefined,
     incomeGrowthRate:     parseFloat(document.getElementById('finIncomeGrowthRate')?.value) || undefined,
     incomeGrowthUntilAge: parseInt(document.getElementById('finIncomeGrowthUntilAge')?.value) || undefined,
@@ -6596,7 +6469,6 @@ function renderFinance() {
   document.getElementById('finBonus').value = f.bonus || '';
   document.getElementById('finExpense').value = f.expense || '';
   document.getElementById('simYears').value = f.simYears || 10;
-  document.getElementById('simRate').value = f.simRate || 3;
   document.getElementById('inflationRate').value = f.inflationRate ?? 2;
 
   // ② 昇給モデルフィールド復元
@@ -6614,7 +6486,6 @@ function renderFinance() {
   renderAssets();
   renderPortfolio();
   initTaxSimDefaults();
-  renderActualList();
 }
 
 function initTaxSimDefaults() {
@@ -6870,166 +6741,6 @@ function saveAllocation() {
   showNotification('目標配分を保存しました');
 }
 
-// ===== 月次実績トラッキング =====
-let editingActualId = null;
-let actualChartObj = null;
-
-function openActualModal(id) {
-  editingActualId = id || null;
-  document.getElementById('actualModalTitle').textContent = id ? '実績を編集' : '月次実績を追加';
-  const now = new Date();
-  if (id) {
-    const a = (state.actuals || []).find(x => x.id === id);
-    if (a) {
-      document.getElementById('actualYear').value = a.year;
-      document.getElementById('actualMonth').value = a.month;
-      document.getElementById('actualIncome').value = a.income ?? '';
-      document.getElementById('actualExpense').value = a.expense ?? '';
-      document.getElementById('actualMemo').value = a.memo || '';
-    }
-  } else {
-    document.getElementById('actualYear').value = now.getFullYear();
-    document.getElementById('actualMonth').value = now.getMonth() + 1;
-    document.getElementById('actualIncome').value = '';
-    document.getElementById('actualExpense').value = '';
-    document.getElementById('actualMemo').value = '';
-  }
-  document.getElementById('actualModal').classList.add('open');
-}
-
-function closeActualModal() {
-  document.getElementById('actualModal').classList.remove('open');
-}
-
-function saveActual() {
-  const year    = parseInt(document.getElementById('actualYear').value);
-  const month   = parseInt(document.getElementById('actualMonth').value);
-  const income  = parseFloat(document.getElementById('actualIncome').value);
-  const expense = parseFloat(document.getElementById('actualExpense').value);
-  if (!year || !month) { alert('年月を入力してください'); return; }
-  const data = { year, month, income: isNaN(income) ? null : income, expense: isNaN(expense) ? null : expense, memo: document.getElementById('actualMemo').value };
-  if (!state.actuals) state.actuals = [];
-  if (editingActualId) {
-    const idx = state.actuals.findIndex(a => a.id === editingActualId);
-    if (idx >= 0) state.actuals[idx] = { ...state.actuals[idx], ...data };
-  } else {
-    // 同月が既にある場合は上書き確認
-    const existing = state.actuals.find(a => a.year === year && a.month === month);
-    if (existing) {
-      if (!confirm(`${year}年${month}月の実績は既に登録されています。上書きしますか？`)) return;
-      Object.assign(existing, data);
-    } else {
-      state.actuals.push({ id: uid(), ...data });
-    }
-  }
-  // 新しい順にソート
-  state.actuals.sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
-  save();
-  closeActualModal();
-  renderActualList();
-  showNotification('実績を保存しました');
-}
-
-function deleteActual(id) {
-  if (!confirm('この実績を削除しますか？')) return;
-  state.actuals = (state.actuals || []).filter(a => a.id !== id);
-  save();
-  renderActualList();
-}
-
-function renderActualList() {
-  const actuals = (state.actuals || []).slice().reverse(); // 新しい順
-  const el = document.getElementById('actualList');
-  const chartWrap = document.getElementById('actualChartWrap');
-  if (!el) return;
-
-  if (!actuals.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">まだ実績が記録されていません</p>';
-    if (chartWrap) chartWrap.style.display = 'none';
-    return;
-  }
-
-  // 計画値
-  const planIncome  = (state.finance?.income || 0);   // 月収（万円）
-  const planExpense = (state.finance?.expense || 0);   // 月支出（万円）
-
-  el.innerHTML = `
-    <div style="overflow-x:auto">
-      <table style="width:100%;font-size:12px;border-collapse:collapse">
-        <thead>
-          <tr style="background:var(--surface2)">
-            <th style="padding:8px 10px;text-align:left">年月</th>
-            <th style="padding:8px 10px;text-align:right">収入（実績）</th>
-            <th style="padding:8px 10px;text-align:right">収入差異</th>
-            <th style="padding:8px 10px;text-align:right">支出（実績）</th>
-            <th style="padding:8px 10px;text-align:right">支出差異</th>
-            <th style="padding:8px 10px;text-align:right">収支</th>
-            <th style="padding:8px 10px;text-align:left">メモ</th>
-            <th style="padding:8px 10px"></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${actuals.map(a => {
-            const incDiff  = a.income  != null ? Math.round((a.income  - planIncome)  * 10) / 10 : null;
-            const expDiff  = a.expense != null ? Math.round((a.expense - planExpense) * 10) / 10 : null;
-            const balance  = a.income != null && a.expense != null ? Math.round((a.income - a.expense) * 10) / 10 : null;
-            const incColor = incDiff != null ? (incDiff >= 0 ? 'var(--secondary)' : 'var(--danger)') : '';
-            const expColor = expDiff != null ? (expDiff <= 0 ? 'var(--secondary)' : 'var(--danger)') : '';
-            const balColor = balance != null ? (balance >= 0 ? 'var(--secondary)' : 'var(--danger)') : '';
-            return `<tr style="border-bottom:1px solid var(--border)">
-              <td style="padding:8px 10px;font-weight:600">${a.year}年${a.month}月</td>
-              <td style="padding:8px 10px;text-align:right">${a.income != null ? a.income + '万円' : '—'}</td>
-              <td style="padding:8px 10px;text-align:right;color:${incColor}">${incDiff != null ? (incDiff >= 0 ? '+' : '') + incDiff + '万円' : '—'}</td>
-              <td style="padding:8px 10px;text-align:right">${a.expense != null ? a.expense + '万円' : '—'}</td>
-              <td style="padding:8px 10px;text-align:right;color:${expColor}">${expDiff != null ? (expDiff >= 0 ? '+' : '') + expDiff + '万円' : '—'}</td>
-              <td style="padding:8px 10px;text-align:right;font-weight:700;color:${balColor}">${balance != null ? (balance >= 0 ? '+' : '') + balance + '万円' : '—'}</td>
-              <td style="padding:8px 10px;color:var(--text-muted);font-size:11px">${escHtml(a.memo || '')}</td>
-              <td style="padding:8px 10px;display:flex;gap:4px">
-                <button class="btn btn-sm btn-secondary" onclick="openActualModal('${a.id}')">編集</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteActual('${a.id}')">削除</button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-    </div>`;
-
-  // チャート
-  if (chartWrap) chartWrap.style.display = '';
-  const sorted = (state.actuals || []).slice(-12); // 最新12ヶ月
-  const labels = sorted.map(a => `${a.year}/${a.month}`);
-  const planIncArr  = sorted.map(() => planIncome);
-  const planExpArr  = sorted.map(() => planExpense);
-  const actIncArr   = sorted.map(a => a.income  ?? null);
-  const actExpArr   = sorted.map(a => a.expense ?? null);
-  const balArr      = sorted.map(a => a.income != null && a.expense != null ? Math.round((a.income - a.expense)*10)/10 : null);
-
-  const ctx = document.getElementById('actualChart')?.getContext('2d');
-  if (ctx) {
-    if (actualChartObj) actualChartObj.destroy();
-    actualChartObj = new Chart(ctx, {
-      data: {
-        labels,
-        datasets: [
-          { type: 'bar', label: '収入（実績）', data: actIncArr,  backgroundColor: 'rgba(52,199,89,.7)',  order: 3 },
-          { type: 'bar', label: '支出（実績）', data: actExpArr,  backgroundColor: 'rgba(248,113,113,.7)', order: 3 },
-          { type: 'line', label: '収入（計画）', data: planIncArr, borderColor: '#34C759', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, fill: false, order: 1 },
-          { type: 'line', label: '支出（計画）', data: planExpArr, borderColor: '#F87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, fill: false, order: 1 },
-          { type: 'line', label: '月次収支',     data: balArr,    borderColor: '#3B82F6', borderWidth: 2, pointRadius: 3, fill: false, order: 2,
-            segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#34C759' : '#F87171' } },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: { y: { ticks: { callback: v => v + '万' } } },
-        plugins: {
-          legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
-          tooltip: { callbacks: { label: item => ` ${item.dataset.label}: ${item.parsed.y != null ? item.parsed.y + '万円' : '—'}` } },
-        },
-      },
-    });
-  }
-}
 
 function calcTaxSim() {
   const taxableIncome = parseFloat(document.getElementById('taxSimIncome')?.value) || 0;
@@ -7110,7 +6821,6 @@ function saveFinance() {
     bonus: parseFloat(document.getElementById('finBonus').value) || 0,
     expense: parseFloat(document.getElementById('finExpense').value) || 0,
     simYears: parseInt(document.getElementById('simYears').value) || 10,
-    simRate: parseFloat(document.getElementById('simRate').value) || 3,
     inflationRate: parseFloat(document.getElementById('inflationRate').value) ?? 2,
     // ② 昇給モデル
     incomeGrowthRate:     parseFloat(document.getElementById('finIncomeGrowthRate').value) || 0,
@@ -7290,8 +7000,17 @@ function renderFinCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
   });
 
-  // ===== 正確な資産推移シミュレーション（ライフイベント・ローン・繰上返済込み）=====
-  const CASH_TYPES = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
+  // ===== 資産推移シミュレーション（カテゴリ別積み上げ・マイルストーン付き）=====
+  const CASH_TYPES_SIM = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
+  const CAT_GROUPS = [
+    { key: 'cash',  label: '💵 現金・預金',    color: '#F59E0B', types: CASH_TYPES_SIM },
+    { key: 'nisa',  label: '🌱 NISA',          color: '#10B981', types: new Set(['nisa_tsumitate','nisa_growth','nisa_old_tsumitate','nisa_old_general']) },
+    { key: 'trust', label: '🌍 投資信託・ETF', color: '#3B82F6', types: new Set(['trust_allworld','trust_sp500','trust_other','etf']) },
+    { key: 'stock', label: '📊 株式',           color: '#EF4444', types: new Set(['japan_stock','high_dividend']) },
+    { key: 'ideco', label: '🏛️ iDeCo・保険',   color: '#8B5CF6', types: new Set(['ideco','insurance']) },
+    { key: 'other', label: '✨ その他',         color: '#84CC16', types: new Set(['other']) },
+  ];
+
   const years = parseInt(document.getElementById('simYears').value) || 10;
   const inflationRate = (state.finance.inflationRate ?? 2) / 100;
   const showReal = document.getElementById('showRealValue')?.checked || false;
@@ -7299,87 +7018,181 @@ function renderFinCharts() {
   const startYear = new Date().getFullYear();
   const currentAge = calcAge();
 
-  // calcIntegratedSim で正確な総資産推移を計算（ローン月払い・繰上返済・ライフイベント全込み）
+  // マイルストーン計算
+  const ret = state.retirement || {};
+  const retAge = parseInt(ret.targetAge) || null;
+  const penAge = parseInt(ret.pensionAge) || null;
+  const retireIdx  = (retAge && currentAge) ? Math.max(0, retAge - currentAge) : null;
+  const pensionIdx = (penAge && currentAge) ? Math.max(0, penAge - currentAge) : null;
+  const retireInRange  = retireIdx  != null && retireIdx  <= years;
+  const pensionInRange = pensionIdx != null && pensionIdx <= years;
+
+  // 総資産・カテゴリ別計算
   const simData = calcIntegratedSim(years);
   const growthDataAll = calcAllAssetGrowth(state.assets, years);
-  const cashAssetGrowth   = growthDataAll.filter(g => CASH_TYPES.has(g.asset.type));
-  const investAssetGrowth = growthDataAll.filter(g => !CASH_TYPES.has(g.asset.type));
 
-  const labels = [], dataCash = [], dataInvest = [], dataTotal = [];
+  const labels = [];
+  const catData = {};
+  CAT_GROUPS.forEach(g => catData[g.key] = []);
+  const totalData = [];
   const tableRows = [];
+
+  // 資産サマリー（現在の残高を自動反映）
+  const currentAssets = state.assets || [];
+  const totalCurrentAssets = currentAssets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const simSummaryEl = document.getElementById('simAssetSummary');
+  if (simSummaryEl && currentAssets.length > 0) {
+    const catTotals = CAT_GROUPS.map(g => ({
+      ...g,
+      val: currentAssets.filter(a => g.types.has(a.type)).reduce((s, a) => s + (a.currentVal || 0), 0)
+    })).filter(g => g.val > 0);
+    simSummaryEl.innerHTML = `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-bottom:.5px solid var(--border);margin-bottom:4px">
+        <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">現在の総資産</span>
+        <span style="font-weight:700;font-size:14px;color:#4F46E5">${fmtMoney(totalCurrentAssets)}</span>
+        <span style="font-size:11px;color:var(--text-muted)">（${currentAssets.length}アセット・利回りは各アセット設定を反映）</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        ${catTotals.map(g => `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${g.color}22;color:${g.color};font-weight:600">${g.label} ${fmtMoney(g.val)}</span>`).join('')}
+      </div>`;
+  }
+
   for (let y = 0; y <= years; y++) {
     const yr = startYear + y;
     const age = currentAge != null ? currentAge + y : null;
-    labels.push(`${yr}年`);
+    labels.push(age != null ? `${yr}\n${age}歳` : `${yr}年`);
 
-    const d = simData[y] || { assetTotal: 0, cashFlow: 0, totalWealth: 0 };
-    // 現金系資産の複利成長（asset設定ベース）
-    const cashAssetAmt   = cashAssetGrowth.reduce((s, g) => s + (g.data[y] || 0), 0);
-    // 投資系資産の複利成長
-    const investAssetAmt = investAssetGrowth.reduce((s, g) => s + (g.data[y] || 0), 0);
+    const d = simData[y] || { cashFlow: 0, totalWealth: 0 };
+    const total = Math.round(d.totalWealth * realFactor(y));
+    totalData.push(total);
 
-    // 現金・預金 = 現金系資産 + 収支累計（収入 - 生活費 - ローン返済 - 繰上返済など）
-    // d.cashFlow が負 = 繰上返済等で一時的にキャッシュが不足している状態（投資資産の取崩しが必要）
-    const cash   = Math.round((cashAssetAmt + d.cashFlow) * realFactor(y));
-    const invest = Math.round(investAssetAmt * realFactor(y));
-    const total  = Math.round(d.totalWealth * realFactor(y));
+    // カテゴリ別金額
+    const groupAmts = {};
+    CAT_GROUPS.forEach(g => groupAmts[g.key] = 0);
+    growthDataAll.forEach(({ asset, data }) => {
+      const amt = (data[y] || 0) * realFactor(y);
+      let matched = false;
+      for (const g of CAT_GROUPS) {
+        if (g.types.has(asset.type)) { groupAmts[g.key] += amt; matched = true; break; }
+      }
+      if (!matched) groupAmts['other'] += amt;
+    });
+    // 現金フロー調整（ローン返済・ライフイベント費用の累計）を現金グループに加算
+    groupAmts['cash'] += d.cashFlow * realFactor(y);
+    CAT_GROUPS.forEach(g => catData[g.key].push(Math.round(groupAmts[g.key])));
 
-    dataCash.push(cash);
-    dataInvest.push(invest);
-    dataTotal.push(total);
-    if (y === 0 || y % Math.max(1, Math.floor(years/10)) === 0 || y === years) {
-      tableRows.push({ yr, age, y, cash, invest, total });
+    // テーブル行：現在・5年毎・マイルストーン・最終年
+    const isMilestone = (retireInRange && y === retireIdx) || (pensionInRange && y === pensionIdx);
+    if (y === 0 || y % 5 === 0 || y === years || isMilestone) {
+      const catAmts = {};
+      CAT_GROUPS.forEach(g => catAmts[g.key] = Math.round(groupAmts[g.key]));
+      tableRows.push({
+        yr, age, y, total, catAmts,
+        isRetire:   retireInRange  && y === retireIdx,
+        isPension:  pensionInRange && y === pensionIdx,
+      });
     }
   }
 
+  // マイルストーン縦線プラグイン
+  const _jfSim = "'Hiragino Sans','Hiragino Kaku Gothic ProN',-apple-system,BlinkMacSystemFont,sans-serif";
+  const simMilestonePlugin = {
+    id: 'simMilestone',
+    afterDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea) return;
+      const marks = [];
+      if (retireInRange)  marks.push({ idx: retireIdx,  label: '🏖️ リタイア', color: '#10B981' });
+      if (pensionInRange) marks.push({ idx: pensionIdx, label: '🏛️ 年金開始', color: '#6366F1' });
+      marks.forEach(({ idx, label, color }) => {
+        const x = scales.x.getPixelForValue(idx);
+        ctx.save();
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.font = `bold 10px ${_jfSim}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, chartArea.top - 6);
+        ctx.restore();
+      });
+    }
+  };
+
+  // グラフ描画（使用カテゴリのみ）
+  const activeGroups = CAT_GROUPS.filter(g => catData[g.key].some(v => v !== 0));
   const ctx2 = document.getElementById('simChart').getContext('2d');
   if (simChartObj) simChartObj.destroy();
   simChartObj = new Chart(ctx2, {
     type: 'line',
     data: {
       labels,
-      datasets: [
-        { label: '純資産合計', data: dataTotal, borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,.08)', fill: true, tension: .4, borderWidth: 2 },
-        { label: '📈 投資資産（運用込み）', data: dataInvest, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,.06)', fill: true, tension: .4, borderWidth: 1.5 },
-        { label: '💵 現金・預金', data: dataCash, borderColor: '#F59E0B', borderDash: [5,4], fill: false, tension: .3, borderWidth: 1.5 },
-      ]
+      datasets: activeGroups.map(g => ({
+        label: g.label,
+        data: catData[g.key],
+        borderColor: g.color,
+        backgroundColor: g.color + '55',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 1.5,
+        pointRadius: 2,
+        stack: 'assets',
+      }))
     },
-    options: { responsive: true, maintainAspectRatio: false,
-      scales: { y: { ticks: { callback: fmtMoneyAxis }, stacked: false } },
-      plugins: { legend: { position: 'bottom' }, tooltip: {
-        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` }
-      }}
-    }
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: (retireInRange || pensionInRange) ? 22 : 6 } },
+      scales: {
+        x: { ticks: { font: { size: 10 } } },
+        y: { stacked: true, ticks: { callback: fmtMoneyAxis } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` } }
+      }
+    },
+    plugins: [simMilestonePlugin]
   });
 
-  // 年次テーブル（ローン・繰上返済反映済み）
+  // 年次テーブル（5年毎・マイルストーンハイライト）
   const realNote = showReal ? `<span style="font-size:11px;color:var(--text-muted)">（インフレ${(inflationRate*100).toFixed(1)}%調整後）</span>` : '';
-  const hasCashDip = tableRows.some(r => r.cash < 0);
+  const hasCashDip = tableRows.some(r => (r.catAmts?.cash || 0) < 0);
   const simTableEl = document.getElementById('simTable');
   if (simTableEl) {
     simTableEl.innerHTML = `
-      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">年次資産内訳 ${realNote}</div>
-      <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">住宅ローン月払い・繰上返済・ライフイベント費用を反映した純資産ベース</div>
-      ${hasCashDip ? `<div style="font-size:11px;color:var(--warning);margin-bottom:8px">⚠️ 繰上返済等で現金・預金がマイナスになる年があります（投資資産の取崩しが必要な時期）</div>` : ''}
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:4px">年次資産推移 ${realNote}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">ローン返済・繰上返済・ライフイベント費用を反映。5年毎＋主要マイルストーン表示。</div>
+      ${hasCashDip ? `<div style="font-size:11px;color:var(--warning);margin-bottom:6px">⚠️ 繰上返済等で現金がマイナスになる年があります（投資資産の取崩しが必要な時期）</div>` : ''}
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead>
           <tr style="border-bottom:1px solid var(--border);color:var(--text-muted)">
             <th style="text-align:left;padding:5px 8px">年</th>
-            ${currentAge != null ? '<th style="padding:5px 8px">年齢</th>' : ''}
-            <th style="text-align:right;padding:5px 8px;color:#F59E0B">💵 現金・預金</th>
-            <th style="text-align:right;padding:5px 8px;color:#10B981">📈 投資資産</th>
+            ${currentAge != null ? '<th style="text-align:center;padding:5px 8px">年齢</th>' : ''}
+            ${activeGroups.map(g => `<th style="text-align:right;padding:5px 8px;color:${g.color}">${g.label}</th>`).join('')}
             <th style="text-align:right;padding:5px 8px;color:#4F46E5;font-weight:700">純資産合計</th>
           </tr>
         </thead>
         <tbody>
-          ${tableRows.map((r,i) => `
-            <tr style="border-bottom:.5px solid var(--border);${i===0?'color:var(--text-muted)':''}">
-              <td style="padding:5px 8px">${r.yr}年${r.y===0?' (現在)':''}</td>
+          ${tableRows.map(r => {
+            const hl = r.isRetire  ? 'background:rgba(16,185,129,.12);font-weight:600'
+                     : r.isPension ? 'background:rgba(99,102,241,.12);font-weight:600' : '';
+            const tag = r.isRetire ? ' 🏖️' : r.isPension ? ' 🏛️' : '';
+            return `<tr style="border-bottom:.5px solid var(--border);${hl}">
+              <td style="padding:5px 8px">${r.yr}年${r.y === 0 ? ' (現在)' : ''}${tag}</td>
               ${currentAge != null ? `<td style="text-align:center;padding:5px 8px">${r.age}歳</td>` : ''}
-              <td style="text-align:right;padding:5px 8px;${r.cash < 0 ? 'color:#EF4444;font-weight:600' : 'color:#B45309'}">${r.cash < 0 ? '▼' : ''}${fmtMoney(Math.abs(r.cash))}</td>
-              <td style="text-align:right;padding:5px 8px;color:#059669">${fmtMoney(r.invest)}</td>
+              ${activeGroups.map(g => {
+                const v = r.catAmts[g.key] || 0;
+                return `<td style="text-align:right;padding:5px 8px;${v < 0 ? 'color:#EF4444' : ''}">${v < 0 ? '▼' : ''}${fmtMoney(Math.abs(v))}</td>`;
+              }).join('')}
               <td style="text-align:right;padding:5px 8px;font-weight:700;color:#4F46E5">${fmtMoney(r.total)}</td>
-            </tr>`).join('')}
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>`;
   }
@@ -7730,7 +7543,6 @@ function renderDashboard() {
           { label: '住居計画を入力', done: !!(le.housingType && (le.mortgage?.principal > 0 || le.rent?.monthly > 0)), page: 'lifeevents' },
           { label: '子ども・教育計画を入力', done: (le.children?.length || 0) > 0, page: 'lifeevents' },
           { label: '支出イベントを登録', done: cfEvents.length > 0, page: 'lifeevents' },
-          { label: '目標を1件以上登録', done: goals.length > 0, page: 'goals' },
         ],
       },
       {
@@ -7803,91 +7615,6 @@ function renderDashboard() {
     }
   })();
 
-  // Stats
-  const totalGoals = state.goals.length;
-  const doneGoals = state.goals.filter(g => calcGoalProgress(g) >= 100).length;
-  const avgProgress = totalGoals ? Math.round(state.goals.reduce((s, g) => s + calcGoalProgress(g), 0) / totalGoals) : 0;
-  const allTasks = state.goals.flatMap(g => g.tasks || []);
-  const totalTasks = allTasks.length;
-  const doneTasks = allTasks.filter(t => t.done).length;
-
-  document.getElementById('dashStats').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">登録目標数</div>
-      <div class="stat-value">${totalGoals}</div>
-      <div class="stat-sub">達成済み ${doneGoals} 件</div>
-    </div>
-    <div class="stat-card green">
-      <div class="stat-label">平均進捗率</div>
-      <div class="stat-value">${avgProgress}%</div>
-      <div class="stat-sub">全目標の平均</div>
-    </div>
-    <div class="stat-card orange">
-      <div class="stat-label">タスク完了率</div>
-      <div class="stat-value">${totalTasks ? Math.round(doneTasks / totalTasks * 100) : 0}%</div>
-      <div class="stat-sub">${doneTasks} / ${totalTasks} 件</div>
-    </div>
-    ${age !== null ? `
-    <div class="stat-card red">
-      <div class="stat-label">現在の年齢</div>
-      <div class="stat-value">${age}歳</div>
-      <div class="stat-sub">${p.job || ''}</div>
-    </div>` : ''}`;
-
-  // Goal list
-  const recentGoals = [...state.goals].sort((a, b) => b.createdAt - a.createdAt).slice(0, 5);
-  const gEl = document.getElementById('dashGoalList');
-  if (!recentGoals.length) {
-    gEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">目標を追加してください</p>';
-  } else {
-    gEl.innerHTML = recentGoals.map(g => {
-      const cat = CATS[g.category] || CATS.other;
-      const prog = calcGoalProgress(g);
-      const tasks = g.tasks || [];
-      const doneT = tasks.filter(t => t.done).length;
-      return `
-        <div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-size:13px;font-weight:600">${cat.emoji} ${escHtml(g.title.slice(0, 24))}${g.title.length > 24 ? '…' : ''}</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              ${tasks.length ? `<span style="font-size:11px;color:var(--text-muted)">${doneT}/${tasks.length}</span>` : ''}
-              <span style="font-size:12px;color:var(--text-muted)">${prog}%</span>
-            </div>
-          </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${prog}%;background:${cat.color}"></div></div>
-        </div>`;
-    }).join('');
-  }
-
-  // Upcoming task list (from all goals, pending tasks sorted by due date)
-  const allPendingTasks = [];
-  state.goals.forEach(g => {
-    const cat = CATS[g.category] || CATS.other;
-    (g.tasks || []).filter(t => !t.done).forEach(t => {
-      allPendingTasks.push({ ...t, _goalId: g.id, _goalTitle: g.title, _cat: cat });
-    });
-  });
-  allPendingTasks.sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
-  const upcomingTasks = allPendingTasks.slice(0, 5);
-  const aEl = document.getElementById('dashActionList');
-  if (!upcomingTasks.length) {
-    aEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">タスクを目標に追加してください</p>';
-  } else {
-    aEl.innerHTML = upcomingTasks.map(t => {
-      const overdue = t.due && new Date(t.due) < new Date();
-      return `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border)">
-          <div class="task-check" onclick="toggleTask('${t._goalId}','${t.id}')"></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.title.slice(0, 28))}${t.title.length > 28 ? '…' : ''}</div>
-            <div style="font-size:11px;color:${overdue ? 'var(--danger)' : 'var(--text-muted)'}">
-              ${t._cat.emoji} ${escHtml(t._goalTitle.slice(0, 16))}${t._goalTitle.length > 16 ? '…' : ''}
-              ${t.due ? ' · ' + formatDate(t.due) : ''}
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  }
 
   // ===== 財務サマリーバナー =====
   const currentYear = new Date().getFullYear();
@@ -7960,7 +7687,6 @@ function renderDashboard() {
     const simData = calcIntegratedSim(10);
     const labels = makeYearLabels(11, currentYear);
     const wealthData = simData.map(d => d.totalWealth);
-    const assetData  = simData.map(d => d.assetTotal);
     const ctx = document.getElementById('dbAssetChart').getContext('2d');
     if (dbAssetChartObj) dbAssetChartObj.destroy();
     dbAssetChartObj = new Chart(ctx, {
@@ -7977,16 +7703,6 @@ function renderDashboard() {
             fill: true,
             tension: 0.35,
             pointRadius: 2,
-          },
-          {
-            label: '運用資産',
-            data: assetData,
-            borderColor: '#60A5FA',
-            backgroundColor: 'rgba(96,165,250,.08)',
-            borderWidth: 1.5,
-            fill: true,
-            tension: 0.35,
-            pointRadius: 0,
           },
         ],
       },
@@ -8014,9 +7730,153 @@ function renderDashboard() {
         },
       },
     });
+    // ===== リタイア進捗カード =====
+    const retireCard = document.getElementById('dbRetireCard');
+    const retireContent = document.getElementById('dbRetireContent');
+    try {
+      const rs = calcRetirementSim();
+      if (rs && rs.requiredAssets > 0) {
+        retireCard.style.display = '';
+        const pct = Math.min(100, Math.round(rs.assetsAtRetire / rs.requiredAssets * 100));
+        const barColor = pct >= 100 ? '#10B981' : pct >= 60 ? '#F59E0B' : '#EF4444';
+        const gap = rs.assetsAtRetire - rs.requiredAssets;
+        const gapLabel = gap >= 0
+          ? `<span style="color:#10B981;font-weight:700">余剰 +${fmtMoney(gap)}</span>`
+          : `<span style="color:#EF4444;font-weight:700">不足 ${fmtMoney(Math.abs(gap))}</span>`;
+        const depStr = rs.depletionAge
+          ? `<span style="color:#EF4444">⚠️ ${rs.depletionAge}歳で資産枯渇リスク</span>`
+          : `<span style="color:#10B981">✅ ${rs.lifeExpectancy}歳まで資産維持の見込み</span>`;
+        retireContent.innerHTML = `
+          <div style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+              <span style="font-size:12px;color:var(--text-muted)">目標 ${rs.targetAge}歳リタイア</span>
+              <span style="font-size:14px;font-weight:700;color:${barColor}">${pct}%</span>
+            </div>
+            <div style="height:8px;background:#F1F5F9;border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .5s"></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+            <div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:8px">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">現在の総資産</div>
+              <div style="font-size:13px;font-weight:700">${fmtMoney(totalAssets)}</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:8px">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">退職時予測</div>
+              <div style="font-size:13px;font-weight:700">${fmtMoney(rs.assetsAtRetire)}</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:#F8FAFC;border-radius:8px">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">必要資産</div>
+              <div style="font-size:13px;font-weight:700">${fmtMoney(rs.requiredAssets)}</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            ${gapLabel}
+            ${depStr}
+          </div>`;
+      } else {
+        retireCard.style.display = 'none';
+      }
+    } catch(e) { retireCard.style.display = 'none'; }
+
+    // ===== 直近ライフイベント・年金カード =====
+    const bottomCards = document.getElementById('dbBottomCards');
+    const nextEventsEl = document.getElementById('dbNextEventsContent');
+    const pensionEl = document.getElementById('dbPensionContent');
+
+    // 直近イベント
+    (() => {
+      const thisYear = currentYear;
+      const items = [];
+      const le = state.lifeEvents || {};
+      const retS = state.retirement || {};
+      const retAge2 = parseInt(retS.targetAge) || null;
+      const penAge2  = parseInt(retS.pensionAge) || 65;
+      const birthYear2 = state.profile.birth ? new Date(state.profile.birth).getFullYear() : null;
+
+      // 一時支出
+      (state.expenses || []).filter(e => e.year && parseInt(e.year) >= thisYear).forEach(e => {
+        items.push({ year: parseInt(e.year), icon: '💴', label: e.name, sub: `${(e.amount||0).toLocaleString()}万円` });
+      });
+      // 子どもの進学
+      (le.children || []).forEach(child => {
+        if (!child.birthYear) return;
+        const by = parseInt(child.birthYear);
+        [{ l: '小学入学', o: 6 }, { l: '中学入学', o: 12 }, { l: '高校入学', o: 15 }, { l: '大学入学', o: 18 }].forEach(m => {
+          const yr = by + m.o;
+          if (yr >= thisYear) items.push({ year: yr, icon: '🎓', label: `${child.name||'子ども'} ${m.l}`, sub: '' });
+        });
+      });
+      // 住宅完済
+      if (le.housingType === 'mortgage' && le.mortgage?.startYear && le.mortgage?.term) {
+        const endYr = parseInt(le.mortgage.startYear) + parseInt(le.mortgage.term);
+        if (endYr >= thisYear) items.push({ year: endYr, icon: '🏠', label: 'ローン完済予定', sub: '' });
+      }
+      // リタイア・年金
+      if (birthYear2 && retAge2) {
+        const yr = birthYear2 + retAge2;
+        if (yr >= thisYear) items.push({ year: yr, icon: '🏖️', label: `リタイア（${retAge2}歳）`, sub: '' });
+      }
+      if (birthYear2) {
+        const yr = birthYear2 + penAge2;
+        if (yr >= thisYear) items.push({ year: yr, icon: '💰', label: `年金受給開始（${penAge2}歳）`, sub: '' });
+      }
+      items.sort((a, b) => a.year - b.year);
+      const upcoming = items.slice(0, 5);
+      if (upcoming.length) {
+        bottomCards.style.display = '';
+        nextEventsEl.innerHTML = upcoming.map(ev => {
+          const age = birthYear2 ? ev.year - birthYear2 : null;
+          const ageStr = age != null ? `（${age}歳）` : '';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--border)">
+            <span style="font-size:16px">${ev.icon}</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600">${escHtml(ev.label)}${ev.sub ? ` <span style="font-weight:400;color:var(--text-muted)">${ev.sub}</span>` : ''}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${ev.year}年${ageStr}</div>
+            </div>
+          </div>`;
+        }).join('');
+      } else {
+        nextEventsEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">ライフイベントを登録すると表示されます</p>';
+        bottomCards.style.display = '';
+      }
+    })();
+
+    // 年金概算
+    (() => {
+      const retS = state.retirement || {};
+      const monthly = parseFloat(retS.pensionMonthly) || 0;
+      const monthly_p = parseFloat(retS.pensionMonthly_p) || 0;
+      const penAge2 = parseInt(retS.pensionAge) || 65;
+      const hasPartner = state.profile.marital === 'married';
+      if (monthly > 0 || monthly_p > 0) {
+        const total = monthly + (hasPartner ? monthly_p : 0);
+        pensionEl.innerHTML = `
+          <div style="text-align:center;padding:12px 0 8px">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">受給開始 ${penAge2}歳〜 / 月額合計</div>
+            <div style="font-size:26px;font-weight:700;color:#4F46E5">${total.toLocaleString()} 万円<span style="font-size:14px;font-weight:500">/月</span></div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">年間 ${(total * 12).toLocaleString()} 万円</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <div style="flex:1;text-align:center;padding:8px;background:#F8FAFC;border-radius:8px">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">本人</div>
+              <div style="font-size:14px;font-weight:700">${monthly.toLocaleString()} 万円</div>
+            </div>
+            ${hasPartner && monthly_p > 0 ? `<div style="flex:1;text-align:center;padding:8px;background:#F8FAFC;border-radius:8px">
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">${escHtml(state.profile.partnername||'パートナー')}</div>
+              <div style="font-size:14px;font-weight:700">${monthly_p.toLocaleString()} 万円</div>
+            </div>` : ''}
+          </div>`;
+      } else {
+        pensionEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted)">出口戦略ページで年金設定をすると表示されます</p>';
+      }
+    })();
+
   } else {
     banner.style.display = 'none';
     document.getElementById('dbAssetChartCard').style.display = 'none';
+    document.getElementById('dbRetireCard').style.display = 'none';
+    document.getElementById('dbBottomCards').style.display = 'none';
   }
 
   // ===== ダッシュボード警告・アラート =====
@@ -8098,19 +7958,28 @@ function renderDashboard() {
       </div>`).join('');
   })();
 
-  // Life score
-  const scoreEl = document.getElementById('lifeScoreGrid');
-  const catScores = Object.entries(CATS).map(([k, v]) => {
-    const goals = state.goals.filter(g => g.category === k);
-    const score = goals.length ? Math.round(goals.reduce((s, g) => s + calcGoalProgress(g), 0) / goals.length) : 0;
-    return { ...v, score, key: k };
-  });
-  scoreEl.innerHTML = catScores.map(c => `
-    <div class="score-item">
-      <div class="score-label">${c.emoji} ${c.label}</div>
-      <div class="score-bar-wrap"><div class="score-bar" style="width:${c.score}%;background:${c.color}"></div></div>
-      <div class="score-val" style="color:${c.color}">${c.score}%</div>
-    </div>`).join('');
+}
+
+// プロフィール 価値観/ビジョン 折りたたみ
+function toggleVisionSection() {
+  const sec  = document.getElementById('visionSection');
+  const icon = document.getElementById('visionToggleIcon');
+  if (!sec) return;
+  const open = sec.style.display === '';
+  sec.style.display = open ? 'none' : '';
+  if (icon) icon.textContent = open ? '▶' : '▼';
+}
+
+// ページ読み込み時：記入済みなら自動展開
+function initVisionSection() {
+  const v = state.profile.values || '';
+  const vi = state.profile.vision || '';
+  if (v || vi) {
+    const sec  = document.getElementById('visionSection');
+    const icon = document.getElementById('visionToggleIcon');
+    if (sec)  sec.style.display = '';
+    if (icon) icon.textContent = '▼';
+  }
 }
 
 // ===== UTILS =====
@@ -8198,7 +8067,7 @@ const PHASE_FIELDS = {
 };
 
 let editingChildId = null;
-let leStackedChartObj = null, leCompareChartObj = null, leCashFlowChartObj = null;
+let leStackedChartObj = null, leCashFlowChartObj = null;
 
 function updatePhaseCost(selectId, phase, hintId) {
   const val = document.getElementById(selectId).value;
@@ -9134,7 +9003,134 @@ function renderLifeEventCharts() {
 
   const annualCosts = Array.from({ length: years + 1 }, (_, i) => calcLECostByYear(currentYear + i));
 
-  // --- 積み上げ棒グラフ ---
+  // --- 積み上げ棒グラフ（強化版） ---
+
+  // ① 繰り返し支出データ
+  const recurringData = Array.from({ length: years + 1 }, (_, i) =>
+    Math.round(getRecurringExpenseForYear(currentYear + i))
+  );
+
+  // ④ ピーク検出
+  const totalPerYear = annualCosts.map((c, i) =>
+    c.childcare + c.education + c.mortgage + c.care + recurringData[i]
+  );
+  const peakVal = Math.max(...totalPerYear, 0);
+  const peakIdx = totalPerYear.indexOf(peakVal);
+
+  // ③ ライフステージ縦線
+  const birthYear = state.profile.birth ? new Date(state.profile.birth).getFullYear() : null;
+  const retAge    = parseInt(state.retirement?.targetAge) || null;
+  const penAge    = parseInt(state.retirement?.pensionAge) || 65;
+  const lifeStages = [];
+  if (birthYear && retAge) {
+    const retIdx = (birthYear + retAge) - currentYear;
+    if (retIdx >= 0 && retIdx <= years)
+      lifeStages.push({ idx: retIdx, label: `リタイア(${retAge}歳)`, color: '#EF4444' });
+  }
+  if (birthYear) {
+    const penIdx = (birthYear + penAge) - currentYear;
+    if (penIdx >= 0 && penIdx <= years)
+      lifeStages.push({ idx: penIdx, label: `年金(${penAge}歳)`, color: '#F59E0B' });
+  }
+  const schoolEntries = [
+    { age: 6,  label: '小学校' },
+    { age: 12, label: '中学' },
+    { age: 15, label: '高校' },
+    { age: 18, label: '大学' },
+  ];
+  (state.lifeEvents?.children || []).forEach(child => {
+    if (!child.birthYear) return;
+    const cName = (child.name || '子').slice(0, 3);
+    schoolEntries.forEach(st => {
+      const stIdx = (child.birthYear + st.age) - currentYear;
+      if (stIdx >= 0 && stIdx <= years)
+        lifeStages.push({ idx: stIdx, label: `${cName}${st.label}`, color: '#8B5CF6' });
+    });
+  });
+
+  // ② 一時支出（支出計画）マーカー
+  const oneTimeMarkers = (state.expenses || [])
+    .filter(e => e.year)
+    .map(e => ({ year: parseInt(e.year), amount: parseFloat(e.amount) || 0, name: e.name || '' }));
+
+  // ⑤ サマリーテキスト
+  const grandTotal = totalPerYear.reduce((s, v) => s + v, 0);
+  const peakYear   = currentYear + peakIdx;
+  const peakAge    = birthYear ? (peakYear - birthYear) : null;
+  const summaryEl  = document.getElementById('leStackedSummary');
+  if (summaryEl) {
+    const peakStr = peakAge != null ? `${peakYear}年(${peakAge}歳)` : `${peakYear}年`;
+    summaryEl.textContent = grandTotal > 0
+      ? `${years}年合計 ${grandTotal.toLocaleString()}万円 ｜ ピーク ${peakStr} ${peakVal.toLocaleString()}万円`
+      : '';
+  }
+
+  // カスタムプラグイン（縦線・★マーカー・▲ピーク）
+  const _jf = "'Hiragino Sans','Hiragino Kaku Gothic ProN',-apple-system,BlinkMacSystemFont,sans-serif";
+  const leEnhPlugin = {
+    id: 'leEnh',
+    afterDraw(chart) {
+      const { ctx, chartArea: ca, scales } = chart;
+      if (!ca || !scales.x || !scales.y) return;
+      const { x, y } = scales;
+      ctx.save();
+
+      // ③ ライフステージ縦線
+      lifeStages.forEach(stage => {
+        const xPos = x.getPixelForValue(stage.idx);
+        ctx.beginPath();
+        ctx.moveTo(xPos, ca.top);
+        ctx.lineTo(xPos, ca.bottom);
+        ctx.strokeStyle = stage.color + 'BB';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.save();
+        ctx.translate(xPos - 4, ca.top + 4);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = stage.color;
+        ctx.font = `600 10px ${_jf}`;
+        ctx.textAlign = 'right';
+        ctx.fillText(stage.label, 0, 0);
+        ctx.restore();
+      });
+
+      // ② ★マーカー（一時支出）
+      oneTimeMarkers.forEach(exp => {
+        const idx = exp.year - currentYear;
+        if (idx < 0 || idx > years) return;
+        const xPos = x.getPixelForValue(idx);
+        const yTop = ca.top + 2;
+        ctx.fillStyle = '#EA580C';
+        ctx.font = `bold 14px ${_jf}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('★', xPos, yTop + 16);
+        ctx.font = `500 9px ${_jf}`;
+        ctx.fillStyle = '#92400E';
+        const shortName = exp.name.slice(0, 6);
+        ctx.fillText(`${shortName}`, xPos, yTop + 32);
+        ctx.fillText(`${exp.amount.toLocaleString()}万`, xPos, yTop + 42);
+      });
+
+      // ④ ▲ピークラベル
+      if (peakIdx >= 0 && peakIdx <= years && peakVal > 0) {
+        const xPos = x.getPixelForValue(peakIdx);
+        const yPos = y.getPixelForValue(peakVal);
+        ctx.fillStyle = '#DC2626';
+        ctx.font = `bold 13px ${_jf}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('▲', xPos, yPos - 14);
+        ctx.font = `600 10px ${_jf}`;
+        ctx.fillText(`${peakVal.toLocaleString()}万`, xPos, yPos - 4);
+      }
+
+      ctx.restore();
+    }
+  };
+
   const ctx1 = document.getElementById('leStackedChart')?.getContext('2d');
   if (ctx1) {
     if (leStackedChartObj) leStackedChartObj.destroy();
@@ -9143,14 +9139,16 @@ function renderLifeEventCharts() {
       data: {
         labels,
         datasets: [
-          { label: '育休収入減', data: annualCosts.map(c => Math.round(c.childcare)), backgroundColor: '#EC4899AA', stack: 'le' },
-          { label: '教育費',     data: annualCosts.map(c => Math.round(c.education)), backgroundColor: '#8B5CF6AA', stack: 'le' },
-          { label: state.lifeEvents.housingType === 'rent' ? '家賃・住居費' : '住宅ローン', data: annualCosts.map(c => Math.round(c.mortgage)),  backgroundColor: '#84CC16AA', stack: 'le' },
-          { label: '介護費',     data: annualCosts.map(c => Math.round(c.care)),      backgroundColor: '#06B6D4AA', stack: 'le' },
+          { label: '育休収入減',  data: annualCosts.map(c => Math.round(c.childcare)), backgroundColor: '#EC4899AA', stack: 'le' },
+          { label: '教育費',      data: annualCosts.map(c => Math.round(c.education)), backgroundColor: '#8B5CF6AA', stack: 'le' },
+          { label: state.lifeEvents.housingType === 'rent' ? '家賃・住居費' : '住宅ローン', data: annualCosts.map(c => Math.round(c.mortgage)), backgroundColor: '#84CC16AA', stack: 'le' },
+          { label: '介護費',      data: annualCosts.map(c => Math.round(c.care)),      backgroundColor: '#06B6D4AA', stack: 'le' },
+          { label: '繰り返し支出', data: recurringData,                                 backgroundColor: '#F97316AA', stack: 'le' },
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        layout: { padding: { top: 55 } },
         scales: {
           x: { ticks: { maxTicksLimit: 8 } },
           y: { stacked: true, ticks: { callback: v => v + '万' }, title: { display: true, text: '年間費用（万円）' } }
@@ -9160,27 +9158,54 @@ function renderLifeEventCharts() {
           tooltip: { callbacks: {
             title: items => ageTooltipTitle(currentYear + items[0].dataIndex),
             footer: items => `合計: ${Math.round(items.reduce((s,i) => s + i.parsed.y, 0)).toLocaleString()}万円/年`
-          }}
+          }},
+          leEnh: {}
         }
-      }
+      },
+      plugins: [leEnhPlugin]
     });
   }
 
-  // --- 年間キャッシュフロー ---
-  const cfAnnual = [], cfCumulative = [];
-  let cumulative = 0;
+  // --- 年間キャッシュフロー（強化版） ---
+  const cfIncome = [], cfExpense = [], cfAnnual = [], cfCumulative = [];
+  let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
     const yr = currentYear + i;
-    const income  = getIncomeForYear(yr);
-    const expense = getExpenseForYear(yr);
-    const c = annualCosts[i];
-    const leCost = c.childcare + c.education + c.mortgage + c.care;
-    const oneTime = getOneTimeForYear(yr);
-    const annual = i === 0 ? oneTime : income - expense - leCost + oneTime;
-    cumulative += annual;
+    const inc     = getIncomeForYear(yr);
+    const exp     = getExpenseForYear(yr);
+    const c       = annualCosts[i];
+    const leCost  = c.childcare + c.education + c.mortgage + c.care;
+    const recur   = recurringData[i];
+    const oneTime = getOneTimeForYear(yr); // = cfEvents - recurring
+    const annual  = i === 0 ? oneTime : inc - exp - leCost + oneTime;
+    cumulativeCF += Math.round(annual);
+    cfIncome.push(i === 0 ? 0 : Math.round(inc));
+    cfExpense.push(i === 0 ? 0 : -Math.round(exp + leCost + recur));
     cfAnnual.push(Math.round(annual));
-    cfCumulative.push(Math.round(cumulative));
+    cfCumulative.push(cumulativeCF);
   }
+
+  // ③ サマリー計算
+  const cfSlice      = cfAnnual.slice(1);
+  const deficitYrs   = cfSlice.filter(v => v < 0).length;
+  const surplusYrs   = cfSlice.filter(v => v >= 0).length;
+  const worstAnnual  = deficitYrs > 0 ? Math.min(...cfSlice) : null;
+  const worstIdx     = worstAnnual != null ? cfAnnual.indexOf(worstAnnual) : -1;
+  const worstYear    = currentYear + worstIdx;
+  const worstAge     = birthYear ? worstYear - birthYear : null;
+  const cfSummaryEl  = document.getElementById('leCFSummary');
+  if (cfSummaryEl) {
+    if (deficitYrs > 0) {
+      const wStr = worstAge != null ? `${worstYear}年(${worstAge}歳)` : `${worstYear}年`;
+      cfSummaryEl.innerHTML =
+        `<span style="color:#EF4444">🔴 赤字年 ${deficitYrs}年</span>` +
+        ` ／ 黒字年 ${surplusYrs}年` +
+        ` ／ <span style="color:#EF4444">最大赤字 ${wStr} ${worstAnnual.toLocaleString()}万円</span>`;
+    } else {
+      cfSummaryEl.innerHTML = `<span style="color:#22C55E">✅ 全${surplusYrs}年 黒字</span>`;
+    }
+  }
+
   const cfCtx = document.getElementById('leCashFlowChart')?.getContext('2d');
   if (cfCtx) {
     if (leCashFlowChartObj) leCashFlowChartObj.destroy();
@@ -9190,12 +9215,21 @@ function renderLifeEventCharts() {
         labels,
         datasets: [
           {
-            label: '年間収支',
-            data: cfAnnual,
-            backgroundColor: cfAnnual.map(v => v >= 0 ? 'rgba(52,199,89,.75)' : 'rgba(255,59,48,.75)'),
-            borderColor:     cfAnnual.map(v => v >= 0 ? '#34C759' : '#FF3B30'),
-            borderWidth: 1,
-            order: 2,
+            label: '収入',
+            data: cfIncome,
+            backgroundColor: 'rgba(52,199,89,.65)',
+            borderWidth: 0,
+            borderRadius: 2,
+            order: 3,
+            yAxisID: 'y1',
+          },
+          {
+            label: '支出',
+            data: cfExpense,
+            backgroundColor: 'rgba(255,59,48,.60)',
+            borderWidth: 0,
+            borderRadius: 2,
+            order: 3,
             yAxisID: 'y1',
           },
           {
@@ -9203,11 +9237,14 @@ function renderLifeEventCharts() {
             data: cfCumulative,
             type: 'line',
             borderColor: '#007AFF',
-            backgroundColor: 'rgba(0,122,255,.08)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.35,
-            pointRadius: 2,
+            borderWidth: 2.5,
+            fill: {
+              target: 'origin',
+              above: 'rgba(0,122,255,.07)',
+              below: 'rgba(255,59,48,.15)',
+            },
+            tension: 0.3,
+            pointRadius: 1.5,
             order: 1,
             yAxisID: 'y',
           },
@@ -9221,78 +9258,51 @@ function renderLifeEventCharts() {
             position: 'left',
             title: { display: true, text: '累計収支', font: { size: 11 }, color: '#007AFF' },
             ticks: { callback: v => fmtMoneyAxis(v), color: '#007AFF' },
-            grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(0,0,255,.15)' : 'rgba(0,0,0,.05)' },
+            grid: {
+              color: ctx => ctx.tick.value === 0 ? 'rgba(0,0,200,.3)' : 'rgba(0,0,0,.05)',
+              lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1,
+            },
           },
           y1: {
             position: 'right',
-            title: { display: true, text: '年間収支', font: { size: 11 }, color: '#34C759' },
-            ticks: { callback: v => fmtMoneyAxis(v), color: '#34C759' },
+            title: { display: true, text: '年間 収入 / 支出', font: { size: 11 }, color: '#64748B' },
+            ticks: { callback: v => fmtMoneyAxis(Math.abs(v)), color: '#64748B' },
             grid: { drawOnChartArea: false },
           },
         },
         plugins: {
           legend: { position: 'bottom' },
-          tooltip: { callbacks: {
-            title: items => ageTooltipTitle(currentYear + items[0].dataIndex),
-            label: item => {
-              const sign = item.parsed.y >= 0 ? '+' : '';
-              return ` ${item.dataset.label}: ${sign}${fmtMoney(item.parsed.y)}`;
-            },
-            afterBody: items => {
-              const idx = items[0].dataIndex;
-              const annual = cfAnnual[idx];
-              return annual >= 0
-                ? [`✅ 黒字: +${fmtMoney(annual)}`]
-                : [`🔴 赤字: ${fmtMoney(annual)}`];
+          tooltip: {
+            callbacks: {
+              title: items => ageTooltipTitle(currentYear + items[0].dataIndex),
+              label: item => {
+                const v = item.parsed.y;
+                if (item.dataset.label === '支出')  return ` 支出: ${fmtMoney(-v)}`;
+                if (item.dataset.label === '収入')  return ` 収入: +${fmtMoney(v)}`;
+                const sign = v >= 0 ? '+' : '';
+                return ` ${item.dataset.label}: ${sign}${fmtMoney(v)}`;
+              },
+              afterBody: items => {
+                const idx = items[0].dataIndex;
+                if (idx === 0) return [];
+                const annual = cfAnnual[idx];
+                const cumul  = cfCumulative[idx];
+                const aSign  = annual >= 0 ? '+' : '';
+                const cSign  = cumul  >= 0 ? '+' : '';
+                return [
+                  annual >= 0
+                    ? `✅ 年間収支: ${aSign}${fmtMoney(annual)}`
+                    : `🔴 年間収支: ${fmtMoney(annual)}`,
+                  `📊 累計収支: ${cSign}${fmtMoney(cumul)}`,
+                ];
+              }
             }
-          }}
+          }
         }
       }
     });
   }
 
-  // --- 子ありvs子なし比較 ---
-  const base = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
-  const annualBase = (state.finance.income || 0) * 12 + (state.finance.bonus || 0) - (state.finance.expense || 0) * 12;
-  const withArr = [base], withoutArr = [base];
-  let w = base, wo = base;
-  for (let i = 1; i <= years; i++) {
-    const c = annualCosts[i];
-    const cNoChild = calcLECostByYear(currentYear + i, { noChild: true });
-    w  = Math.round((w  + annualBase - c.childcare - c.education - c.mortgage - c.care) * 10) / 10;
-    wo = Math.round((wo + annualBase - cNoChild.mortgage - cNoChild.care) * 10) / 10;
-    withArr.push(w); withoutArr.push(wo);
-  }
-  // 子どもが1人以上登録されている場合のみ比較チャートを表示
-  const hasChildren = (state.lifeEvents?.children || []).length > 0;
-  const leCompareSection = document.getElementById('leCompareSection');
-  if (leCompareSection) leCompareSection.style.display = hasChildren ? '' : 'none';
-
-  const ctx2 = document.getElementById('leCompareChart')?.getContext('2d');
-  if (ctx2 && hasChildren) {
-    if (leCompareChartObj) leCompareChartObj.destroy();
-    leCompareChartObj = new Chart(ctx2, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: '子どもあり', data: withArr,    borderColor: '#EC4899', backgroundColor: 'rgba(236,72,153,.08)', fill: true, tension: .4 },
-          { label: '子どもなし', data: withoutArr, borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,.08)',  fill: true, tension: .4 },
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: { x: { ticks: { maxTicksLimit: 8 } }, y: { ticks: { callback: fmtMoneyAxis } } },
-        plugins: {
-          legend: { position: 'bottom' },
-          tooltip: { callbacks: {
-            title: items => ageTooltipTitle(currentYear + items[0].dataIndex),
-            label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}`
-          }}
-        }
-      }
-    });
-  }
 }
 
 // ===== 統合シミュレーション =====
@@ -9607,6 +9617,11 @@ function renderRetirementPage() {
   document.getElementById('retHybridRate').value = r.withdrawalHybridRate || 4;
   document.getElementById('retHybridMonthly').value = r.withdrawalHybridMonthly || 20;
   document.getElementById('retHybridSwitchAge').value = r.withdrawalHybridSwitchAge || 75;
+  const drawdownOrderEl = document.getElementById('retDrawdownOrder');
+  if (drawdownOrderEl) drawdownOrderEl.value = r.drawdownOrder || 'proportional';
+  const cashFloorEl = document.getElementById('retCashFloor');
+  if (cashFloorEl) cashFloorEl.value = r.cashFloor || '';
+  updateDrawdownOrderUI();
   const p1type = r.withdrawalHybridP1Type || 'rate';
   const p1hidden = document.getElementById('retHybridP1TypeHidden');
   if (p1hidden) p1hidden.value = p1type;
@@ -9793,6 +9808,8 @@ function saveRetirement() {
     residualAssets:   parseFloat(document.getElementById('retResidualAssets').value) || 0,
     mortgageDeductStart: parseInt(document.getElementById('leMortgageDeductStart').value) || null,
     mortgageDeductYears: parseInt(document.getElementById('leMortgageDeductYears').value) || 0,
+    drawdownOrder: document.getElementById('retDrawdownOrder')?.value || 'proportional',
+    cashFloor: parseFloat(document.getElementById('retCashFloor')?.value) || 0,
   };
   save();
   showNotification('出口戦略を保存しました');
@@ -9897,6 +9914,19 @@ function autoFillRetirementExpenses() {
       </div>
     `;
   }
+}
+
+function updateDrawdownOrderUI() {
+  const order = document.getElementById('retDrawdownOrder')?.value || 'proportional';
+  const floorRow = document.getElementById('retCashFloorRow');
+  const noteEl   = document.getElementById('retDrawdownOrderNote');
+  if (floorRow) floorRow.style.display = order === 'cash_first' ? '' : 'none';
+  const notes = {
+    cash_first:   '現金・預金を先に使い、投資資産はできるだけ長く運用し続けます。複利効果を最大化する戦略ですが、現金が尽きると投資資産の売却が必要になります。',
+    invest_first: '投資資産から先に売却し、現金・預金は最後まで温存します。手元の安心感は保てますが、高成長資産を早期に売却するため資産寿命は短くなる傾向があります。',
+    proportional: '現金と投資資産を保有比率に応じて同時に取り崩します（標準的なアプローチ）。',
+  };
+  if (noteEl) noteEl.textContent = notes[order] || '';
 }
 
 function updateWithdrawalUI() {
@@ -10683,9 +10713,131 @@ function runRetirementSim() {
           style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
           📉 ストレステスト
         </button>
+        <button id="btnPrepay" onclick="toggleRetirementPanel('prepay')"
+          style="flex:1;min-width:120px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:white;font-size:12px;color:var(--text-secondary);cursor:pointer;transition:all .15s">
+          🏠 繰上返済比較
+        </button>
       </div>`;
     retResultCardEl.appendChild(extraBtns);
   }
+  renderDrawdownCompare();
+}
+
+let _retDrawdownChartObj = null;
+function renderDrawdownCompare() {
+  const card = document.getElementById('retDrawdownCard');
+  if (!card) return;
+  const r = state.retirement || {};
+  if (!r.targetAge || !r.monthlyExpense) { card.style.display = 'none'; return; }
+
+  const lifeEx = parseInt(r.lifeExpectancy) || 90;
+  const currentOrder = r.drawdownOrder || 'proportional';
+  const cashFloor = parseFloat(r.cashFloor) || 0;
+  const scenarios = [
+    { key: 'cash_first',   label: '💵 現金優先', color: '#F59E0B' },
+    { key: 'proportional', label: '⚖️ 按分',    color: '#4F46E5' },
+    { key: 'invest_first', label: '📈 投資優先', color: '#10B981' },
+  ];
+
+  const simResults = scenarios.map(s => ({
+    ...s,
+    data: calcRetirementSimWithOpts({
+      drawdownOrder: s.key,
+      cashFloor: s.key === 'cash_first' ? cashFloor : 0,
+    }) || [],
+  }));
+
+  const labels = (simResults[0].data || []).map(d => `${d.age}歳`);
+  card.style.display = '';
+  card.innerHTML = `<div class="card">
+    <div class="card-title"><span class="icon" style="background:#ECFCCB">⚖️</span>取り崩し順序 比較シミュレーション</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.7">
+      同じ取り崩し方式で、<b>現金優先・按分・投資優先</b>の3パターンを比較します。<br>
+      投資資産（NISA・株式等）は成長率が高いため、後で使うほど複利メリットが増し、資産寿命が伸びます。<b>★ は現在の設定</b>。
+    </div>
+    <div class="chart-wrap" style="height:260px"><canvas id="retDrawdownChart"></canvas></div>
+    <div id="retDrawdownPoolChart" style="margin-top:16px"></div>
+    <div id="retDrawdownSummary" style="margin-top:12px"></div>
+  </div>`;
+
+  const ctx = document.getElementById('retDrawdownChart')?.getContext('2d');
+  if (!ctx) return;
+  if (_retDrawdownChartObj) _retDrawdownChartObj.destroy();
+  _retDrawdownChartObj = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: simResults.map(s => ({
+        label: s.label + (s.key === currentOrder ? ' ★' : ''),
+        data: s.data.map(d => d.endAssets),
+        borderColor: s.color,
+        backgroundColor: s.key === currentOrder ? s.color + '18' : 'transparent',
+        fill: s.key === currentOrder,
+        tension: 0.3,
+        borderWidth: s.key === currentOrder ? 2.5 : 1.5,
+        pointRadius: 2,
+        borderDash: s.key === currentOrder ? [] : [5, 3],
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { ticks: { callback: fmtMoneyAxis }, beginAtZero: true } },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` } }
+      }
+    }
+  });
+
+  // 現在の設定のプール内訳グラフ（現金 vs 投資）
+  const curData = simResults.find(s => s.key === currentOrder)?.data || [];
+  if (curData.length > 0 && curData[0].cashPool != null) {
+    const poolEl = document.getElementById('retDrawdownPoolChart');
+    if (poolEl) {
+      poolEl.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">現在の設定（${scenarios.find(s=>s.key===currentOrder)?.label}）での現金 / 投資 内訳推移</div>
+        <div style="height:180px"><canvas id="retDrawdownPoolCanvas"></canvas></div>`;
+      const pCtx = document.getElementById('retDrawdownPoolCanvas')?.getContext('2d');
+      if (pCtx) {
+        new Chart(pCtx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: '💵 現金・預金', data: curData.map(d => d.cashPool), borderColor: '#F59E0B', backgroundColor: '#F59E0B33', fill: true, tension: 0.3, borderWidth: 1.5, pointRadius: 2, stack: 'pool' },
+              { label: '📈 投資資産',   data: curData.map(d => d.investPool), borderColor: '#10B981', backgroundColor: '#10B98133', fill: true, tension: 0.3, borderWidth: 1.5, pointRadius: 2, stack: 'pool' },
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { ticks: { font: { size: 10 } } }, y: { stacked: true, ticks: { callback: fmtMoneyAxis } } },
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+              tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` } } }
+          }
+        });
+      }
+    }
+  }
+
+  // サマリーテーブル
+  const rows = simResults.map(s => {
+    const last = s.data.find(d => d.age === lifeEx) || s.data[s.data.length - 1];
+    const dep  = s.data.find(d => d.depleted);
+    const isCur = s.key === currentOrder;
+    return `<tr style="border-bottom:.5px solid var(--border);${isCur ? 'font-weight:700;background:var(--surface2)' : ''}">
+      <td style="padding:6px 8px">${s.label}${isCur ? ' ★' : ''}</td>
+      <td style="text-align:right;padding:6px 8px;color:${dep ? '#EF4444' : '#10B981'}">${dep ? `${dep.age}歳で枯渇` : `${fmtMoney(last?.endAssets || 0)} 残`}</td>
+      <td style="text-align:right;padding:6px 8px;color:${dep ? '#EF4444' : '#6B7280'}">${dep ? '—' : `💵 ${fmtMoney(last?.cashPool||0)} / 📈 ${fmtMoney(last?.investPool||0)}`}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('retDrawdownSummary').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="border-bottom:1px solid var(--border);color:var(--text-muted)">
+        <th style="text-align:left;padding:6px 8px">取り崩し順序</th>
+        <th style="text-align:right;padding:6px 8px">${lifeEx}歳時点（想定余命）</th>
+        <th style="text-align:right;padding:6px 8px">内訳（現金 / 投資）</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 
 // ===== 相続・贈与プランニング =====
@@ -11317,6 +11469,26 @@ function calcRetirementSimWithOpts(opts = {}) {
     : 0.03;
   const weightedReturn = baseWeightedReturn + returnMod;
 
+  // ===== 資産プール（現金 / 投資）分離トラッキング =====
+  const _CASH_TYPES_RET = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
+  const _allAssets = state.assets || [];
+  const _totalCurr  = _allAssets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const _cashCurr   = _allAssets.filter(a => _CASH_TYPES_RET.has(a.type)).reduce((s, a) => s + (a.currentVal || 0), 0);
+  const _investCurr = Math.max(0, _totalCurr - _cashCurr);
+  const _cashRatio  = _totalCurr > 0 ? _cashCurr / _totalCurr : 0.2;
+  const _cashBaseReturn = _cashCurr > 0
+    ? _allAssets.filter(a => _CASH_TYPES_RET.has(a.type)).reduce((s, a) =>
+        s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 0.1) / 100), 0) / _cashCurr
+    : 0.001;
+  const _investBaseReturn = _investCurr > 0
+    ? _allAssets.filter(a => !_CASH_TYPES_RET.has(a.type)).reduce((s, a) =>
+        s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 3) / 100), 0) / _investCurr
+    : baseWeightedReturn;
+  let cashPool   = assetsAtRetire * _cashRatio;
+  let investPool = assetsAtRetire * (1 - _cashRatio);
+  const drawdownOrder = opts.drawdownOrder || r.drawdownOrder || 'proportional';
+  const cashFloor = parseFloat(opts.cashFloor != null ? opts.cashFloor : r.cashFloor) || 0;
+
   // フェーズ別月支出（未入力の場合は①の値を引き継ぎ）
   const baseMonthlyExpense  = parseFloat(r.monthlyExpense)  || 25;
   const baseMonthlyExpense2 = parseFloat(r.monthlyExpense2) || baseMonthlyExpense;
@@ -11358,7 +11530,7 @@ function calcRetirementSimWithOpts(opts = {}) {
     const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd + recurringCost;
 
     const severanceThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
-    if (severanceThisYear > 0) assets += severanceThisYear;
+    if (severanceThisYear > 0) { assets += severanceThisYear; investPool += severanceThisYear; }
 
     const pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
@@ -11420,16 +11592,42 @@ function calcRetirementSimWithOpts(opts = {}) {
 
     // 収支: 余剰取り崩し分が「余裕資金」として毎月使える額
     const monthlyBalance = Math.round(annualSurplus / 12 * 10) / 10;
-    const endAssets = Math.max(0, assets * (1 + weightedReturn) - actualDeduction);
+
+    // ===== プール別成長・取り崩し =====
+    const _cashPre = cashPool, _investPre = investPool;
+    cashPool   *= (1 + _cashBaseReturn);
+    investPool *= (1 + Math.max(-1, _investBaseReturn + returnMod));
+    const _annualReturn = Math.round(_cashPre * _cashBaseReturn + _investPre * Math.max(-1, _investBaseReturn + returnMod));
+
+    // 取り崩し順序に基づく引き出し
+    const _poolTotal = cashPool + investPool;
+    let _fromCash = 0, _fromInvest = 0;
+    if (drawdownOrder === 'cash_first') {
+      const _avail = Math.max(0, cashPool - cashFloor);
+      _fromCash   = Math.min(_avail, actualDeduction);
+      _fromInvest = Math.max(0, actualDeduction - _fromCash);
+    } else if (drawdownOrder === 'invest_first') {
+      _fromInvest = Math.min(investPool, actualDeduction);
+      _fromCash   = Math.max(0, actualDeduction - _fromInvest);
+    } else { // proportional
+      const _cf   = _poolTotal > 0 ? cashPool / _poolTotal : 0.5;
+      _fromCash   = actualDeduction * _cf;
+      _fromInvest = actualDeduction * (1 - _cf);
+    }
+    cashPool   = Math.max(0, cashPool   - _fromCash);
+    investPool = Math.max(0, investPool - _fromInvest);
+    const endAssets = cashPool + investPool;
 
     postData.push({
       year: yr, age,
       startAssets: Math.round(assets),
       endAssets: Math.round(endAssets),
+      cashPool: Math.round(cashPool),
+      investPool: Math.round(investPool),
       totalNonAssetIncome: Math.round(totalNonAssetIncome),
       pension: Math.round(pension), pension_p: Math.round(pension_p),
       semi: Math.round(semi), extra: Math.round(extra),
-      annualReturn: Math.round(assets * weightedReturn),
+      annualReturn: _annualReturn,
       assetWithdrawal: Math.round(assetWithdrawal),
       annualExpense: Math.round(totalAnnualExpense),
       baseExpense: Math.round(inflatedExpense),
@@ -11559,6 +11757,7 @@ function toggleRetirementPanel(type) {
     scenarios: { cardId: 'retScenarioCompareCard', btnId: 'btnShowScenarios', fn: () => calcAndShowScenarios(true) },
     tax:       { cardId: 'retTaxCard',             btnId: 'btnShowTax',       fn: () => showRetirementTaxCard(true) },
     stress:    { cardId: 'retStressCard',          btnId: 'btnStressTest',    fn: () => runStressTest(true) },
+    prepay:    { cardId: 'retPrepayCard',          btnId: 'btnPrepay',        fn: () => renderPrepaymentSim() },
   };
   const current = map[type];
   if (!current) return;
@@ -12744,6 +12943,381 @@ function closeIrregularGuide() {
   document.getElementById('irregularGuideModal').classList.remove('open');
 }
 
+// ===== 🏠 繰上返済シナリオ比較 =====
+
+/**
+ * 指定年における住宅ローン残高を正確な元利均等返済方式で計算
+ */
+function calcRemainingMortgageBalance(atYear) {
+  const m = state.lifeEvents?.mortgage || {};
+  const P = parseFloat(m.amount) || 0;
+  const annualRate = parseFloat(m.rate) || 1.5;
+  const term = parseInt(m.term) || 35;
+  const startYear = parseInt(m.startYear) || new Date().getFullYear();
+  if (!P || !term) return 0;
+  const n = term * 12;
+  const r = annualRate / 100 / 12;
+  const elapsed = Math.max(0, (atYear - startYear) * 12);
+  if (elapsed >= n) return 0;
+  if (r === 0) return Math.round(P * (1 - elapsed / n));
+  const pow_n = Math.pow(1 + r, n);
+  const pow_k = Math.pow(1 + r, elapsed);
+  return Math.round(P * (pow_n - pow_k) / (pow_n - 1));
+}
+
+/**
+ * 現在年齢〜余命まで通しの基本資産推移を返す（繰上返済シナリオ比較用）
+ * [{year, age, wealth}] の配列
+ */
+function calcFullBaseTrajectory() {
+  const currentAge = calcAge();
+  if (!currentAge) return null;
+  const r = state.retirement || {};
+  const targetAge = parseInt(r.targetAge) || 65;
+  const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+  const currentYear = new Date().getFullYear();
+  const yearsToRetire = Math.max(0, targetAge - currentAge);
+
+  const preData  = calcIntegratedSim(Math.max(yearsToRetire, 1));
+  const postData = calcRetirementSimWithOpts({});
+
+  const result = [];
+  // リタイア前
+  for (let i = 0; i <= yearsToRetire; i++) {
+    const d = preData[Math.min(i, preData.length - 1)];
+    result.push({ year: currentYear + i, age: currentAge + i, wealth: d?.totalWealth || 0 });
+  }
+  // リタイア後 (i=1から。i=0はリタイア時点でpreDataと重複)
+  if (postData) {
+    for (let i = 1; i < postData.length; i++) {
+      const d = postData[i];
+      result.push({ year: d.year, age: d.age, wealth: d.endAssets });
+    }
+  }
+  return result;
+}
+
+/**
+ * 繰上返済によるデルタ（資産差分）を年別に計算して返す
+ * @param {number} prepayYear  繰上返済実施年
+ * @param {number} prepayAmount 繰上返済額（万円）
+ * @param {string} source 'none' | 'cash' | 'cash_invest'
+ * @param {number} cashFraction  sourceが'cash_invest'のとき現金割合 (0〜1)
+ * @param {Array}  baseTraj  calcFullBaseTrajectory()の結果
+ */
+function calcPrepayDeltaTrajectory(prepayYear, prepayAmount, source, cashFraction, baseTraj) {
+  const currentYear = new Date().getFullYear();
+  const m = state.lifeEvents?.mortgage || {};
+  const monthlyPayment = parseFloat(m.monthlyPayment) || 0;
+  const startYear = parseInt(m.startYear) || currentYear;
+  const term = parseInt(m.term) || 35;
+  const loanEndYear = startYear + term;
+  const annualSavings = monthlyPayment * 12; // 繰上後に浮く年間返済額
+
+  // 資産リターン（キャッシュ / 投資 分離）
+  const CASH_TYPES = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
+  const allAssets = state.assets || [];
+  const cashAssets = allAssets.filter(a => CASH_TYPES.has(a.type));
+  const cashVal    = cashAssets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const totalVal   = allAssets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  const cashReturn = cashVal > 0
+    ? cashAssets.reduce((s, a) => s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 0.1) / 100), 0) / cashVal
+    : 0.001;
+  const investReturn = totalVal > 0
+    ? allAssets.reduce((s, a) => s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 3) / 100), 0) / totalVal
+    : 0.03;
+
+  let deltaCash = 0, deltaInvest = 0;
+  const deltas = [];
+  const prepayOffset = prepayYear - currentYear;
+
+  for (let i = 0; i < baseTraj.length; i++) {
+    const yr = baseTraj[i].year;
+    const t  = yr - currentYear;
+
+    // 既存デルタを複利成長
+    deltaCash   *= (1 + cashReturn);
+    deltaInvest *= (1 + investReturn);
+
+    if (t === prepayOffset && source !== 'none') {
+      // 繰上返済コスト
+      if (source === 'cash') {
+        deltaCash -= prepayAmount;
+      } else { // cash_invest
+        deltaCash   -= prepayAmount * cashFraction;
+        deltaInvest -= prepayAmount * (1 - cashFraction);
+      }
+    }
+
+    // 繰上後〜ローン終了年まで毎年の返済額節約分を現金デルタへ追加
+    if (t > prepayOffset && yr <= loanEndYear && source !== 'none') {
+      deltaCash += annualSavings;
+    }
+
+    deltas.push(deltaCash + deltaInvest);
+  }
+  return deltas;
+}
+
+let _retPrepayChartObj = null;
+
+function renderPrepaymentSim() {
+  const card = document.getElementById('retPrepayCard');
+  if (!card) return;
+  const r = state.retirement || {};
+  if (!r.targetAge || !r.monthlyExpense) {
+    card.innerHTML = '<div class="card" style="padding:16px;color:var(--text-muted)">リタイア設定を先に入力してください。</div>';
+    card.style.display = '';
+    return;
+  }
+  const m = state.lifeEvents?.mortgage || {};
+  const hasMortgage = m.amount && m.term && m.startYear;
+  const currentYear = new Date().getFullYear();
+  const startYear   = parseInt(m.startYear) || currentYear;
+  const term        = parseInt(m.term) || 35;
+  const loanEndYear = startYear + term;
+  const monthlyPmt  = parseFloat(m.monthlyPayment) || 0;
+  const currentAge  = calcAge() || 30;
+  const defaultPrepayYear = Math.max(currentYear + 1, Math.min(loanEndYear - 1, parseInt(r.targetAge) > currentAge ? currentYear + (parseInt(r.targetAge) - currentAge - 2) : currentYear + 5));
+
+  const noMortgageMsg = !hasMortgage
+    ? `<div style="background:#FFF7ED;border-radius:10px;padding:12px 16px;margin-bottom:14px;border:1px solid #FED7AA">
+        <div style="font-size:13px;font-weight:700;color:#C2410C;margin-bottom:4px">⚠️ 住宅ローン情報が未設定です</div>
+        <div style="font-size:12px;color:#9A3412">「ライフイベント」ページで住宅ローンを設定すると精度が上がります。以下はサンプル値で試算します。</div>
+       </div>` : '';
+
+  const totalInterest = (() => {
+    if (!hasMortgage) return 0;
+    return Math.round(monthlyPmt * term * 12 - (parseFloat(m.amount)||0));
+  })();
+
+  card.innerHTML = `
+    <div class="card" style="border-left:4px solid #10B981">
+      <div class="card-title"><span class="icon" style="background:#ECFDF5">🏠</span>繰上返済シナリオ比較</div>
+      ${noMortgageMsg}
+      <div style="background:#F0FDF4;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
+        <div class="pf-stat"><div class="val" style="font-size:16px">${(parseFloat(m.amount)||0).toLocaleString()} 万円</div><div class="lbl">借入額</div></div>
+        <div class="pf-stat"><div class="val" style="font-size:16px">${parseFloat(m.rate)||1.5} %</div><div class="lbl">金利（年）</div></div>
+        <div class="pf-stat"><div class="val" style="font-size:16px">${term} 年</div><div class="lbl">返済期間</div></div>
+        <div class="pf-stat"><div class="val" style="font-size:16px">${monthlyPmt.toFixed(1)} 万円</div><div class="lbl">月額返済</div></div>
+        <div class="pf-stat"><div class="val" style="font-size:16px;color:var(--danger)">${totalInterest.toLocaleString()} 万円</div><div class="lbl">利息総額（当初）</div></div>
+        <div class="pf-stat"><div class="val" style="font-size:16px">${loanEndYear} 年</div><div class="lbl">完済予定年</div></div>
+      </div>
+
+      <div style="background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:10px">🔧 シナリオ設定</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>繰上返済実施年</label>
+            <input type="number" id="prepayYearInput" value="${defaultPrepayYear}" min="${currentYear+1}" max="${loanEndYear-1}"
+              oninput="updatePrepayHints()" style="font-size:13px">
+            <div id="prepayBalanceHint" style="font-size:11px;color:var(--primary);margin-top:4px"></div>
+          </div>
+          <div class="form-group">
+            <label>繰上返済額（万円）</label>
+            <input type="number" id="prepayAmountInput" placeholder="残高全額を自動取得" min="0"
+              oninput="updatePrepayHints()" style="font-size:13px">
+            <div style="font-size:10px;color:var(--text-muted);margin-top:3px">空欄=その時点のローン残高全額</div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:4px">
+          <label>シナリオC 現金/投資の割合</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">現金</span>
+            <input type="range" id="prepayMixSlider" min="0" max="100" value="50"
+              oninput="document.getElementById('prepayMixLabel').textContent=this.value+'%現金 / '+(100-this.value)+'%投資資産'"
+              style="flex:1;accent-color:#10B981">
+            <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">投資</span>
+          </div>
+          <div id="prepayMixLabel" style="font-size:11px;color:var(--text-secondary);margin-top:4px;text-align:center">50%現金 / 50%投資資産</div>
+        </div>
+        <button onclick="runPrepayCalc()"
+          style="width:100%;padding:10px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px">
+          📊 シナリオ計算実行
+        </button>
+      </div>
+
+      <div id="prepayChartArea" style="display:none">
+        <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">📈 資産推移比較（現在〜余命）</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="prepayChart"></canvas></div>
+        <div id="prepaySummaryTable" style="margin-top:14px;overflow-x:auto"></div>
+      </div>
+    </div>`;
+
+  card.style.display = '';
+  updatePrepayHints();
+}
+
+function updatePrepayHints() {
+  const hintEl = document.getElementById('prepayBalanceHint');
+  if (!hintEl) return;
+  const prepayYear = parseInt(document.getElementById('prepayYearInput')?.value);
+  if (!prepayYear || isNaN(prepayYear)) { hintEl.textContent = ''; return; }
+  const bal = calcRemainingMortgageBalance(prepayYear);
+  const m = state.lifeEvents?.mortgage || {};
+  const startYear = parseInt(m.startYear) || new Date().getFullYear();
+  const term      = parseInt(m.term) || 35;
+  const loanEndYear = startYear + term;
+  if (bal <= 0 || prepayYear >= loanEndYear) {
+    hintEl.textContent = 'この年はローンが完済済みです';
+    hintEl.style.color = 'var(--text-muted)';
+    return;
+  }
+  hintEl.textContent = `${prepayYear}年時点のローン残高: 約 ${bal.toLocaleString()} 万円`;
+  hintEl.style.color = 'var(--primary)';
+}
+
+function runPrepayCalc() {
+  const card = document.getElementById('retPrepayCard');
+  const chartArea = document.getElementById('prepayChartArea');
+  if (!chartArea) return;
+
+  const currentYear  = new Date().getFullYear();
+  const currentAge   = calcAge() || 30;
+  const r = state.retirement || {};
+  const targetAge    = parseInt(r.targetAge) || 65;
+  const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
+  const m = state.lifeEvents?.mortgage || {};
+  const monthlyPmt   = parseFloat(m.monthlyPayment) || 0;
+  const startYear    = parseInt(m.startYear) || currentYear;
+  const term         = parseInt(m.term) || 35;
+  const loanEndYear  = startYear + term;
+  const retireYear   = currentYear + Math.max(0, targetAge - currentAge);
+
+  const prepayYear = parseInt(document.getElementById('prepayYearInput')?.value) || (currentYear + 5);
+  const balAtPrepay = calcRemainingMortgageBalance(prepayYear);
+  const inputAmt   = parseFloat(document.getElementById('prepayAmountInput')?.value);
+  const prepayAmount = (!isNaN(inputAmt) && inputAmt > 0) ? inputAmt : balAtPrepay;
+  const mixPct     = parseInt(document.getElementById('prepayMixSlider')?.value) || 50;
+  const cashFraction = mixPct / 100;
+
+  if (prepayAmount <= 0 || prepayYear >= loanEndYear) {
+    alert('繰上返済額またはローン残高が0です。設定を確認してください。');
+    return;
+  }
+
+  // 基本軌跡
+  const baseTraj = calcFullBaseTrajectory();
+  if (!baseTraj || baseTraj.length === 0) {
+    alert('シミュレーションデータが不足しています。プロフィールとリタイア設定を確認してください。');
+    return;
+  }
+
+  // 節約利息 = 繰上後の残余支払い合計 - 繰上返済額
+  const remainingMonths = Math.max(0, loanEndYear - prepayYear) * 12;
+  const interestSaved   = Math.max(0, Math.round(monthlyPmt * remainingMonths - prepayAmount));
+
+  // デルタ計算
+  const deltaB = calcPrepayDeltaTrajectory(prepayYear, prepayAmount, 'cash',       1,            baseTraj);
+  const deltaC = calcPrepayDeltaTrajectory(prepayYear, prepayAmount, 'cash_invest', cashFraction, baseTraj);
+
+  const trajA = baseTraj.map((d, i) => ({ ...d, wealth: d.wealth }));
+  const trajB = baseTraj.map((d, i) => ({ ...d, wealth: d.wealth + deltaB[i] }));
+  const trajC = baseTraj.map((d, i) => ({ ...d, wealth: d.wealth + deltaC[i] }));
+
+  const labels = baseTraj.map(d => `${d.age}歳\n(${d.year})`);
+
+  // リタイア時インデックス
+  const retireIdx = baseTraj.findIndex(d => d.year >= retireYear);
+
+  // チャート描画
+  if (_retPrepayChartObj) { _retPrepayChartObj.destroy(); _retPrepayChartObj = null; }
+  const ctx = document.getElementById('prepayChart')?.getContext('2d');
+  if (!ctx) return;
+
+  const prepayLine = {
+    id: 'prepayVertLine',
+    afterDraw(chart) {
+      const prepIdx = baseTraj.findIndex(d => d.year >= prepayYear);
+      const rIdx    = retireIdx >= 0 ? retireIdx : -1;
+      const { ctx: c, chartArea: ca, scales: { x, y } } = chart;
+      if (!ca) return;
+      [[prepIdx, '#F59E0B', '繰上返済'], [rIdx, '#6366F1', 'リタイア']].forEach(([idx, color, label]) => {
+        if (idx < 0 || idx >= baseTraj.length) return;
+        const xPos = x.getPixelForIndex(idx);
+        c.save();
+        c.strokeStyle = color; c.lineWidth = 1.5; c.setLineDash([4, 3]);
+        c.beginPath(); c.moveTo(xPos, ca.top); c.lineTo(xPos, ca.bottom); c.stroke();
+        c.fillStyle = color; c.font = 'bold 9px sans-serif'; c.textAlign = 'center';
+        c.fillText(label, xPos, ca.top + 10);
+        c.restore();
+      });
+    }
+  };
+
+  _retPrepayChartObj = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'A: 現状維持（継続返済）', data: trajA.map(d => d.wealth), borderColor: '#94A3B8', borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'B: 現金で全額繰上返済',   data: trajB.map(d => d.wealth), borderColor: '#F59E0B', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: `C: 現金${mixPct}%+投資${100-mixPct}%で繰上返済`, data: trajC.map(d => d.wealth), borderColor: '#10B981', borderWidth: 2.5, pointRadius: 0, tension: 0.3, fill: false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { font: { size: 11 }, boxWidth: 20 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, maxRotation: 0, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.04)' } },
+        y: { ticks: { callback: v => `${(v/1).toLocaleString()}万`, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,.04)' } }
+      }
+    },
+    plugins: [prepayLine]
+  });
+
+  // サマリーテーブル
+  const getAt = (traj, yr) => {
+    const d = traj.find(t => t.year >= yr);
+    return d ? Math.round(d.wealth) : null;
+  };
+  const retYr  = retireYear;
+  const lifeYr = currentYear + (lifeExpectancy - currentAge);
+  const prepYr = prepayYear;
+
+  const rows = [
+    ['', 'A: 現状維持', 'B: 現金で繰上', `C: 現金${mixPct}%+投資${100-mixPct}%`],
+    ['繰上返済時（' + prepayYear + '年）資産', getAt(trajA, prepYr), getAt(trajB, prepYr), getAt(trajC, prepYr)],
+    ['リタイア時（' + retireYear + '年）資産',   getAt(trajA, retYr), getAt(trajB, retYr),  getAt(trajC, retYr)],
+    [lifeExpectancy + '歳時点 残高',             getAt(trajA, lifeYr), getAt(trajB, lifeYr), getAt(trajC, lifeYr)],
+    ['節約利息（推定）', '—', interestSaved.toLocaleString() + '万円', interestSaved.toLocaleString() + '万円'],
+  ];
+
+  const fmtCell = (v, isHeader) => {
+    if (isHeader) return `<th style="padding:8px 10px;text-align:center;font-size:11px;font-weight:700;background:#F8FAFC;color:var(--text-secondary)">${v}</th>`;
+    if (typeof v === 'string') return `<td style="padding:8px 10px;text-align:center;font-size:12px">${v}</td>`;
+    if (v === null) return `<td style="padding:8px 10px;text-align:center;font-size:12px;color:var(--text-muted)">—</td>`;
+    const color = v < 0 ? '#FF3B30' : v === 0 ? 'var(--text-muted)' : '#1D1D1F';
+    return `<td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:600;color:${color}">${v.toLocaleString()}万円</td>`;
+  };
+
+  const tableHtml = `
+    <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      ${rows.map((row, ri) => `<tr style="border-bottom:.5px solid var(--border)">
+        <th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:600;background:#F8FAFC;color:var(--text-secondary)">${ri === 0 ? '' : row[0]}</th>
+        ${ri === 0
+          ? row.slice(1).map(h => fmtCell(h, true)).join('')
+          : row.slice(1).map(v => fmtCell(v, false)).join('')
+        }
+      </tr>`).join('')}
+    </table>
+    <div style="font-size:10px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+      ※ 節約利息は概算です（残存月数×月額−繰上額）。実際は返済方法（期間短縮/返済額軽減）により異なります。<br>
+      ※ シナリオB/Cは繰上返済後に浮いた月額返済分が毎年資産に再加算される効果を含みます。
+    </div>`;
+
+  document.getElementById('prepaySummaryTable').innerHTML = tableHtml;
+  chartArea.style.display = '';
+}
+
 // FAQアコーディオン（クリック）
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.faq-q').forEach(qEl => {
@@ -12758,6 +13332,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== INIT =====
+// Chart.js グローバルフォント設定（日本語対応）
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = "'Hiragino Sans','Hiragino Kaku Gothic ProN',-apple-system,BlinkMacSystemFont,'Yu Gothic UI','Meiryo',sans-serif";
+  Chart.defaults.font.size = 11;
+}
 load();
 renderDashboard();
 applyMaritalFilter();
