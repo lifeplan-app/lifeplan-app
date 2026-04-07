@@ -14758,13 +14758,13 @@ function renderLifeScenarioTheme(theme) {
       <div class="card" style="margin-bottom:16px;padding:16px;background:#fff8f0;border:1px solid #fed7aa;">
         <div style="font-size:13px;color:#c2410c;font-weight:600;margin-bottom:4px;">🏠 住宅選択で比べる</div>
         <div style="font-size:12px;color:#666;line-height:1.6;">
-          賃貸・持ち家（一括）・持ち家（ローン）の3パターンで、老後の資産推移の違いを比較します。<br>
-          収入・資産・年金は現在の設定をベースに、住宅コスト差分を老後生活費に加算して計算します。
+          賃貸・持ち家（一括）・持ち家（ローン）の3パターンで、現在から老後までの資産推移の違いを比較します。<br>
+          住宅コストは現在から発生するものとして試算します。
         </div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_housing_cards"></div>
       <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・現在〜老後）</div>
         <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
       </div>
       <div id="ls_insights" style="margin-bottom:16px;"></div>
@@ -15227,13 +15227,61 @@ function updateLsHousing(idx, field, value) {
   window._lsSaveTimer = setTimeout(() => save(), 800);
 }
 
+// 住宅比較: 現在年齢〜老後まで全期間シミュレーション
+function calcHousingFullTimeline(sc) {
+  const currentAge = calcAge();
+  const ret = state.retirement;
+  if (!currentAge || !ret?.targetAge) return null;
+
+  const targetAge = parseInt(ret.targetAge);
+  const lifeExpectancy = parseInt(ret.lifeExpectancy) || 90;
+  const yearsToRetire = Math.max(0, targetAge - currentAge);
+  const loanYears = parseFloat(sc.loanYears) || 0;
+  const monthlyCost = calcHousingMonthlyCost(sc); // 万円/月
+
+  // ① 退職前シミュレーション（現状の収支ベース）
+  const preSim = calcIntegratedSim(yearsToRetire);
+
+  let upfrontCost = 0;
+  if (sc.type === 'buy_cash') upfrontCost = parseFloat(sc.purchasePrice) || 0;
+  else if (sc.type === 'buy_loan') upfrontCost = parseFloat(sc.downPayment) || 0;
+
+  const preResult = [];
+  let cumulativeHousingCost = 0;
+  for (let y = 0; y <= yearsToRetire; y++) {
+    const age = currentAge + y;
+    const base = preSim[y] || { totalWealth: 0 };
+    let annualHousing = y === 0 ? upfrontCost : 0;
+    if (y > 0) {
+      if (sc.type === 'rent') annualHousing += monthlyCost * 12;
+      else if (sc.type === 'buy_loan' && y <= loanYears) annualHousing += monthlyCost * 12;
+    }
+    cumulativeHousingCost += annualHousing;
+    preResult.push({ age, endAssets: Math.round(base.totalWealth - cumulativeHousingCost) });
+  }
+
+  // ② 退職後シミュレーション（既存ロジック）
+  const postResult = calcHousingScenarioSim(sc);
+  if (!postResult || postResult.length === 0) return preResult;
+
+  // ③ 退職時点で連続性を合わせる（プレ末尾とポスト先頭のズレを補正）
+  const preAtRetire = preResult[preResult.length - 1]?.endAssets || 0;
+  const postAtRetire = postResult[0]?.endAssets || 0;
+  const delta = preAtRetire - postAtRetire;
+
+  return [
+    ...preResult.slice(0, -1), // 退職年齢の重複を除く
+    ...postResult.map(r => ({ age: r.age, endAssets: Math.max(0, r.endAssets + delta) })),
+  ];
+}
+
 // 住宅比較チャート
 let _lsHousingChartObj = null;
 function renderLsHousingChart() {
   const canvas = document.getElementById('ls_chart');
   if (!canvas) return;
   const scs = state.lifeScenario.housing.scenarios;
-  const sims = scs.map(sc => calcHousingScenarioSim(sc));
+  const sims = scs.map(sc => calcHousingFullTimeline(sc));
   if (sims.every(s => !s || s.length === 0)) return;
 
   const allAges = sims.flatMap(s => (s || []).map(r => r.age));
