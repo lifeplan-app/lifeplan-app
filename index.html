@@ -7602,6 +7602,14 @@ function renderFinSummary() {
   const monthlyBalance = income - monthlyTotal;                    // 手元余剰（月）
   // 年間余剰：ボーナス収入からボーナス投資を差し引く
   const annualBalance  = annualIncome - monthlyTotal * 12 - annualBonusInvest;
+
+  // 繰り返し支出の今後10年平均（参考値）
+  const _cy = new Date().getFullYear();
+  const _simYrs = Math.min(10, state.finance?.simYears || 10);
+  let _recurringTotal = 0;
+  for (let _y = 0; _y < _simYrs; _y++) _recurringTotal += getRecurringExpenseForYear(_cy + _y);
+  const avgRecurring = Math.round(_recurringTotal / _simYrs * 10) / 10;
+  const netAnnualBalance = Math.round((annualBalance - avgRecurring) * 10) / 10;
   const mColor = monthlyBalance >= 0 ? 'var(--secondary)' : 'var(--danger)';
   const aColor = annualBalance  >= 0 ? 'var(--secondary)' : 'var(--danger)';
 
@@ -7635,6 +7643,15 @@ function renderFinSummary() {
         }
         ${annualBonusInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">ボーナス投資</span><span style="font-weight:600;color:var(--warning)">−${annualBonusInvest.toLocaleString()}万円</span></div>${bonusLines}` : ''}
         <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--text-muted)">ボーナス余剰</span><span style="font-weight:600;color:${(bonus-annualBonusInvest)>=0?'var(--secondary)':'var(--danger)'}">+${(bonus-annualBonusInvest).toLocaleString()}万円</span></div>
+      </div>` : ''}
+      ${avgRecurring > 0 ? `
+      <div style="margin-top:10px;padding-top:8px;border-top:.5px dashed var(--border)">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">📋 参考：登録済み特別支出（10年平均）</div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">旅行・車・特別費など</span><span style="font-weight:600;color:var(--danger)">−${avgRecurring.toLocaleString()}万円/年</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;padding-top:4px;border-top:.5px solid var(--border)">
+          <span style="font-weight:600;font-size:12px">実質余剰（参考）</span>
+          <span style="font-weight:700;color:${netAnnualBalance>=0?'var(--secondary)':'var(--danger)'}">${netAnnualBalance>=0?'+':''}${netAnnualBalance.toLocaleString()}万円/年</span>
+        </div>
       </div>` : ''}
     `;
   }
