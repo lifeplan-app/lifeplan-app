@@ -4420,7 +4420,7 @@ function save() {
 // ===== かんたん試算モード ユーティリティ =====
 // 手取り年収（万円）から年金月額（万円/月）を推計
 function calcPensionEstimate() {
-  const income = parseFloat(state.finance?.income) || 0; // 手取り年収（万円）
+  const income = (parseFloat(state.finance?.income) || 0) * 12; // 月収→手取り年収（万円）
   if (income <= 0) return 0;
   const grossAnnual = income / 0.75; // 額面年収推計
   const grossMonthly = grossAnnual / 12; // 月額面（万円）
@@ -4462,15 +4462,15 @@ function calcSimpleSim() {
 
   for (let age = currentAge; age <= simEndAge; age++) {
     const isRetired = age >= retireAge;
-    const annualExpense = isRetired ? retireExpense * 12 : monthlyExpense * 12;
-    const annualIncome = isRetired ? pension * 12 : (parseFloat(state.finance?.income) || 0);
-    const annualInvest = isRetired ? 0 : monthlyInvest * 12;
 
     // 資産成長（年初残高に運用益）
     assets = assets * (1 + rate);
-    // 収支
-    const netCashflow = annualIncome + annualInvest - annualExpense;
-    assets += netCashflow;
+    // 収支: 就労期は積立額を加算、退職後は純引き出し額（生活費-年金）を減算
+    if (!isRetired) {
+      assets += monthlyInvest * 12;
+    } else {
+      assets -= Math.max(0, retireExpense * 12 - pension * 12);
+    }
 
     results.push({
       age,
@@ -13903,9 +13903,16 @@ function updateSmRetireDefault() {
 function openSimpleInputModal() {
   const sm = state.simpleMode || {};
   const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
-  setVal('sm_totalAssets',    sm.totalAssets);
-  setVal('sm_monthlyInvest',  sm.monthlyInvest);
-  setVal('sm_monthlyExpense', sm.monthlyExpense);
+
+  // 既存stateから補完（simpleMode未入力の場合のみ）
+  const assetsTotal = (state.assets || []).reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+  const fallbackTotal   = assetsTotal > 0 ? assetsTotal : null;
+  const fallbackExpense = state.finance?.expense > 0 ? state.finance.expense : null;
+  const fallbackInvest  = state.finance?.monthlySavings > 0 ? state.finance.monthlySavings : null;
+
+  setVal('sm_totalAssets',    sm.totalAssets    ?? fallbackTotal);
+  setVal('sm_monthlyInvest',  sm.monthlyInvest  ?? fallbackInvest);
+  setVal('sm_monthlyExpense', sm.monthlyExpense ?? fallbackExpense);
   setVal('sm_retireExpense',  sm.retireExpense);
   selectInvestStyle(sm.investStyle || 'balanced');
   document.getElementById('simpleModeModal').style.display = '';
