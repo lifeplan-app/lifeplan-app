@@ -4255,6 +4255,7 @@ function load() {
     if (!state.insurance.needs) state.insurance.needs = {};
     if (!state.inheritance) state.inheritance = { giftPlans: [] };
     if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
+    if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
     if (!state.recurringExpenses) state.recurringExpenses = [];
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
@@ -4632,6 +4633,7 @@ function importData(event) {
       if (!state.insurance.needs) state.insurance.needs = {};
       if (!state.inheritance) state.inheritance = { giftPlans: [] };
       if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
+      if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
       if (!state.recurringExpenses) state.recurringExpenses = [];
       state.goals = (state.goals || []).map(g => ({ tasks: [], progressMode: 'manual', ...g }));
       save();
@@ -11203,58 +11205,106 @@ function renderGiftPlanList() {
     </table></div>`;
 }
 
+function toggleInheritanceCheck(key) {
+  if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
+  state.inheritance.checklistManual[key] = !state.inheritance.checklistManual[key];
+  save();
+  renderInheritanceChecklist();
+}
+
 function renderInheritanceChecklist() {
   const el = document.getElementById('inheritanceChecklist');
   if (!el) return;
   const p = state.profile;
-  const totalAssets = state.assets.reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
-  const heirs = 1 + (parseInt(p.children) || 0) + (p.partner ? 1 : 0);
+  // 修正: currentVal を使用（amount は旧フィールド）
+  const totalAssets = state.assets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+  const hasPartner = p.marital === 'married' || p.marital === 'planning';
+  const heirs = 1 + (parseInt(p.children) || 0) + (hasPartner ? 1 : 0);
   const deduction = 3000 + 600 * heirs;
+  const manual = state.inheritance.checklistManual || {};
 
+  // auto: 自動判定（データ連動）、manual: 手動トグル可能
   const items = [
     {
-      done: (parseInt(p.children) > 0 || p.partner),
+      key: 'heirs',
+      auto: (parseInt(p.children) > 0 || hasPartner),
+      manualToggle: false,
       text: '法定相続人を把握している',
-      tip: 'プロフィールで配偶者・子供の人数を設定すると基礎控除額が正確に計算されます。',
+      tip: parseInt(p.children) > 0 || hasPartner
+        ? `配偶者${hasPartner ? 'あり' : 'なし'} ／ 子供 ${parseInt(p.children)||0}人 → 法定相続人 ${heirs}人・基礎控除 ${deduction.toLocaleString()}万円`
+        : 'プロフィールで配偶者・子供の人数を設定すると基礎控除額が正確に計算されます。',
     },
     {
-      done: totalAssets > 0,
+      key: 'assets',
+      auto: totalAssets > 0,
+      manualToggle: false,
       text: '相続財産の総額を把握している',
-      tip: '資産一覧ページで現在の資産を登録すると相続税の概算計算に活用できます。',
+      tip: totalAssets > 0
+        ? `登録済み資産の合計: ${totalAssets.toLocaleString()}万円`
+        : '資産一覧ページで現在の資産を登録すると相続税の概算計算に活用できます。',
     },
     {
-      done: totalAssets > deduction,
+      key: 'taxcheck',
+      auto: totalAssets > 0, // 資産を登録していれば確認できている
+      manualToggle: false,
       text: '相続税の課税対象かどうか確認している',
       tip: totalAssets > deduction
-        ? `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）を超えているため、相続税対策が必要です。`
-        : `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）以下のため、相続税はかかりません。`,
+        ? `⚠️ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）を超えています。相続税対策が必要です。`
+        : totalAssets > 0
+        ? `✅ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）以下のため、相続税はかかりません。`
+        : '資産を登録すると課税対象かどうかを自動判定します。',
     },
     {
-      done: state.inheritance.giftPlans.length > 0,
+      key: 'gift',
+      auto: state.inheritance.giftPlans.length > 0,
+      manualToggle: false,
       text: '生前贈与の計画を立てている',
-      tip: '生前贈与は相続財産を減らす有効な手段です。暦年贈与（年110万円以内）から始めましょう。',
+      tip: state.inheritance.giftPlans.length > 0
+        ? `${state.inheritance.giftPlans.length}件の贈与計画を登録済み`
+        : '生前贈与は相続財産を減らす有効な手段です。暦年贈与（年110万円以内）から始めましょう。',
     },
     {
-      done: state.insurance.items.some(i => i.type === 'life'),
-      text: '生命保険を活用した非課税枠を活用している',
-      tip: '生命保険金は「500万円×法定相続人数」まで非課税。相続対策として有効です。',
+      key: 'insurance',
+      auto: state.insurance.items.some(i => i.type === 'life'),
+      manualToggle: false,
+      text: '生命保険の非課税枠を活用している',
+      tip: state.insurance.items.some(i => i.type === 'life')
+        ? `生命保険（死亡保障）登録済み — 非課税枠: ${(500 * heirs).toLocaleString()}万円（500万円×${heirs}人）`
+        : `生命保険金は「500万円×法定相続人数」まで非課税（現在 ${(500*heirs).toLocaleString()}万円枠）。相続対策として有効です。`,
     },
     {
-      done: false,
+      key: 'will',
+      auto: null, // 自動判定なし → 手動トグルのみ
+      manualToggle: true,
       text: '遺言書を作成している',
       tip: '遺言書があれば相続人間のトラブルを防ぎ、意思通りの財産分配が可能になります。公正証書遺言の作成をご検討ください。',
     },
+    {
+      key: 'trust',
+      auto: null,
+      manualToggle: true,
+      text: '家族信託・成年後見を検討している',
+      tip: '認知症対策として家族信託や成年後見制度の活用を検討しましょう。',
+    },
   ];
 
-  el.innerHTML = items.map(item => `
-    <div style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:${item.done?'rgba(52,199,89,.06)':'var(--surface2)'};border-radius:8px;border-left:3px solid ${item.done?'var(--secondary)':'var(--border-strong)'}">
-      <span style="font-size:18px;flex-shrink:0;margin-top:1px">${item.done?'✅':'⬜'}</span>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">${item.text}</div>
+  el.innerHTML = items.map(item => {
+    const isDone = item.auto !== null ? item.auto : (manual[item.key] || false);
+    const isManualOverride = item.manualToggle;
+    const canToggle = isManualOverride; // 手動トグル可能かどうか
+    const clickAttr = canToggle ? `onclick="toggleInheritanceCheck('${item.key}')" style="cursor:pointer"` : '';
+    const hintLabel = canToggle
+      ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px">${isDone ? 'クリックで未完了に戻す' : 'クリックで完了にする'}</span>`
+      : '';
+    return `
+    <div ${clickAttr} style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:${isDone?'rgba(52,199,89,.06)':'var(--surface2)'};border-radius:8px;border-left:3px solid ${isDone?'var(--secondary)':'var(--border-strong)'};transition:background .15s${canToggle?';user-select:none':''}">
+      <span style="font-size:18px;flex-shrink:0;margin-top:1px">${isDone?'✅':'⬜'}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">${item.text}${hintLabel}</div>
         <div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${item.tip}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function renderInheritancePage() {
