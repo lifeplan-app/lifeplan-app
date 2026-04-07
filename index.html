@@ -3470,6 +3470,19 @@
     </div>
 
     <div style="margin-bottom:20px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">シミュレーション設定</div>
+      <button onclick="closeDataSettings();openRatePresetModal('settings')"
+        style="display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;background:#fff;border:1px solid #e0e0e0;border-radius:10px;font-size:14px;cursor:pointer;margin-bottom:8px;">
+        <span style="font-size:20px;">📊</span>
+        <div style="text-align:left;">
+          <div style="font-weight:600;">利回り前提設定</div>
+          <div style="font-size:12px;color:#888;">シミュレーション計算に使用する利回りの仮定値を設定</div>
+        </div>
+        <span style="margin-left:auto;color:#ccc;">›</span>
+      </button>
+    </div>
+
+    <div style="margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">💾 バックアップ（エクスポート）</div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">ブラウザのデータ消去やPC変更時に備え、定期的にバックアップを保存することをお勧めします。</p>
       <button class="btn btn-primary" onclick="exportData();closeDataSettings()" style="width:100%">📥 データをJSONファイルに書き出す</button>
@@ -3874,6 +3887,13 @@
       <div class="form-group">
         <label>期待年利（%）</label>
         <input type="number" id="amReturn" placeholder="5" min="0" max="30" step="0.1" oninput="updateTaxNote()">
+        <div id="amRateOverrideBadge" style="display:none;margin-top:6px;align-items:center;gap:6px;background:#fff3e0;border-radius:6px;padding:4px 10px;font-size:12px;color:#e65100;">
+          🔒 個別設定済み
+          <button onclick="resetAssetRateToPreset()"
+            style="background:none;border:none;color:#e65100;cursor:pointer;font-size:11px;text-decoration:underline;padding:0;">
+            プリセットに戻す
+          </button>
+        </div>
         <div id="amReturnHint" style="font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.5">
           値上がり益＋配当を含む<b>合計リターン</b>を入力してください。<br>
           例：VYM（値上がり4%＋配当3%）→ <b>7%</b> と入力し、配当利回りに <b>3%</b> を別途入力
@@ -4221,6 +4241,14 @@ let state = {
   insurance: { items: [], needs: {} },
   inheritance: { giftPlans: [] },
   recurringExpenses: [],
+  ratePresets: {
+    initialized: false,
+    index:    { rate: 5.0 },
+    dividend: { dividendRate: 3.5, rate: 1.5 },
+    bond:     { rate: 1.5 },
+    reit:     { rate: 4.0 },
+    cash:     { rate: 0.5 },
+  },
 };
 
 let editingGoalId = null;
@@ -4257,6 +4285,14 @@ function load() {
     if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
     if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
     if (!state.recurringExpenses) state.recurringExpenses = [];
+    if (!state.ratePresets) state.ratePresets = {
+      initialized: false,
+      index:    { rate: 5.0 },
+      dividend: { dividendRate: 3.5, rate: 1.5 },
+      bond:     { rate: 1.5 },
+      reit:     { rate: 4.0 },
+      cash:     { rate: 0.5 },
+    };
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
     // cashFlowEventsのlabelのみでtitleがないエントリを修正
@@ -4313,6 +4349,37 @@ function load() {
 
 function save() {
   localStorage.setItem('lifeplan_v1', JSON.stringify(state));
+}
+
+// ===== 利回りプリセット関連ユーティリティ =====
+// 資産タイプ → プリセットカテゴリのマッピング
+function getRatePresetCategory(asset) {
+  const t = asset.type || '';
+  const hasDividend = parseFloat(asset.dividendYield) > 0;
+  if (t === 'cash' || t === 'deposit' || t === 'cash_emergency' || t === 'cash_special' || t === 'cash_reserved' || t === 'cash_surplus') return 'cash';
+  if (t === 'bond') return 'bond';
+  if (t === 'real_estate' || t === 'reit') return 'reit';
+  if (t === 'high_dividend' || t === 'etf') return 'dividend';
+  if ((t === 'nisa_growth' || t === 'ideco') && hasDividend) return 'dividend';
+  return 'index'; // stock, nisa_growth(配当なし), その他
+}
+
+// プリセットを全資産に適用（rateOverridden=trueの資産はスキップ）
+function applyRatePresets(forceAll = false) {
+  const p = state.ratePresets;
+  state.assets.forEach(a => {
+    if (!forceAll && a.rateOverridden) return;
+    const cat = getRatePresetCategory(a);
+    if (cat === 'dividend') {
+      a.dividendYield = p.dividend.dividendRate;
+      a.annualReturn = p.dividend.rate;
+    } else {
+      a.annualReturn = p[cat].rate;
+    }
+  });
+  save();
+  if (typeof renderAssets === 'function') renderAssets();
+  if (typeof renderDashboard === 'function') renderDashboard();
 }
 
 // ===== バックアップ: 書き出し / 読み込み =====
@@ -4788,6 +4855,7 @@ function saveProfile() {
   };
   save();
   showNotification('プロフィールを保存しました');
+  maybeShowRatePresetWizard();
 }
 
 function calcAge() {
@@ -5841,6 +5909,8 @@ function checkAssetLimit() {
 function openAssetModal(id) {
   editingAssetId = id || null;
   document.getElementById('assetModalTitle').textContent = id ? 'アセットを編集' : 'アセットを追加';
+  // data-asset-id を設定（resetAssetRateToPreset で参照）
+  document.getElementById('assetModal').dataset.assetId = id || '';
   // 名義フィールド：パートナーがいる場合のみ表示
   const _hasPartner = state.profile?.marital === 'married' || state.profile?.marital === 'planning';
   const _ownerWrap = document.getElementById('amOwnerWrap');
@@ -5863,6 +5933,9 @@ function openAssetModal(id) {
     document.getElementById('amEndYear').value = a.endYear || '';
     document.getElementById('amEndAge').value = a.endAge || '';
     document.getElementById('amNote').value = a.note || '';
+    // 個別設定済みバッジの表示制御
+    const overrideBadge = document.getElementById('amRateOverrideBadge');
+    if (overrideBadge) overrideBadge.style.display = a.rateOverridden ? 'flex' : 'none';
   } else {
     document.getElementById('amType').value = 'nisa_tsumitate';
     document.getElementById('amName').value = '';
@@ -5877,6 +5950,9 @@ function openAssetModal(id) {
     document.getElementById('amEndAge').value = '';
     document.getElementById('amNote').value = '';
     if (document.getElementById('amOwner')) document.getElementById('amOwner').value = 'self';
+    // 新規作成時はバッジ非表示
+    const _newBadge = document.getElementById('amRateOverrideBadge');
+    if (_newBadge) _newBadge.style.display = 'none';
   }
   // 旧NISAの場合は終了年を自動セット（編集・新規共通）
   setTimeout(() => {
@@ -5936,6 +6012,21 @@ function saveAsset() {
   } else {
     state.assets.push({ id: uid(), createdAt: Date.now(), ...data });
   }
+
+  // 利回りがプリセットと異なる場合は rateOverridden フラグを立てる
+  const _savedAsset = state.assets.find(x => x.id === (editingAssetId || state.assets[state.assets.length - 1]?.id));
+  if (_savedAsset && state.ratePresets) {
+    const _cat = getRatePresetCategory(_savedAsset);
+    const _p = state.ratePresets;
+    const _presetRate = _cat === 'dividend' ? (_p.dividend?.rate ?? 0) : (_p[_cat]?.rate ?? 0);
+    const _presetDiv  = _cat === 'dividend' ? (_p.dividend?.dividendRate ?? 0) : null;
+    const _rateChanged = Math.abs((_savedAsset.annualReturn || 0) - _presetRate) > 0.01;
+    const _divChanged  = _presetDiv !== null && Math.abs((_savedAsset.dividendYield || 0) - _presetDiv) > 0.01;
+    if (_rateChanged || _divChanged) {
+      _savedAsset.rateOverridden = true;
+    }
+  }
+
   // アセット保存と同時にfinanceフォームの最新値もstateに同期して
   // シミュレーション系（ダッシュボード・タイムライン等）に即反映
   const finFields = {
@@ -13533,6 +13624,263 @@ checkBackupReminder();
     };
   }
 })();
+
+// ===== 利回り前提設定モーダル 制御関数 =====
+// スライダー表示更新
+function updateRpDisplay(cat) {
+  if (cat === 'index') {
+    const v = parseFloat(document.getElementById('rp_index_rate').value);
+    document.getElementById('rp_index_rate_disp').textContent = v.toFixed(1);
+  } else if (cat === 'dividend') {
+    const d = parseFloat(document.getElementById('rp_dividend_dividendRate').value);
+    const r = parseFloat(document.getElementById('rp_dividend_rate').value);
+    document.getElementById('rp_dividend_dividendRate_disp').textContent = d.toFixed(1);
+    document.getElementById('rp_dividend_rate_disp').textContent = r.toFixed(1);
+    document.getElementById('rp_dividend_total').textContent = (d + r).toFixed(1);
+  } else if (cat === 'bond') {
+    const v = parseFloat(document.getElementById('rp_bond_rate').value);
+    document.getElementById('rp_bond_rate_disp').textContent = v.toFixed(1);
+  } else if (cat === 'reit') {
+    const v = parseFloat(document.getElementById('rp_reit_rate').value);
+    document.getElementById('rp_reit_rate_disp').textContent = v.toFixed(1);
+  } else if (cat === 'cash') {
+    const v = parseFloat(document.getElementById('rp_cash_rate').value);
+    document.getElementById('rp_cash_rate_disp').textContent = v.toFixed(1);
+  }
+}
+
+// モーダルを開く（mode: 'wizard' or 'settings'）
+function openRatePresetModal(mode) {
+  const p = state.ratePresets || {};
+  // スライダーに現在値をセット
+  const setSlider = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  setSlider('rp_index_rate', p.index?.rate ?? 5.0);
+  setSlider('rp_dividend_dividendRate', p.dividend?.dividendRate ?? 3.5);
+  setSlider('rp_dividend_rate', p.dividend?.rate ?? 1.5);
+  setSlider('rp_bond_rate', p.bond?.rate ?? 1.5);
+  setSlider('rp_reit_rate', p.reit?.rate ?? 4.0);
+  setSlider('rp_cash_rate', p.cash?.rate ?? 0.5);
+  // 表示更新
+  ['index','dividend','bond','reit','cash'].forEach(updateRpDisplay);
+
+  // ヘッダー・ボタン切り替え
+  document.getElementById('ratePresetWizardHeader').style.display   = mode === 'wizard' ? '' : 'none';
+  document.getElementById('ratePresetSettingsHeader').style.display  = mode === 'settings' ? '' : 'none';
+  document.getElementById('ratePresetWizardButtons').style.display   = mode === 'wizard' ? '' : 'none';
+  document.getElementById('ratePresetSettingsButtons').style.display = mode === 'settings' ? '' : 'none';
+
+  document.getElementById('ratePresetModal').style.display = '';
+}
+
+// 保存 & 適用
+function saveRatePresets(apply) {
+  if (!state.ratePresets) state.ratePresets = {};
+  state.ratePresets.initialized = true;
+  state.ratePresets.index    = { rate: parseFloat(document.getElementById('rp_index_rate').value) };
+  state.ratePresets.dividend = {
+    dividendRate: parseFloat(document.getElementById('rp_dividend_dividendRate').value),
+    rate:         parseFloat(document.getElementById('rp_dividend_rate').value),
+  };
+  state.ratePresets.bond  = { rate: parseFloat(document.getElementById('rp_bond_rate').value) };
+  state.ratePresets.reit  = { rate: parseFloat(document.getElementById('rp_reit_rate').value) };
+  state.ratePresets.cash  = { rate: parseFloat(document.getElementById('rp_cash_rate').value) };
+
+  document.getElementById('ratePresetModal').style.display = 'none';
+
+  if (apply) {
+    applyRatePresets(false); // rateOverridden=trueの資産はスキップ
+  } else {
+    save();
+  }
+}
+
+// 初回ウィザードを条件付きで表示
+function maybeShowRatePresetWizard() {
+  if (!state.ratePresets || !state.ratePresets.initialized) {
+    setTimeout(() => openRatePresetModal('wizard'), 400);
+  }
+}
+
+// 資産モーダル: 利回りをプリセットにリセット
+function resetAssetRateToPreset() {
+  const id = document.getElementById('assetModal')?.dataset?.assetId;
+  if (!id) return;
+  const a = state.assets.find(x => x.id === id);
+  if (!a) return;
+  a.rateOverridden = false;
+  const cat = getRatePresetCategory(a);
+  const p = state.ratePresets;
+  if (cat === 'dividend') {
+    a.dividendYield = p.dividend.dividendRate;
+    a.annualReturn = p.dividend.rate;
+  } else {
+    a.annualReturn = p[cat].rate;
+  }
+  // モーダル内の表示を更新
+  const returnEl = document.getElementById('amReturn');
+  if (returnEl) returnEl.value = a.annualReturn;
+  const divEl = document.getElementById('amDividend');
+  if (divEl && cat === 'dividend') divEl.value = a.dividendYield;
+  const badge = document.getElementById('amRateOverrideBadge');
+  if (badge) badge.style.display = 'none';
+}
 </script>
+
+<!-- 利回り前提設定モーダル -->
+<div id="ratePresetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;overflow-y:auto;">
+  <div style="background:#fff;border-radius:16px;max-width:520px;margin:24px auto;padding:28px 24px;">
+
+    <div id="ratePresetWizardHeader" style="margin-bottom:20px;">
+      <div style="font-size:13px;color:#888;margin-bottom:4px;">ステップ 2 / 3 — シミュレーション前提</div>
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">利回りの前提を設定</h2>
+      <p style="font-size:13px;color:#666;margin:0;line-height:1.6;">
+        シミュレーションに使用する利回りの仮定値をご自身で設定してください。<br>
+        <strong>将来の運用成果を示すものではありません。</strong>各資産の個別モーダルからいつでも変更できます。
+      </p>
+    </div>
+    <div id="ratePresetSettingsHeader" style="display:none;margin-bottom:20px;">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 8px;">利回り前提設定</h2>
+      <p style="font-size:13px;color:#666;margin:0;line-height:1.6;">
+        シミュレーションに使用する利回りの仮定値をご自身で設定してください。<br>
+        <strong>将来の運用成果を示すものではありません。</strong>
+      </p>
+    </div>
+
+    <!-- インデックス・成長株式 -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">インデックス・成長株式</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px;">対象: 国内株、インデックスファンド、NISA成長投資枠（配当なし）</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+        <span>保守的 0%</span><span>積極的 12%</span>
+      </div>
+      <input type="range" id="rp_index_rate" min="0" max="12" step="0.5" value="5.0"
+        oninput="updateRpDisplay('index')"
+        style="width:100%;accent-color:#4CAF50;">
+      <div style="text-align:center;margin-top:6px;">
+        <span style="font-size:18px;font-weight:700;color:#2e7d32;" id="rp_index_rate_disp">5.0</span>
+        <span style="font-size:13px;color:#666;">%（年率・仮定値）</span>
+      </div>
+    </div>
+
+    <!-- 高配当株・配当ETF -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">高配当株・配当ETF</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px;">対象: 高配当株、ETF、NISA成長投資枠（配当あり設定）</div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px;color:#555;font-weight:600;margin-bottom:4px;">配当利回り</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+          <span>0%</span><span>8%</span>
+        </div>
+        <input type="range" id="rp_dividend_dividendRate" min="0" max="8" step="0.5" value="3.5"
+          oninput="updateRpDisplay('dividend')"
+          style="width:100%;accent-color:#FF9800;">
+        <div style="text-align:center;margin-top:4px;">
+          <span style="font-size:16px;font-weight:700;color:#e65100;" id="rp_dividend_dividendRate_disp">3.5</span>
+          <span style="font-size:12px;color:#666;">%</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <div style="font-size:12px;color:#555;font-weight:600;margin-bottom:4px;">値上がり率（配当除く）</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+          <span>0%</span><span>6%</span>
+        </div>
+        <input type="range" id="rp_dividend_rate" min="0" max="6" step="0.5" value="1.5"
+          oninput="updateRpDisplay('dividend')"
+          style="width:100%;accent-color:#FF9800;">
+        <div style="text-align:center;margin-top:4px;">
+          <span style="font-size:16px;font-weight:700;color:#e65100;" id="rp_dividend_rate_disp">1.5</span>
+          <span style="font-size:12px;color:#666;">%</span>
+        </div>
+      </div>
+
+      <div style="background:#fff3e0;border-radius:8px;padding:8px 12px;font-size:12px;color:#e65100;text-align:center;">
+        想定トータルリターン（仮定）:
+        <strong id="rp_dividend_total">5.0</strong>%
+      </div>
+    </div>
+
+    <!-- 債券 -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">債券・社債</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px;">対象: 国内・外国債券</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+        <span>0%</span><span>5%</span>
+      </div>
+      <input type="range" id="rp_bond_rate" min="0" max="5" step="0.1" value="1.5"
+        oninput="updateRpDisplay('bond')"
+        style="width:100%;accent-color:#2196F3;">
+      <div style="text-align:center;margin-top:6px;">
+        <span style="font-size:18px;font-weight:700;color:#1565c0;" id="rp_bond_rate_disp">1.5</span>
+        <span style="font-size:13px;color:#666;">%（年率・仮定値）</span>
+      </div>
+    </div>
+
+    <!-- REIT・不動産 -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">REIT・不動産</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px;">対象: REIT、収益不動産</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+        <span>0%</span><span>8%</span>
+      </div>
+      <input type="range" id="rp_reit_rate" min="0" max="8" step="0.5" value="4.0"
+        oninput="updateRpDisplay('reit')"
+        style="width:100%;accent-color:#9C27B0;">
+      <div style="text-align:center;margin-top:6px;">
+        <span style="font-size:18px;font-weight:700;color:#6a1b9a;" id="rp_reit_rate_disp">4.0</span>
+        <span style="font-size:13px;color:#666;">%（年率・仮定値）</span>
+      </div>
+    </div>
+
+    <!-- 現金・預金 -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:4px;">現金・預金</div>
+      <div style="font-size:12px;color:#888;margin-bottom:12px;">対象: 現金、普通預金、定期預金</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-bottom:4px;">
+        <span>0%</span><span>3%</span>
+      </div>
+      <input type="range" id="rp_cash_rate" min="0" max="3" step="0.1" value="0.5"
+        oninput="updateRpDisplay('cash')"
+        style="width:100%;accent-color:#607D8B;">
+      <div style="text-align:center;margin-top:6px;">
+        <span style="font-size:18px;font-weight:700;color:#37474f;" id="rp_cash_rate_disp">0.5</span>
+        <span style="font-size:13px;color:#666;">%（年率・仮定値）</span>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:#aaa;text-align:center;margin:0 0 16px;line-height:1.5;">
+      ※ 上記はシミュレーション計算のための仮定値です。実際の運用成果を保証・推奨するものではありません。
+    </p>
+
+    <!-- ウィザード時のボタン -->
+    <div id="ratePresetWizardButtons">
+      <button onclick="saveRatePresets(true)"
+        style="width:100%;padding:14px;background:#4CAF50;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        この設定で資産に適用する
+      </button>
+      <button onclick="saveRatePresets(false)"
+        style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer;">
+        スキップ（後で設定する）
+      </button>
+    </div>
+
+    <!-- 設定メニュー時のボタン -->
+    <div id="ratePresetSettingsButtons" style="display:none;">
+      <button onclick="saveRatePresets(true)"
+        style="width:100%;padding:14px;background:#4CAF50;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        保存して資産に適用する
+      </button>
+      <button onclick="document.getElementById('ratePresetModal').style.display='none'"
+        style="width:100%;padding:12px;background:#f5f5f5;color:#666;border:none;border-radius:10px;font-size:14px;cursor:pointer;">
+        キャンセル
+      </button>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
