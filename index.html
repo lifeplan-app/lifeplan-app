@@ -1581,6 +1581,10 @@
 /* ===== 出口戦略 タブ・アコーディオン ===== */
 .ret-main-tabs { display:flex; gap:4px; margin-bottom:20px; background:#E5E5EA; border-radius:14px; padding:4px; }
 .owner-btn { flex:1; padding:8px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:var(--surface); color:var(--text-muted); transition:all .15s; -webkit-tap-highlight-color:transparent; }
+    .birth-row { display:flex; gap:6px; }
+    .birth-row select { padding:10px 8px; font-size:15px; }
+    .birth-row select:first-child { flex:2.2; }
+    .birth-row select:not(:first-child) { flex:1; }
     .owner-btn-active { background:#EEF2FF; color:#4F46E5; border-color:#4F46E5; }
     .owner-btn:active { transform:scale(0.97); }
     .ret-main-tab { flex:1; min-height:50px; padding:13px 8px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; background:transparent; color:#666; transition:background .2s, box-shadow .2s, transform .1s; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; gap:6px; }
@@ -1906,7 +1910,8 @@
         </div>
         <div class="form-group">
           <label>生年月日</label>
-          <input type="date" id="profileBirth">
+          <input type="hidden" id="profileBirth">
+          <div class="birth-row" id="profileBirthRow"></div>
         </div>
       </div>
       <div class="form-row">
@@ -1953,7 +1958,8 @@
       <div class="form-row" id="partnerProfileRow">
         <div class="form-group">
           <label>パートナーの生年月日</label>
-          <input type="date" id="profilePartnerBirth" placeholder="パートナーがいる場合">
+          <input type="hidden" id="profilePartnerBirth">
+          <div class="birth-row" id="profilePartnerBirthRow"></div>
         </div>
         <div class="form-group">
           <label>パートナーの名前（任意）</label>
@@ -5171,12 +5177,76 @@ function showPage(id) {
 }
 
 // ===== PROFILE =====
+// ===== 生年月日 3セレクト =====
+function initBirthRow(rowId, hiddenId) {
+  const row = document.getElementById(rowId);
+  if (!row || row.dataset.init) return;
+  row.dataset.init = '1';
+
+  const currentYear = new Date().getFullYear();
+
+  // 年セレクト
+  const yearSel = document.createElement('select');
+  yearSel.id = hiddenId + 'Year';
+  let yOpts = '<option value="">年</option>';
+  for (let y = currentYear - 10; y >= 1930; y--) yOpts += `<option value="${y}">${y}年</option>`;
+  yearSel.innerHTML = yOpts;
+  yearSel.onchange = () => syncBirthValue(hiddenId);
+
+  // 月セレクト
+  const monthSel = document.createElement('select');
+  monthSel.id = hiddenId + 'Month';
+  let mOpts = '<option value="">月</option>';
+  for (let m = 1; m <= 12; m++) mOpts += `<option value="${m}">${m}月</option>`;
+  monthSel.innerHTML = mOpts;
+  monthSel.onchange = () => syncBirthValue(hiddenId);
+
+  // 日セレクト
+  const daySel = document.createElement('select');
+  daySel.id = hiddenId + 'Day';
+  let dOpts = '<option value="">日</option>';
+  for (let d = 1; d <= 31; d++) dOpts += `<option value="${d}">${d}日</option>`;
+  daySel.innerHTML = dOpts;
+  daySel.onchange = () => syncBirthValue(hiddenId);
+
+  row.appendChild(yearSel);
+  row.appendChild(monthSel);
+  row.appendChild(daySel);
+}
+
+function syncBirthValue(hiddenId) {
+  const yr = document.getElementById(hiddenId + 'Year')?.value;
+  const mo = document.getElementById(hiddenId + 'Month')?.value;
+  const dy = document.getElementById(hiddenId + 'Day')?.value;
+  const hidden = document.getElementById(hiddenId);
+  if (hidden) hidden.value = (yr && mo && dy) ? `${yr}-${String(mo).padStart(2,'0')}-${String(dy).padStart(2,'0')}` : '';
+}
+
+function syncBirthSelects(hiddenId) {
+  const val = document.getElementById(hiddenId)?.value;
+  if (!val) return;
+  const [yr, mo, dy] = val.split('-');
+  const yrEl = document.getElementById(hiddenId + 'Year');
+  const moEl = document.getElementById(hiddenId + 'Month');
+  const dyEl = document.getElementById(hiddenId + 'Day');
+  if (yrEl) yrEl.value = yr || '';
+  if (moEl) moEl.value = mo ? String(parseInt(mo)) : '';
+  if (dyEl) dyEl.value = dy ? String(parseInt(dy)) : '';
+}
+
 function loadProfileForm() {
   const p = state.profile;
+  // 生年月日セレクトを先に初期化
+  initBirthRow('profileBirthRow', 'profileBirth');
+  initBirthRow('profilePartnerBirthRow', 'profilePartnerBirth');
+
   ['Name','Birth','Gender','Job','Location','Bio','Marital','Family','Values','Vision','PartnerBirth','PartnerName'].forEach(k => {
     const el = document.getElementById('profile' + k);
     if (el) el.value = p[k.toLowerCase()] || '';
   });
+  // hidden input に値が入ったのでセレクトに反映
+  syncBirthSelects('profileBirth');
+  syncBirthSelects('profilePartnerBirth');
   const ch = document.getElementById('profileChildren');
   // ライフイベントの実際の子ども登録数を正とする
   const actualCount = (state.lifeEvents?.children?.length) ?? (p.children || 0);
