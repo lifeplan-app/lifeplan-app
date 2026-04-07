@@ -1565,9 +1565,11 @@
   }
 
 /* ===== 出口戦略 タブ・アコーディオン ===== */
-.ret-main-tabs { display:flex; gap:6px; margin-bottom:20px; background:#f0f0f5; border-radius:12px; padding:4px; }
-.ret-main-tab { flex:1; padding:10px 8px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; background:transparent; color:#888; transition:all .2s; }
-.ret-main-tab.active { background:#fff; color:#4F46E5; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+.ret-main-tabs { display:flex; gap:4px; margin-bottom:20px; background:#E5E5EA; border-radius:14px; padding:4px; }
+.ret-main-tab { flex:1; min-height:50px; padding:13px 8px; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; background:transparent; color:#666; transition:background .2s, box-shadow .2s, transform .1s; -webkit-tap-highlight-color:transparent; display:flex; align-items:center; justify-content:center; gap:6px; }
+.ret-main-tab:active { transform:scale(0.96); }
+.ret-main-tab.active { background:#fff; color:#4F46E5; box-shadow:0 2px 12px rgba(0,0,0,.13); font-weight:700; }
+.ret-main-tab:not(.active):hover { background:rgba(255,255,255,0.5); color:#444; }
 .ret-acc-group { border:1.5px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; }
 .ret-acc-header { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; background:var(--surface); cursor:pointer; font-size:14px; font-weight:700; color:var(--text); user-select:none; }
 .ret-acc-header:hover { background:var(--surface2); }
@@ -2557,8 +2559,14 @@
 
     <!-- メインタブ -->
     <div class="ret-main-tabs">
-      <button class="ret-main-tab active" id="retMainTab_settings" onclick="switchRetTab('settings')">📝 設定</button>
-      <button class="ret-main-tab" id="retMainTab_results" onclick="switchRetTab('results')">📊 結果</button>
+      <button class="ret-main-tab active" id="retMainTab_settings" onclick="switchRetTab('settings')">
+        <span style="font-size:18px;line-height:1">📝</span>
+        <span>設定</span>
+      </button>
+      <button class="ret-main-tab" id="retMainTab_results" onclick="switchRetTab('results')">
+        <span style="font-size:18px;line-height:1">📊</span>
+        <span>結果</span>
+      </button>
     </div>
 
     <!-- ===== 設定タブ ===== -->
