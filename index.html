@@ -14334,7 +14334,7 @@ function maybeShowSimpleModeInput() {
       <!-- 月々の生活費 -->
       <div style="margin-bottom:20px;">
         <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:6px;">
-          🏠 今の月々の生活費
+          🏠 今の月々の生活費（全支出合計）
         </label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="sm_monthlyExpense" placeholder="25" min="0" step="1"
@@ -14343,6 +14343,7 @@ function maybeShowSimpleModeInput() {
             onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
           <span style="font-size:14px;color:#666;white-space:nowrap;">万円 / 月</span>
         </div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">家賃・住宅ローン・食費・光熱費など毎月かかる費用の合計</div>
       </div>
 
       <!-- 老後の生活費 -->
