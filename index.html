@@ -11216,91 +11216,100 @@ function renderInheritanceChecklist() {
   const el = document.getElementById('inheritanceChecklist');
   if (!el) return;
   const p = state.profile;
-  // 修正: currentVal を使用（amount は旧フィールド）
   const totalAssets = state.assets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
   const hasPartner = p.marital === 'married' || p.marital === 'planning';
   const heirs = 1 + (parseInt(p.children) || 0) + (hasPartner ? 1 : 0);
   const deduction = 3000 + 600 * heirs;
   const manual = state.inheritance.checklistManual || {};
 
-  // auto: 自動判定（データ連動）、manual: 手動トグル可能
+  // linked: データ連動で自動✅（手動トグル不可）
+  // manual: 手動クリックで✅（データなし）
   const items = [
     {
-      key: 'heirs',
-      auto: (parseInt(p.children) > 0 || hasPartner),
-      manualToggle: false,
+      key: 'heirs', type: 'linked',
+      done: (parseInt(p.children) > 0 || hasPartner),
       text: '法定相続人を把握している',
       tip: parseInt(p.children) > 0 || hasPartner
         ? `配偶者${hasPartner ? 'あり' : 'なし'} ／ 子供 ${parseInt(p.children)||0}人 → 法定相続人 ${heirs}人・基礎控除 ${deduction.toLocaleString()}万円`
-        : 'プロフィールで配偶者・子供の人数を設定すると基礎控除額が正確に計算されます。',
+        : '→ プロフィールで配偶者・子供を設定してください',
+      linkHint: 'プロフィール入力で自動更新',
     },
     {
-      key: 'assets',
-      auto: totalAssets > 0,
-      manualToggle: false,
+      key: 'assets', type: 'linked',
+      done: totalAssets > 0,
       text: '相続財産の総額を把握している',
       tip: totalAssets > 0
         ? `登録済み資産の合計: ${totalAssets.toLocaleString()}万円`
-        : '資産一覧ページで現在の資産を登録すると相続税の概算計算に活用できます。',
+        : '→ 家計・資産ページで資産を登録してください',
+      linkHint: '資産登録で自動更新',
     },
     {
-      key: 'taxcheck',
-      auto: totalAssets > 0, // 資産を登録していれば確認できている
-      manualToggle: false,
+      key: 'taxcheck', type: 'linked',
+      done: totalAssets > 0,
       text: '相続税の課税対象かどうか確認している',
       tip: totalAssets > deduction
-        ? `⚠️ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）を超えています。相続税対策が必要です。`
+        ? `⚠️ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）超 → 相続税対策が必要です`
         : totalAssets > 0
-        ? `✅ 現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）以下のため、相続税はかかりません。`
-        : '資産を登録すると課税対象かどうかを自動判定します。',
+        ? `現在の資産（${totalAssets.toLocaleString()}万円）は基礎控除（${deduction.toLocaleString()}万円）以下 → 相続税はかかりません`
+        : '→ 資産を登録すると自動判定されます',
+      linkHint: '資産登録で自動更新',
     },
     {
-      key: 'gift',
-      auto: state.inheritance.giftPlans.length > 0,
-      manualToggle: false,
+      key: 'gift', type: 'linked',
+      done: state.inheritance.giftPlans.length > 0,
       text: '生前贈与の計画を立てている',
       tip: state.inheritance.giftPlans.length > 0
         ? `${state.inheritance.giftPlans.length}件の贈与計画を登録済み`
-        : '生前贈与は相続財産を減らす有効な手段です。暦年贈与（年110万円以内）から始めましょう。',
+        : '→ このページ下部の「生前贈与計画」から追加してください',
+      linkHint: '贈与計画追加で自動更新',
     },
     {
-      key: 'insurance',
-      auto: state.insurance.items.some(i => i.type === 'life'),
-      manualToggle: false,
+      key: 'insurance', type: 'linked',
+      done: state.insurance.items.some(i => i.type === 'life'),
       text: '生命保険の非課税枠を活用している',
       tip: state.insurance.items.some(i => i.type === 'life')
         ? `生命保険（死亡保障）登録済み — 非課税枠: ${(500 * heirs).toLocaleString()}万円（500万円×${heirs}人）`
-        : `生命保険金は「500万円×法定相続人数」まで非課税（現在 ${(500*heirs).toLocaleString()}万円枠）。相続対策として有効です。`,
+        : `→ 保険管理ページで生命保険を登録してください（非課税枠 ${(500*heirs).toLocaleString()}万円）`,
+      linkHint: '保険管理で自動更新',
     },
     {
-      key: 'will',
-      auto: null, // 自動判定なし → 手動トグルのみ
-      manualToggle: true,
+      key: 'will', type: 'manual',
+      done: manual['will'] || false,
       text: '遺言書を作成している',
-      tip: '遺言書があれば相続人間のトラブルを防ぎ、意思通りの財産分配が可能になります。公正証書遺言の作成をご検討ください。',
+      tip: '遺言書があれば相続人間のトラブルを防ぎ、意思通りの財産分配が可能になります。',
     },
     {
-      key: 'trust',
-      auto: null,
-      manualToggle: true,
+      key: 'trust', type: 'manual',
+      done: manual['trust'] || false,
       text: '家族信託・成年後見を検討している',
       tip: '認知症対策として家族信託や成年後見制度の活用を検討しましょう。',
     },
   ];
 
   el.innerHTML = items.map(item => {
-    const isDone = item.auto !== null ? item.auto : (manual[item.key] || false);
-    const isManualOverride = item.manualToggle;
-    const canToggle = isManualOverride; // 手動トグル可能かどうか
-    const clickAttr = canToggle ? `onclick="toggleInheritanceCheck('${item.key}')" style="cursor:pointer"` : '';
-    const hintLabel = canToggle
-      ? `<span style="font-size:10px;color:var(--text-muted);margin-left:6px">${isDone ? 'クリックで未完了に戻す' : 'クリックで完了にする'}</span>`
-      : '';
+    const { done, type } = item;
+    const isLinked = type === 'linked';
+    const canClick = type === 'manual';
+    const bg     = done ? 'rgba(52,199,89,.08)' : 'var(--surface2)';
+    const border = done ? 'var(--secondary)' : 'var(--border-strong)';
+    const cursor = canClick ? 'cursor:pointer;user-select:none' : '';
+    const clickAttr = canClick ? `onclick="toggleInheritanceCheck('${item.key}')"` : '';
+
+    // 右上バッジ
+    const badge = isLinked
+      ? `<span style="font-size:10px;color:var(--text-muted);background:var(--surface3);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0">🔗 ${item.linkHint}</span>`
+      : done
+      ? `<span style="font-size:10px;color:var(--secondary);background:rgba(52,199,89,.12);border-radius:4px;padding:1px 5px;flex-shrink:0">タップで取消</span>`
+      : `<span style="font-size:10px;color:var(--primary);background:rgba(0,122,255,.1);border-radius:4px;padding:1px 5px;flex-shrink:0">タップで完了</span>`;
+
     return `
-    <div ${clickAttr} style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:${isDone?'rgba(52,199,89,.06)':'var(--surface2)'};border-radius:8px;border-left:3px solid ${isDone?'var(--secondary)':'var(--border-strong)'};transition:background .15s${canToggle?';user-select:none':''}">
-      <span style="font-size:18px;flex-shrink:0;margin-top:1px">${isDone?'✅':'⬜'}</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">${item.text}${hintLabel}</div>
+    <div ${clickAttr} style="display:flex;gap:12px;align-items:flex-start;padding:10px 12px;background:${bg};border-radius:8px;border-left:3px solid ${border};transition:background .15s;${cursor}">
+      <span style="font-size:18px;flex-shrink:0;margin-top:1px;line-height:1">${done ? '✅' : '⬜'}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${item.text}</span>
+          ${badge}
+        </div>
         <div style="font-size:12px;color:var(--text-secondary);line-height:1.5">${item.tip}</div>
       </div>
     </div>`;
