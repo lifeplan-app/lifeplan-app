@@ -961,6 +961,39 @@
       accent-color: var(--primary);
     }
 
+    /* ===== SCENARIO SLIDER ===== */
+    input[type="range"].sc-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+      margin: 4px 0;
+    }
+    input[type="range"].sc-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--sc-color, #4F46E5);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      cursor: grab;
+    }
+    input[type="range"].sc-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--sc-color, #4F46E5);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      cursor: grab;
+    }
+    input[type="range"].sc-slider:active::-webkit-slider-thumb { cursor: grabbing; }
+    input[type="range"].sc-slider:active::-moz-range-thumb     { cursor: grabbing; }
+
     /* ===== EMPTY STATE ===== */
     .empty {
       text-align: center;
@@ -14194,6 +14227,17 @@ function maybeShowSimpleModeInput() {
 
 // シナリオカラー
 const SCENARIO_COLORS = ['#4F46E5', '#10B981', '#F59E0B'];
+
+// スライダーの塗り済みトラックのbackground styleを返す
+function scTrackStyle(val, min, max, color) {
+  const pct = Math.round((val - min) / (max - min) * 100);
+  return `background:linear-gradient(to right,${color} ${pct}%,#e0e0e0 ${pct}%);`;
+}
+// スライダー操作中にトラックをリアルタイム更新
+function scTrack(el, min, max, color) {
+  const pct = Math.round((el.value - min) / (max - min) * 100);
+  el.style.background = `linear-gradient(to right,${color} ${pct}%,#e0e0e0 ${pct}%)`;
+}
 const SCENARIO_LABELS = ['A', 'B', 'C'];
 
 // シナリオ比較のベース値を取得
@@ -14232,9 +14276,10 @@ function renderScenarioCards() {
           <span style="font-weight:700;color:${color};" id="sc_retireAge_disp_${i}">${retireAge}歳</span>
         </div>
         <input type="range" min="45" max="75" step="1" value="${retireAge}"
-          oninput="updateScenario(${i},'retireAge',+this.value)"
-          style="width:100%;accent-color:${color};">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#ccc;"><span>45歳</span><span>75歳</span></div>
+          class="sc-slider"
+          oninput="updateScenario(${i},'retireAge',+this.value);scTrack(this,45,75,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(retireAge,45,75,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>45歳</span><span>75歳</span></div>
       </div>
 
       <!-- 老後生活費 -->
@@ -14244,9 +14289,10 @@ function renderScenarioCards() {
           <span style="font-weight:700;color:${color};" id="sc_monthlyExpense_disp_${i}">${expense}万円/月</span>
         </div>
         <input type="range" min="10" max="60" step="1" value="${expense}"
-          oninput="updateScenario(${i},'monthlyExpense',+this.value)"
-          style="width:100%;accent-color:${color};">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#ccc;"><span>10万</span><span>60万</span></div>
+          class="sc-slider"
+          oninput="updateScenario(${i},'monthlyExpense',+this.value);scTrack(this,10,60,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(expense,10,60,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>10万</span><span>60万</span></div>
       </div>
 
       <!-- 運用利回り調整 -->
@@ -14256,9 +14302,10 @@ function renderScenarioCards() {
           <span style="font-weight:700;color:${color};" id="sc_returnMod_disp_${i}">${returnMod >= 0 ? '+' : ''}${returnMod}%</span>
         </div>
         <input type="range" min="-3" max="3" step="0.5" value="${returnMod}"
-          oninput="updateScenario(${i},'returnMod',+this.value)"
-          style="width:100%;accent-color:${color};">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#ccc;"><span>-3%</span><span>+3%</span></div>
+          class="sc-slider"
+          oninput="updateScenario(${i},'returnMod',+this.value);scTrack(this,-3,3,'${color}')"
+          style="--sc-color:${color};${scTrackStyle(returnMod,-3,3,color)}">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>-3%</span><span>+3%</span></div>
       </div>
     </div>
     `;
