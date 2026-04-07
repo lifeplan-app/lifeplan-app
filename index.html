@@ -7566,7 +7566,9 @@ function renderExpenseList() {
 
 function renderFinSummary() {
   const f = state.finance;
-  const income  = f.income  || 0;
+  const selfIncome    = f.income        || 0;
+  const partnerIncome = f.partnerIncome || 0;
+  const income  = selfIncome + partnerIncome; // 世帯月収合計
   const bonus   = f.bonus   || 0;
   const expense = f.expense || 0; // 生活費のみ
 
@@ -7607,7 +7609,11 @@ function renderFinSummary() {
       `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.annualBonus||0).toLocaleString()}万円/年</span></div>`
     ).join('');
     breakdown.innerHTML = `
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月収（手取り）</span><span style="font-weight:600;color:var(--secondary)">+${income.toLocaleString()}万円</span></div>
+      ${partnerIncome > 0
+        ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">本人月収</span><span style="font-weight:600;color:var(--secondary)">+${selfIncome.toLocaleString()}万円</span></div>
+           <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">パートナー月収</span><span style="font-weight:600;color:var(--secondary)">+${partnerIncome.toLocaleString()}万円</span></div>`
+        : `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月収（手取り）</span><span style="font-weight:600;color:var(--secondary)">+${income.toLocaleString()}万円</span></div>`
+      }
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">生活費</span><span style="font-weight:600;color:var(--danger)">−${expense.toLocaleString()}万円</span></div>
       ${monthlyHousing > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">${le.housingType === 'rent' ? '家賃' : '住宅ローン返済'}</span><span style="font-weight:600;color:var(--danger)">−${monthlyHousing.toFixed(1)}万円</span></div>` : ''}
       ${monthlyInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">月積立・投資</span><span style="font-weight:600;color:var(--warning)">−${monthlyInvest.toLocaleString()}万円</span></div>${investLines}` : ''}
@@ -7625,7 +7631,7 @@ function renderFinSummary() {
     <div class="finance-grid">
       <div class="finance-stat">
         <div class="val" style="color:var(--secondary)">${income.toLocaleString()} 万円</div>
-        <div class="lbl">月収（手取り）</div>
+        <div class="lbl">世帯月収${partnerIncome > 0 ? `<br><span style="font-size:10px;font-weight:400;color:var(--text-muted)">本人${selfIncome}万+P${partnerIncome}万</span>` : '（手取り）'}</div>
       </div>
       <div class="finance-stat">
         <div class="val" style="color:var(--secondary)">${bonus.toLocaleString()} 万円</div>
@@ -7657,7 +7663,7 @@ function renderFinSummary() {
 
 function renderFinCharts() {
   const f = state.finance;
-  const income = f.income || 0, expense = f.expense || 0;
+  const income = (f.income || 0) + (f.partnerIncome || 0), expense = f.expense || 0;
 
   // ローン返済 / 家賃を取得（finSummaryと同じロジック）
   const le = state.lifeEvents || {};
