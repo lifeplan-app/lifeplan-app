@@ -13905,15 +13905,17 @@ function openSimpleInputModal() {
   const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
 
   // 既存stateから補完（simpleMode未入力の場合のみ）
-  const assetsTotal = (state.assets || []).reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+  const assetsTotal  = (state.assets || []).reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+  const monthlyInvestTotal = (state.assets || []).reduce((s, a) => s + (parseFloat(a.monthly) || 0), 0);
   const fallbackTotal   = assetsTotal > 0 ? assetsTotal : null;
+  const fallbackInvest  = monthlyInvestTotal > 0 ? monthlyInvestTotal : null;
   const fallbackExpense = state.finance?.expense > 0 ? state.finance.expense : null;
-  const fallbackInvest  = state.finance?.monthlySavings > 0 ? state.finance.monthlySavings : null;
+  const fallbackRetire  = state.retirement?.monthlyExpense > 0 ? state.retirement.monthlyExpense : null;
 
   setVal('sm_totalAssets',    sm.totalAssets    ?? fallbackTotal);
   setVal('sm_monthlyInvest',  sm.monthlyInvest  ?? fallbackInvest);
   setVal('sm_monthlyExpense', sm.monthlyExpense ?? fallbackExpense);
-  setVal('sm_retireExpense',  sm.retireExpense);
+  setVal('sm_retireExpense',  sm.retireExpense  ?? fallbackRetire);
   selectInvestStyle(sm.investStyle || 'balanced');
   document.getElementById('simpleModeModal').style.display = '';
 }
@@ -14116,10 +14118,14 @@ function upgradeToDetailedMode() {
       note: 'かんたん試算モードから引き継ぎ。内訳を個別に入力してください。',
     });
   }
-  // 月々の積立を finance に設定
-  if (sm.monthlyInvest > 0 && !state.finance?.monthlySavings) {
-    if (!state.finance) state.finance = {};
-    state.finance.monthlySavings = sm.monthlyInvest;
+  // 生活費・老後生活費をfinance/retirementに書き戻し（未設定の場合のみ）
+  if (!state.finance) state.finance = {};
+  if (sm.monthlyExpense > 0 && !state.finance.expense) {
+    state.finance.expense = sm.monthlyExpense;
+  }
+  if (!state.retirement) state.retirement = {};
+  if (sm.retireExpense > 0 && !state.retirement.monthlyExpense) {
+    state.retirement.monthlyExpense = sm.retireExpense;
   }
   sm.active = false;
   save();
