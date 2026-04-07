@@ -14313,7 +14313,7 @@ function calcScenarioSim(sc) {
 
   let result = null;
   try {
-    result = calcRetirementSimWithOpts({ returnMod: sc.returnMod || 0 });
+    result = calcRetirementSimWithOpts({ returnMod: (sc.returnMod || 0) / 100 });
   } catch(e) {
     console.warn('calcScenarioSim error:', e);
   }
