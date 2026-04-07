@@ -5517,12 +5517,31 @@ function onAssetTypeChange() {
   document.getElementById('amDividend').value = t.dividendYield || '';
   // 口座種別を自動設定
   document.getElementById('amTaxType').value = TAX_TYPE_DEFAULT[type] || 'tokutei';
-  const showDiv = (type === 'high_dividend' || type === 'etf');
+  // 配当フィールド：高配当株・ETF・NISA成長枠（ETF/高配当株を保有可）で表示
+  const showDiv = (type === 'high_dividend' || type === 'etf' || type === 'nisa_growth');
   document.getElementById('amDividendWrap').style.display = showDiv ? '' : 'none';
   if (!showDiv) {
     document.getElementById('amDividend').value = '';
     document.getElementById('amDividendModeWrap').style.display = 'none';
     document.getElementById('amDividendModeNote').style.display = 'none';
+  }
+  // NISA成長枠専用ヒント：ETF・高配当株を保有する場合の配当設定案内
+  let _nisaGrowthDivHint = document.getElementById('amNisaGrowthDivHint');
+  if (!_nisaGrowthDivHint) {
+    _nisaGrowthDivHint = document.createElement('div');
+    _nisaGrowthDivHint.id = 'amNisaGrowthDivHint';
+    _nisaGrowthDivHint.style.cssText = 'font-size:12px;color:#1D4ED8;background:#EFF6FF;border-radius:8px;padding:8px 12px;margin-bottom:8px;line-height:1.7;border:1px solid #BFDBFE;display:none';
+    const divWrap = document.getElementById('amDividendWrap');
+    if (divWrap?.parentElement) divWrap.parentElement.insertBefore(_nisaGrowthDivHint, divWrap);
+  }
+  if (type === 'nisa_growth') {
+    _nisaGrowthDivHint.style.display = '';
+    _nisaGrowthDivHint.innerHTML = `📌 <strong>NISA成長投資枠での分配金について</strong><br>
+      ETF・高配当株・REITなど分配金が出る商品を保有する場合は「配当利回り」を入力してください。<br>
+      NISA口座内の分配金・配当は <strong>非課税</strong>（20.315%の源泉徴収なし）で計算されます。<br>
+      <span style="color:var(--text-muted)">※ 再投資モード：年利に分配込みの合計リターンを入力 / 受取モード：配当利回りを別途入力</span>`;
+  } else {
+    _nisaGrowthDivHint.style.display = 'none';
   }
   // 配当利回りの値に応じて受取方法セレクトを更新
   onDividendChange();
@@ -6095,15 +6114,22 @@ function calcAllAssetGrowth(assets, years) {
     return { asset: a, data: r.values, overflows: r.overflows };
   });
 
-  // 新NISAアセット：合算プールを年ごとに按分
-  const combinedBasis0 = nisaAssets.reduce((s, a) => s + (a.nisaBasis || 0), 0);
-  let nisaPoolRemaining = Math.max(0, NISA_COMBINED_LIMIT - combinedBasis0);
+  // 新NISAアセット：名義（owner）ごとに独立した合算プールで管理
+  // 本人・パートナーそれぞれ1800万円の生涯非課税枠を持つ
+  const NISA_OWNERS = ['self', 'partner'];
+  const nisaPoolRemainingByOwner = {};
+  NISA_OWNERS.forEach(own => {
+    const ownerNisaAssets = nisaAssets.filter(a => (a.owner || 'self') === own);
+    const basis0 = ownerNisaAssets.reduce((s, a) => s + (a.nisaBasis || 0), 0);
+    nisaPoolRemainingByOwner[own] = Math.max(0, NISA_COMBINED_LIMIT - basis0);
+  });
 
   const nisaStates = nisaAssets.map(a => {
     const t = ASSET_TYPES[a.type] || {};
     const divRate = (a.dividendMode === 'cashout' && a.dividendYield) ? a.dividendYield / 100 : 0;
     return {
       asset: a,
+      owner: a.owner || 'self',
       values: [a.currentVal || 0],
       overflows: [0],
       growthRate: Math.max(0, (a.annualReturn || 0) / 100 - divRate),
@@ -6126,14 +6152,23 @@ function calcAllAssetGrowth(assets, years) {
       return c;
     });
 
-    const totalDesired = desired.reduce((s, v) => s + v, 0);
-
-    // 合算プールで按分キャップ
-    const actual = desired.map(d => {
-      if (d <= 0 || nisaPoolRemaining <= 0) return 0;
-      return totalDesired <= nisaPoolRemaining ? d : (d / totalDesired) * nisaPoolRemaining;
+    // 名義ごとに合算プールで按分キャップ
+    const actual = nisaStates.map((s, i) => {
+      const d = desired[i];
+      if (d <= 0) return 0;
+      const own = s.owner;
+      const poolLeft = nisaPoolRemainingByOwner[own] || 0;
+      if (poolLeft <= 0) return 0;
+      // 同名義の希望合計で按分
+      const ownerTotal = nisaStates.reduce((sum, ss, ii) => sum + (ss.owner === own ? desired[ii] : 0), 0);
+      return ownerTotal <= poolLeft ? d : (d / ownerTotal) * poolLeft;
     });
-    nisaPoolRemaining = Math.max(0, nisaPoolRemaining - actual.reduce((s, v) => s + v, 0));
+
+    // 名義ごとにプール残高を更新
+    NISA_OWNERS.forEach(own => {
+      const used = nisaStates.reduce((sum, s, i) => sum + (s.owner === own ? actual[i] : 0), 0);
+      nisaPoolRemainingByOwner[own] = Math.max(0, nisaPoolRemainingByOwner[own] - used);
+    });
 
     // 成長計算
     nisaStates.forEach((s, i) => {
@@ -6226,13 +6261,19 @@ function renderPortfolio() {
   const gainPct = totalContrib + totalNow > 0 ? (gain / (totalNow + totalContrib) * 100).toFixed(1) : 0;
 
   // 配当収入計算（現在）
+  // NISA・iDeCo → 非課税、課税口座 → 約20.315%差引
+  const _DIV_TAX = 0.20315;
   const dividendAssets = state.assets.filter(a => a.dividendYield > 0);
-  const totalAnnualDiv = dividendAssets.reduce((s, a) => s + (a.currentVal || 0) * (a.dividendYield / 100), 0);
+  const _divNetRate = a => {
+    const tt = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
+    return (tt === 'nisa' || tt === 'ideco' || tt === 'cash') ? 1 : (1 - _DIV_TAX);
+  };
+  const totalAnnualDiv = dividendAssets.reduce((s, a) => s + (a.currentVal || 0) * (a.dividendYield / 100) * _divNetRate(a), 0);
   // 配当収入（years年後）
-  const totalFutureDiv = dividendAssets.reduce((s, a, i) => {
+  const totalFutureDiv = dividendAssets.reduce((s, a) => {
     const idx = state.assets.indexOf(a);
     const futureVal = growthData[idx]?.data[years] || 0;
-    return s + futureVal * (a.dividendYield / 100);
+    return s + futureVal * (a.dividendYield / 100) * _divNetRate(a);
   }, 0);
 
   // NISA合算チェック（積立枠＋成長枠の累計元本が1800万円を超えないか）
@@ -6302,23 +6343,33 @@ function renderPortfolio() {
         <div class="val" style="color:${gain >= 0 ? 'var(--secondary)' : 'var(--danger)'}">${gain >= 0 ? '+' : ''}${fmtMoney(Math.abs(gain))}</div>
         <div class="lbl">運用益（${gainPct}%）</div>
       </div>
-      ${totalAnnualDiv > 0 ? `
+      ${totalAnnualDiv > 0 ? (() => {
+        const hasNisaDiv = dividendAssets.some(a => (a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei') === 'nisa');
+        const hasTaxableDiv = dividendAssets.some(a => (a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei') !== 'nisa');
+        const taxNote = hasNisaDiv && hasTaxableDiv
+          ? '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">🌱 NISA非課税 + 📋 課税後（−20.3%）の合計</div>'
+          : hasNisaDiv
+          ? '<div style="font-size:10px;color:#059669;margin-top:2px">🌱 すべてNISA非課税</div>'
+          : '<div style="font-size:10px;color:var(--text-muted);margin-top:2px">📋 税引き後（約20.3%控除済み）</div>';
+        return `
       <div class="pf-stat" style="border:1.5px solid #F97316">
         <div class="val" style="color:#F97316">${fmtMoney(Math.round(totalAnnualDiv))}</div>
-        <div class="lbl">💴 年間配当収入（現在）</div>
+        <div class="lbl">💴 年間配当収入（現在・税後）</div>
+        ${taxNote}
       </div>
       <div class="pf-stat" style="border:1.5px solid #F97316">
         <div class="val" style="color:#F97316">${fmtMoney(Math.round(totalFutureDiv))}</div>
-        <div class="lbl">💴 年間配当収入（${years}年後）</div>
+        <div class="lbl">💴 年間配当収入（${years}年後・税後）</div>
       </div>
       <div class="pf-stat" style="border:1.5px dashed #F97316">
         <div class="val" style="color:#F97316">${Math.round(totalAnnualDiv / 12 * 10) / 10} 万円/月</div>
-        <div class="lbl">月換算配当（現在）</div>
+        <div class="lbl">月換算配当（現在・税後）</div>
       </div>
       <div class="pf-stat" style="border:1.5px dashed #F97316">
         <div class="val" style="color:#F97316">${Math.round(totalFutureDiv / 12 * 10) / 10} 万円/月</div>
-        <div class="lbl">月換算配当（${years}年後）</div>
-      </div>` : ''}
+        <div class="lbl">月換算配当（${years}年後・税後）</div>
+      </div>`;
+      })() : ''}
     </div>`;
 
   // --- Allocation donut ---
@@ -6459,26 +6510,28 @@ function renderPortfolio() {
     if (pfDivObj) { pfDivObj.destroy(); pfDivObj = null; }
   } else {
     divSection.style.display = 'block';
-    // 各年の配当収入 = その年の各配当アセット評価額 × 利回り の合計
+    // 各年の配当収入（税引き後）= その年の各配当アセット評価額 × 利回り × 課税率 の合計
     const divByYear = Array.from({ length: years + 1 }, (_, y) => {
       return Math.round(dividendAssets.reduce((s, a) => {
         const gd = growthData.find(g => g.asset.id === a.id);
         const val = gd ? gd.data[y] : (a.currentVal || 0);
-        return s + val * (a.dividendYield / 100);
+        return s + val * (a.dividendYield / 100) * _divNetRate(a);
       }, 0) * 10) / 10;
     });
 
-    // アセット別配当
+    // アセット別配当（税引き後）
     const divDatasets = dividendAssets.map(a => {
       const at = ASSET_TYPES[a.type] || ASSET_TYPES.other;
       const gd = growthData.find(g => g.asset.id === a.id);
+      const isNisaTax = (a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei') === 'nisa';
+      const taxBadge = isNisaTax ? ' 🌱非課税' : ' 📋課税後';
       return {
-        label: at.emoji + ' ' + (a.name || at.label).slice(0, 12),
+        label: at.emoji + ' ' + (a.name || at.label).slice(0, 12) + taxBadge,
         data: Array.from({ length: years + 1 }, (_, y) => {
           const val = gd ? gd.data[y] : (a.currentVal || 0);
-          return Math.round(val * (a.dividendYield / 100) * 10) / 10;
+          return Math.round(val * (a.dividendYield / 100) * _divNetRate(a) * 10) / 10;
         }),
-        backgroundColor: at.color + 'CC',
+        backgroundColor: isNisaTax ? '#10B981CC' : at.color + 'CC',
         stack: 'div',
       };
     });
