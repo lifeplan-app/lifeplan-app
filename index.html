@@ -2033,8 +2033,9 @@
             <label>パートナーの月収（手取り）万円</label>
             <input type="number" id="finPartnerIncome" placeholder="20" min="0" oninput="updateIncomeGrowthPreview()">
           </div>
-          <div class="form-group" style="display:flex;align-items:flex-end">
-            <div style="font-size:12px;color:var(--text-muted);padding-bottom:10px">世帯月収合計は保存時に自動集計されます</div>
+          <div class="form-group">
+            <label>パートナーの賞与（年間合計・手取り）万円</label>
+            <input type="number" id="finPartnerBonus" placeholder="0" min="0">
           </div>
         </div>
       </div>
@@ -6528,6 +6529,7 @@ function saveAsset() {
     incomeGrowthRate:     parseFloat(document.getElementById('finIncomeGrowthRate')?.value) || undefined,
     incomeGrowthUntilAge: parseInt(document.getElementById('finIncomeGrowthUntilAge')?.value) || undefined,
     partnerIncome:        parseFloat(document.getElementById('finPartnerIncome')?.value) || undefined,
+    partnerBonus:         parseFloat(document.getElementById('finPartnerBonus')?.value) || undefined,
     partnerGrowthRate:    parseFloat(document.getElementById('finPartnerGrowthRate')?.value) || undefined,
   };
   // undefinedのキーを除いてマージ（フォームが存在しないページからの保存でも安全）
@@ -7178,6 +7180,7 @@ function renderFinance() {
   document.getElementById('finIncomeGrowthRate').value     = f.incomeGrowthRate || '';
   document.getElementById('finIncomeGrowthUntilAge').value = f.incomeGrowthUntilAge || '';
   document.getElementById('finPartnerIncome').value        = f.partnerIncome || '';
+  document.getElementById('finPartnerBonus').value         = f.partnerBonus || '';
   document.getElementById('finPartnerGrowthRate').value    = f.partnerGrowthRate || '';
   // ③ 入力モード
   setFinanceInputMode(f._inputMode || 'net');
@@ -7530,6 +7533,7 @@ function saveFinance() {
     incomeGrowthRate:     parseFloat(document.getElementById('finIncomeGrowthRate').value) || 0,
     incomeGrowthUntilAge: parseInt(document.getElementById('finIncomeGrowthUntilAge').value) || 50,
     partnerIncome:        parseFloat(document.getElementById('finPartnerIncome').value) || 0,
+    partnerBonus:         parseFloat(document.getElementById('finPartnerBonus').value) || 0,
     partnerGrowthRate:    parseFloat(document.getElementById('finPartnerGrowthRate').value) || 0,
     _inputMode: state.finance._inputMode || 'net',
     taxSim: {
@@ -7571,7 +7575,9 @@ function renderFinSummary() {
   const selfIncome    = f.income        || 0;
   const partnerIncome = f.partnerIncome || 0;
   const income  = selfIncome + partnerIncome; // 世帯月収合計
-  const bonus   = f.bonus   || 0;
+  const selfBonus    = f.bonus        || 0;
+  const partnerBonus = f.partnerBonus || 0;
+  const bonus   = selfBonus + partnerBonus;   // 世帯賞与合計
   const expense = f.expense || 0; // 生活費のみ
 
   // アセット積立合計（今年アクティブなもの）
@@ -7622,7 +7628,11 @@ function renderFinSummary() {
       <div style="border-top:.5px solid var(--border);margin-top:4px;padding-top:4px;display:flex;justify-content:space-between"><span style="font-weight:600">手元余剰</span><span style="font-weight:700;color:${mColor}">${monthlyBalance >= 0 ? '+' : ''}${monthlyBalance.toLocaleString()}万円/月</span></div>
       ${bonus > 0 ? `
       <div style="margin-top:10px;padding-top:8px;border-top:.5px solid var(--border)">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">賞与（年間）</span><span style="font-weight:600;color:var(--secondary)">+${bonus.toLocaleString()}万円</span></div>
+        ${partnerBonus > 0
+          ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">本人賞与</span><span style="font-weight:600;color:var(--secondary)">+${selfBonus.toLocaleString()}万円</span></div>
+             <div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">パートナー賞与</span><span style="font-weight:600;color:var(--secondary)">+${partnerBonus.toLocaleString()}万円</span></div>`
+          : `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">賞与（年間）</span><span style="font-weight:600;color:var(--secondary)">+${bonus.toLocaleString()}万円</span></div>`
+        }
         ${annualBonusInvest > 0 ? `<div style="display:flex;justify-content:space-between"><span style="color:var(--text-muted)">ボーナス投資</span><span style="font-weight:600;color:var(--warning)">−${annualBonusInvest.toLocaleString()}万円</span></div>${bonusLines}` : ''}
         <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--text-muted)">ボーナス余剰</span><span style="font-weight:600;color:${(bonus-annualBonusInvest)>=0?'var(--secondary)':'var(--danger)'}">+${(bonus-annualBonusInvest).toLocaleString()}万円</span></div>
       </div>` : ''}
@@ -7637,7 +7647,7 @@ function renderFinSummary() {
       </div>
       <div class="finance-stat">
         <div class="val" style="color:var(--secondary)">${bonus.toLocaleString()} 万円</div>
-        <div class="lbl">賞与（年間）</div>
+        <div class="lbl">賞与（年間）${partnerBonus > 0 ? `<br><span style="font-size:10px;font-weight:400;color:var(--text-muted)">本人${selfBonus}万+P${partnerBonus}万</span>` : ''}</div>
       </div>
       <div class="finance-stat">
         <div class="val" style="color:var(--danger)">${expense.toLocaleString()} 万円</div>
@@ -11981,7 +11991,8 @@ function getIncomeForYearWithGrowth(yr) {
   // 昇給率が設定されている場合、昇給分をオーバーライド（cashFlowEventsで上書きされていない場合のみ）
   const growthRate = (parseFloat(state.finance.incomeGrowthRate) || 0) / 100;
   const untilAge   = parseInt(state.finance.incomeGrowthUntilAge) || 50;
-  const partnerIncome = (parseFloat(state.finance.partnerIncome) || 0) * 12;
+  const partnerIncome = (parseFloat(state.finance.partnerIncome) || 0) * 12
+                       + (parseFloat(state.finance.partnerBonus) || 0); // 月収×12 + 賞与
   const partnerGrowthRate = (parseFloat(state.finance.partnerGrowthRate) || 0) / 100;
   if (growthRate <= 0 && partnerIncome <= 0) return baseIncome;
 
