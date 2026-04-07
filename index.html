@@ -2014,7 +2014,7 @@
       <div id="finNetInputArea">
         <div class="form-row">
           <div class="form-group">
-            <label>月収（手取り）万円</label>
+            <label>本人の月収（手取り）万円</label>
             <input type="number" id="finIncome" placeholder="30" min="0">
           </div>
           <div class="form-group">
@@ -2022,12 +2022,21 @@
             <input type="number" id="finBonus" placeholder="0" min="0">
           </div>
         </div>
+        <div class="form-row" id="partnerFinanceRow" style="display:none">
+          <div class="form-group">
+            <label>パートナーの月収（手取り）万円</label>
+            <input type="number" id="finPartnerIncome" placeholder="20" min="0" oninput="updateIncomeGrowthPreview()">
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-end">
+            <div style="font-size:12px;color:var(--text-muted);padding-bottom:10px">世帯月収合計は保存時に自動集計されます</div>
+          </div>
+        </div>
       </div>
       <!-- 額面入力（自動計算） -->
       <div id="finGrossInputArea" style="display:none">
         <div class="form-row">
           <div class="form-group">
-            <label>月収（額面・総支給）万円</label>
+            <label>本人の月収（額面・総支給）万円</label>
             <input type="number" id="finGrossIncome" placeholder="40" min="0" oninput="calcTakeHome()">
           </div>
           <div class="form-group">
@@ -2043,7 +2052,7 @@
         <div style="margin-top:10px;padding:12px;background:var(--surface2);border-radius:10px">
           <div class="form-row">
             <div class="form-group">
-              <label>年収増加率（昇給率）% / 年</label>
+              <label>本人の昇給率 % / 年</label>
               <input type="number" id="finIncomeGrowthRate" placeholder="2" min="0" max="20" step="0.1" oninput="updateIncomeGrowthPreview()">
               <div style="font-size:11px;color:var(--text-muted);margin-top:3px">日本の平均昇給率: 1.5〜3%</div>
             </div>
@@ -2053,15 +2062,12 @@
               <div style="font-size:11px;color:var(--text-muted);margin-top:3px">50歳以降は横ばいを想定</div>
             </div>
           </div>
-          <div class="form-row" id="partnerFinanceRow">
-            <div class="form-group">
-              <label>パートナー収入（月収・手取り）万円</label>
-              <input type="number" id="finPartnerIncome" placeholder="20" min="0" oninput="updateIncomeGrowthPreview()">
-            </div>
+          <div class="form-row" id="partnerGrowthRow" style="display:none">
             <div class="form-group">
               <label>パートナー昇給率 % / 年</label>
               <input type="number" id="finPartnerGrowthRate" placeholder="1" min="0" max="20" step="0.1" oninput="updateIncomeGrowthPreview()">
             </div>
+            <div class="form-group"></div>
           </div>
           <div id="finGrowthPreview" style="margin-top:8px;font-size:12px;color:var(--text-secondary)"></div>
         </div>
@@ -5183,8 +5189,8 @@ function loadProfileForm() {
 // ===== 婚姻状況フィルター =====
 function applyMaritalFilter() {
   const marital = document.getElementById('profileMarital')?.value
-                  ?? state.profile?.marital
-                  ?? 'single';
+                  || state.profile?.marital
+                  || 'single';
   const hasParter = (marital === 'married' || marital === 'planning');
 
   // プロフィール: パートナー行
@@ -5198,6 +5204,8 @@ function applyMaritalFilter() {
   // 家計・資産: パートナー収入行
   const finRow = document.getElementById('partnerFinanceRow');
   if (finRow) finRow.style.display = hasParter ? '' : 'none';
+  const partnerGrowthRow = document.getElementById('partnerGrowthRow');
+  if (partnerGrowthRow) partnerGrowthRow.style.display = hasParter ? '' : 'none';
 
   // 出口戦略: パートナー年金受給欄
   const retSec = document.getElementById('partnerRetireSection');
@@ -7101,6 +7109,7 @@ function renderFinance() {
   document.getElementById('finPartnerGrowthRate').value    = f.partnerGrowthRate || '';
   // ③ 入力モード
   setFinanceInputMode(f._inputMode || 'net');
+  applyMaritalFilter();
 
   renderExpenseList();
   renderRecurringExpenseList();
