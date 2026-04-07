@@ -74,7 +74,7 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      height: 52px;
+      height: 58px;
       justify-content: space-between;
     }
 
@@ -85,11 +85,24 @@
     }
 
     .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      white-space: nowrap;
+    }
+    .logo-title {
       font-size: 17px;
       font-weight: 700;
       color: var(--text);
-      white-space: nowrap;
       letter-spacing: -.3px;
+      line-height: 1.2;
+    }
+    .logo-subtitle {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: .2px;
+      line-height: 1.2;
     }
 
     /* ハンバーガーボタン */
@@ -1400,7 +1413,8 @@
       gap: 8px;
       height: 48px;
     }
-    .logo { font-size: 14px; }
+    .logo-title { font-size: 14px; }
+    .logo-subtitle { font-size: 9px; }
     .header-actions { gap: 4px; }
     .header-icon-btn { padding: 4px 6px; font-size: 11px; }
 
@@ -1632,7 +1646,7 @@
       <span class="d-icon">📥</span>データ読み込み
     </button>
     <button class="drawer-item" onclick="closeDrawer();openInputDiagnosis()" style="color:#6366F1;font-weight:600">
-      <span class="d-icon">🔍</span>入力診断
+      <span class="d-icon">🔍</span>入力サポート
     </button>
     <button class="drawer-item" onclick="closeDrawer();openIrregularGuide()" style="color:#0EA5E9">
       <span class="d-icon">❓</span>よくある疑問・使い方ガイド
@@ -1660,14 +1674,17 @@
     <button class="hamburger-btn" onclick="openDrawer()" aria-label="メニューを開く">
       <span></span><span></span><span></span>
     </button>
-    <div class="logo">🌟 ライフプラン</div>
+    <div class="logo">
+      <span class="logo-title">🌟 ライフプラン</span>
+      <span class="logo-subtitle">人生100年を、自分の手で設計する</span>
+    </div>
   </div>
   <div class="header-actions">
     <!-- デスクトップ用ツールボタン（モバイルではドロワーへ） -->
     <button class="header-icon-btn desktop-only" onclick="printLifePlan()">🖨️ PDF出力</button>
     <button class="header-icon-btn desktop-only" onclick="exportData()">📤 書き出し</button>
     <button class="header-icon-btn desktop-only" onclick="document.getElementById('importFileInput').click()">📥 読み込み</button>
-    <button class="header-icon-btn desktop-only" onclick="openInputDiagnosis()" style="color:#6366F1;font-weight:600">🔍 入力診断</button>
+    <button class="header-icon-btn desktop-only" onclick="openInputDiagnosis()" style="color:#6366F1;font-weight:600">🔍 入力サポート</button>
     <button class="header-icon-btn desktop-only" onclick="openDataSettings()" style="color:var(--text-muted)">⚙️ データ設定</button>
     <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
   </div>
@@ -3536,11 +3553,11 @@
 </div>
 
 <!-- ===== DATA SETTINGS MODAL ===== -->
-<!-- ===== 入力診断モーダル ===== -->
+<!-- ===== 入力サポートモーダル ===== -->
 <div class="modal-overlay" id="inputDiagnosisModal">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
-      <div class="modal-title">🔍 入力診断レポート</div>
+      <div class="modal-title">🔍 入力サポートレポート</div>
       <button class="modal-close" onclick="closeInputDiagnosis()">✕</button>
     </div>
     <div style="padding:16px 20px 20px;overflow-y:auto;max-height:70vh">
@@ -13325,7 +13342,7 @@ function toggleRetBasis(titleEl) {
   icon.textContent = isOpen ? '▼ 展開する' : '▲ 閉じる';
 }
 
-// ===== A. 入力診断機能 =====
+// ===== A. 入力サポート機能 =====
 function openInputDiagnosis() {
   const el = document.getElementById('inputDiagnosisModal');
   if (!el) return;
@@ -14178,9 +14195,10 @@ function renderSimpleResult() {
   const zeroRow = sim.find(r => r.assets <= 0);
   const zeroAge = zeroRow ? zeroRow.age : null;
 
-  // 100歳時残高
+  // 末尾時残高
   const age100Row = sim[sim.length - 1];
   const age100Assets = age100Row ? age100Row.assets : 0;
+  const endAge = age100Row?.age || (parseInt(state.retirement?.lifeExpectancy) || 90);
 
   // KPIカード
   const kpiEl = document.getElementById('simpleKpiCards');
@@ -14196,7 +14214,7 @@ function renderSimpleResult() {
       },
       {
         icon: '🧓',
-        label: '100歳時点の推計残高',
+        label: `${endAge}歳時点の推計残高`,
         value: age100Assets >= 0 ? `+${Math.round(age100Assets).toLocaleString()}万円` : `${Math.round(age100Assets).toLocaleString()}万円`,
         color: age100Assets >= 0 ? '#1565c0' : '#c62828',
         bg: age100Assets >= 0 ? '#e3f2fd' : '#ffebee',
@@ -14211,7 +14229,7 @@ function renderSimpleResult() {
       {
         icon: zeroAge ? '⚠️' : '✅',
         label: '残高ゼロの試算',
-        value: zeroAge ? `${zeroAge}歳で残高ゼロ` : '100歳時点で残高あり',
+        value: zeroAge ? `${zeroAge}歳で残高ゼロ` : `${endAge}歳時点で残高あり`,
         color: zeroAge ? '#e65100' : '#2e7d32',
         bg: zeroAge ? '#fff3e0' : '#f1f8e9',
       },
@@ -14515,13 +14533,47 @@ function calcScenarioSim(sc) {
   return result;
 }
 
+// シナリオ全期間タイムライン（現在年齢〜想定余命）
+function calcScenarioFullTimeline(sc) {
+  const currentAge = calcAge();
+  const ret = state.retirement;
+  if (!currentAge || !ret?.targetAge) return calcScenarioSim(sc);
+
+  const { baseRetireAge } = getScenarioBase();
+  const retireAge = sc.retireAge ?? parseInt(ret.targetAge) ?? baseRetireAge;
+  const yearsToRetire = Math.max(0, retireAge - currentAge);
+
+  // 退職前: 現状収支ベースの資産推移
+  const preSim = calcIntegratedSim(yearsToRetire);
+  const preResult = [];
+  for (let y = 0; y <= yearsToRetire; y++) {
+    const age = currentAge + y;
+    const base = preSim[y] || { totalWealth: 0 };
+    preResult.push({ age, endAssets: Math.round(base.totalWealth) });
+  }
+
+  // 退職後: シナリオ別シミュレーション
+  const postResult = calcScenarioSim(sc);
+  if (!postResult || postResult.length === 0) return preResult;
+
+  // 退職時点で連続性を補正
+  const preAtRetire = preResult[preResult.length - 1]?.endAssets || 0;
+  const postAtRetire = postResult[0]?.endAssets || 0;
+  const delta = preAtRetire - postAtRetire;
+
+  return [
+    ...preResult.slice(0, -1),
+    ...postResult.map(r => ({ age: r.age, endAssets: r.endAssets + delta })),
+  ];
+}
+
 // シナリオ比較チャートのレンダリング
 let _scenarioChartObj = null;
 function renderScenarioChart() {
   const canvas = document.getElementById('scenarioCompChart');
   if (!canvas) return;
 
-  const sims = (state.scenarioComp || []).map(sc => calcScenarioSim(sc));
+  const sims = (state.scenarioComp || []).map(sc => calcScenarioFullTimeline(sc));
   if (sims.every(s => !s || s.length === 0)) return;
 
   // 全シナリオの年齢レンジを統一
@@ -14618,6 +14670,7 @@ function renderScenarioTable() {
   const { baseRetireAge, baseExpense } = getScenarioBase();
   const sims = (state.scenarioComp || []).map(sc => calcScenarioSim(sc));
 
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
   const fmtAssets = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
   const colorAssets = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
 
@@ -14657,7 +14710,7 @@ function renderScenarioTable() {
       colors: null,
     },
     {
-      label: '100歳時点の推計残高',
+      label: `${endAge}歳時点の推計残高`,
       vals: sims.map(sim => {
         if (!sim || sim.length === 0) return null;
         return sim[sim.length - 1]?.endAssets ?? null;
@@ -14669,7 +14722,7 @@ function renderScenarioTable() {
       vals: sims.map(sim => {
         if (!sim) return '計算不可';
         const zero = sim.find(r => r.endAssets <= 0);
-        return zero ? `${zero.age}歳で残高ゼロ` : '100歳時点で残高あり';
+        return zero ? `${zero.age}歳で残高ゼロ` : `${endAge}歳時点で残高あり`;
       }),
       colors: sims.map(sim => {
         if (!sim) return '#aaa';
@@ -14929,7 +14982,7 @@ function renderLsChart(theme) {
   const canvas = document.getElementById('ls_chart');
   if (!canvas) return;
   const scs = state.lifeScenario[theme].scenarios;
-  const sims = scs.map(sc => calcScenarioSim(lsToSimScenario(theme, sc)));
+  const sims = scs.map(sc => calcScenarioFullTimeline(lsToSimScenario(theme, sc)));
   if (sims.every(s => !s || s.length === 0)) return;
 
   const allAges = sims.flatMap(s => (s || []).map(r => r.age));
@@ -15012,7 +15065,8 @@ function renderLsInsights(theme, scs, sims) {
   const el = document.getElementById('ls_insights');
   if (!el) return;
 
-  // 100歳時点の資産を取得
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
+  // 末尾時点の資産を取得
   const endAssets = sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null);
   const validAssets = endAssets.filter(v => v !== null);
   if (validAssets.length < 2) { el.innerHTML = ''; return; }
@@ -15028,12 +15082,12 @@ function renderLsInsights(theme, scs, sims) {
     const maxAge = scs[maxIdx].retireAge;
     const minAge = scs[minIdx].retireAge;
     const ageDiff = maxAge - minAge;
-    insightText = `<strong>${scs[maxIdx].label}（${maxAge}歳退職）</strong>は、<strong>${scs[minIdx].label}（${minAge}歳退職）</strong>と比べて100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。${ageDiff > 0 ? `${ageDiff}年長く働くことで積み上がる資産の差です。` : ''}`;
+    insightText = `<strong>${scs[maxIdx].label}（${maxAge}歳退職）</strong>は、<strong>${scs[minIdx].label}（${minAge}歳退職）</strong>と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。${ageDiff > 0 ? `${ageDiff}年長く働くことで積み上がる資産の差です。` : ''}`;
   } else {
     const maxExp = scs[maxIdx].monthlyExpense;
     const minExp = scs[minIdx].monthlyExpense;
     const expDiff = maxExp - minExp;
-    insightText = `月々の生活費を<strong>${minExp}万円</strong>に抑えると、<strong>${maxExp}万円</strong>の場合と比べて100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。月<strong>${expDiff}万円</strong>の差が長期間で大きな差となります。`;
+    insightText = `月々の生活費を<strong>${minExp}万円</strong>に抑えると、<strong>${maxExp}万円</strong>の場合と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。月<strong>${expDiff}万円</strong>の差が長期間で大きな差となります。`;
   }
 
   el.innerHTML = `
@@ -15051,6 +15105,7 @@ function renderLsTable(theme) {
   const scs = state.lifeScenario[theme].scenarios;
   const sims = scs.map(sc => calcScenarioSim(lsToSimScenario(theme, sc)));
   const { baseRetireAge, baseExpense } = getScenarioBase();
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
 
   const fmtA = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
   const colorA = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
@@ -15079,7 +15134,7 @@ function renderLsTable(theme) {
       }),
     },
     {
-      label: '100歳時点の推計残高',
+      label: `${endAge}歳時点の推計残高`,
       vals: sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null),
       isAsset: true,
     },
@@ -15088,7 +15143,7 @@ function renderLsTable(theme) {
       vals: sims.map(sim => {
         if (!sim) return '計算不可';
         const zero = sim.find(r => r.endAssets <= 0);
-        return zero ? `${zero.age}歳で残高ゼロ` : '100歳時点で残高あり';
+        return zero ? `${zero.age}歳で残高ゼロ` : `${endAge}歳時点で残高あり`;
       }),
       colors: sims.map(sim => {
         if (!sim) return '#aaa';
@@ -15413,6 +15468,7 @@ function renderLsHousingChart() {
 function renderLsHousingInsights(scs, sims) {
   const el = document.getElementById('ls_insights');
   if (!el) return;
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
   const endAssets = sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null);
   const validVals = endAssets.filter(v => v !== null);
   if (validVals.length < 2) { el.innerHTML = ''; return; }
@@ -15427,7 +15483,7 @@ function renderLsHousingInsights(scs, sims) {
     <div style="background:#fffbe6;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
       <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 試算からの気づき</div>
       <div style="font-size:13px;color:#78350f;line-height:1.6;">
-        <strong>${scs[maxIdx].label}</strong>は<strong>${scs[minIdx].label}</strong>と比べて、100歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。
+        <strong>${scs[maxIdx].label}</strong>は<strong>${scs[minIdx].label}</strong>と比べて、${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。
         住宅コストの差が長期の資産形成に与える影響を示しています。
       </div>
     </div>
@@ -15439,7 +15495,8 @@ function renderLsHousingTable() {
   const table = document.getElementById('ls_table');
   if (!table) return;
   const scs = state.lifeScenario.housing.scenarios;
-  const sims = scs.map(sc => calcHousingScenarioSim(sc));
+  const sims = scs.map(sc => calcHousingFullTimeline(sc));
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
 
   const fmtA = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
   const colorA = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
@@ -15462,7 +15519,7 @@ function renderLsHousingTable() {
       }),
     },
     {
-      label: '100歳時点の推計残高',
+      label: `${endAge}歳時点の推計残高`,
       vals: sims.map(sim => sim && sim.length > 0 ? sim[sim.length - 1].endAssets : null),
       isAsset: true,
     },
@@ -15471,7 +15528,7 @@ function renderLsHousingTable() {
       vals: sims.map(sim => {
         if (!sim) return '計算不可';
         const zero = sim.find(r => r.endAssets <= 0);
-        return zero ? `${zero.age}歳で残高ゼロ` : '100歳時点で残高あり';
+        return zero ? `${zero.age}歳で残高ゼロ` : `${endAge}歳時点で残高あり`;
       }),
       colors: sims.map(sim => {
         if (!sim) return '#aaa';
