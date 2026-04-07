@@ -1659,6 +1659,60 @@
 
   <!-- ===== DASHBOARD ===== -->
   <div id="page-dashboard" class="page active">
+
+    <!-- かんたん試算 結果画面（simpleMode.active===trueのときのみ表示） -->
+    <div id="simpleResultView" style="display:none;">
+      <div style="max-width:600px;margin:0 auto;padding:16px;">
+
+        <!-- ヘッダー -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <div>
+            <div style="font-size:12px;color:#888;margin-bottom:2px;">かんたん試算モード</div>
+            <h2 style="font-size:20px;font-weight:800;margin:0;color:#1a1a2e;">あなたのライフプラン試算</h2>
+          </div>
+          <button onclick="openSimpleInputModal()"
+            style="padding:8px 14px;background:#f0f0ff;color:#667eea;border:1px solid #c7c7f1;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">
+            ✏️ 入力を修正
+          </button>
+        </div>
+
+        <!-- KPIカード -->
+        <div id="simpleKpiCards" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;"></div>
+
+        <!-- グラフ -->
+        <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:20px;">
+          <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:4px;">📊 資産残高の推移（試算）</div>
+          <div style="font-size:11px;color:#aaa;margin-bottom:16px;">現在〜100歳まで（シミュレーション上の仮定値）</div>
+          <div style="position:relative;height:220px;">
+            <canvas id="simpleChart"></canvas>
+          </div>
+        </div>
+
+        <!-- 前提条件 -->
+        <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:20px;" id="simpleAssumptions"></div>
+
+        <!-- 免責 -->
+        <div style="font-size:11px;color:#bbb;text-align:center;line-height:1.6;margin-bottom:20px;">
+          ※ このシミュレーションは入力された仮定値に基づく試算です。<br>
+          実際の運用成果・将来の収支を保証・推奨するものではありません。
+        </div>
+
+        <!-- アップグレードCTA -->
+        <div style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:16px;padding:20px;text-align:center;color:#fff;margin-bottom:24px;">
+          <div style="font-size:18px;margin-bottom:8px;">🔍</div>
+          <div style="font-weight:700;font-size:16px;margin-bottom:6px;">より精度の高い試算へ</div>
+          <div style="font-size:13px;opacity:0.85;margin-bottom:16px;line-height:1.5;">
+            個別資産・保険・住宅ローン・ライフイベントを詳しく入力すると<br>精緻な試算ができます
+          </div>
+          <button onclick="upgradeToDetailedMode()"
+            style="padding:12px 28px;background:#fff;color:#667eea;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">
+            詳細入力で精度を上げる →
+          </button>
+        </div>
+
+      </div>
+    </div>
+
     <div id="welcomeBanner" class="welcome-banner">
       <h2 id="welcomeName">あなたのライフプランへようこそ</h2>
       <p id="welcomeSub">ライフプランを整理して、理想の未来を描きましょう</p>
@@ -4249,6 +4303,14 @@ let state = {
     reit:     { rate: 4.0 },
     cash:     { rate: 0.5 },
   },
+  simpleMode: {
+    active: false,         // かんたんモードが有効か
+    totalAssets: null,     // 貯蓄・投資合計（万円）
+    monthlyInvest: null,   // 毎月の積立額（万円）
+    monthlyExpense: null,  // 月々の生活費（万円）
+    retireExpense: null,   // 老後の月々の生活費（万円）
+    investStyle: 'balanced', // 'conservative'|'balanced'|'aggressive'
+  },
 };
 
 let editingGoalId = null;
@@ -4292,6 +4354,10 @@ function load() {
       bond:     { rate: 1.5 },
       reit:     { rate: 4.0 },
       cash:     { rate: 0.5 },
+    };
+    if (!state.simpleMode) state.simpleMode = {
+      active: false, totalAssets: null, monthlyInvest: null,
+      monthlyExpense: null, retireExpense: null, investStyle: 'balanced',
     };
     // autoSurplusアセットの残骸を削除
     cleanupSurplusAsset();
@@ -4349,6 +4415,73 @@ function load() {
 
 function save() {
   localStorage.setItem('lifeplan_v1', JSON.stringify(state));
+}
+
+// ===== かんたん試算モード ユーティリティ =====
+// 手取り年収（万円）から年金月額（万円/月）を推計
+function calcPensionEstimate() {
+  const income = parseFloat(state.finance?.income) || 0; // 手取り年収（万円）
+  if (income <= 0) return 0;
+  const grossAnnual = income / 0.75; // 額面年収推計
+  const grossMonthly = grossAnnual / 12; // 月額面（万円）
+  const p = state.profile || {};
+  const birthYear = p.birth ? new Date(p.birth).getFullYear() : (new Date().getFullYear() - 35);
+  const currentAge = new Date().getFullYear() - birthYear;
+  const retireAge = parseFloat(state.retirement?.targetAge) || 65;
+  const startWorkAge = 22;
+  const workingMonths = Math.min(480, Math.max(0, (retireAge - startWorkAge)) * 12);
+  // 厚生年金（報酬比例部分）
+  const kosei = grossMonthly * 5.481 / 1000 * workingMonths; // 万円/月
+  // 基礎年金（満額を加入期間で按分）
+  const kiso = 6.625 * (workingMonths / 480); // 万円/月
+  return Math.round((kosei + kiso) * 10) / 10;
+}
+
+// かんたんモード用 年別シミュレーション
+// 戻り値: [{age, year, assets, pension, expense, balance}]
+function calcSimpleSim() {
+  const sm = state.simpleMode;
+  const p = state.profile || {};
+  const birthYear = p.birth ? new Date(p.birth).getFullYear() : (new Date().getFullYear() - 35);
+  const currentAge = new Date().getFullYear() - birthYear;
+  const retireAge = parseFloat(state.retirement?.targetAge) || 65;
+
+  // 投資スタイル → 利回り
+  const rateMap = { conservative: 0.02, balanced: 0.04, aggressive: 0.065 };
+  const rate = rateMap[sm.investStyle || 'balanced'];
+
+  const totalAssets = parseFloat(sm.totalAssets) || 0;
+  const monthlyInvest = parseFloat(sm.monthlyInvest) || 0;
+  const monthlyExpense = parseFloat(sm.monthlyExpense) || 20;
+  const retireExpense = parseFloat(sm.retireExpense) || monthlyExpense * 0.8;
+  const pension = calcPensionEstimate(); // 万円/月
+
+  const simEndAge = 100;
+  const results = [];
+  let assets = totalAssets;
+
+  for (let age = currentAge; age <= simEndAge; age++) {
+    const isRetired = age >= retireAge;
+    const annualExpense = isRetired ? retireExpense * 12 : monthlyExpense * 12;
+    const annualIncome = isRetired ? pension * 12 : (parseFloat(state.finance?.income) || 0);
+    const annualInvest = isRetired ? 0 : monthlyInvest * 12;
+
+    // 資産成長（年初残高に運用益）
+    assets = assets * (1 + rate);
+    // 収支
+    const netCashflow = annualIncome + annualInvest - annualExpense;
+    assets += netCashflow;
+
+    results.push({
+      age,
+      year: new Date().getFullYear() + (age - currentAge),
+      assets: Math.round(assets),
+      pension: isRetired ? pension : 0,
+      expense: annualExpense,
+      balance: Math.round(assets),
+    });
+  }
+  return results;
 }
 
 // ===== 利回りプリセット関連ユーティリティ =====
@@ -4744,7 +4877,16 @@ function showPage(id) {
     b.classList.toggle('active', b.dataset.page === id);
   });
 
-  if (id === 'dashboard')   renderDashboard();
+  if (id === 'dashboard') {
+    const simpleView = document.getElementById('simpleResultView');
+    const isSimple = state.simpleMode?.active && !(state.assets?.length > 0);
+    if (simpleView) simpleView.style.display = isSimple ? '' : 'none';
+    if (isSimple) {
+      renderSimpleResult();
+    } else {
+      renderDashboard();
+    }
+  }
   if (id === 'finance')     renderFinance();
   if (id === 'timeline')    renderTimeline();
   if (id === 'profile')     loadProfileForm();
@@ -4856,6 +4998,7 @@ function saveProfile() {
   save();
   showNotification('プロフィールを保存しました');
   maybeShowRatePresetWizard();
+  maybeShowSimpleModeInput();
 }
 
 function calcAge() {
@@ -13727,6 +13870,271 @@ function resetAssetRateToPreset() {
   const badge = document.getElementById('amRateOverrideBadge');
   if (badge) badge.style.display = 'none';
 }
+
+// ===== かんたん試算モード JavaScript =====
+
+// 投資スタイル選択
+function selectInvestStyle(style) {
+  ['conservative','balanced','aggressive'].forEach(s => {
+    const el = document.getElementById('sm_style_' + s);
+    if (!el) return;
+    if (s === style) {
+      el.style.border = '2px solid #667eea';
+      el.style.background = '#f0f0ff';
+    } else {
+      el.style.border = '2px solid #e0e0e0';
+      el.style.background = '#fff';
+    }
+  });
+  if (!state.simpleMode) state.simpleMode = {};
+  state.simpleMode.investStyle = style;
+}
+
+// 老後生活費のデフォルト自動入力
+function updateSmRetireDefault() {
+  const expense = parseFloat(document.getElementById('sm_monthlyExpense')?.value);
+  const retireEl = document.getElementById('sm_retireExpense');
+  if (retireEl && !retireEl.dataset.userEdited && expense > 0) {
+    retireEl.value = Math.round(expense * 0.8 * 10) / 10;
+  }
+}
+
+// 入力モーダルを開く
+function openSimpleInputModal() {
+  const sm = state.simpleMode || {};
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+  setVal('sm_totalAssets',    sm.totalAssets);
+  setVal('sm_monthlyInvest',  sm.monthlyInvest);
+  setVal('sm_monthlyExpense', sm.monthlyExpense);
+  setVal('sm_retireExpense',  sm.retireExpense);
+  selectInvestStyle(sm.investStyle || 'balanced');
+  document.getElementById('simpleModeModal').style.display = '';
+}
+
+// 入力を保存して結果を表示
+function saveSimpleInput() {
+  if (!state.simpleMode) state.simpleMode = {};
+  const sm = state.simpleMode;
+  sm.totalAssets    = parseFloat(document.getElementById('sm_totalAssets')?.value) || 0;
+  sm.monthlyInvest  = parseFloat(document.getElementById('sm_monthlyInvest')?.value) || 0;
+  sm.monthlyExpense = parseFloat(document.getElementById('sm_monthlyExpense')?.value) || 20;
+  sm.retireExpense  = parseFloat(document.getElementById('sm_retireExpense')?.value) || sm.monthlyExpense * 0.8;
+  sm.active = true;
+  document.getElementById('simpleModeModal').style.display = 'none';
+  save();
+  showPage('dashboard');
+}
+
+// スキップして詳細モードへ
+function skipSimpleMode() {
+  document.getElementById('simpleModeModal').style.display = 'none';
+  if (state.simpleMode) state.simpleMode.active = false;
+  save();
+  showPage('finance');
+}
+
+// かんたん試算結果のレンダリング
+let _simpleChartObj = null;
+function renderSimpleResult() {
+  const sim = calcSimpleSim();
+  const p = state.profile || {};
+  const birthYear = p.birth ? new Date(p.birth).getFullYear() : (new Date().getFullYear() - 35);
+  const currentAge = new Date().getFullYear() - birthYear;
+  const retireAge = parseFloat(state.retirement?.targetAge) || 65;
+  const sm = state.simpleMode || {};
+
+  // 退職時資産
+  const retireRow = sim.find(r => r.age === retireAge) || sim[sim.filter(r => r.age <= retireAge).length - 1] || sim[0];
+  const retireAssets = retireRow ? retireRow.assets : 0;
+
+  // 残高ゼロになる年齢
+  const zeroRow = sim.find(r => r.assets <= 0);
+  const zeroAge = zeroRow ? zeroRow.age : null;
+
+  // 100歳時残高
+  const age100Row = sim[sim.length - 1];
+  const age100Assets = age100Row ? age100Row.assets : 0;
+
+  // KPIカード
+  const kpiEl = document.getElementById('simpleKpiCards');
+  if (kpiEl) {
+    const pension = calcPensionEstimate();
+    kpiEl.innerHTML = [
+      {
+        icon: '🏁',
+        label: `${retireAge}歳時点の推計資産`,
+        value: retireAssets >= 0 ? `${Math.round(retireAssets).toLocaleString()}万円` : '−',
+        color: retireAssets >= 0 ? '#2e7d32' : '#c62828',
+        bg: retireAssets >= 0 ? '#f1f8e9' : '#ffebee',
+      },
+      {
+        icon: '🧓',
+        label: '100歳時点の推計残高',
+        value: age100Assets >= 0 ? `+${Math.round(age100Assets).toLocaleString()}万円` : `${Math.round(age100Assets).toLocaleString()}万円`,
+        color: age100Assets >= 0 ? '#1565c0' : '#c62828',
+        bg: age100Assets >= 0 ? '#e3f2fd' : '#ffebee',
+      },
+      {
+        icon: '💴',
+        label: '年金受給額（推計）',
+        value: `月${pension.toFixed(1)}万円`,
+        color: '#6a1b9a',
+        bg: '#f3e5f5',
+      },
+      {
+        icon: zeroAge ? '⚠️' : '✅',
+        label: '残高ゼロの試算',
+        value: zeroAge ? `${zeroAge}歳で残高ゼロ` : '100歳時点で残高あり',
+        color: zeroAge ? '#e65100' : '#2e7d32',
+        bg: zeroAge ? '#fff3e0' : '#f1f8e9',
+      },
+    ].map(c => `
+      <div style="background:${c.bg};border-radius:12px;padding:14px 12px;">
+        <div style="font-size:18px;margin-bottom:4px;">${c.icon}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">${c.label}</div>
+        <div style="font-size:16px;font-weight:800;color:${c.color};">${c.value}</div>
+      </div>
+    `).join('');
+  }
+
+  // グラフ
+  const labels = sim.map(r => `${r.age}歳`);
+  const data = sim.map(r => r.assets);
+  // 退職ラインのインデックス
+  const retireIdx = sim.findIndex(r => r.age >= retireAge);
+
+  const ctx = document.getElementById('simpleChart');
+  if (ctx) {
+    if (_simpleChartObj) { _simpleChartObj.destroy(); _simpleChartObj = null; }
+    _simpleChartObj = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: '推計資産残高',
+            data,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102,126,234,0.1)',
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          // ゼロライン
+          {
+            label: '残高ゼロ',
+            data: sim.map(() => 0),
+            borderColor: 'rgba(200,0,0,0.3)',
+            borderWidth: 1,
+            borderDash: [4, 4],
+            pointRadius: 0,
+            fill: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => `推計残高: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+            }
+          },
+        },
+        scales: {
+          x: {
+            ticks: {
+              maxTicksLimit: 8,
+              font: { size: 11 },
+              color: '#aaa',
+              callback: (v, i) => {
+                const age = currentAge + i;
+                return age % 10 === 0 ? `${age}歳` : '';
+              }
+            },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              font: { size: 11 },
+              color: '#aaa',
+              callback: v => `${Math.round(v).toLocaleString()}万`
+            },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          }
+        }
+      }
+    });
+  }
+
+  // 前提条件
+  const assumptionsEl = document.getElementById('simpleAssumptions');
+  if (assumptionsEl) {
+    const styleLabel = { conservative: '安定重視（年2%）', balanced: 'バランス型（年4%）', aggressive: '成長重視（年6.5%）' };
+    const pension = calcPensionEstimate();
+    assumptionsEl.innerHTML = `
+      <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:10px;">📋 シミュレーションの前提（仮定値）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:#666;">
+        <div>投資スタイル</div><div style="font-weight:600;">${styleLabel[sm.investStyle] || 'バランス型'}</div>
+        <div>現在の積立額</div><div style="font-weight:600;">月${sm.monthlyInvest || 0}万円</div>
+        <div>現在の生活費</div><div style="font-weight:600;">月${sm.monthlyExpense || 0}万円</div>
+        <div>老後の生活費</div><div style="font-weight:600;">月${sm.retireExpense || 0}万円</div>
+        <div>年金受給額（推計）</div><div style="font-weight:600;">月${pension.toFixed(1)}万円</div>
+        <div>退職予定年齢</div><div style="font-weight:600;">${retireAge}歳</div>
+      </div>
+    `;
+  }
+}
+
+// かんたんモードから詳細モードへアップグレード
+function upgradeToDetailedMode() {
+  const sm = state.simpleMode || {};
+  // かんたんモードのデータから資産を1件生成（積立資産）
+  if (sm.totalAssets > 0 && state.assets.length === 0) {
+    const rateMap = { conservative: 2, balanced: 4, aggressive: 6.5 };
+    const rate = rateMap[sm.investStyle || 'balanced'];
+    state.assets.push({
+      id: 'asset_' + Date.now(),
+      name: '積立・貯蓄（かんたん試算から引継ぎ）',
+      type: 'stock',
+      currentVal: sm.totalAssets,
+      annualReturn: rate,
+      dividendYield: 0,
+      taxType: 'tokutei',
+      owner: 'self',
+      note: 'かんたん試算モードから引き継ぎ。内訳を個別に入力してください。',
+    });
+  }
+  // 月々の積立を finance に設定
+  if (sm.monthlyInvest > 0 && !state.finance?.monthlySavings) {
+    if (!state.finance) state.finance = {};
+    state.finance.monthlySavings = sm.monthlyInvest;
+  }
+  sm.active = false;
+  save();
+  // 資産入力ページへ
+  showPage('finance');
+  // 少し後にアセット追加の案内を表示
+  setTimeout(() => {
+    alert('かんたん試算のデータを引き継ぎました。\n「積立・貯蓄（かんたん試算から引継ぎ）」を個別の資産に分けて入力すると、より精緻な試算ができます。');
+  }, 300);
+}
+
+// 初回表示トリガー（saveProfile後に呼ばれる）
+function maybeShowSimpleModeInput() {
+  // 既存資産があれば詳細モードのまま
+  if (state.assets && state.assets.length > 0) return;
+  // かんたんモードが完了済みならスキップ
+  if (state.simpleMode?.active) return;
+  // プロフィール未入力ならスキップ
+  if (!state.profile?.birth) return;
+  // income が未設定でも表示（0のまま注意喚起）
+  setTimeout(() => openSimpleInputModal(), 500);
+}
 </script>
 
 <!-- 利回り前提設定モーダル -->
@@ -13880,6 +14288,124 @@ function resetAssetRateToPreset() {
       </button>
     </div>
 
+  </div>
+</div>
+
+<!-- かんたん試算 入力モーダル -->
+<div id="simpleModeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:4000;overflow-y:auto;">
+  <div style="background:#fff;border-radius:20px;max-width:480px;margin:32px auto 32px;padding:0;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+
+    <!-- ヘッダー -->
+    <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:28px 24px 24px;color:#fff;">
+      <div style="font-size:12px;opacity:0.8;margin-bottom:6px;letter-spacing:0.5px;">STEP 3/3 — かんたん試算</div>
+      <h2 style="font-size:22px;font-weight:800;margin:0 0 8px;">今の状況を入力</h2>
+      <p style="font-size:13px;opacity:0.85;margin:0;line-height:1.5;">6つの項目に答えるだけで、老後のお金の見通しが分かります。</p>
+    </div>
+
+    <div style="padding:24px;">
+
+      <!-- 貯蓄・投資合計 -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:6px;">
+          💰 現在の貯蓄・投資の合計額
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="sm_totalAssets" placeholder="500" min="0" step="10"
+            style="flex:1;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+          <span style="font-size:14px;color:#666;white-space:nowrap;">万円</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">預金・株・投資信託・iDeCo・NISAなど全て合わせた金額</div>
+      </div>
+
+      <!-- 毎月の積立額 -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:6px;">
+          📈 毎月の積立・投資額
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="sm_monthlyInvest" placeholder="5" min="0" step="1"
+            style="flex:1;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+          <span style="font-size:14px;color:#666;white-space:nowrap;">万円 / 月</span>
+        </div>
+      </div>
+
+      <!-- 月々の生活費 -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:6px;">
+          🏠 今の月々の生活費
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="sm_monthlyExpense" placeholder="25" min="0" step="1"
+            oninput="updateSmRetireDefault()"
+            style="flex:1;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+          <span style="font-size:14px;color:#666;white-space:nowrap;">万円 / 月</span>
+        </div>
+      </div>
+
+      <!-- 老後の生活費 -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:6px;">
+          🌅 老後の目標生活費
+        </label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="sm_retireExpense" placeholder="20" min="0" step="1"
+            style="flex:1;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:16px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+          <span style="font-size:14px;color:#666;white-space:nowrap;">万円 / 月</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">未入力の場合は現在の生活費の80%で計算します</div>
+      </div>
+
+      <!-- 投資スタイル -->
+      <div style="margin-bottom:24px;">
+        <label style="display:block;font-weight:700;font-size:14px;color:#333;margin-bottom:10px;">
+          🎯 投資スタイル（利回りの仮定）
+        </label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label id="sm_style_conservative" onclick="selectInvestStyle('conservative')"
+            style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;transition:all .2s;">
+            <span style="font-size:20px;">🏦</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;">安定重視</div>
+              <div style="font-size:12px;color:#888;">預金・債券中心（想定利回り: 年2%）</div>
+            </div>
+          </label>
+          <label id="sm_style_balanced" onclick="selectInvestStyle('balanced')"
+            style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #667eea;background:#f0f0ff;border-radius:10px;cursor:pointer;transition:all .2s;">
+            <span style="font-size:20px;">⚖️</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;">バランス型</div>
+              <div style="font-size:12px;color:#555;">株式・債券を組み合わせ（想定利回り: 年4%）</div>
+            </div>
+          </label>
+          <label id="sm_style_aggressive" onclick="selectInvestStyle('aggressive')"
+            style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:2px solid #e0e0e0;border-radius:10px;cursor:pointer;transition:all .2s;">
+            <span style="font-size:20px;">🚀</span>
+            <div>
+              <div style="font-weight:600;font-size:14px;">成長重視</div>
+              <div style="font-size:12px;color:#888;">株式・インデックス中心（想定利回り: 年6.5%）</div>
+            </div>
+          </label>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;line-height:1.5;">
+          ※ 利回りはシミュレーション上の仮定値です。実際の運用成果を保証するものではありません。
+        </div>
+      </div>
+
+      <!-- ボタン -->
+      <button onclick="saveSimpleInput()"
+        style="width:100%;padding:16px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:0.5px;">
+        試算を見る →
+      </button>
+      <button onclick="skipSimpleMode()"
+        style="width:100%;padding:12px;background:none;color:#aaa;border:none;font-size:13px;cursor:pointer;margin-top:8px;">
+        スキップして詳細入力する
+      </button>
+
+    </div>
   </div>
 </div>
 </body>
