@@ -3162,7 +3162,10 @@
 
       <!-- グラフ -->
       <div style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:12px;">
+          <span>資産残高の推移（試算・退職後）</span>
+          <button onclick="showDisclaimerModal()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:#B45309;" title="試算の前提を確認">ℹ️</button>
+        </div>
         <div style="position:relative;height:260px;">
           <canvas id="scenarioCompChart"></canvas>
         </div>
@@ -3411,6 +3414,9 @@
       🏠 住宅選択で比べる
     </button>
   </div>
+
+  <!-- 試算前提バナー -->
+  <div id="ls_discBannerWrap"></div>
 
   <!-- テーマごとのコンテンツ -->
   <div id="ls_themeContent"></div>
@@ -4408,6 +4414,7 @@ let state = {
     retireExpense: null,   // 老後の月々の生活費（万円）
     investStyle: 'balanced', // 'conservative'|'balanced'|'aggressive'
   },
+  disclaimerAck: { shown: false, rateHash: '' },
   scenarioComp: [
     { name: 'シナリオA', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
@@ -4508,6 +4515,7 @@ function load() {
         { label: '持ち家（ローン）',monthlyRent: 0,  purchasePrice: 3000, downPayment: 500, loanYears: 35, loanRate: 1.0, type: 'buy_loan' },
       ]},
     };
+    if (!state.disclaimerAck) state.disclaimerAck = { shown: false, rateHash: '' };
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
       { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
       { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
@@ -5045,10 +5053,10 @@ function showPage(id) {
   if (id === 'timeline')    renderTimeline();
   if (id === 'profile')     loadProfileForm();
   if (id === 'lifeevents')  renderLifeEventsPage();
-  if (id === 'retirement')  { renderRetirementPage(); applyMaritalFilter(); setTimeout(() => renderScenarioComp(), 100); }
+  if (id === 'retirement')  { renderRetirementPage(); applyMaritalFilter(); setTimeout(() => renderScenarioComp(), 100); checkAndShowDisclaimerModal(); }
   if (id === 'insurance')   renderInsurancePage();
   if (id === 'inheritance') renderInheritancePage();
-  if (id === 'scenarios')   renderScenariosPage();
+  if (id === 'scenarios')   { renderScenariosPage(); checkAndShowDisclaimerModal(); }
   if (id === 'finance')     applyMaritalFilter();
 }
 
@@ -10879,7 +10887,7 @@ function runRetirementSim() {
   const monthlyDiv = result.annualDividendYield > 0
     ? Math.round(result.assetsAtRetire * result.annualDividendYield / 12) : 0;
 
-  resultCard.innerHTML = `
+  resultCard.innerHTML = getSimDisclaimerBannerHTML() + `
     <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;padding:20px;margin-bottom:12px;color:white">
       <div style="font-size:15px;font-weight:700;margin-bottom:16px">🏖️ 出口戦略シミュレーション結果</div>
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">
@@ -13986,6 +13994,9 @@ function saveRatePresets(apply) {
   state.ratePresets.reit  = { rate: parseFloat(document.getElementById('rp_reit_rate').value) };
   state.ratePresets.cash  = { rate: parseFloat(document.getElementById('rp_cash_rate').value) };
 
+  // 利回り変更時は次回シミュレーション画面を開いたときに免責モーダルを再表示
+  if (state.disclaimerAck) state.disclaimerAck.shown = false;
+
   document.getElementById('ratePresetModal').style.display = 'none';
 
   if (apply) {
@@ -14717,7 +14728,7 @@ function renderLifeScenarioTheme(theme) {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_retireAge_cards"></div>
       <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:12px;"><span>資産残高の推移（試算・退職後）</span><button onclick="showDisclaimerModal()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;" title="試算の前提を確認">ℹ️</button></div>
         <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
       </div>
       <div id="ls_insights" style="margin-bottom:16px;"></div>
@@ -14744,7 +14755,7 @@ function renderLifeScenarioTheme(theme) {
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_expense_cards"></div>
       <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・退職後）</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:12px;"><span>資産残高の推移（試算・退職後）</span><button onclick="showDisclaimerModal()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;" title="試算の前提を確認">ℹ️</button></div>
         <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
       </div>
       <div id="ls_insights" style="margin-bottom:16px;"></div>
@@ -14764,7 +14775,7 @@ function renderLifeScenarioTheme(theme) {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;" id="ls_housing_cards"></div>
       <div id="ls_chart_wrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">資産残高の推移（試算・現在〜老後）</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:12px;"><span>資産残高の推移（試算・現在〜老後）</span><button onclick="showDisclaimerModal()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;" title="試算の前提を確認">ℹ️</button></div>
         <div style="position:relative;height:260px;"><canvas id="ls_chart"></canvas></div>
       </div>
       <div id="ls_insights" style="margin-bottom:16px;"></div>
@@ -15435,9 +15446,95 @@ function renderLsHousingTable() {
   `;
 }
 
+// ===== 試算前提免責 =====
+function calcRateHash() {
+  const p = state.ratePresets || {};
+  return [
+    p.index?.rate ?? '', p.dividend?.dividendRate ?? '', p.dividend?.rate ?? '',
+    p.bond?.rate ?? '', p.reit?.rate ?? '', p.cash?.rate ?? '',
+  ].join(',');
+}
+
+function getSimDisclaimerBannerHTML() {
+  const p = state.ratePresets || {};
+  return `<div data-disc-banner style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:10px 14px;margin-bottom:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <div style="color:#92400E;font-weight:600;font-size:13px;">⚠️ 試算の前提</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button onclick="toggleDisclaimerDetail(this)" style="background:none;border:none;color:#B45309;cursor:pointer;font-size:11px;padding:0;">詳細を見る ▼</button>
+      <button onclick="showDisclaimerModal()" style="background:none;border:none;color:#B45309;cursor:pointer;font-size:15px;padding:0;line-height:1;" title="前提条件を確認">ℹ️</button>
+    </div>
+  </div>
+  <div style="color:#78350F;font-size:12px;margin-top:4px;line-height:1.5;">一定の利回り・インフレ率を前提とした試算です。将来の結果を保証するものではありません。</div>
+  <div data-disc-detail style="display:none;margin-top:8px;color:#78350F;font-size:12px;border-top:1px solid #FED7AA;padding-top:8px;line-height:1.8;">
+    <ul style="margin:0;padding-left:16px;">
+      <li>株式インデックス <strong>${p.index?.rate ?? 5}%</strong> など設定利回りを変動なしで一定と仮定しています</li>
+      <li>実際の市場環境・運用成果は大きく異なる場合があります</li>
+      <li>税制・年金・社会保障制度の変更により、結果が変わる可能性があります</li>
+      <li>本ツールは情報提供を目的としており、投資・財務アドバイスではありません</li>
+    </ul>
+  </div>
+</div>`;
+}
+
+function toggleDisclaimerDetail(btn) {
+  const detail = btn.closest('[data-disc-banner]').querySelector('[data-disc-detail]');
+  const hidden = detail.style.display === 'none';
+  detail.style.display = hidden ? 'block' : 'none';
+  btn.textContent = hidden ? '▲ 閉じる' : '詳細を見る ▼';
+}
+
+function checkAndShowDisclaimerModal() {
+  if (!state.disclaimerAck) state.disclaimerAck = { shown: false, rateHash: '' };
+  const currentHash = calcRateHash();
+  if (!state.disclaimerAck.shown || state.disclaimerAck.rateHash !== currentHash) {
+    setTimeout(() => showDisclaimerModal(), 500);
+  }
+}
+
+function showDisclaimerModal() {
+  const p = state.ratePresets || {};
+  const modal = document.getElementById('disclaimerModal');
+  modal.style.display = 'flex';
+  document.getElementById('disclaimerModalBody').innerHTML = `
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px;color:#1F2937;">⚠️ 試算の前提条件</div>
+    <div style="background:#F0F9FF;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#0369A1;border:1px solid #BAE6FD;">
+      <strong>現在の利回り前提設定</strong><br>
+      株式インデックス: <strong>${p.index?.rate ?? 5}%</strong>
+      高配当: <strong>${p.dividend?.dividendRate ?? 3.5}% + キャピタル${p.dividend?.rate ?? 1.5}%</strong><br>
+      債券: <strong>${p.bond?.rate ?? 1.5}%</strong>
+      REIT: <strong>${p.reit?.rate ?? 4.0}%</strong>
+      現金: <strong>${p.cash?.rate ?? 0.5}%</strong>
+    </div>
+    <ul style="font-size:13px;line-height:2.0;color:#374151;padding-left:18px;margin:0 0 18px;">
+      <li>本試算は上記の利回りおよび一定のインフレ率を変動なしで適用した仮定値です</li>
+      <li>実際の市場環境や運用成果は時期・銘柄によって大きく異なります</li>
+      <li>将来の結果を保証・予測するものではありません</li>
+      <li>税制・年金・社会保障制度の変更により、実際の結果は異なる場合があります</li>
+      <li>本ツールは情報提供目的であり、投資・財務・税務アドバイスではありません</li>
+      <li>具体的な意思決定には、ファイナンシャルプランナー等の専門家へのご相談をおすすめします</li>
+    </ul>
+    <button onclick="ackDisclaimer()" style="width:100%;padding:13px;background:#4F46E5;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">理解しました</button>
+  `;
+}
+
+function closeDisclaimerModal() {
+  document.getElementById('disclaimerModal').style.display = 'none';
+}
+
+function ackDisclaimer() {
+  if (!state.disclaimerAck) state.disclaimerAck = {};
+  state.disclaimerAck.shown = true;
+  state.disclaimerAck.rateHash = calcRateHash();
+  save();
+  closeDisclaimerModal();
+}
+
 // シナリオページのメインレンダリング
 function renderScenariosPage() {
   const theme = state.lifeScenario?.activeTheme || 'retireAge';
+  const bannerWrap = document.getElementById('ls_discBannerWrap');
+  if (bannerWrap) bannerWrap.innerHTML = getSimDisclaimerBannerHTML();
   // ボタン状態を初期化
   ['retireAge','expense','housing'].forEach(t => {
     const btn = document.getElementById('ls_btn_' + t);
@@ -15450,6 +15547,14 @@ function renderScenariosPage() {
   renderLifeScenarioTheme(theme);
 }
 </script>
+
+<!-- 試算前提免責モーダル -->
+<div id="disclaimerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:5000;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;padding:24px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <button onclick="closeDisclaimerModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;color:#9CA3AF;cursor:pointer;line-height:1;">×</button>
+    <div id="disclaimerModalBody"></div>
+  </div>
+</div>
 
 <!-- 利回り前提設定モーダル -->
 <div id="ratePresetModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;overflow-y:auto;">
