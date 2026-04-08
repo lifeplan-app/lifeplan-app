@@ -975,38 +975,57 @@
       accent-color: var(--primary);
     }
 
-    /* ===== SCENARIO SLIDER ===== */
-    input[type="range"].sc-slider {
+    /* ===== SLIDER (全体共通) ===== */
+    input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
       height: 6px;
       border-radius: 3px;
+      background: #D1D5DB;
       outline: none;
       cursor: pointer;
-      margin: 4px 0;
+      margin: 6px 0;
     }
-    input[type="range"].sc-slider::-webkit-slider-thumb {
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 3px;
+      background: inherit;
+    }
+    input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 22px;
       height: 22px;
       border-radius: 50%;
       background: var(--sc-color, #4F46E5);
       border: 3px solid #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       cursor: grab;
+      margin-top: -8px;
     }
-    input[type="range"].sc-slider::-moz-range-thumb {
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #D1D5DB;
+    }
+    input[type="range"]::-moz-range-thumb {
       width: 22px;
       height: 22px;
       border-radius: 50%;
       background: var(--sc-color, #4F46E5);
       border: 3px solid #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       cursor: grab;
     }
-    input[type="range"].sc-slider:active::-webkit-slider-thumb { cursor: grabbing; }
-    input[type="range"].sc-slider:active::-moz-range-thumb     { cursor: grabbing; }
+    input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; }
+    input[type="range"]:active::-moz-range-thumb     { cursor: grabbing; }
+
+    /* ===== SCENARIO SLIDER (色のみ上書き) ===== */
+    input[type="range"].sc-slider {
+      background: linear-gradient(to right, var(--sc-color, #4F46E5) var(--pct, 50%), #D1D5DB var(--pct, 50%));
+    }
+    input[type="range"].sc-slider::-webkit-slider-thumb { background: var(--sc-color, #4F46E5); }
+    input[type="range"].sc-slider::-moz-range-thumb     { background: var(--sc-color, #4F46E5); }
 
     /* ===== EMPTY STATE ===== */
     .empty {
@@ -14551,12 +14570,12 @@ const SCENARIO_COLORS = ['#4F46E5', '#10B981', '#F59E0B'];
 // スライダーの塗り済みトラックのbackground styleを返す
 function scTrackStyle(val, min, max, color) {
   const pct = Math.round((val - min) / (max - min) * 100);
-  return `background:linear-gradient(to right,${color} ${pct}%,#e0e0e0 ${pct}%);`;
+  return `background:linear-gradient(to right,${color} ${pct}%,#D1D5DB ${pct}%);`;
 }
 // スライダー操作中にトラックをリアルタイム更新
 function scTrack(el, min, max, color) {
   const pct = Math.round((el.value - min) / (max - min) * 100);
-  el.style.background = `linear-gradient(to right,${color} ${pct}%,#e0e0e0 ${pct}%)`;
+  el.style.background = `linear-gradient(to right,${color} ${pct}%,#D1D5DB ${pct}%)`;
 }
 const SCENARIO_LABELS = ['A', 'B', 'C'];
 
