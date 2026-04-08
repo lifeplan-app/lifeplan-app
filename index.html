@@ -2338,7 +2338,7 @@
             <option value="employee_no_corp">会社員（企業年金なし）上限2.3万/月</option>
             <option value="employee_corp">会社員（企業年金あり）上限1.2万/月</option>
             <option value="self">自営業・フリーランス 上限6.8万/月</option>
-            <option value="public">公務員 上限1.2万/月</option>
+            <option value="public">公務員 上限2.0万/月（2022年10月改正後）</option>
           </select>
         </div>
       </div>
@@ -3182,7 +3182,7 @@
           <input type="range" id="sensPension" class="sc-slider" min="-30" max="10" step="5" value="0" style="--sc-color:#10B981;--pct:75%;width:100%" oninput="updateSensitivity();scTrack(this,-30,10,'#10B981')">
         </div>
       </div>
-      <div id="retSensitivityResult" style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px"></div>
+      <div id="retSensitivityResult" style="display:none;margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px"></div>
     </div>
 
     <!-- ⑩ モンテカルロシミュレーション -->
@@ -3248,7 +3248,7 @@
           </div>
           <div class="basis-item">
             <div class="basis-label">インフレ調整</div>
-            <div class="basis-desc">「物価上昇率」設定値（デフォルト 2%）を使用。各年の支出・収入を実質値に変換して計算します。</div>
+            <div class="basis-desc">「物価上昇率」設定値（デフォルト 2%）を使用。各年の支出・収入を実質値に変換して計算します。デフォルトの2%は日本銀行の物価安定目標に基づく参考値です。<br>出典: 日本銀行「物価安定の目標」 https://www.boj.or.jp/mopo/mpmdeci/mpr_2013/k130122b.pdf</div>
           </div>
           <div class="basis-item">
             <div class="basis-label">ライフイベント費用</div>
@@ -3263,12 +3263,20 @@
             <div class="basis-desc">元本 × (1 + 年利)^年数 で計算。毎月積立がある場合は月次複利に変換して加算します。</div>
           </div>
           <div class="basis-item">
+            <div class="basis-label">新NISA（2024年〜）</div>
+            <div class="basis-desc">つみたて投資枠: 年間120万円・成長投資枠: 年間240万円（合計360万円/年）、非課税保有限度額: 総額1,800万円、非課税期間: 無期限。<br>出典: 金融庁「新しいNISA」 https://www.fsa.go.jp/policy/nisa2/about/index.html</div>
+          </div>
+          <div class="basis-item">
+            <div class="basis-label">iDeCo 拠出限度額</div>
+            <div class="basis-desc">会社員（企業年金なし）: 23,000円/月・会社員（企業年金あり）: 12,000円/月・自営業: 68,000円/月・公務員: 20,000円/月（2022年10月改正後）。<br>出典: 確定拠出年金法 / 国民年金基金連合会 https://www.npfa.or.jp/</div>
+          </div>
+          <div class="basis-item">
             <div class="basis-label">課税口座の税効果</div>
-            <div class="basis-desc">特定口座・一般口座は実効年利 = 年利 × (1 − 0.20315) で運用益に課税。NISA口座は非課税のため入力年利をそのまま使用します。</div>
+            <div class="basis-desc">特定口座・一般口座は実効年利 = 年利 × (1 − 0.20315) で運用益に課税。NISA口座は非課税のため入力年利をそのまま使用します。<br>出典: 租税特別措置法第37条の11（上場株式等の譲渡所得）・所得税法</div>
           </div>
           <div class="basis-item">
             <div class="basis-label">配当課税</div>
-            <div class="basis-desc">課税口座での配当受け取りには 20.315%（所得税15.315% + 住民税5%）を適用。NISA口座は非課税です（2014年〜制度、2024年〜新NISA）。</div>
+            <div class="basis-desc">課税口座での配当受け取りには 20.315%（所得税15.315% + 住民税5%）を適用。NISA口座は非課税です（2014年〜制度、2024年〜新NISA）。<br>出典: 租税特別措置法・地方税法 / 金融庁「新しいNISA」 https://www.fsa.go.jp/policy/nisa2/</div>
           </div>
           <div class="basis-item">
             <div class="basis-label">4%ルール</div>
@@ -3288,7 +3296,7 @@
           </div>
           <div class="basis-item">
             <div class="basis-label">繰り下げ受給</div>
-            <div class="basis-desc">1ヶ月繰り下げごとに +0.7%増額（最大75歳・+84%）。繰り上げは1ヶ月ごと −0.4%（2022年4月改正後）。</div>
+            <div class="basis-desc">1ヶ月繰り下げごとに +0.7%増額（最大75歳・+84%）。繰り上げは1ヶ月ごと −0.4%（2022年4月改正後）。<br>出典: 日本年金機構「年金の繰り下げ受給」 https://www.nenkin.go.jp/service/jukyu/roureinenkin/kuriage-kurisage/20150401.html</div>
           </div>
         </div>
 
@@ -6102,7 +6110,7 @@ const TAX_TYPE_DEFAULT = {
   etf: 'tokutei', cash_emergency: 'cash', cash_special: 'cash',
   cash_reserved: 'cash', cash_surplus: 'cash', cash: 'cash', other: 'tokutei',
 };
-const TAX_RATE = 0.20315; // 譲渡益・配当課税（特定口座・一般口座）
+const TAX_RATE = 0.20315; // 譲渡益・配当課税（特定口座・一般口座）: 所得税15.315%（復興特別所得税含む）+ 住民税5% 出典: 租税特別措置法第37条の11
 
 function effectiveReturn(annualReturn, taxType) {
   if (taxType === 'nisa' || taxType === 'ideco' || taxType === 'cash') return annualReturn;
@@ -7277,16 +7285,17 @@ function initTaxSimDefaults() {
 
 // ===== iDeCo/NISA 節税シミュレーション =====
 // 所得税率テーブル（課税所得→税率・控除額）
+// 出典: 国税庁「所得税の税率」 https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2260.htm
 const TAX_BRACKETS = [
-  { limit: 195,  rate: 0.05,  deduct: 0 },
-  { limit: 330,  rate: 0.10,  deduct: 9.75 },
-  { limit: 695,  rate: 0.20,  deduct: 42.75 },
-  { limit: 900,  rate: 0.23,  deduct: 63.6 },
-  { limit: 1800, rate: 0.33,  deduct: 153.6 },
-  { limit: 4000, rate: 0.40,  deduct: 279.6 },
-  { limit: Infinity, rate: 0.45, deduct: 479.6 },
+  { limit: 195,  rate: 0.05,  deduct: 0 },      // 195万円以下: 5%
+  { limit: 330,  rate: 0.10,  deduct: 9.75 },   // 330万円以下: 10%
+  { limit: 695,  rate: 0.20,  deduct: 42.75 },  // 695万円以下: 20%
+  { limit: 900,  rate: 0.23,  deduct: 63.6 },   // 900万円以下: 23%
+  { limit: 1800, rate: 0.33,  deduct: 153.6 },  // 1,800万円以下: 33%
+  { limit: 4000, rate: 0.40,  deduct: 279.6 },  // 4,000万円以下: 40%
+  { limit: Infinity, rate: 0.45, deduct: 479.6 }, // 4,000万円超: 45%
 ];
-const JUMINZEI_RATE = 0.10; // 住民税率（一律10%）
+const JUMINZEI_RATE = 0.10; // 住民税率（一律10%）出典: 地方税法第35条・第314条の3
 
 function getMarginalTaxRate(taxableIncome) {
   for (const b of TAX_BRACKETS) {
@@ -7302,11 +7311,14 @@ function getIncomeTax(taxableIncome) {
   return taxableIncome * 0.45 - 479.6;
 }
 
+// iDeCo月額拠出限度額（万円/月）
+// 出典: 確定拠出年金法・国民年金基金連合会 https://www.npfa.or.jp/
+// ※2024年12月施行の法改正により一部区分が変更。最新情報は国民年金基金連合会公式サイトを参照。
 const IDECO_LIMITS = {
-  employee_no_corp: 2.3,
-  employee_corp: 1.2,
-  self: 6.8,
-  public: 1.2,
+  employee_no_corp: 2.3,  // 会社員（企業年金なし）: 23,000円/月
+  employee_corp: 1.2,     // 会社員（企業年金あり）: 12,000円/月
+  self: 6.8,              // 自営業・フリーランス（国民年金第1号）: 68,000円/月
+  public: 2.0,            // 公務員: 20,000円/月（2024年12月改正後）
 };
 
 function updateIdecoLimit() {
@@ -10825,6 +10837,7 @@ function onHybridSliderChange(val) {
 
 // ===== 年金自動試算 =====
 // 2024年度水準: 国民年金満額 816,000円/年 = 68,000円/月 = 6.8万円/月
+// 出典: 厚生労働省「令和6年度の年金額改定について」 https://www.mhlw.go.jp/stf/newpage_38201.html
 const KOKUMIN_FULL_MONTHLY = 6.8; // 万円/月（2024年度）
 const KOKUMIN_FULL_MONTHS = 480;  // 40年×12
 
@@ -13102,6 +13115,7 @@ function updateSensitivity() {
   const lastD = data[data.length - 1];
   const depleted = data.find(d => d.depleted);
   const el = document.getElementById('retSensitivityResult');
+  el.style.display = '';
   if (depleted) {
     el.innerHTML = `<span style="color:var(--danger);font-weight:700">⚠️ ${depleted.age}歳で資産が枯渇します</span>（この条件では${depleted.age - parseInt((state.retirement||{}).targetAge||65)}年で枯渇）`;
   } else {
@@ -13144,7 +13158,9 @@ function runMonteCarlo() {
   const pensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 - params.pensionSlide);
   const semiEndAgeScen = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
 
-  // Box-Muller法で正規乱数
+  // Box-Muller法で正規乱数を生成（一様乱数→標準正規分布への変換）
+  // 出典: Box, G.E.P. & Muller, M.E. (1958). "A Note on the Generation of Random Normal Deviates."
+  //       The Annals of Mathematical Statistics, 29(2), 610-611.
   function randn() {
     let u = 0, v = 0;
     while (!u) u = Math.random();
@@ -13199,7 +13215,7 @@ function runMonteCarlo() {
       labels,
       datasets: allPaths.map((path, i) => ({
         data: path,
-        borderColor: `rgba(0,122,255,${i === 0 ? 0.8 : 0.06})`,
+        borderColor: `rgba(0,122,255,${i === 0 ? 0.9 : 0.18})`,
         borderWidth: i === 0 ? 2 : 1,
         pointRadius: 0,
         fill: false,
