@@ -2595,6 +2595,18 @@
       <div id="carePresetHint" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
     </div>
 
+    <!-- 奨学金返済 -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="icon" style="background:#E0F2FE">🎓</span>奨学金返済
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openScholarshipModal()">＋ 追加</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">借りた奨学金の返済計画を登録すると、返済期間中の固定費として資産シミュレーションに自動反映されます。第一種（無利子）・第二種（有利子）どちらも対応しています。</p>
+      <div id="scholarshipList"></div>
+    </div>
+
     <!-- 収支変化イベント -->
     <div class="card">
       <div class="card-title" style="justify-content:space-between">
@@ -4498,6 +4510,56 @@
   </div>
 </div>
 
+<!-- ===== 奨学金返済 モーダル ===== -->
+<div class="modal-overlay" id="scholarshipModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title" id="scholarshipModalTitle">奨学金を追加</div>
+    <div class="form-group">
+      <label>奨学金の名前・メモ</label>
+      <input type="text" id="scName" placeholder="例: 日本学生支援機構 第二種">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>種別</label>
+        <select id="scType" onchange="updateScholarshipHint()">
+          <option value="type1">第一種（無利子）</option>
+          <option value="type2" selected>第二種（有利子）</option>
+          <option value="other">その他・民間奨学金</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>借入総額（万円）</label>
+        <input type="number" id="scBorrowed" placeholder="250" min="0" step="10" oninput="calcScholarshipEndYearPreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>月々の返済額（万円）</label>
+        <input type="number" id="scMonthly" placeholder="1.2" min="0.1" step="0.1" oninput="calcScholarshipEndYearPreview()">
+      </div>
+      <div class="form-group">
+        <label>返済開始年</label>
+        <input type="number" id="scStartYear" placeholder="2024" min="1990" max="2060" oninput="calcScholarshipEndYearPreview()">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>返済終了年</label>
+        <input type="number" id="scEndYear" placeholder="自動計算" min="1990" max="2080">
+      </div>
+      <div class="form-group">
+        <label>現在の残債（万円・任意）</label>
+        <input type="number" id="scRemaining" placeholder="150" min="0" step="10">
+      </div>
+    </div>
+    <div id="scholarshipPreviewHint" style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text-secondary);margin-bottom:4px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeScholarshipModal()">キャンセル</button>
+      <button class="btn btn-primary" id="scholarshipModalSaveBtn" onclick="saveScholarshipItem()">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== 収支変化イベント モーダル ===== -->
 <div class="modal-overlay" id="cfeModal">
   <div class="modal" style="max-width:480px">
@@ -4581,7 +4643,7 @@ let state = {
   actions: [], // kept for migration only
   finance: {},
   assets: [],
-  lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {} },
+  lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [] },
   cashFlowEvents: [], // 収支変化イベント（転職・昇給・副業・一時収入/支出など）
   actuals: [],
   retirement: {},
@@ -4658,7 +4720,8 @@ function load() {
     if (!state.lifeEvents.mortgage.events) state.lifeEvents.mortgage.events = [];
     if (!state.lifeEvents.housingType) state.lifeEvents.housingType = 'mortgage';
     if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
-    if (!state.lifeEvents.care)     state.lifeEvents.care = {};
+    if (!state.lifeEvents.care)        state.lifeEvents.care = {};
+    if (!state.lifeEvents.scholarships) state.lifeEvents.scholarships = [];
     if (!state.actuals) state.actuals = [];
     if (!state.actions) state.actions = [];
     if (!state.retirement) state.retirement = {};
@@ -5161,7 +5224,7 @@ function importData(event) {
         actions: [],
         finance: {},
         assets: [],
-        lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {} },
+        lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [] },
         cashFlowEvents: [],
         actuals: [],
         retirement: {},
@@ -5179,6 +5242,7 @@ function importData(event) {
       if (!state.lifeEvents.housingType) state.lifeEvents.housingType = 'mortgage';
       if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
       if (!state.lifeEvents.care) state.lifeEvents.care = {};
+      if (!state.lifeEvents.scholarships) state.lifeEvents.scholarships = [];
       if (!state.retirement) state.retirement = {};
       if (!state.insurance) state.insurance = { items: [], needs: {} };
       if (!state.insurance.items) state.insurance.items = [];
@@ -8707,7 +8771,7 @@ function renderDashboard() {
     const income  = getIncomeForYear(currentYear);
     const expense = getExpenseForYear(currentYear);
     const leCost  = calcLECostByYear(currentYear);
-    const leTot   = leCost.childcare + leCost.education + leCost.mortgage + leCost.care;
+    const leTot   = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
     const annualCF = income - expense - leTot;
     if (income > 0 && annualCF < 0) {
       alerts.push({ level: 'danger', icon: '🔴', text: `今年の年間収支: ${fmtMoney(annualCF)}（収入 - 支出の差引）` });
@@ -9439,8 +9503,8 @@ function renderMortgageBalanceTable() {
 
 // 指定年のライフイベント費用（万円/年）を計算
 function calcLECostByYear(year, opts = {}) {
-  const { noChild = false, noLoan = false, noCare = false } = opts;
-  const costs = { childcare: 0, education: 0, mortgage: 0, care: 0 };
+  const { noChild = false, noLoan = false, noCare = false, noScholarship = false } = opts;
+  const costs = { childcare: 0, education: 0, mortgage: 0, care: 0, scholarship: 0 };
   const le = state.lifeEvents;
 
   if (!noChild) {
@@ -9538,6 +9602,18 @@ function calcLECostByYear(year, opts = {}) {
       costs.care += (parseFloat(ca.monthlyFee) || 0) * 12;
     }
   }
+
+  if (!noScholarship) {
+    (le.scholarships || []).forEach(sc => {
+      if (!sc.monthlyPayment || !sc.startYear) return;
+      const sy = parseInt(sc.startYear);
+      const ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12));
+      if (year >= sy && year <= ey) {
+        costs.scholarship += (parseFloat(sc.monthlyPayment) || 0) * 12;
+      }
+    });
+  }
+
   return costs;
 }
 
@@ -9566,6 +9642,7 @@ function saveLifeEvents() {
     monthlyFee: parseFloat(document.getElementById('leCareMonthly').value) || 0,
     careType:   document.getElementById('leCareType').value,
   };
+  // 奨学金は個別に保存済みのため、ここでは何もしない（state.lifeEvents.scholarships はリアルタイム更新）
   save();
   renderLifeEventCharts();
   showNotification('ライフイベント情報を保存しました');
@@ -9607,6 +9684,202 @@ function openCFEModal(id) {
 
 function closeCFEModal() {
   document.getElementById('cfeModal').style.display = 'none';
+}
+
+// ===== 奨学金返済 CRUD =====
+let editingScholarshipId = null;
+
+const SC_TYPE_LABEL = {
+  type1: '第一種（無利子）',
+  type2: '第二種（有利子）',
+  other: 'その他',
+};
+
+function openScholarshipModal(id) {
+  editingScholarshipId = id || null;
+  const isEdit = !!id;
+  document.getElementById('scholarshipModalTitle').textContent = isEdit ? '奨学金を編集' : '奨学金を追加';
+  document.getElementById('scholarshipModalSaveBtn').textContent = isEdit ? '保存する' : '追加する';
+  if (isEdit) {
+    const sc = (state.lifeEvents.scholarships || []).find(x => x.id === id);
+    if (!sc) return;
+    document.getElementById('scName').value      = sc.label || '';
+    document.getElementById('scType').value      = sc.loanType || 'type2';
+    document.getElementById('scBorrowed').value  = sc.borrowedAmount != null ? sc.borrowedAmount : '';
+    document.getElementById('scMonthly').value   = sc.monthlyPayment != null ? sc.monthlyPayment : '';
+    document.getElementById('scStartYear').value = sc.startYear || '';
+    document.getElementById('scEndYear').value   = sc.endYear || '';
+    document.getElementById('scRemaining').value = sc.remainingBalance != null ? sc.remainingBalance : '';
+  } else {
+    document.getElementById('scName').value      = '';
+    document.getElementById('scType').value      = 'type2';
+    document.getElementById('scBorrowed').value  = '';
+    document.getElementById('scMonthly').value   = '';
+    document.getElementById('scStartYear').value = '';
+    document.getElementById('scEndYear').value   = '';
+    document.getElementById('scRemaining').value = '';
+    document.getElementById('scholarshipPreviewHint').style.display = 'none';
+  }
+  document.getElementById('scholarshipModal').style.display = 'flex';
+  calcScholarshipEndYearPreview();
+}
+
+function closeScholarshipModal() {
+  document.getElementById('scholarshipModal').style.display = 'none';
+}
+
+function calcScholarshipEndYearPreview() {
+  const borrowed   = parseFloat(document.getElementById('scBorrowed').value) || 0;
+  const monthly    = parseFloat(document.getElementById('scMonthly').value) || 0;
+  const startYear  = parseInt(document.getElementById('scStartYear').value) || 0;
+  const hint       = document.getElementById('scholarshipPreviewHint');
+
+  // startYearが4桁の有効な年でない場合は計算しない
+  if (!monthly || !startYear || startYear < 1950 || startYear > 2060) { hint.style.display = 'none'; return; }
+
+  let lines = [];
+  if (borrowed > 0 && monthly > 0) {
+    const months   = Math.ceil(borrowed / monthly);
+    const years    = Math.floor(months / 12);
+    const remMonth = months % 12;
+    const calcEndYear = startYear + Math.ceil(months / 12) - 1;
+    // 終了年フィールドが空、または4桁未満（途中入力）の場合のみ自動セット
+    const curEndVal = parseInt(document.getElementById('scEndYear').value) || 0;
+    if (!curEndVal || curEndVal < 1950) {
+      document.getElementById('scEndYear').value = calcEndYear;
+    }
+    const totalPaid = monthly * months;
+    const birthYear = state.profile.birth ? new Date(state.profile.birth).getFullYear() : null;
+    const endAge = birthYear ? calcEndYear - birthYear : null;
+    lines.push(`📅 返済期間: ${startYear}年〜${calcEndYear}年（約${years}年${remMonth > 0 ? remMonth + 'ヶ月' : ''}）`);
+    if (endAge && endAge > 0) lines.push(`🎂 完済時の年齢: ${endAge}歳頃`);
+    lines.push(`💴 総返済額: 約${Math.round(totalPaid * 10) / 10}万円`);
+  } else {
+    lines.push(`📅 返済開始: ${startYear}年〜 月${monthly}万円`);
+  }
+
+  hint.innerHTML = lines.join('<br>');
+  hint.style.display = 'block';
+}
+
+function updateScholarshipHint() {
+  calcScholarshipEndYearPreview();
+}
+
+function saveScholarshipItem() {
+  const label     = document.getElementById('scName').value.trim() || '奨学金';
+  const loanType  = document.getElementById('scType').value;
+  const borrowed  = parseFloat(document.getElementById('scBorrowed').value) || 0;
+  const monthly   = parseFloat(document.getElementById('scMonthly').value) || 0;
+  const startYear = parseInt(document.getElementById('scStartYear').value) || 0;
+  const endYear   = parseInt(document.getElementById('scEndYear').value) || 0;
+  const remaining = parseFloat(document.getElementById('scRemaining').value);
+
+  if (!monthly || !startYear) {
+    showNotification('月々の返済額と返済開始年は必須です', 'error');
+    return;
+  }
+
+  if (!state.lifeEvents.scholarships) state.lifeEvents.scholarships = [];
+
+  if (editingScholarshipId) {
+    const idx = state.lifeEvents.scholarships.findIndex(x => x.id === editingScholarshipId);
+    if (idx >= 0) {
+      state.lifeEvents.scholarships[idx] = {
+        ...state.lifeEvents.scholarships[idx],
+        label, loanType,
+        borrowedAmount: borrowed || null,
+        monthlyPayment: monthly,
+        startYear, endYear: endYear || null,
+        remainingBalance: !isNaN(remaining) ? remaining : null,
+      };
+    }
+  } else {
+    state.lifeEvents.scholarships.push({
+      id: Date.now(),
+      label, loanType,
+      borrowedAmount: borrowed || null,
+      monthlyPayment: monthly,
+      startYear, endYear: endYear || null,
+      remainingBalance: !isNaN(remaining) ? remaining : null,
+    });
+  }
+
+  save();
+  closeScholarshipModal();
+  renderScholarships();
+  renderLifeEventCharts();
+  showNotification('奨学金情報を保存しました');
+}
+
+function deleteScholarship(id) {
+  if (!confirm('この奨学金を削除しますか？')) return;
+  state.lifeEvents.scholarships = (state.lifeEvents.scholarships || []).filter(x => x.id !== id);
+  save();
+  renderScholarships();
+  renderLifeEventCharts();
+  showNotification('奨学金を削除しました');
+}
+
+function renderScholarships() {
+  const container = document.getElementById('scholarshipList');
+  if (!container) return;
+  const list = state.lifeEvents.scholarships || [];
+  if (list.length === 0) {
+    container.innerHTML = `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">奨学金が登録されていません。「＋ 追加」から登録してください。</p>`;
+    return;
+  }
+
+  const birthYear = state.profile.birth ? new Date(state.profile.birth).getFullYear() : null;
+
+  container.innerHTML = list.map(sc => {
+    const monthly  = parseFloat(sc.monthlyPayment) || 0;
+    const borrowed = parseFloat(sc.borrowedAmount) || 0;
+    const sy = sc.startYear || '?';
+    let ey = sc.endYear;
+    if (!ey && borrowed && monthly) {
+      ey = parseInt(sc.startYear) + Math.ceil(borrowed / monthly / 12) - 1;
+    }
+    const period = ey ? `${sy}〜${ey}年` : `${sy}年〜`;
+    const totalYears = ey && sc.startYear ? (ey - parseInt(sc.startYear) + 1) : null;
+    const endAge = (birthYear && ey) ? ey - birthYear : null;
+    const totalPaid = monthly * (totalYears ? totalYears * 12 : 0);
+    const typeLabel = SC_TYPE_LABEL[sc.loanType] || sc.loanType || '';
+
+    // 現在の返済状況
+    const currentYear = new Date().getFullYear();
+    const isActive = sc.startYear && currentYear >= parseInt(sc.startYear) && (!ey || currentYear <= ey);
+    const statusBadge = isActive
+      ? `<span style="background:#DCFCE7;color:#166534;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">返済中</span>`
+      : (ey && currentYear > ey)
+        ? `<span style="background:#F3F4F6;color:#6B7280;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">完済済</span>`
+        : `<span style="background:#FEF9C3;color:#854D0E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px">返済前</span>`;
+
+    return `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:var(--surface)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+            <span style="font-weight:700;font-size:14px">🎓 ${sc.label || '奨学金'}</span>
+            ${statusBadge}
+            <span style="font-size:11px;color:var(--text-muted)">${typeLabel}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px;color:var(--text-secondary)">
+            <span>📅 返済期間: <b>${period}</b>${totalYears ? `（${totalYears}年間）` : ''}</span>
+            <span>💴 月々返済: <b>${monthly}万円</b></span>
+            ${borrowed ? `<span>💰 借入総額: <b>${borrowed}万円</b></span>` : '<span></span>'}
+            ${endAge ? `<span>🎂 完済時: <b>${endAge}歳頃</b></span>` : '<span></span>'}
+            ${sc.remainingBalance != null ? `<span>📉 現在の残債: <b>${sc.remainingBalance}万円</b></span>` : ''}
+            ${totalPaid > 0 ? `<span>💸 総返済額: <b>約${Math.round(totalPaid * 10) / 10}万円</b></span>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-sm" style="font-size:11px" onclick="openScholarshipModal(${sc.id})">編集</button>
+          <button class="btn btn-sm" style="font-size:11px;color:#DC2626" onclick="deleteScholarship(${sc.id})">削除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderCFETypeFields(event) {
@@ -9769,6 +10042,7 @@ function renderLifeEventsPage() {
   switchHousingType(le.housingType || 'mortgage', false);
   calcMortgage();
   renderCFEvents();
+  renderScholarships();
   renderLifeEventCharts();
 }
 
@@ -9831,7 +10105,7 @@ function renderLifeEventCharts() {
 
   // ④ ピーク検出
   const totalPerYear = annualCosts.map((c, i) =>
-    c.childcare + c.education + c.mortgage + c.care + recurringData[i]
+    c.childcare + c.education + c.mortgage + c.care + c.scholarship + recurringData[i]
   );
   const peakVal = Math.max(...totalPerYear, 0);
   const peakIdx = totalPerYear.indexOf(peakVal);
@@ -9958,11 +10232,12 @@ function renderLifeEventCharts() {
       data: {
         labels,
         datasets: [
-          { label: '育休収入減',  data: annualCosts.map(c => Math.round(c.childcare)), backgroundColor: '#EC4899AA', stack: 'le' },
-          { label: '教育費',      data: annualCosts.map(c => Math.round(c.education)), backgroundColor: '#8B5CF6AA', stack: 'le' },
+          { label: '育休収入減',  data: annualCosts.map(c => Math.round(c.childcare)),   backgroundColor: '#EC4899AA', stack: 'le' },
+          { label: '教育費',      data: annualCosts.map(c => Math.round(c.education)),   backgroundColor: '#8B5CF6AA', stack: 'le' },
           { label: state.lifeEvents.housingType === 'rent' ? '家賃・住居費' : '住宅ローン', data: annualCosts.map(c => Math.round(c.mortgage)), backgroundColor: '#84CC16AA', stack: 'le' },
-          { label: '介護費',      data: annualCosts.map(c => Math.round(c.care)),      backgroundColor: '#06B6D4AA', stack: 'le' },
-          { label: '繰り返し支出', data: recurringData,                                 backgroundColor: '#F97316AA', stack: 'le' },
+          { label: '奨学金返済',  data: annualCosts.map(c => Math.round(c.scholarship)), backgroundColor: '#0EA5E9AA', stack: 'le' },
+          { label: '介護費',      data: annualCosts.map(c => Math.round(c.care)),        backgroundColor: '#06B6D4AA', stack: 'le' },
+          { label: '繰り返し支出', data: recurringData,                                  backgroundColor: '#F97316AA', stack: 'le' },
         ]
       },
       options: {
@@ -10005,7 +10280,7 @@ function renderLifeEventCharts() {
     const inc     = getIncomeForYearWithGrowth(yr);
     const exp     = getExpenseForYear(yr);
     const c       = annualCosts[i];
-    const leCost  = c.childcare + c.education + c.mortgage + c.care;
+    const leCost  = c.childcare + c.education + c.mortgage + c.care + c.scholarship;
     const recur   = recurringData[i];
     const oneTime = getOneTimeForYear(yr);
     // 配当受取（cashout）の年間配当（前年末評価額ベース・課税口座は税引後）
@@ -10167,7 +10442,7 @@ function calcIntegratedSim(years, opts = {}) {
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const leCost = calcLECostByYear(yr, opts);
-    const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care;
+    const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
     // 収支変化イベントを年別に反映（収入・支出の変化 + 一時収支）
     const annualIncome  = getIncomeForYearWithGrowth(yr); // ② 昇給モデル込み
     const annualExpense = getExpenseForYear(yr);
@@ -12396,7 +12671,7 @@ function calcRetirementSimWithOpts(opts = {}) {
     const age = targetAge + i;
     const yr = retireYear + i;
     const leCost = calcLECostByYear(yr);
-    const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
+    const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care + leCost.scholarship;
     // ① インフレ適用 × 生活費低減（加齢による自然な逓減）
     const expenseChangeFactor = Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
     // フェーズ別支出：セミ期→待機期→年金期
@@ -12529,7 +12804,7 @@ function calcRetirementSimWithOpts(opts = {}) {
       baseExpense: Math.round(inflatedExpense),
       medicalAdd: Math.round(medicalAdd),
       mortgageDeduct: Math.round(mortgageDeduct),
-      leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care),
+      leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care), leScholarship: Math.round(leCost.scholarship),
       recurringCost: Math.round(recurringCost),
       monthlyBalance,
       annualSurplus,
@@ -12968,7 +13243,7 @@ function calcRetirementSimWithStress(stressShock) {
     const age = targetAge + i;
     const yr = retireYear + i;
     const leCost = calcLECostByYear(yr);
-    const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
+    const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care + leCost.scholarship;
     const expenseChangeFactor = Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
     const phaseExpense = age < semiEndAge ? baseMonthlyExpense
       : age < pensionAge ? baseMonthlyExpense2
@@ -13193,7 +13468,7 @@ function runMonteCarlo() {
       const inflatedExpense = phaseExpScen * 12 * Math.pow((1 + params.inflationRate) * (1 - params.expenseDecayRate), i);
       const medicalAdd = getMedicalAddition(age, params.medicalModel) * 12;
       const leCost = calcLECostByYear(yr);
-      const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care;
+      const annualLE = leCost.mortgage + leCost.childcare + leCost.education + leCost.care + leCost.scholarship;
       const totalExpense = inflatedExpense + medicalAdd + annualLE;
       const pension = age >= pensionAge ? pensionAnnual : 0;
       const pension_p = age >= pensionAge_p ? pensionAnnual_p : 0;
