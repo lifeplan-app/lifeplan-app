@@ -13339,6 +13339,7 @@ const WZ_STEPS = [
     fields: [
       { id: 'wz_income', label: '月収（手取り）万円', type: 'number', placeholder: '30', hint: '手取り・税引後の月収入' },
       { id: 'wz_expense', label: '月支出合計 万円', type: 'number', placeholder: '20', hint: '家賃・食費・通信費などすべて含む' },
+      { id: 'wz_assets', label: '現在の総資産（貯蓄・投資）万円', type: 'number', placeholder: '100', hint: '預貯金・株・投資信託などすべて合計した金額' },
     ],
     next: '次へ →',
   },
@@ -13405,6 +13406,7 @@ function wizardGetSavedVal(id) {
     wz_birth:       state.profile?.birth || '',
     wz_income:      state.finance?.income || '',
     wz_expense:     state.finance?.expense || '',
+    wz_assets:      state.assets?.length > 0 ? state.assets.reduce((s, a) => s + (a.currentVal || 0), 0) : '',
     wz_retireAge:   state.retirement?.targetAge || '',
     wz_retireReturn: state.retirement?.expectedReturn || '',
   };
@@ -13423,8 +13425,19 @@ function wizardSaveStep() {
   if (wzStep === 2) {
     const income = parseFloat(get('wz_income')) || 0;
     const expense = parseFloat(get('wz_expense')) || 0;
+    const assets = parseFloat(get('wz_assets')) || 0;
     if (income > 0) state.finance.income = income;
     if (expense > 0) state.finance.expense = expense;
+    if (assets > 0 && state.assets.length === 0) {
+      state.assets.push({
+        id: 'asset_wz_' + Date.now(),
+        name: '現金・預金（初期設定）',
+        type: 'cash',
+        currentVal: assets,
+        annualReturn: 0.1,
+        account: 'cash',
+      });
+    }
     save();
   }
   if (wzStep === 3) {
