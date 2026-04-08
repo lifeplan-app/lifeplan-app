@@ -11519,7 +11519,9 @@ function runRetirementSim() {
   }
 
   renderDrawdownCompare();
-  switchRetSubTab('overview');
+  // 現在アクティブなサブタブを保持（保存時に概要へ戻らないようにする）
+  const activeTab = document.querySelector('.ret-sub-tab.active')?.id?.replace('retSubTab_', '') || 'overview';
+  switchRetSubTab(activeTab);
 }
 
 let _retDrawdownChartObj = null;
