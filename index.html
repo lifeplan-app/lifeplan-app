@@ -414,6 +414,8 @@
       background-repeat: no-repeat;
       background-position: right 12px center;
       padding-right: 32px;
+      height: 40px;        /* 高さを明示的に固定してOS・ブラウザ差異を吸収 */
+      box-sizing: border-box;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -1611,9 +1613,14 @@
     .card { padding: 14px 12px; }
     .card-title { font-size: 14px; }
     /* フォーム入力 タッチターゲット最適化 */
-    input, select, textarea {
+    input, textarea {
       font-size: 16px !important; /* iOS zoom防止 */
       min-height: 44px;
+    }
+    select {
+      font-size: 16px !important; /* iOS zoom防止 */
+      height: 44px !important;    /* タッチターゲット高さ固定 */
+      min-height: unset !important;
     }
     label { font-size: 12px; }
     .btn { min-height: 40px; }
