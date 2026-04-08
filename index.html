@@ -11462,7 +11462,7 @@ function runRetirementSim() {
           <td style="padding:6px 8px;font-weight:600">${d.age}歳 <span style="font-weight:400;color:var(--text-muted);font-size:11px">${d.year}年</span></td>
           ${isHybridMode ? `<td style="text-align:center;padding:6px 4px">${phaseBadge}</td>` : ''}
           <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.endAssets)}</td>
-          <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${d.pension ? d.pension.toLocaleString()+'万' : '－'}</td>
+          <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.pension||0)+(d.pension_p||0) ? ((d.pension||0)+(d.pension_p||0)).toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.semi+d.extra) ? (d.semi+d.extra).toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--warning)">${d.assetWithdrawal ? d.assetWithdrawal.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--danger)">${Math.round(d.baseExpense).toLocaleString()}万</td>
