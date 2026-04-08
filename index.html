@@ -9939,6 +9939,13 @@ function renderLifeEventCharts() {
   const _cashoutAssets = (state.assets || []).filter(a => a.dividendMode === 'cashout' && a.dividendYield > 0);
   const _growthData = _cashoutAssets.length > 0 ? calcAllAssetGrowth(state.assets, years) : [];
 
+  // 退職金：出口戦略設定から受取年を特定
+  const _severance    = parseFloat(state.retirement?.severance)    || 0;
+  const _severanceAge = parseInt(state.retirement?.severanceAge)   || 0;
+  const _currentAge   = calcAge() || 0;
+  const _severanceYr  = (_severance > 0 && _severanceAge > 0)
+    ? currentYear + (_severanceAge - _currentAge) : null;
+
   const cfIncome = [], cfExpense = [], cfAnnual = [], cfCumulative = [];
   let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
@@ -9957,7 +9964,9 @@ function renderLifeEventCharts() {
       const taxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
       return s + Math.round(taxable ? gross * (1 - _DIV_TAX) : gross);
     }, 0);
-    const totalInc = inc + annualDiv;
+    // 退職金（受取年のみ一時収入として加算）
+    const severanceInc = (_severanceYr !== null && yr === _severanceYr) ? _severance : 0;
+    const totalInc = inc + annualDiv + severanceInc;
     const annual  = i === 0 ? oneTime : totalInc - exp - leCost + oneTime;
     cumulativeCF += Math.round(annual);
     cfIncome.push(i === 0 ? 0 : Math.round(totalInc));
