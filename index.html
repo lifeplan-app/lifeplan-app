@@ -13328,7 +13328,7 @@ const WZ_STEPS = [
     sub: '年齢計算やシミュレーションに使用します。',
     fields: [
       { id: 'wz_name', label: 'お名前', type: 'text', placeholder: '山田 太郎' },
-      { id: 'wz_birth', label: '生年月日', type: 'date' },
+      { id: 'wz_birth', label: '生年月日', type: 'birth' },
     ],
     next: '次へ →',
   },
@@ -13380,13 +13380,19 @@ function wizardRender() {
     ${s.fields.map(f => `
       <div class="wz-field">
         <label for="${f.id}">${f.label}</label>
-        <input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}"
-          value="${wizardGetSavedVal(f.id)}"
-          ${f.type === 'date' ? '' : ''}
-        >
+        ${f.type === 'birth'
+          ? `<input type="hidden" id="${f.id}" value="${wizardGetSavedVal(f.id)}"><div class="birth-row" id="${f.id}Row"></div>`
+          : `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}" value="${wizardGetSavedVal(f.id)}">`
+        }
         ${f.hint ? `<div class="wz-hint">${f.hint}</div>` : ''}
       </div>`).join('')}
   `;
+
+  // birth型フィールドの3セレクト初期化
+  s.fields.filter(f => f.type === 'birth').forEach(f => {
+    initBirthRow(f.id + 'Row', f.id);
+    syncBirthSelects(f.id);
+  });
 
   document.getElementById('wzNext').textContent = s.next || '次へ →';
   document.getElementById('wzBack').style.display = wzStep > 0 && !s.isLast ? '' : 'none';
