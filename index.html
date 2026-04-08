@@ -9934,6 +9934,11 @@ function renderLifeEventCharts() {
   }
 
   // --- 年間キャッシュフロー（強化版） ---
+  // 配当受取（cashoutモード）アセットの年別配当を事前計算
+  const _DIV_TAX = 0.20315;
+  const _cashoutAssets = (state.assets || []).filter(a => a.dividendMode === 'cashout' && a.dividendYield > 0);
+  const _growthData = _cashoutAssets.length > 0 ? calcAllAssetGrowth(state.assets, years) : [];
+
   const cfIncome = [], cfExpense = [], cfAnnual = [], cfCumulative = [];
   let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
@@ -9943,10 +9948,19 @@ function renderLifeEventCharts() {
     const c       = annualCosts[i];
     const leCost  = c.childcare + c.education + c.mortgage + c.care;
     const recur   = recurringData[i];
-    const oneTime = getOneTimeForYear(yr); // = cfEvents - recurring
-    const annual  = i === 0 ? oneTime : inc - exp - leCost + oneTime;
+    const oneTime = getOneTimeForYear(yr);
+    // 配当受取（cashout）の年間配当（前年末評価額ベース・課税口座は税引後）
+    const annualDiv = i === 0 ? 0 : _cashoutAssets.reduce((s, a) => {
+      const gd = _growthData.find(g => g.asset.id === a.id);
+      const prevVal = gd ? (gd.data[i - 1] || 0) : 0;
+      const gross = prevVal * (a.dividendYield / 100);
+      const taxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
+      return s + Math.round(taxable ? gross * (1 - _DIV_TAX) : gross);
+    }, 0);
+    const totalInc = inc + annualDiv;
+    const annual  = i === 0 ? oneTime : totalInc - exp - leCost + oneTime;
     cumulativeCF += Math.round(annual);
-    cfIncome.push(i === 0 ? 0 : Math.round(inc));
+    cfIncome.push(i === 0 ? 0 : Math.round(totalInc));
     cfExpense.push(i === 0 ? 0 : -Math.round(exp + leCost + recur));
     cfAnnual.push(Math.round(annual));
     cfCumulative.push(cumulativeCF);
