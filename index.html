@@ -3165,21 +3165,21 @@
             <label style="font-size:12px">運用利回りの変化</label>
             <span id="sensReturnLabel" style="font-size:12px;font-weight:700;color:var(--primary)">±0%</span>
           </div>
-          <input type="range" id="sensReturn" min="-3" max="3" step="0.5" value="0" style="width:100%" oninput="updateSensitivity()">
+          <input type="range" id="sensReturn" class="sc-slider" min="-3" max="3" step="0.5" value="0" style="--sc-color:#4F46E5;--pct:50%;width:100%" oninput="updateSensitivity();scTrack(this,-3,3,'#4F46E5')">
         </div>
         <div>
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
             <label style="font-size:12px">生活支出の変化</label>
             <span id="sensExpenseLabel" style="font-size:12px;font-weight:700;color:var(--warning)">±0%</span>
           </div>
-          <input type="range" id="sensExpense" min="-30" max="30" step="5" value="0" style="width:100%" oninput="updateSensitivity()">
+          <input type="range" id="sensExpense" class="sc-slider" min="-30" max="30" step="5" value="0" style="--sc-color:#F59E0B;--pct:50%;width:100%" oninput="updateSensitivity();scTrack(this,-30,30,'#F59E0B')">
         </div>
         <div>
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
             <label style="font-size:12px">年金額の変化</label>
             <span id="sensPensionLabel" style="font-size:12px;font-weight:700;color:var(--secondary)">±0%</span>
           </div>
-          <input type="range" id="sensPension" min="-30" max="10" step="5" value="0" style="width:100%" oninput="updateSensitivity()">
+          <input type="range" id="sensPension" class="sc-slider" min="-30" max="10" step="5" value="0" style="--sc-color:#10B981;--pct:75%;width:100%" oninput="updateSensitivity();scTrack(this,-30,10,'#10B981')">
         </div>
       </div>
       <div id="retSensitivityResult" style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px"></div>
@@ -11545,7 +11545,7 @@ function renderDrawdownCompare() {
     data: calcRetirementSimWithOpts({
       drawdownOrder: s.key,
       cashFloor,
-    }) || [],
+    })?.postData || [],
   }));
 
   const labels = (simResults[0].data || []).map(d => `${d.age}歳`);
@@ -13025,11 +13025,12 @@ function runStressTest() {
   const CRASH_YEARS = 2;
 
   // 通常シナリオ
-  const normalData = calcRetirementSimWithOpts({});
+  const normalResult = calcRetirementSimWithOpts({});
+  const normalData = normalResult?.postData;
   // 暴落シナリオ
   const stressData = calcRetirementSimWithStress({ rate: CRASH_RATE, years: CRASH_YEARS });
 
-  if (!normalData || !stressData) {
+  if (!normalData || !normalData.length || !stressData) {
     card.innerHTML = '<div class="card" style="padding:16px;color:var(--text-muted)">シミュレーションデータが不足しています。</div>';
     card.style.display = '';
     return;
@@ -13093,8 +13094,10 @@ function updateSensitivity() {
   document.getElementById('sensExpenseLabel').textContent = (eV >= 0 ? '+' : '') + eV + '%';
   document.getElementById('sensPensionLabel').textContent = (pV >= 0 ? '+' : '') + pV + '%';
 
-  const data = calcRetirementSimWithOpts({ returnMod: rV / 100, expenseMod: eV / 100, pensionMod: pV / 100 });
-  if (!data) return;
+  const result = calcRetirementSimWithOpts({ returnMod: rV / 100, expenseMod: eV / 100, pensionMod: pV / 100 });
+  if (!result) return;
+  const data = result.postData;
+  if (!data || data.length === 0) return;
 
   const lastD = data[data.length - 1];
   const depleted = data.find(d => d.depleted);
@@ -14784,7 +14787,7 @@ function calcScenarioSim(sc) {
 
   let result = null;
   try {
-    result = calcRetirementSimWithOpts({ returnMod: (sc.returnMod || 0) / 100 });
+    result = calcRetirementSimWithOpts({ returnMod: (sc.returnMod || 0) / 100 })?.postData || null;
   } catch(e) {
     console.warn('calcScenarioSim error:', e);
   }
@@ -15467,7 +15470,8 @@ function calcHousingScenarioSim(sc) {
 
   let result = null;
   try {
-    result = calcRetirementSimWithOpts({ returnMod: 0 });
+    const simResult = calcRetirementSimWithOpts({ returnMod: 0 });
+    result = simResult?.postData || null;
     // 一括購入・頭金: 退職時点の資産から控除
     if (result && result.length > 0) {
       let deduction = 0;
