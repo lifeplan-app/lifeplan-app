@@ -9607,7 +9607,7 @@ function calcLECostByYear(year, opts = {}) {
     (le.scholarships || []).forEach(sc => {
       if (!sc.monthlyPayment || !sc.startYear) return;
       const sy = parseInt(sc.startYear);
-      const ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12));
+      const ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12) - 1);
       if (year >= sy && year <= ey) {
         costs.scholarship += (parseFloat(sc.monthlyPayment) || 0) * 12;
       }
