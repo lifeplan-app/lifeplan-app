@@ -13873,8 +13873,9 @@ function calcFullBaseTrajectory() {
   const currentYear = new Date().getFullYear();
   const yearsToRetire = Math.max(0, targetAge - currentAge);
 
-  const preData  = calcIntegratedSim(Math.max(yearsToRetire, 1));
-  const postData = calcRetirementSimWithOpts({});
+  const preData   = calcIntegratedSim(Math.max(yearsToRetire, 1));
+  const postResult = calcRetirementSimWithOpts({});
+  const postData  = postResult?.postData; // 配列を正しく取得
 
   const result = [];
   // リタイア前
@@ -13883,7 +13884,7 @@ function calcFullBaseTrajectory() {
     result.push({ year: currentYear + i, age: currentAge + i, wealth: d?.totalWealth || 0 });
   }
   // リタイア後 (i=1から。i=0はリタイア時点でpreDataと重複)
-  if (postData) {
+  if (Array.isArray(postData)) {
     for (let i = 1; i < postData.length; i++) {
       const d = postData[i];
       result.push({ year: d.year, age: d.age, wealth: d.endAssets });
@@ -14030,6 +14031,7 @@ function renderPrepaymentSim() {
           style="width:100%;padding:10px;background:var(--primary);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px">
           📊 シナリオ計算実行
         </button>
+        <div id="prepayErrorMsg" style="display:none;margin-top:10px;padding:10px 12px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;font-size:12px;color:#C2410C;line-height:1.5"></div>
       </div>
 
       <div id="prepayChartArea" style="display:none">
@@ -14086,15 +14088,25 @@ function runPrepayCalc() {
   const mixPct     = parseInt(document.getElementById('prepayMixSlider')?.value) || 50;
   const cashFraction = mixPct / 100;
 
-  if (prepayAmount <= 0 || prepayYear >= loanEndYear) {
-    alert('繰上返済額またはローン残高が0です。設定を確認してください。');
+  const prepayErrEl = document.getElementById('prepayErrorMsg');
+  const showPrepayErr = msg => {
+    if (prepayErrEl) { prepayErrEl.textContent = msg; prepayErrEl.style.display = ''; }
+  };
+  if (prepayErrEl) prepayErrEl.style.display = 'none';
+
+  if (prepayYear >= loanEndYear) {
+    showPrepayErr('⚠️ 指定年はローン完済後です。完済予定年（' + loanEndYear + '年）より前の年を入力してください。');
+    return;
+  }
+  if (prepayAmount <= 0) {
+    showPrepayErr('⚠️ 繰上返済額またはローン残高が0です。ライフイベントで住宅ローン情報を設定するか、繰上返済額を手動入力してください。');
     return;
   }
 
   // 基本軌跡
   const baseTraj = calcFullBaseTrajectory();
   if (!baseTraj || baseTraj.length === 0) {
-    alert('シミュレーションデータが不足しています。プロフィールとリタイア設定を確認してください。');
+    showPrepayErr('⚠️ シミュレーションデータが不足しています。プロフィールとリタイア設定を確認してください。');
     return;
   }
 
