@@ -59,6 +59,7 @@
       color: var(--text);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
     /* ===== HEADER ===== */
@@ -116,8 +117,10 @@
       justify-content: center;
       gap: 5px;
       border-radius: 8px;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
       transition: background .12s;
       flex-shrink: 0;
     }
@@ -183,7 +186,12 @@
       font-size: 20px;
       color: var(--text-secondary);
       cursor: pointer;
-      padding: 6px 8px;
+      padding: 0;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border-radius: 8px;
       line-height: 1;
       transition: background .12s;
@@ -345,6 +353,7 @@
 
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .two-col-2-3 { display: grid; grid-template-columns: 2fr 3fr; gap: 16px; }
+    .two-col > *, .two-col-2-3 > * { min-width: 0; }
     @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .two-col-2-3 { grid-template-columns: 1fr; } }
 
     /* シナリオ比較：モバイルでグラフをsticky固定 */
@@ -616,7 +625,8 @@
 
     .finance-stat .lbl { font-size: 11px; color: var(--text-muted); margin-top: 3px; letter-spacing: .1px; }
 
-    .chart-wrap { position: relative; height: 240px; margin-top: 12px; }
+    .chart-wrap { position: relative; height: 240px; margin-top: 12px; max-width: 100%; overflow: hidden; }
+    .chart-wrap canvas, .chart-wrap-tall canvas, .chart-wrap-md canvas { max-width: 100% !important; }
 
     /* ===== ASSETS ===== */
     .asset-item {
@@ -1158,8 +1168,8 @@
       color: var(--text-secondary);
     }
 
-    .chart-wrap-tall { position: relative; height: 300px; margin-top: 12px; }
-    .chart-wrap-md   { position: relative; height: 220px; margin-top: 12px; }
+    .chart-wrap-tall { position: relative; height: 300px; margin-top: 12px; max-width: 100%; overflow: hidden; }
+    .chart-wrap-md   { position: relative; height: 220px; margin-top: 12px; max-width: 100%; overflow: hidden; }
 
     /* ===== MORTGAGE EVENTS ===== */
     .mortgage-event-item {
@@ -1511,7 +1521,7 @@
     .mob-tab:active { background: rgba(0,0,0,.04); }
     .mob-tab.active { color: var(--primary); }
     .mob-tab .mt-icon { font-size: 22px; line-height: 1; }
-    .mob-tab .mt-label { font-size: 10px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
+    .mob-tab .mt-label { font-size: 11px; font-weight: 600; letter-spacing: -.2px; white-space: nowrap; }
     .mob-tab.active .mt-icon { transform: scale(1.08); transition: transform .12s; }
 
     main {
@@ -1623,8 +1633,8 @@
       min-height: unset !important;
     }
     label { font-size: 12px; }
-    .btn { min-height: 40px; }
-    .btn-sm { min-height: 34px; }
+    .btn { min-height: 44px; }
+    .btn-sm { min-height: 44px; }
     /* 資産カード */
     .asset-nums { flex-wrap: wrap; gap: 6px; }
     /* テーブル文字サイズ */
@@ -1637,6 +1647,16 @@
   /* PDF出力は別ウィンドウで行うため、メインページの @media print は最小限 */
   @media print {
     body { display: none !important; }
+  }
+
+  /* ===== アニメーション軽減（アクセシビリティ） ===== */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
 /* ===== 出口戦略 タブ・アコーディオン ===== */
@@ -1759,28 +1779,28 @@
 </header>
 
 <!-- モバイル専用タブバー -->
-<div id="mobileTabBar">
-  <button class="mob-tab active" data-page="dashboard" onclick="showPage('dashboard')">
+<div id="mobileTabBar" role="navigation" aria-label="モバイルナビゲーション">
+  <button class="mob-tab active" data-page="dashboard" onclick="showPage('dashboard')" aria-label="ホーム" aria-current="page">
     <span class="mt-icon">🏠</span>
     <span class="mt-label">ホーム</span>
   </button>
-  <button class="mob-tab" data-page="finance" onclick="showPage('finance')">
+  <button class="mob-tab" data-page="finance" onclick="showPage('finance')" aria-label="家計・資産">
     <span class="mt-icon">💰</span>
     <span class="mt-label">家計・資産</span>
   </button>
-  <button class="mob-tab" data-page="lifeevents" onclick="showPage('lifeevents')">
+  <button class="mob-tab" data-page="lifeevents" onclick="showPage('lifeevents')" aria-label="イベント">
     <span class="mt-icon">📅</span>
     <span class="mt-label">イベント</span>
   </button>
-  <button class="mob-tab" data-page="timeline" onclick="showPage('timeline')">
+  <button class="mob-tab" data-page="timeline" onclick="showPage('timeline')" aria-label="タイムライン">
     <span class="mt-icon">📊</span>
     <span class="mt-label">タイムライン</span>
   </button>
-  <button class="mob-tab" data-page="retirement" onclick="showPage('retirement')">
+  <button class="mob-tab" data-page="retirement" onclick="showPage('retirement')" aria-label="出口戦略">
     <span class="mt-icon">🏖️</span>
     <span class="mt-label">出口戦略</span>
   </button>
-  <button class="mob-tab" onclick="openDrawer()">
+  <button class="mob-tab" onclick="openDrawer()" aria-label="その他のメニューを開く">
     <span class="mt-icon">☰</span>
     <span class="mt-label">その他</span>
   </button>
@@ -2484,7 +2504,7 @@
         </div>
         <div class="form-group">
           <label>借入開始年</label>
-          <input type="number" id="leMortgageStartYear" placeholder="2026" oninput="calcMortgage()">
+          <input type="number" id="leMortgageStartYear" placeholder="2026" min="1900" max="2100" oninput="calcMortgage()">
         </div>
         <div class="mortgage-result" id="mortgageResult">借入額・金利・返済期間を入力すると月額返済額が自動計算されます</div>
         <!-- ⑧ 住宅ローン控除 -->
@@ -2545,11 +2565,11 @@
         <div class="form-row">
           <div class="form-group">
             <label>居住開始年</label>
-            <input type="number" id="leRentStartYear" placeholder="2024" oninput="calcRentResult()">
+            <input type="number" id="leRentStartYear" placeholder="2024" min="1900" max="2100" oninput="calcRentResult()">
           </div>
           <div class="form-group">
             <label>居住終了年（空白＝無期限）</label>
-            <input type="number" id="leRentEndYear" placeholder="未定" oninput="calcRentResult()">
+            <input type="number" id="leRentEndYear" placeholder="未定" min="1900" max="2100" oninput="calcRentResult()">
           </div>
         </div>
         <div class="form-row">
@@ -2571,11 +2591,11 @@
       <div class="form-row">
         <div class="form-group">
           <label>介護開始年</label>
-          <input type="number" id="leCareStartYear" placeholder="2040">
+          <input type="number" id="leCareStartYear" placeholder="2040" min="1900" max="2100">
         </div>
         <div class="form-group">
           <label>介護終了年</label>
-          <input type="number" id="leCareEndYear" placeholder="2050">
+          <input type="number" id="leCareEndYear" placeholder="2050" min="1900" max="2100">
         </div>
       </div>
       <div class="form-row">
@@ -3655,7 +3675,7 @@
 
 <!-- ===== DATA SETTINGS MODAL ===== -->
 <!-- ===== 入力サポートモーダル ===== -->
-<div class="modal-overlay" id="inputDiagnosisModal">
+<div class="modal-overlay" id="inputDiagnosisModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
       <div class="modal-title">🔍 入力サポートレポート</div>
@@ -3675,7 +3695,7 @@
 </div>
 
 <!-- ===== よくある疑問・イレギュラー対応ガイド ===== -->
-<div class="modal-overlay" id="irregularGuideModal">
+<div class="modal-overlay" id="irregularGuideModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:600px">
     <div class="modal-header">
       <div class="modal-title">❓ よくある疑問・イレギュラー対応ガイド</div>
@@ -3814,7 +3834,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="dataSettingsModal">
+<div class="modal-overlay" id="dataSettingsModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:480px">
     <div class="modal-title">⚙️ データ設定・プライバシー</div>
 
@@ -3866,7 +3886,7 @@
 </div>
 
 <!-- ===== GIFT PLAN MODAL ===== -->
-<div class="modal-overlay" id="giftModal">
+<div class="modal-overlay" id="giftModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <div class="modal-title" id="giftModalTitle">贈与計画を追加</div>
@@ -3912,7 +3932,7 @@
 </div>
 
 <!-- ===== INSURANCE MODAL ===== -->
-<div class="modal-overlay" id="insuranceModal">
+<div class="modal-overlay" id="insuranceModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:520px">
     <div class="modal-header">
       <div class="modal-title" id="insuranceModalTitle">保険を追加</div>
@@ -3971,7 +3991,7 @@
 
 
 <!-- ===== CHILD MODAL ===== -->
-<div class="modal-overlay" id="childModal">
+<div class="modal-overlay" id="childModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:600px">
     <div class="modal-title" id="childModalTitle">子どもを追加</div>
     <input type="hidden" id="cmId">
@@ -4123,7 +4143,7 @@
 </div>
 
 <!-- ===== ASSET MODAL ===== -->
-<div class="modal-overlay" id="assetModal">
+<div class="modal-overlay" id="assetModal" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-title" id="assetModalTitle">アセットを追加</div>
 
@@ -4288,11 +4308,11 @@
     <div class="form-row">
       <div class="form-group">
         <label>積立開始年</label>
-        <input type="number" id="amStartYear" placeholder="2024">
+        <input type="number" id="amStartYear" placeholder="2024" min="1900" max="2100">
       </div>
       <div class="form-group">
         <label>積立終了年（空欄=無期限）</label>
-        <input type="number" id="amEndYear" placeholder="2045" oninput="syncEndAgeFromYear()">
+        <input type="number" id="amEndYear" placeholder="2045" min="1900" max="2100" oninput="syncEndAgeFromYear()">
       </div>
     </div>
     <div class="form-row" id="amEndAgeRow">
@@ -4340,7 +4360,7 @@
 </div>
 
 <!-- ===== GOAL MODAL ===== -->
-<div class="modal-overlay" id="goalModal">
+<div class="modal-overlay" id="goalModal" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-title" id="goalModalTitle">目標を追加</div>
     <div class="form-group">
@@ -4373,7 +4393,7 @@
     <div class="form-row">
       <div class="form-group">
         <label>達成目標年</label>
-        <input type="number" id="gmYear" placeholder="2027">
+        <input type="number" id="gmYear" placeholder="2027" min="1900" max="2100">
       </div>
       <div class="form-group">
         <label>達成目標月</label>
@@ -4419,7 +4439,7 @@
 
 <!-- ===== EXPENSE MODAL ===== -->
 <!-- ===== 繰り返し支出モーダル ===== -->
-<div class="modal-overlay" id="recurringExpenseModal">
+<div class="modal-overlay" id="recurringExpenseModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <div class="modal-title" id="recurringExpenseModalTitle">繰り返し支出を追加</div>
@@ -4482,7 +4502,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="expenseModal">
+<div class="modal-overlay" id="expenseModal" role="dialog" aria-modal="true">
   <div class="modal">
     <div class="modal-title" id="expenseModalTitle">大きな支出を追加</div>
     <div class="form-group">
@@ -4496,7 +4516,7 @@
       </div>
       <div class="form-group">
         <label>予定年</label>
-        <input type="number" id="emYear" placeholder="2028">
+        <input type="number" id="emYear" placeholder="2028" min="1900" max="2100">
       </div>
     </div>
     <div class="form-group">
@@ -4511,7 +4531,7 @@
 </div>
 
 <!-- ===== 奨学金返済 モーダル ===== -->
-<div class="modal-overlay" id="scholarshipModal">
+<div class="modal-overlay" id="scholarshipModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:500px">
     <div class="modal-title" id="scholarshipModalTitle">奨学金を追加</div>
     <div class="form-group">
@@ -4561,7 +4581,7 @@
 </div>
 
 <!-- ===== 収支変化イベント モーダル ===== -->
-<div class="modal-overlay" id="cfeModal">
+<div class="modal-overlay" id="cfeModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:480px">
     <div class="modal-title" id="cfeModalTitle">収支変化イベントを追加</div>
     <input type="hidden" id="cfeId">
@@ -5292,7 +5312,13 @@ function showPage(id) {
   window.scrollTo({ top: 0, behavior: 'instant' });
   // data-page属性を持つすべてのナビボタン（デスクトップnav・モバイルタブ・ドロワー）を一括更新
   document.querySelectorAll('[data-page]').forEach(b => {
-    b.classList.toggle('active', b.dataset.page === id);
+    const isActive = b.dataset.page === id;
+    b.classList.toggle('active', isActive);
+    // aria-current: モバイルタブバーのみ更新（スクリーンリーダー対応）
+    if (b.closest('#mobileTabBar')) {
+      if (isActive) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    }
   });
 
   if (id === 'dashboard') {
@@ -5305,7 +5331,7 @@ function showPage(id) {
       renderDashboard();
     }
   }
-  if (id === 'finance')     renderFinance();
+  if (id === 'finance')     { renderFinance(); requestAnimationFrame(() => { if (finChartObj) finChartObj.resize(); if (simChartObj) simChartObj.resize(); }); }
   if (id === 'timeline')    renderTimeline();
   if (id === 'profile')     loadProfileForm();
   if (id === 'lifeevents')  renderLifeEventsPage();
@@ -8485,7 +8511,7 @@ function renderDashboard() {
     if (nextActions.length > 0 && overallPct < 100) {
       nextWrap.style.display = '';
       nextItemsEl.innerHTML = nextActions.map(a => `
-        <div onclick="showPage('${a.page}')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#F8FAFC'">
+        <div onclick="showPage('${a.page}')" style="display:flex;align-items:center;gap:10px;padding:8px 12px;min-height:44px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;margin-bottom:6px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#F8FAFC'">
           <span style="font-size:16px;flex-shrink:0">→</span>
           <div style="flex:1">
             <span style="font-size:13px;font-weight:500;color:var(--text)">${a.label}</span>
@@ -11840,7 +11866,7 @@ function renderDrawdownCompare() {
     data: calcRetirementSimWithOpts({
       drawdownOrder: s.key,
       cashFloor,
-    })?.postData || [],
+    }) || [],
   }));
 
   const labels = (simResults[0].data || []).map(d => `${d.age}歳`);
