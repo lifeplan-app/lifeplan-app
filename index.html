@@ -344,7 +344,8 @@
     /* ===== DASHBOARD ===== */
 
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+    .two-col-2-3 { display: grid; grid-template-columns: 2fr 3fr; gap: 16px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .two-col-2-3 { grid-template-columns: 1fr; } }
 
     /* ===== FORMS ===== */
     .form-group { margin-bottom: 14px; }
@@ -1484,6 +1485,7 @@
     .welcome-banner h2 { font-size: 17px; }
 
     .two-col { grid-template-columns: 1fr; }
+    .two-col-2-3 { grid-template-columns: 1fr; }
     .form-row { grid-template-columns: 1fr; }
 
     .finance-grid {
@@ -2138,7 +2140,7 @@
       </div>
     </div>
 
-    <div class="two-col" style="grid-template-columns: 2fr 3fr">
+    <div class="two-col-2-3">
       <div class="card">
         <div class="card-title"><span class="icon" style="background:#FEF3C7">📊</span>収支バランス</div>
         <div id="finSummary"></div>
@@ -5151,6 +5153,8 @@ function showPage(id) {
   // 対象ページを表示
   const pageEl = document.getElementById('page-' + id);
   if (pageEl) pageEl.classList.add('active');
+  // ページ先頭にスクロール
+  window.scrollTo({ top: 0, behavior: 'instant' });
   // data-page属性を持つすべてのナビボタン（デスクトップnav・モバイルタブ・ドロワー）を一括更新
   document.querySelectorAll('[data-page]').forEach(b => {
     b.classList.toggle('active', b.dataset.page === id);
