@@ -10710,7 +10710,7 @@ function updateDrawdownOrderUI() {
   const order = document.getElementById('retDrawdownOrder')?.value || 'proportional';
   const floorRow = document.getElementById('retCashFloorRow');
   const noteEl   = document.getElementById('retDrawdownOrderNote');
-  if (floorRow) floorRow.style.display = order === 'cash_first' ? '' : 'none';
+  if (floorRow) floorRow.style.display = '';
   const notes = {
     cash_first:   '現金・預金を先に使い、投資資産はできるだけ長く運用し続けます。複利効果を最大化する戦略ですが、現金が尽きると投資資産の売却が必要になります。',
     invest_first: '投資資産から先に売却し、現金・預金は最後まで温存します。手元の安心感は保てますが、高成長資産を早期に売却するため資産寿命は短くなる傾向があります。',
@@ -11509,7 +11509,7 @@ function renderDrawdownCompare() {
     ...s,
     data: calcRetirementSimWithOpts({
       drawdownOrder: s.key,
-      cashFloor: s.key === 'cash_first' ? cashFloor : 0,
+      cashFloor,
     }) || [],
   }));
 
@@ -12443,11 +12443,17 @@ function calcRetirementSimWithOpts(opts = {}) {
       _fromInvest = Math.max(0, actualDeduction - _fromCash);
     } else if (drawdownOrder === 'invest_first') {
       _fromInvest = Math.min(investPool, actualDeduction);
-      _fromCash   = Math.max(0, actualDeduction - _fromInvest);
+      // 投資資産が不足した場合、cashFloor を超えた分の現金で補填
+      const _remain = Math.max(0, actualDeduction - _fromInvest);
+      const _cashAvail = Math.max(0, cashPool - cashFloor);
+      _fromCash = Math.min(_cashAvail, _remain);
     } else { // proportional
       const _cf   = _poolTotal > 0 ? cashPool / _poolTotal : 0.5;
-      _fromCash   = actualDeduction * _cf;
-      _fromInvest = actualDeduction * (1 - _cf);
+      const _wantCash = actualDeduction * _cf;
+      // cashFloor を下回らない範囲で現金から取り崩す
+      const _cashAvail = Math.max(0, cashPool - cashFloor);
+      _fromCash   = Math.min(_cashAvail, _wantCash);
+      _fromInvest = Math.max(0, actualDeduction - _fromCash);
     }
     cashPool   = Math.max(0, cashPool   - _fromCash);
     investPool = Math.max(0, investPool - _fromInvest);
