@@ -13,3 +13,12 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+
+# Claude Code project context
+CLAUDE.md
+
+# Personal spending data (auto-generated from MoneyForward — do not publish)
+spending/inject_data.js
+
+# Internal diagrams / working files
+monetization-diagram.html

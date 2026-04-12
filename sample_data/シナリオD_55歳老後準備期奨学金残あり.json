@@ -1,0 +1,392 @@
+{
+  "_version": "lifeplan_v1",
+  "_exportedAt": "2026-04-08T00:00:00.000Z",
+  "_scenarioName": "シナリオD：55歳・老後準備期・奨学金残6年・定年まで10年",
+  "_description": "55歳・公務員。定年まであと10年。第二種奨学金が2032年まで残っている。子2人は独立済み。住宅ローンも残4年。老後資金の確保が最重要課題。",
+
+  "profile": {
+    "name": "中村 博",
+    "birth": "1971-05-18",
+    "gender": "male",
+    "job": "地方公務員（課長職）",
+    "location": "大阪府吹田市",
+    "bio": "定年まで10年。子供は2人とも独立。住宅ローンと奨学金が残り数年で完済予定。老後の資金計画を立て直したい。",
+    "marital": "married",
+    "children": "2",
+    "family": "妻（53歳・パート）。子2人は独立。",
+    "partnername": "中村 幸子",
+    "partnerbirth": "1973-02-28"
+  },
+
+  "finance": {
+    "income": 48,
+    "bonus": 120,
+    "partnerIncome": 8,
+    "partnerBonus": 0,
+    "expense": 25,
+    "incomeGrowthType": "fixed_rate",
+    "incomeGrowthRate": 0.5
+  },
+
+  "assets": [
+    {
+      "id": "sd_001",
+      "createdAt": 1712534400000,
+      "type": "cash",
+      "name": "普通預金・定期預金",
+      "currentVal": 900,
+      "monthly": 5,
+      "annualBonus": 30,
+      "annualReturn": 0.2,
+      "taxType": "hitazei",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "生活資金・緊急予備費"
+    },
+    {
+      "id": "sd_002",
+      "createdAt": 1712534400001,
+      "type": "nisa_tsumitate",
+      "name": "新NISA積立（本人）",
+      "currentVal": 600,
+      "monthly": 5,
+      "annualBonus": 20,
+      "annualReturn": 5,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "2022年から新NISA。老後資産の主力に。"
+    },
+    {
+      "id": "sd_003",
+      "createdAt": 1712534400002,
+      "type": "ideco",
+      "name": "iDeCo（本人・公務員）",
+      "currentVal": 520,
+      "monthly": 2.0,
+      "annualBonus": 0,
+      "annualReturn": 4,
+      "taxType": "ideco",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "公務員iDeCo。月2万円（2024年12月改正後上限）。60歳まで積立。"
+    },
+    {
+      "id": "sd_004",
+      "createdAt": 1712534400003,
+      "type": "japan_stock",
+      "name": "個別株・日本株",
+      "currentVal": 800,
+      "monthly": 0,
+      "annualBonus": 10,
+      "annualReturn": 3.5,
+      "taxType": "tokutei",
+      "dividendYield": 2.5,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "長期保有の日本株。景気連動型。"
+    },
+    {
+      "id": "sd_005",
+      "createdAt": 1712534400004,
+      "type": "nisa_tsumitate",
+      "name": "新NISA（妻名義）",
+      "currentVal": 150,
+      "monthly": 2,
+      "annualBonus": 0,
+      "annualReturn": 4.5,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "partner",
+      "note": "妻名義でも積立。世帯として非課税枠を活用。"
+    }
+  ],
+
+  "lifeEvents": {
+    "housingType": "mortgage",
+    "mortgage": {
+      "amount": 3200,
+      "rateType": "fixed",
+      "rate": 1.8,
+      "term": 35,
+      "startYear": 1996,
+      "events": []
+    },
+    "rent": {},
+    "care": {
+      "startYear": 2035,
+      "endYear": 2042,
+      "monthlyFee": 8,
+      "careType": "home"
+    },
+    "scholarships": [
+      {
+        "id": 2001,
+        "label": "日本学生支援機構 第二種（大学・大学院）",
+        "loanType": "type2",
+        "borrowedAmount": 320,
+        "monthlyPayment": 0.8,
+        "startYear": 1999,
+        "endYear": 2032,
+        "remainingBalance": 58
+      }
+    ],
+    "children": [
+      {
+        "id": "child_sd_01",
+        "name": "長男（独立済）",
+        "birthYear": 1998,
+        "parentalLeave": {
+          "mom": { "income": 0, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" },
+          "dad": { "income": 48, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" }
+        },
+        "phases": {
+          "nursery": "public",
+          "kindergarten": "public",
+          "elementary": "public",
+          "juniorhigh": "public",
+          "highschool": "public",
+          "university": "national"
+        }
+      },
+      {
+        "id": "child_sd_02",
+        "name": "長女（独立済）",
+        "birthYear": 2001,
+        "parentalLeave": {
+          "mom": { "income": 0, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" },
+          "dad": { "income": 48, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" }
+        },
+        "phases": {
+          "nursery": "public",
+          "kindergarten": "public",
+          "elementary": "public",
+          "juniorhigh": "public",
+          "highschool": "public",
+          "university": "national"
+        }
+      }
+    ]
+  },
+
+  "cashFlowEvents": [
+    {
+      "id": "cfe_sd_01",
+      "title": "定年退職（65歳）",
+      "type": "income_change",
+      "startAge": 65,
+      "endAge": null,
+      "monthlyAmount": 0,
+      "bonusAmount": 0,
+      "note": "65歳で定年退職。給与収入ゼロ。退職金・年金・資産取り崩しへ移行。"
+    },
+    {
+      "id": "cfe_sd_02",
+      "title": "退職金受取",
+      "type": "one_time_income",
+      "startAge": 65,
+      "endAge": null,
+      "amount": 2200,
+      "note": "公務員退職金。勤続年数35年・課長職を想定。"
+    },
+    {
+      "id": "cfe_sd_03",
+      "title": "奨学金完済後・生活費減少",
+      "type": "expense_change",
+      "startAge": 62,
+      "endAge": null,
+      "monthlyAmount": 24.2,
+      "bonusAmount": 0,
+      "note": "2032年の奨学金完済後、月0.8万円が浮く。住宅ローン完済後も含め生活費を見直し。"
+    },
+    {
+      "id": "cfe_sd_04",
+      "title": "妻パート退職",
+      "type": "income_change",
+      "startAge": 67,
+      "endAge": null,
+      "monthlyAmount": 48,
+      "bonusAmount": 120,
+      "note": "妻の就労終了（70歳頃を想定）。世帯収入がさらに減る。"
+    }
+  ],
+
+  "recurringExpenses": [
+    {
+      "id": "re_sd_01",
+      "emoji": "🚗",
+      "name": "車維持費（年間）",
+      "amount": 25,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2075,
+      "note": "普通車1台の年間維持費"
+    },
+    {
+      "id": "re_sd_02",
+      "emoji": "🏠",
+      "name": "住宅メンテナンス",
+      "amount": 80,
+      "intervalYears": 5,
+      "startYear": 2028,
+      "endYear": null,
+      "note": "築30年超の家。5年ごとにメンテナンス費用"
+    },
+    {
+      "id": "re_sd_03",
+      "emoji": "🌸",
+      "name": "冠婚葬祭・交際費",
+      "amount": 20,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2060,
+      "note": "同世代の冠婚葬祭が増える年代"
+    }
+  ],
+
+  "expenses": [
+    {
+      "id": "ex_sd_01",
+      "name": "孫への援助（祝い金等）",
+      "amount": 50,
+      "year": 2030,
+      "note": "子供の結婚・孫誕生時の支援を想定"
+    },
+    {
+      "id": "ex_sd_02",
+      "name": "大規模リフォーム（築35年）",
+      "amount": 400,
+      "year": 2031,
+      "note": "築35年を目安に水回り・バリアフリー化"
+    }
+  ],
+
+  "retirement": {
+    "type": "full",
+    "targetAge": 65,
+    "monthlyExpense": 22,
+    "monthlyExpense2": 18,
+    "monthlyExpense3": 16,
+    "lifeExpectancy": 90,
+    "pensionAge": 65,
+    "pensionMonthly": 22,
+    "pensionAge_p": 65,
+    "pensionMonthly_p": 8,
+    "severance": 2200,
+    "severanceAge": 65,
+    "pension": {
+      "employType": "public",
+      "koseiYears": 43,
+      "avgIncome": 48,
+      "kokuminYears": 0
+    },
+    "pension_p": {
+      "employType": "employee_no_corp",
+      "koseiYears": 15,
+      "avgIncome": 18,
+      "kokuminYears": 25
+    },
+    "withdrawalType": "hybrid",
+    "withdrawalRate": 4,
+    "withdrawalMonthly": 22,
+    "withdrawalHybridSwitchAge": 75,
+    "inflationRate": 1,
+    "expenseDecayRate": 0.8,
+    "medicalModel": "high",
+    "residualAssets": 300,
+    "drawdownOrder": "cash_first",
+    "cashFloor": 300,
+    "mortgageDeductStart": 1996,
+    "mortgageDeductYears": 10
+  },
+
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_sd_01",
+        "type": "death",
+        "name": "終身生命保険",
+        "premium": 1.5,
+        "coverage": 800,
+        "startYear": 2000,
+        "endYear": null,
+        "memo": "終身型。解約返戻金あり。死亡保障として継続中。"
+      },
+      {
+        "id": "ins_sd_02",
+        "type": "medical",
+        "name": "医療保険（夫婦型）",
+        "premium": 1.8,
+        "coverage": 100,
+        "startYear": 2005,
+        "endYear": null,
+        "memo": "入院・手術保障。夫婦合算。"
+      }
+    ],
+    "needs": {}
+  },
+
+  "goals": [
+    {
+      "id": "goal_sd_01",
+      "createdAt": 1712534400000,
+      "tasks": [],
+      "title": "65歳までに老後資金3000万円を確保",
+      "category": "finance",
+      "priority": "high",
+      "year": "2036",
+      "month": "5",
+      "note": "年金+退職金だけでは不足分をカバーするため、65歳時点で金融資産3000万円を目標。",
+      "progressMode": "manual",
+      "progress": 55
+    },
+    {
+      "id": "goal_sd_02",
+      "createdAt": 1712534400001,
+      "tasks": [],
+      "title": "奨学金を完済する（2032年）",
+      "category": "finance",
+      "priority": "high",
+      "year": "2032",
+      "month": "3",
+      "note": "残6年で完済。30年間の返済にようやく終止符。",
+      "progressMode": "manual",
+      "progress": 82
+    },
+    {
+      "id": "goal_sd_03",
+      "createdAt": 1712534400002,
+      "tasks": [],
+      "title": "バリアフリーリフォームを実施",
+      "category": "life",
+      "priority": "medium",
+      "year": "2031",
+      "month": "4",
+      "note": "老後の住みやすさのため、60歳を目安にリフォーム計画を立てる。",
+      "progressMode": "manual",
+      "progress": 10
+    }
+  ],
+
+  "actuals": [],
+  "inheritance": {
+    "giftPlans": [
+      {
+        "id": "gift_sd_01",
+        "recipient": "長男",
+        "amount": 110,
+        "year": 2028,
+        "note": "贈与税の基礎控除（110万円）を活用した生前贈与"
+      }
+    ]
+  },
+  "scenarioComp": [
+    { "name": "現状維持（65歳退職）", "retireAge": 65, "monthlyExpense": 22, "returnMod": 0 },
+    { "name": "63歳早期退職",        "retireAge": 63, "monthlyExpense": 20, "returnMod": 0 },
+    { "name": "年金75歳繰下げ受給",  "retireAge": 65, "monthlyExpense": 22, "returnMod": 0 }
+  ]
+}

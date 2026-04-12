@@ -1,0 +1,250 @@
+{
+  "_version": "lifeplan_v1",
+  "_exportedAt": "2026-04-08T00:00:00.000Z",
+  "_scenarioName": "シナリオA：26歳・独身・奨学金返済中（就職3年目）",
+  "_description": "大学卒業後3年目。奨学金の返済が続く若手社会人。投資はNISA積立のみ開始。賃貸一人暮らし。",
+
+  "profile": {
+    "name": "田中 葵",
+    "birth": "2000-06-15",
+    "gender": "female",
+    "job": "IT企業 システムエンジニア",
+    "location": "東京都新宿区",
+    "bio": "大学卒業後3年目。奨学金を返済しながら投資を始めた。将来はフリーランスも考えている。",
+    "marital": "single",
+    "children": "0",
+    "family": "一人暮らし"
+  },
+
+  "finance": {
+    "income": 22,
+    "bonus": 50,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "expense": 14,
+    "incomeGrowthType": "fixed_rate",
+    "incomeGrowthRate": 3
+  },
+
+  "assets": [
+    {
+      "id": "sa_001",
+      "createdAt": 1712534400000,
+      "type": "cash_emergency",
+      "name": "生活防衛資金（普通預金）",
+      "currentVal": 80,
+      "monthly": 1,
+      "annualBonus": 0,
+      "annualReturn": 0.1,
+      "taxType": "hitazei",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "生活費3ヶ月分を目標に積立中"
+    },
+    {
+      "id": "sa_002",
+      "createdAt": 1712534400001,
+      "type": "nisa_tsumitate",
+      "name": "新NISA積立枠（eMAXIS Slim 全世界株式）",
+      "currentVal": 35,
+      "monthly": 1,
+      "annualBonus": 0,
+      "annualReturn": 5,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "2023年から毎月1万円積立"
+    }
+  ],
+
+  "lifeEvents": {
+    "housingType": "rent",
+    "mortgage": {},
+    "rent": {
+      "monthly": 8,
+      "admin": 0.5,
+      "startYear": 2023,
+      "endYear": null,
+      "renewal": 16,
+      "riseRate": 0.5
+    },
+    "care": {},
+    "scholarships": [
+      {
+        "id": 1001,
+        "label": "日本学生支援機構 第二種（大学4年間）",
+        "loanType": "type2",
+        "borrowedAmount": 280,
+        "monthlyPayment": 1.3,
+        "startYear": 2023,
+        "endYear": 2040,
+        "remainingBalance": 246
+      }
+    ],
+    "children": []
+  },
+
+  "cashFlowEvents": [
+    {
+      "id": "cfe_sa_01",
+      "title": "昇給（入社5年目・主任昇格）",
+      "type": "income_change",
+      "startAge": 29,
+      "endAge": null,
+      "monthlyAmount": 28,
+      "bonusAmount": 70,
+      "note": "入社5年目でリーダー職昇格を想定"
+    },
+    {
+      "id": "cfe_sa_02",
+      "title": "副業収入（フリーランス案件）",
+      "type": "income_change",
+      "startAge": 28,
+      "endAge": 35,
+      "monthlyAmount": 25,
+      "bonusAmount": 0,
+      "note": "副業で月5万円の案件を想定（本業継続）"
+    },
+    {
+      "id": "cfe_sa_03",
+      "title": "奨学金返済完了後・NISA増額",
+      "type": "expense_change",
+      "startAge": 41,
+      "endAge": null,
+      "monthlyAmount": -1.3,
+      "bonusAmount": 0,
+      "note": "奨学金完済後に毎月1.3万円を投資へ振替"
+    }
+  ],
+
+  "recurringExpenses": [
+    {
+      "id": "re_sa_01",
+      "emoji": "✈️",
+      "name": "年1回の旅行",
+      "amount": 15,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": null,
+      "note": "国内旅行・年1回"
+    },
+    {
+      "id": "re_sa_02",
+      "emoji": "💻",
+      "name": "PC買い替え",
+      "amount": 20,
+      "intervalYears": 4,
+      "startYear": 2028,
+      "endYear": null,
+      "note": "4年ごとにノートPC買替"
+    }
+  ],
+
+  "expenses": [
+    {
+      "id": "ex_sa_01",
+      "name": "免許取得",
+      "amount": 35,
+      "year": 2027,
+      "note": "自動車運転免許（AT限定）"
+    }
+  ],
+
+  "retirement": {
+    "type": "full",
+    "targetAge": 65,
+    "monthlyExpense": 18,
+    "monthlyExpense2": 16,
+    "monthlyExpense3": 14,
+    "lifeExpectancy": 90,
+    "pensionAge": 65,
+    "pensionMonthly": 12,
+    "pensionAge_p": 65,
+    "pensionMonthly_p": 0,
+    "severance": 0,
+    "severanceAge": null,
+    "pension": {
+      "employType": "employee_no_corp",
+      "koseiYears": 43,
+      "avgIncome": 35,
+      "kokuminYears": 0
+    },
+    "withdrawalType": "fixed_rate",
+    "withdrawalRate": 4,
+    "inflationRate": 1,
+    "expenseDecayRate": 0.5,
+    "medicalModel": "standard",
+    "residualAssets": 0,
+    "drawdownOrder": "cash_first",
+    "cashFloor": 100
+  },
+
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_sa_01",
+        "type": "death",
+        "name": "掛け捨て死亡保険",
+        "premium": 0.3,
+        "coverage": 500,
+        "startYear": 2023,
+        "endYear": 2055,
+        "memo": "就職時に加入"
+      }
+    ],
+    "needs": {}
+  },
+
+  "goals": [
+    {
+      "id": "goal_sa_01",
+      "createdAt": 1712534400000,
+      "tasks": [],
+      "title": "奨学金を完済する",
+      "category": "finance",
+      "priority": "high",
+      "year": "2040",
+      "month": "12",
+      "note": "月1.3万×約17年。完済後は投資額を増やす。",
+      "progressMode": "manual",
+      "progress": 10
+    },
+    {
+      "id": "goal_sa_02",
+      "createdAt": 1712534400001,
+      "tasks": [],
+      "title": "NISA枠を最大限活用する",
+      "category": "finance",
+      "priority": "high",
+      "year": "2030",
+      "month": "3",
+      "note": "年120万円（月10万）を目標に積立額を増やす",
+      "progressMode": "manual",
+      "progress": 5
+    },
+    {
+      "id": "goal_sa_03",
+      "createdAt": 1712534400002,
+      "tasks": [],
+      "title": "フリーランスとして独立",
+      "category": "career",
+      "priority": "medium",
+      "year": "2035",
+      "month": "4",
+      "note": "副業で実績を作り、30代中盤に独立を検討",
+      "progressMode": "manual",
+      "progress": 0
+    }
+  ],
+
+  "recurringExpenses": [],
+  "actuals": [],
+  "inheritance": { "giftPlans": [] },
+  "scenarioComp": [
+    { "name": "現在計画", "retireAge": 65, "monthlyExpense": 18, "returnMod": 0 },
+    { "name": "奨学金なし（比較用）", "retireAge": 65, "monthlyExpense": 18, "returnMod": 0 },
+    { "name": "副業成功・60歳退職", "retireAge": 60, "monthlyExpense": 16, "returnMod": 0 }
+  ]
+}

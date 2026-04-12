@@ -1,0 +1,332 @@
+{
+  "_version": "lifeplan_v1",
+  "_exportedAt": "2026-04-08T00:00:00.000Z",
+  "_scenarioName": "シナリオB：35歳・共働き夫婦・子1人・住宅ローン返済中",
+  "_description": "35歳会社員（妻32歳・育休復帰後パート）。5歳の子供あり。2022年にマイホーム購入。奨学金は完済済。NISAとiDeCoで資産形成中。",
+
+  "profile": {
+    "name": "鈴木 健太",
+    "birth": "1991-04-20",
+    "gender": "male",
+    "job": "メーカー 営業職（課長代理）",
+    "location": "神奈川県横浜市",
+    "bio": "マイホームを購入して5年目。子供の教育費と住宅ローンの両立が課題。共働きで資産形成を続けている。",
+    "marital": "married",
+    "children": "1",
+    "family": "妻（32歳・時短勤務）と子1人",
+    "partnername": "鈴木 麻衣",
+    "partnerbirth": "1993-08-12"
+  },
+
+  "finance": {
+    "income": 38,
+    "bonus": 80,
+    "partnerIncome": 12,
+    "partnerBonus": 10,
+    "expense": 26,
+    "incomeGrowthType": "fixed_rate",
+    "incomeGrowthRate": 2
+  },
+
+  "assets": [
+    {
+      "id": "sb_001",
+      "createdAt": 1712534400000,
+      "type": "cash",
+      "name": "普通預金・生活口座",
+      "currentVal": 200,
+      "monthly": 2,
+      "annualBonus": 20,
+      "annualReturn": 0.1,
+      "taxType": "hitazei",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "家族の生活費・緊急資金"
+    },
+    {
+      "id": "sb_002",
+      "createdAt": 1712534400001,
+      "type": "nisa_tsumitate",
+      "name": "新NISA積立（本人）",
+      "currentVal": 180,
+      "monthly": 3,
+      "annualBonus": 0,
+      "annualReturn": 5.5,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "eMAXIS Slim 全世界株式"
+    },
+    {
+      "id": "sb_003",
+      "createdAt": 1712534400002,
+      "type": "ideco",
+      "name": "iDeCo（本人・会社員）",
+      "currentVal": 90,
+      "monthly": 2.3,
+      "annualBonus": 0,
+      "annualReturn": 4.5,
+      "taxType": "ideco",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "2020年から積立。バランスファンド中心。"
+    },
+    {
+      "id": "sb_004",
+      "createdAt": 1712534400003,
+      "type": "nisa_tsumitate",
+      "name": "新NISA積立（妻）",
+      "currentVal": 60,
+      "monthly": 1,
+      "annualBonus": 0,
+      "annualReturn": 5.0,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "partner",
+      "note": "妻名義。育休中も積立継続"
+    }
+  ],
+
+  "lifeEvents": {
+    "housingType": "mortgage",
+    "mortgage": {
+      "amount": 3800,
+      "rateType": "fixed",
+      "rate": 1.5,
+      "term": 35,
+      "startYear": 2022,
+      "events": []
+    },
+    "rent": {},
+    "care": {},
+    "scholarships": [],
+    "children": [
+      {
+        "id": "child_sb_01",
+        "name": "長男",
+        "birthYear": 2021,
+        "parentalLeave": {
+          "mom": { "income": 12, "leaveMonths": 12, "incomeRate": 67, "leaveStart": "birth" },
+          "dad": { "income": 38, "leaveMonths": 1, "incomeRate": 67, "leaveStart": "birth" }
+        },
+        "phases": {
+          "nursery": "public",
+          "kindergarten": "public",
+          "elementary": "public",
+          "juniorhigh": "public",
+          "highschool": "public",
+          "university": "national"
+        }
+      }
+    ]
+  },
+
+  "cashFlowEvents": [
+    {
+      "id": "cfe_sb_01",
+      "title": "妻・フルタイム復帰",
+      "type": "income_change",
+      "startAge": 37,
+      "endAge": null,
+      "monthlyAmount": 50,
+      "bonusAmount": 100,
+      "note": "子供が小学校入学後にフルタイム復帰を想定。世帯月収+12万想定。"
+    },
+    {
+      "id": "cfe_sb_02",
+      "title": "子どもの塾・習い事費増加",
+      "type": "expense_change",
+      "startAge": 38,
+      "endAge": 50,
+      "monthlyAmount": 29,
+      "bonusAmount": 0,
+      "note": "子供の中学受験対策・塾代（月3万円追加）"
+    },
+    {
+      "id": "cfe_sb_03",
+      "title": "管理職昇格",
+      "type": "income_change",
+      "startAge": 40,
+      "endAge": null,
+      "monthlyAmount": 48,
+      "bonusAmount": 120,
+      "note": "40歳での課長昇格を想定"
+    }
+  ],
+
+  "recurringExpenses": [
+    {
+      "id": "re_sb_01",
+      "emoji": "🚗",
+      "name": "車の維持費（車検・保険・ガソリン）",
+      "amount": 30,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": null,
+      "note": "年間維持費合計（車検は2年に1回15万程度含む）"
+    },
+    {
+      "id": "re_sb_02",
+      "emoji": "🏠",
+      "name": "住宅設備修繕・リフォーム積立",
+      "amount": 50,
+      "intervalYears": 3,
+      "startYear": 2029,
+      "endYear": null,
+      "note": "給湯器・エアコン等の修繕費"
+    },
+    {
+      "id": "re_sb_03",
+      "emoji": "✈️",
+      "name": "家族旅行",
+      "amount": 30,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": null,
+      "note": "年1回の家族旅行（国内）"
+    }
+  ],
+
+  "expenses": [
+    {
+      "id": "ex_sb_01",
+      "name": "子ども大学入学費用",
+      "amount": 100,
+      "year": 2039,
+      "note": "入学金・諸経費・引越し費用"
+    },
+    {
+      "id": "ex_sb_02",
+      "name": "車購入（買替）",
+      "amount": 250,
+      "year": 2030,
+      "note": "現在の車を5年で乗り換え"
+    },
+    {
+      "id": "ex_sb_03",
+      "name": "大規模リフォーム",
+      "amount": 300,
+      "year": 2042,
+      "note": "築20年を目安に水回り・外壁リフォーム"
+    }
+  ],
+
+  "retirement": {
+    "type": "full",
+    "targetAge": 65,
+    "monthlyExpense": 24,
+    "monthlyExpense2": 20,
+    "monthlyExpense3": 18,
+    "lifeExpectancy": 90,
+    "pensionAge": 65,
+    "pensionMonthly": 16,
+    "pensionAge_p": 65,
+    "pensionMonthly_p": 10,
+    "severance": 1200,
+    "severanceAge": 65,
+    "pension": {
+      "employType": "employee_no_corp",
+      "koseiYears": 43,
+      "avgIncome": 50,
+      "kokuminYears": 0
+    },
+    "pension_p": {
+      "employType": "employee_no_corp",
+      "koseiYears": 40,
+      "avgIncome": 30,
+      "kokuminYears": 0
+    },
+    "withdrawalType": "hybrid",
+    "withdrawalRate": 4,
+    "withdrawalMonthly": 24,
+    "withdrawalHybridSwitchAge": 75,
+    "inflationRate": 1,
+    "expenseDecayRate": 0.5,
+    "medicalModel": "standard",
+    "residualAssets": 500,
+    "drawdownOrder": "cash_first",
+    "cashFloor": 200,
+    "mortgageDeductStart": 2022,
+    "mortgageDeductYears": 13
+  },
+
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_sb_01",
+        "type": "death",
+        "name": "収入保障保険（本人）",
+        "premium": 0.8,
+        "coverage": 2000,
+        "startYear": 2022,
+        "endYear": 2051,
+        "memo": "住宅購入時に加入。60歳まで"
+      },
+      {
+        "id": "ins_sb_02",
+        "type": "cancer",
+        "name": "がん保険（夫婦型）",
+        "premium": 1.2,
+        "coverage": 300,
+        "startYear": 2020,
+        "endYear": null,
+        "memo": "終身。夫婦2人分"
+      }
+    ],
+    "needs": {}
+  },
+
+  "goals": [
+    {
+      "id": "goal_sb_01",
+      "createdAt": 1712534400000,
+      "tasks": [],
+      "title": "子どもの大学費用を準備する",
+      "category": "family",
+      "priority": "high",
+      "year": "2039",
+      "month": "3",
+      "note": "国公立大学4年間の学費目安：250万円。在学中の仕送りも考慮。",
+      "progressMode": "manual",
+      "progress": 30
+    },
+    {
+      "id": "goal_sb_02",
+      "createdAt": 1712534400001,
+      "tasks": [],
+      "title": "住宅ローンを繰り上げ返済",
+      "category": "finance",
+      "priority": "medium",
+      "year": "2045",
+      "month": "12",
+      "note": "退職前に完済を目指す。ボーナス時に繰り上げ返済を検討。",
+      "progressMode": "manual",
+      "progress": 0
+    },
+    {
+      "id": "goal_sb_03",
+      "createdAt": 1712534400002,
+      "tasks": [],
+      "title": "老後資金2000万円を確保",
+      "category": "finance",
+      "priority": "high",
+      "year": "2056",
+      "month": "3",
+      "note": "65歳時点でNISA+iDeCoで2000万円以上を目標",
+      "progressMode": "manual",
+      "progress": 15
+    }
+  ],
+
+  "actuals": [],
+  "inheritance": { "giftPlans": [] },
+  "scenarioComp": [
+    { "name": "現状維持（65歳退職）", "retireAge": 65, "monthlyExpense": 24, "returnMod": 0 },
+    { "name": "子ども私立大学の場合", "retireAge": 65, "monthlyExpense": 24, "returnMod": 0 },
+    { "name": "妻フルタイム＋63歳退職", "retireAge": 63, "monthlyExpense": 22, "returnMod": 0 }
+  ]
+}

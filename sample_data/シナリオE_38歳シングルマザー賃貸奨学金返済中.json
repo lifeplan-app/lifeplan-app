@@ -1,0 +1,366 @@
+{
+  "_version": "lifeplan_v1",
+  "_exportedAt": "2026-04-08T00:00:00.000Z",
+  "_scenarioName": "シナリオE：38歳・シングルマザー・子2人・賃貸・奨学金返済中",
+  "_description": "38歳・医療事務・シングルマザー。子2人（9歳・6歳）を育てながら賃貸一人暮らし。奨学金残17年。NISA・iDeCoで老後資産形成中。",
+
+  "profile": {
+    "name": "林 菜緒",
+    "birth": "1988-03-22",
+    "gender": "female",
+    "job": "医療法人 医療事務（正職員）",
+    "location": "愛知県名古屋市",
+    "bio": "離婚後に正職員として復職。子育てと仕事を両立しながら少しずつ資産形成を始めた。奨学金の残債が重く、老後が不安。",
+    "marital": "single",
+    "children": "2",
+    "family": "子2人と3人暮らし（賃貸）"
+  },
+
+  "finance": {
+    "income": 24,
+    "bonus": 40,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "expense": 19,
+    "incomeGrowthType": "fixed_rate",
+    "incomeGrowthRate": 1.5
+  },
+
+  "assets": [
+    {
+      "id": "se_001",
+      "createdAt": 1712534400000,
+      "type": "cash_emergency",
+      "name": "生活防衛資金（普通預金）",
+      "currentVal": 60,
+      "monthly": 1,
+      "annualBonus": 0,
+      "annualReturn": 0.1,
+      "taxType": "hitazei",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "生活費3ヶ月分が目標。現在2.5ヶ月分。"
+    },
+    {
+      "id": "se_002",
+      "createdAt": 1712534400001,
+      "type": "nisa_tsumitate",
+      "name": "新NISA積立（本人）",
+      "currentVal": 45,
+      "monthly": 1.5,
+      "annualBonus": 0,
+      "annualReturn": 5,
+      "taxType": "nisa",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "2024年から積立開始。eMAXIS Slim 全世界株式。"
+    },
+    {
+      "id": "se_003",
+      "createdAt": 1712534400002,
+      "type": "ideco",
+      "name": "iDeCo（本人・会社員）",
+      "currentVal": 30,
+      "monthly": 1.2,
+      "annualBonus": 0,
+      "annualReturn": 4.5,
+      "taxType": "ideco",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "2023年から積立。節税効果を重視。バランスファンド。"
+    },
+    {
+      "id": "se_004",
+      "createdAt": 1712534400003,
+      "type": "cash",
+      "name": "子ども用教育積立（定期預金）",
+      "currentVal": 70,
+      "monthly": 1,
+      "annualBonus": 5,
+      "annualReturn": 0.3,
+      "taxType": "hitazei",
+      "dividendYield": 0,
+      "dividendMode": "reinvest",
+      "owner": "self",
+      "note": "子ども2人の大学費用を目標に積立中。"
+    }
+  ],
+
+  "lifeEvents": {
+    "housingType": "rent",
+    "mortgage": {},
+    "rent": {
+      "monthly": 7.5,
+      "admin": 0.5,
+      "startYear": 2021,
+      "endYear": null,
+      "renewal": 24,
+      "riseRate": 0.5
+    },
+    "care": {
+      "startYear": 2048,
+      "endYear": 2055,
+      "monthlyFee": 10,
+      "careType": "home"
+    },
+    "scholarships": [
+      {
+        "id": 3001,
+        "label": "日本学生支援機構 第二種（大学4年間）",
+        "loanType": "type2",
+        "borrowedAmount": 300,
+        "monthlyPayment": 1.2,
+        "startYear": 2013,
+        "endYear": 2034,
+        "remainingBalance": 182
+      }
+    ],
+    "children": [
+      {
+        "id": "child_se_01",
+        "name": "長男",
+        "birthYear": 2017,
+        "parentalLeave": {
+          "mom": { "income": 24, "leaveMonths": 10, "incomeRate": 67, "leaveStart": "birth" },
+          "dad": { "income": 0, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" }
+        },
+        "phases": {
+          "nursery": "public",
+          "kindergarten": "public",
+          "elementary": "public",
+          "juniorhigh": "public",
+          "highschool": "public",
+          "university": "national"
+        }
+      },
+      {
+        "id": "child_se_02",
+        "name": "長女",
+        "birthYear": 2020,
+        "parentalLeave": {
+          "mom": { "income": 24, "leaveMonths": 8, "incomeRate": 67, "leaveStart": "birth" },
+          "dad": { "income": 0, "leaveMonths": 0, "incomeRate": 67, "leaveStart": "birth" }
+        },
+        "phases": {
+          "nursery": "public",
+          "kindergarten": "public",
+          "elementary": "public",
+          "juniorhigh": "public",
+          "highschool": "public",
+          "university": "national"
+        }
+      }
+    ]
+  },
+
+  "cashFlowEvents": [
+    {
+      "id": "cfe_se_01",
+      "title": "主任昇格・昇給",
+      "type": "income_change",
+      "startAge": 41,
+      "endAge": null,
+      "monthlyAmount": 28,
+      "bonusAmount": 55,
+      "note": "3年後に主任昇格を想定。月4万円増。"
+    },
+    {
+      "id": "cfe_se_02",
+      "title": "奨学金完済後・投資額増加",
+      "type": "expense_change",
+      "startAge": 46,
+      "endAge": null,
+      "monthlyAmount": -1.2,
+      "bonusAmount": 0,
+      "note": "2034年完済後、月1.2万をNISAへ振替。"
+    },
+    {
+      "id": "cfe_se_03",
+      "title": "末子独立・生活費削減",
+      "type": "expense_change",
+      "startAge": 60,
+      "endAge": null,
+      "monthlyAmount": 15,
+      "bonusAmount": 0,
+      "note": "子どもが独立後、生活費を月15万円に削減。"
+    }
+  ],
+
+  "recurringExpenses": [
+    {
+      "id": "re_se_01",
+      "emoji": "📚",
+      "name": "子どもの習い事・塾代",
+      "amount": 24,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2038,
+      "note": "2人分の習い事・学習塾（月2万円相当）"
+    },
+    {
+      "id": "re_se_02",
+      "emoji": "💻",
+      "name": "PC・家電買い替え",
+      "amount": 15,
+      "intervalYears": 4,
+      "startYear": 2027,
+      "endYear": null,
+      "note": "4年ごとに家電・PCを更新"
+    },
+    {
+      "id": "re_se_03",
+      "emoji": "✈️",
+      "name": "子どもとの旅行（国内）",
+      "amount": 20,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2040,
+      "note": "年1回の国内旅行（子どもが独立するまで）"
+    }
+  ],
+
+  "expenses": [
+    {
+      "id": "ex_se_01",
+      "name": "長男 大学入学費用",
+      "amount": 80,
+      "year": 2035,
+      "note": "国公立大学入学金・諸費用・引越し"
+    },
+    {
+      "id": "ex_se_02",
+      "name": "長女 大学入学費用",
+      "amount": 80,
+      "year": 2038,
+      "note": "国公立大学入学金・諸費用・引越し"
+    },
+    {
+      "id": "ex_se_03",
+      "name": "引越し（子ども独立後・転居）",
+      "amount": 30,
+      "year": 2048,
+      "note": "子ども独立後に1LDKへ転居を想定"
+    }
+  ],
+
+  "retirement": {
+    "type": "full",
+    "targetAge": 65,
+    "monthlyExpense": 16,
+    "monthlyExpense2": 14,
+    "monthlyExpense3": 12,
+    "lifeExpectancy": 92,
+    "pensionAge": 65,
+    "pensionMonthly": 11,
+    "pensionAge_p": 65,
+    "pensionMonthly_p": 0,
+    "severance": 400,
+    "severanceAge": 65,
+    "pension": {
+      "employType": "employee_no_corp",
+      "koseiYears": 43,
+      "avgIncome": 28,
+      "kokuminYears": 0
+    },
+    "withdrawalType": "fixed_rate",
+    "withdrawalRate": 4,
+    "inflationRate": 1,
+    "expenseDecayRate": 0.5,
+    "medicalModel": "standard",
+    "residualAssets": 0,
+    "drawdownOrder": "cash_first",
+    "cashFloor": 100
+  },
+
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_se_01",
+        "type": "death",
+        "name": "収入保障保険（シングル用）",
+        "premium": 0.6,
+        "coverage": 1500,
+        "startYear": 2021,
+        "endYear": 2048,
+        "memo": "子どもが成人するまでの死亡・就労不能保障。"
+      },
+      {
+        "id": "ins_se_02",
+        "type": "medical",
+        "name": "医療保険（女性特約付）",
+        "premium": 0.9,
+        "coverage": 150,
+        "startYear": 2022,
+        "endYear": null,
+        "memo": "終身。女性疾患特約あり。"
+      }
+    ],
+    "needs": {}
+  },
+
+  "goals": [
+    {
+      "id": "goal_se_01",
+      "createdAt": 1712534400000,
+      "tasks": [],
+      "title": "奨学金を2034年に完済する",
+      "category": "finance",
+      "priority": "high",
+      "year": "2034",
+      "month": "12",
+      "note": "残182万円。月1.2万円返済で2034年末に完済予定。",
+      "progressMode": "manual",
+      "progress": 39
+    },
+    {
+      "id": "goal_se_02",
+      "createdAt": 1712534400001,
+      "tasks": [],
+      "title": "子ども2人の大学費用を確保",
+      "category": "family",
+      "priority": "high",
+      "year": "2038",
+      "month": "3",
+      "note": "教育積立を継続し、国公立大各80万円を目標。",
+      "progressMode": "manual",
+      "progress": 25
+    },
+    {
+      "id": "goal_se_03",
+      "createdAt": 1712534400002,
+      "tasks": [],
+      "title": "老後資金1500万円を65歳までに確保",
+      "category": "finance",
+      "priority": "high",
+      "year": "2053",
+      "month": "3",
+      "note": "NISA＋iDeCoで65歳時点1500万円を目標。年金と合わせて老後生活費を賄う。",
+      "progressMode": "manual",
+      "progress": 8
+    },
+    {
+      "id": "goal_se_04",
+      "createdAt": 1712534400003,
+      "tasks": [],
+      "title": "生活防衛資金を生活費6ヶ月分に増やす",
+      "category": "finance",
+      "priority": "medium",
+      "year": "2028",
+      "month": "3",
+      "note": "現在2.5ヶ月分。シングルのためリスク管理を優先。",
+      "progressMode": "manual",
+      "progress": 40
+    }
+  ],
+
+  "actuals": [],
+  "inheritance": { "giftPlans": [] },
+  "scenarioComp": [
+    { "name": "現状維持（65歳退職）", "retireAge": 65, "monthlyExpense": 16, "returnMod": 0 },
+    { "name": "奨学金繰上げ返済あり", "retireAge": 65, "monthlyExpense": 16, "returnMod": 0 },
+    { "name": "副業開始・63歳退職", "retireAge": 63, "monthlyExpense": 14, "returnMod": 0 }
+  ]
+}
