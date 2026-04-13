@@ -11158,7 +11158,7 @@ function renderRetirementPage() {
   // パートナー（partnerIncomeから自動補完）
   document.getElementById('penEmployType_p').value = penDataP.employType || 'employee';
   document.getElementById('penKosei_p').value = penDataP.koseiYears !== undefined ? penDataP.koseiYears : Math.min(defaultKosei, 20);
-  const isAutoFilledIncomeP = (penDataP.avgIncome === undefined || penDataP.avgIncome === 0) && defaultIncomeP > 0;
+  const isAutoFilledIncomeP = (penDataP.avgIncome === undefined || penDataP.avgIncome === 0 || penDataP.avgIncome === defaultIncomeP) && defaultIncomeP > 0;
   document.getElementById('penAvgIncome_p').value = isAutoFilledIncomeP ? defaultIncomeP : (penDataP.avgIncome ?? '');
   const penWarnP = document.getElementById('penAvgIncomeWarn_p');
   if (penWarnP) penWarnP.style.display = isAutoFilledIncomeP ? '' : 'none';
