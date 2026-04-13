@@ -6433,8 +6433,11 @@ function onAssetTypeChange() {
   const type = document.getElementById('amType').value;
   const t = ASSET_TYPES[type] || ASSET_TYPES.other;
   document.getElementById('assetTypeNote').textContent = t.note || '';
-  document.getElementById('amReturn').value = t.defaultReturn || '';
-  document.getElementById('amDividend').value = t.dividendYield || '';
+  // 新規作成時のみデフォルト値を設定（編集時は既存値を保持）
+  if (!editingAssetId) {
+    document.getElementById('amReturn').value = t.defaultReturn || '';
+    document.getElementById('amDividend').value = t.dividendYield || '';
+  }
   // 口座種別を自動設定
   document.getElementById('amTaxType').value = TAX_TYPE_DEFAULT[type] || 'tokutei';
   // 配当フィールド：高配当株・ETF・NISA成長枠（ETF/高配当株を保有可）で表示
