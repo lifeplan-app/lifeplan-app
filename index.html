@@ -11153,19 +11153,11 @@ function autoFillRetirementExpenses() {
   const fmt = v => Math.round(v * 2) / 2; // 0.5万単位に丸め
 
   // ===== ベース支出の決定 =====
-  // 優先①：①フィールドに入力済みの値をそのままベースにする
-  // 優先②：未入力なら現役支出（生活費＋住居費）から計算
-
-  const enteredP1 = parseFloat(document.getElementById('retMonthlyExpense').value) || 0;
+  // ボタン押下時は常に現役支出（生活費＋住居費）から再計算してセットする
 
   let baseMonthly, baseSource;
 
-  if (enteredP1 > 0) {
-    // ① に値が入っている → それをそのままベースとして使い、②③を導出
-    baseMonthly = enteredP1;
-    baseSource = `①入力済みの値 ${enteredP1}万円`;
-  } else {
-    // ① が空 → 現役支出から計算してセット
+  {
     const currentMonthlyLiving = parseFloat(state.finance?.expense) || 0;
     const le = state.lifeEvents || {};
     let currentMonthlyHousing = 0;
@@ -11189,7 +11181,7 @@ function autoFillRetirementExpenses() {
       : (currentMonthlyLiving + currentMonthlyHousing) - commuteCost;
     baseMonthly = Math.max(10, rawBase);
     baseSource = `現役支出 ${(currentMonthlyLiving + currentMonthlyHousing).toFixed(1)}万円から試算`;
-    // ①も自動セット
+    // ①も現役支出ベースで更新
     document.getElementById('retMonthlyExpense').value = fmt(baseMonthly * 0.85);
   }
 
