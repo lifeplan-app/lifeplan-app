@@ -4465,7 +4465,7 @@
       <div style="display:flex;gap:10px;align-items:flex-end">
         <div class="form-group" style="margin:0;flex-shrink:0">
           <label>アイコン</label>
-          <select id="reEmoji" style="font-size:18px;width:60px;text-align:center;padding:8px 4px">
+          <select id="reEmoji" style="font-size:18px;width:60px;text-align:center;padding:8px 4px" onchange="reEmojiUserPicked=true">
             <option>🚗</option><option>✈️</option><option>🎌</option><option>🏡</option>
             <option>🎉</option><option>🍽️</option><option>🎵</option><option>📱</option>
             <option>🐾</option><option>🔧</option><option>🏥</option><option>🎓</option>
@@ -4475,7 +4475,7 @@
         </div>
         <div class="form-group" style="margin:0;flex:1">
           <label>支出の名称</label>
-          <input type="text" id="reName" placeholder="例: 国内旅行、車検、実家帰省" oninput="updateRePreview()">
+          <input type="text" id="reName" placeholder="例: 国内旅行、車検、実家帰省" oninput="updateRePreview(); autoSuggestReEmoji(this.value)">
         </div>
       </div>
       <div class="form-row">
@@ -5763,11 +5763,48 @@ function renderRecurringExpenseList() {
   }).join('');
 }
 
+// キーワード→絵文字の自動推定マップ（上から順に優先）
+const RE_EMOJI_MAP = [
+  ['🚗', ['車検','車','自動車','カー','ドライブ','買い替え']],
+  ['✈️', ['海外旅行','海外','フライト','航空']],
+  ['🎌', ['国内旅行','帰省','旅行','温泉','観光','ホテル']],
+  ['📱', ['家電','冷蔵庫','洗濯機','エアコン','スマホ','パソコン','電化','電器']],
+  ['🏡', ['リフォーム','住宅','修繕','引越','引っ越し']],
+  ['🎉', ['お祝い','記念','パーティ','結婚','誕生']],
+  ['🍽️', ['外食','食事','ディナー','レストラン']],
+  ['🎵', ['コンサート','ライブ','音楽','チケット']],
+  ['🐾', ['ペット','犬','猫','動物']],
+  ['🔧', ['修理','メンテ','点検','整備','工事']],
+  ['🏥', ['医療','健康診断','病院','診療','治療','健康']],
+  ['🎓', ['教育','学費','塾','学校','スクール']],
+  ['💴', ['税金','保険料']],
+  ['⛽', ['ガソリン','給油','燃料']],
+  ['🛒', ['買い物','購入','ショッピング']],
+  ['🎯', ['特別費','予備費','まとめ']],
+  ['🏋️', ['ジム','運動','フィットネス','スポーツ']],
+  ['📚', ['本','書籍','勉強','読書']],
+  ['🎨', ['趣味','アート','創作']],
+  ['🌿', ['植物','園芸','庭','ガーデン']],
+];
+let reEmojiUserPicked = false;
+
+function autoSuggestReEmoji(name) {
+  if (reEmojiUserPicked) return;
+  for (const [emoji, keywords] of RE_EMOJI_MAP) {
+    if (keywords.some(k => name.includes(k))) {
+      document.getElementById('reEmoji').value = emoji;
+      return;
+    }
+  }
+  document.getElementById('reEmoji').value = '🚗'; // デフォルト
+}
+
 function openRecurringExpenseModal(id, itemYear) {
   const thisYear = new Date().getFullYear();
   document.getElementById('reId').value = '';
-  document.getElementById('reEmoji').value = '🔁';
+  document.getElementById('reEmoji').value = '🚗';
   document.getElementById('reName').value = '';
+  reEmojiUserPicked = false; // 新規追加時はフラグリセット
   document.getElementById('reAmount').value = '';
   document.getElementById('reInterval').value = '1';
   document.getElementById('reStartYear').value = thisYear;
@@ -5788,8 +5825,9 @@ function openRecurringExpenseModal(id, itemYear) {
   if (id) {
     const e = (state.recurringExpenses || []).find(x => x.id === id);
     if (e) {
+      reEmojiUserPicked = true; // 編集時は保存済みアイコンを維持
       document.getElementById('reId').value = e.id;
-      document.getElementById('reEmoji').value = e.emoji || '🔁';
+      document.getElementById('reEmoji').value = e.emoji || '🚗';
       document.getElementById('reName').value = e.name || '';
       document.getElementById('reAmount').value = e.amount || '';
       document.getElementById('reInterval').value = e.intervalYears || '1';
