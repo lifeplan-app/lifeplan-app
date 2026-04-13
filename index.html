@@ -5874,6 +5874,8 @@ function saveRecurringExpense() {
   renderRecurringExpenseList();
   closeRecurringExpenseModal();
   renderTimeline && renderTimeline();
+  if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
+  if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
 }
 
 function deleteRecurringExpense(id) {
@@ -5882,6 +5884,8 @@ function deleteRecurringExpense(id) {
   save();
   renderRecurringExpenseList();
   renderTimeline && renderTimeline();
+  if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
+  if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
 }
 
 function editRecurringExpense(id) {
@@ -8325,6 +8329,8 @@ function saveExpense() {
   closeExpenseModal();
   renderExpenseList();
   if (document.getElementById('timelineContent')) renderTimeline();
+  if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
+  if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
 }
 
 function deleteExpense(id) {
@@ -8333,6 +8339,8 @@ function deleteExpense(id) {
   save();
   renderExpenseList();
   if (document.getElementById('timelineContent')) renderTimeline();
+  if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
+  if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
 }
 
 // ===== TIMELINE =====
@@ -8558,6 +8566,8 @@ function tlDeleteItem(type, id, year) {
       if (!entry.excludeYears.includes(year)) entry.excludeYears.push(year);
       save();
       renderTimeline();
+      if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
+      if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
     } else {
       deleteRecurringExpense(id);
     }
