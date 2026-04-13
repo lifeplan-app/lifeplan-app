@@ -2647,7 +2647,14 @@
       <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
         <div class="form-group" style="min-width:140px;margin:0">
           <label>表示年数</label>
-          <input type="number" id="leSimYears" value="30" min="5" max="50" onchange="renderLifeEventCharts()">
+          <input type="number" id="leSimYears" value="30" min="5" max="60" onchange="renderLifeEventCharts()">
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">
+          <button class="btn btn-secondary btn-sm" onclick="setLeSimYearsByAge(55)">55歳まで</button>
+          <button class="btn btn-secondary btn-sm" onclick="setLeSimYearsByAge(60)">60歳まで</button>
+          <button class="btn btn-secondary btn-sm" onclick="setLeSimYearsByAge(65)">65歳まで</button>
+          <button class="btn btn-secondary btn-sm" onclick="setLeSimYearsByAge(null,30)">30年</button>
+          <button class="btn btn-secondary btn-sm" onclick="setLeSimYearsByAge(null,50)">50年</button>
         </div>
         <p style="font-size:12px;color:var(--text-muted);margin:0">現在登録中のイベントを「保存する」後にグラフへ反映されます</p>
       </div>
@@ -10335,6 +10342,20 @@ function calcRentResult() {
       <div class="pf-stat"><div class="val" style="font-size:17px;color:var(--warning)">${calc(10).toLocaleString()} 万円</div><div class="lbl">10年累計</div></div>
       <div class="pf-stat"><div class="val" style="font-size:17px;color:var(--danger)">${calc(30).toLocaleString()} 万円</div><div class="lbl">30年累計</div></div>
     </div>`;
+}
+
+function setLeSimYearsByAge(targetAge, fixedYears) {
+  const el = document.getElementById('leSimYears');
+  if (!el) return;
+  if (fixedYears) {
+    el.value = fixedYears;
+  } else {
+    const birthYear = state.profile?.birth ? parseInt(state.profile.birth.split('-')[0]) : null;
+    const currentYear = new Date().getFullYear();
+    const years = birthYear ? Math.max(5, targetAge - (currentYear - birthYear)) : 30;
+    el.value = Math.min(60, years);
+  }
+  renderLifeEventCharts();
 }
 
 function renderLifeEventCharts() {
