@@ -10478,11 +10478,11 @@ function renderLifeEventCharts() {
   const _severanceYr  = (_severance > 0 && _severanceAge > 0)
     ? currentYear + (_severanceAge - _currentAge) : null;
 
-  const cfIncome = [], cfExpense = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
+  const cfIncomeSalary = [], cfIncomeOther = [], cfExpense = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
   let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
     const yr = currentYear + i;
-    const inc     = getIncomeForYearWithGrowth(yr);
+    const inc     = getIncomeForYearWithGrowth(yr);  // 給与・副業含む
     const exp     = getExpenseForYear(yr);
     const c       = annualCosts[i];
     const leCost  = c.childcare + c.education + c.mortgage + c.care + c.scholarship;
@@ -10496,7 +10496,7 @@ function renderLifeEventCharts() {
       if (yr < start || yr > end) return s;
       return s + (parseFloat(a.monthly) || 0) * 12;
     }, 0);
-    // 配当受取（cashout）の年間配当（前年末評価額ベース・課税口座は税引後）
+    // その他収入: 配当受取（cashout）+ 退職金
     const annualDiv = i === 0 ? 0 : _cashoutAssets.reduce((s, a) => {
       const gd = _growthData.find(g => g.asset.id === a.id);
       const prevVal = gd ? (gd.data[i - 1] || 0) : 0;
@@ -10504,12 +10504,13 @@ function renderLifeEventCharts() {
       const taxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
       return s + Math.round(taxable ? gross * (1 - _DIV_TAX) : gross);
     }, 0);
-    // 退職金（受取年のみ一時収入として加算）
     const severanceInc = (_severanceYr !== null && yr === _severanceYr) ? _severance : 0;
-    const totalInc = inc + annualDiv + severanceInc;
+    const otherInc = annualDiv + severanceInc;
+    const totalInc = inc + otherInc;
     const annual  = totalInc - exp - leCost + oneTime - investOut;
     cumulativeCF += Math.round(annual);
-    cfIncome.push(Math.round(totalInc));
+    cfIncomeSalary.push(Math.round(inc));
+    cfIncomeOther.push(Math.round(otherInc));
     cfExpense.push(-Math.round(exp + leCost + recur));
     cfInvest.push(-Math.round(investOut));
     cfAnnual.push(Math.round(annual));
@@ -10558,34 +10559,47 @@ function renderLifeEventCharts() {
         labels,
         datasets: [
           {
-            label: '収入',
-            data: cfIncome,
-            backgroundColor: 'rgba(52,199,89,.65)',
+            label: '給与・副業収入',
+            data: cfIncomeSalary,
+            backgroundColor: 'rgba(52,199,89,.70)',
             borderWidth: 0,
-            borderRadius: 2,
+            borderRadius: 0,
+            stack: 'income',
             order: 3,
             yAxisID: 'y1',
           },
           {
-            label: '支出',
+            label: 'その他収入（配当・退職金等）',
+            data: cfIncomeOther,
+            backgroundColor: 'rgba(134,239,172,.80)',
+            borderWidth: 0,
+            borderRadius: 2,
+            stack: 'income',
+            order: 3,
+            yAxisID: 'y1',
+          },
+          {
+            label: '生活・ライフイベント支出',
             data: cfExpense,
-            backgroundColor: 'rgba(255,59,48,.60)',
+            backgroundColor: 'rgba(255,59,48,.65)',
             borderWidth: 0,
-            borderRadius: 2,
+            borderRadius: 0,
+            stack: 'outflow',
             order: 3,
             yAxisID: 'y1',
           },
           {
-            label: '投資活動',
+            label: '投資活動（将来への積立）',
             data: cfInvest,
-            backgroundColor: 'rgba(139,92,246,.65)',
+            backgroundColor: 'rgba(139,92,246,.70)',
             borderWidth: 0,
             borderRadius: 2,
+            stack: 'outflow',
             order: 3,
             yAxisID: 'y1',
           },
           {
-            label: '累計収支',
+            label: '手元現金推移',
             data: cfCumulative,
             type: 'line',
             borderColor: '#007AFF',
@@ -10608,7 +10622,7 @@ function renderLifeEventCharts() {
           x: { ticks: { maxTicksLimit: 8 } },
           y: {
             position: 'left',
-            title: { display: true, text: '累計収支', font: { size: 11 }, color: '#007AFF' },
+            title: { display: true, text: '手元現金推移', font: { size: 11 }, color: '#007AFF' },
             ticks: { callback: v => fmtMoneyAxis(v), color: '#007AFF' },
             grid: {
               color: ctx => ctx.tick.value === 0 ? 'rgba(0,0,200,.3)' : 'rgba(0,0,0,.05)',
@@ -10617,6 +10631,7 @@ function renderLifeEventCharts() {
           },
           y1: {
             position: 'right',
+            stacked: true,
             title: { display: true, text: '年間 収入 / 支出', font: { size: 11 }, color: '#64748B' },
             ticks: { callback: v => fmtMoneyAxis(Math.abs(v)), color: '#64748B' },
             grid: { drawOnChartArea: false },
@@ -10629,23 +10644,28 @@ function renderLifeEventCharts() {
               title: items => ageTooltipTitle(currentYear + items[0].dataIndex),
               label: item => {
                 const v = item.parsed.y;
-                if (item.dataset.label === '支出')  return ` 支出: ${fmtMoney(-v)}`;
-                if (item.dataset.label === '収入')  return ` 収入: +${fmtMoney(v)}`;
+                const lbl = item.dataset.label;
+                if (lbl === '生活・ライフイベント支出') return ` 生活・ライフイベント: ${fmtMoney(-v)}`;
+                if (lbl === '投資活動（将来への積立）')  return ` 投資活動: ${fmtMoney(-v)}`;
+                if (lbl === '給与・副業収入')            return ` 給与・副業: +${fmtMoney(v)}`;
+                if (lbl === 'その他収入（配当・退職金等）' && v > 0) return ` その他収入: +${fmtMoney(v)}`;
+                if (lbl === 'その他収入（配当・退職金等）' && v === 0) return null;
+                if (lbl === '手元現金推移') { const sign = v >= 0 ? '+' : ''; return ` 手元現金: ${sign}${fmtMoney(v)}`; }
                 const sign = v >= 0 ? '+' : '';
-                return ` ${item.dataset.label}: ${sign}${fmtMoney(v)}`;
+                return ` ${lbl}: ${sign}${fmtMoney(v)}`;
               },
               afterBody: items => {
                 const idx = items[0].dataIndex;
-                if (idx === 0) return [];
                 const annual = cfAnnual[idx];
                 const cumul  = cfCumulative[idx];
                 const aSign  = annual >= 0 ? '+' : '';
                 const cSign  = cumul  >= 0 ? '+' : '';
                 return [
+                  '─────────────────',
                   annual >= 0
-                    ? `✅ 年間収支: ${aSign}${fmtMoney(annual)}`
-                    : `🔴 年間収支: ${fmtMoney(annual)}`,
-                  `📊 累計収支: ${cSign}${fmtMoney(cumul)}`,
+                    ? `✅ 年間手元収支: ${aSign}${fmtMoney(annual)}`
+                    : `🔴 年間手元収支: ${fmtMoney(annual)}`,
+                  `💰 手元現金累計: ${cSign}${fmtMoney(cumul)}`,
                 ];
               }
             }
