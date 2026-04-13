@@ -2721,55 +2721,71 @@
       <div class="ret-acc-body">
     <div class="card">
       <div class="card-title"><span class="icon" style="background:#FEF3C7">🏖️</span>リタイア目標</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>リタイア形態</label>
-          <select id="retType" onchange="updateRetirementTypeUI()">
-            <option value="full">フルリタイア</option>
-            <option value="semi">セミリタイア（一部収入あり）</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>目標リタイア年齢</label>
-          <input type="number" id="retTargetAge" placeholder="65" min="30" max="80">
-        </div>
+      <!-- 本人 / パートナー タブ -->
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+        <button id="retireTab_self" onclick="switchRetireTab('self')"
+          style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--primary);margin-bottom:-2px;color:var(--primary)">👤 本人</button>
+        <button id="retireTab_partner" onclick="switchRetireTab('partner')"
+          style="padding:8px 20px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted);display:none" class="partner-only">👫 パートナー</button>
       </div>
-      <div class="form-row" id="retSemiRow" style="display:none">
-        <div class="form-group">
-          <label>セミリタイア後の月収 万円</label>
-          <input type="number" id="retSemiIncome" placeholder="10" min="0" step="0.1">
-          <div id="retSemiIncomeNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">本人（ご自身）のセミリタイア後月収入</div>
-        </div>
-        <div class="form-group">
-          <label>セミリタイア終了年齢（フルリタイアへ）</label>
-          <input type="number" id="retSemiEndAge" placeholder="65" min="30" max="80">
-        </div>
-      </div>
-      <!-- パートナーリタイア設定 -->
-      <div id="retPartnerRetireSection" class="partner-only" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(99,102,241,.05);border-radius:10px;border:.5px solid rgba(99,102,241,.2)">
-        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">👫 パートナーのリタイア設定</div>
+      <!-- 本人タブ -->
+      <div id="retireTabContent_self">
         <div class="form-row">
           <div class="form-group">
-            <label>リタイア形態（パートナー）</label>
+            <label>リタイア形態</label>
+            <select id="retType" onchange="updateRetirementTypeUI()">
+              <option value="full">フルリタイア</option>
+              <option value="semi">セミリタイア（一部収入あり）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>目標リタイア年齢</label>
+            <input type="number" id="retTargetAge" placeholder="65" min="30" max="80">
+          </div>
+        </div>
+        <div class="form-row" id="retSemiRow" style="display:none">
+          <div class="form-group">
+            <label>セミリタイア後の月収 万円</label>
+            <input type="number" id="retSemiIncome" placeholder="10" min="0" step="0.1">
+            <div id="retSemiIncomeNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">本人（ご自身）のセミリタイア後月収入</div>
+          </div>
+          <div class="form-group">
+            <label>セミリタイア終了年齢（フルリタイアへ）</label>
+            <input type="number" id="retSemiEndAge" placeholder="65" min="30" max="80">
+          </div>
+        </div>
+      </div>
+      <!-- パートナータブ -->
+      <div id="retireTabContent_partner" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>リタイア形態</label>
             <select id="retPartnerType" onchange="updatePartnerRetirementUI()">
               <option value="full">フルリタイア</option>
               <option value="semi">セミリタイア（一部収入あり）</option>
             </select>
           </div>
           <div class="form-group">
-            <label>目標リタイア年齢（パートナー）</label>
+            <label>目標リタイア年齢</label>
             <input type="number" id="retPartnerTargetAge" placeholder="65" min="30" max="80">
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">未入力の場合、パートナーは退職後も現役収入として加算されます</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">未入力の場合、リタイア後も現役収入として加算されます</div>
           </div>
         </div>
         <div class="form-row" id="retPartnerSemiRow" style="display:none">
           <div class="form-group">
-            <label>セミリタイア後の月収 万円（パートナー）</label>
+            <label>セミリタイア後の月収 万円</label>
             <input type="number" id="retPartnerSemiIncome" placeholder="10" min="0" step="0.1">
           </div>
           <div class="form-group">
-            <label>セミリタイア終了年齢（パートナー）</label>
+            <label>セミリタイア終了年齢（フルリタイアへ）</label>
             <input type="number" id="retPartnerSemiEndAge" placeholder="65" min="30" max="80">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:8px">
+          <div class="form-group" style="grid-column:1/-1">
+            <label>リタイア後の月支出変化 万円/月</label>
+            <input type="number" id="retPartnerExpenseChange" placeholder="0" step="0.5">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">例：−3（通勤費削減）、+2（余暇費増加）。リタイア年以降、フェーズ別支出に加減算されます</div>
           </div>
         </div>
       </div>
@@ -5527,11 +5543,11 @@ function applyMaritalFilter() {
   const partnerGrowthRow = document.getElementById('partnerGrowthRow');
   if (partnerGrowthRow) partnerGrowthRow.style.display = hasParter ? '' : 'none';
 
-  // 出口戦略: パートナー年金受給欄・パートナーリタイア設定
+  // 出口戦略: パートナー年金受給欄・パートナーリタイアタブボタン
   const retSec = document.getElementById('partnerRetireSection');
   if (retSec) retSec.style.display = hasParter ? '' : 'none';
-  const retPartnerSec = document.getElementById('retPartnerRetireSection');
-  if (retPartnerSec) retPartnerSec.style.display = hasParter ? '' : 'none';
+  const retPartnerTabBtn = document.getElementById('retireTab_partner');
+  if (retPartnerTabBtn) retPartnerTabBtn.style.display = hasParter ? '' : 'none';
 
   // 年金試算: パートナータブ（非表示の場合は本人タブに戻す）
   const penTab = document.getElementById('penTab_partner');
@@ -11305,6 +11321,9 @@ function renderRetirementPage() {
   if (retPartnerSemiIncomeEl) retPartnerSemiIncomeEl.value = r.partnerSemiMonthlyIncome || '';
   const retPartnerSemiEndAgeEl = document.getElementById('retPartnerSemiEndAge');
   if (retPartnerSemiEndAgeEl) retPartnerSemiEndAgeEl.value = r.partnerSemiEndAge || '';
+  const retPartnerExpChangeEl = document.getElementById('retPartnerExpenseChange');
+  if (retPartnerExpChangeEl) retPartnerExpChangeEl.value = r.partnerExpenseChange != null ? r.partnerExpenseChange : '';
+  switchRetireTab('self');
   updateRetirementTypeUI();
   updatePartnerRetirementUI();
   document.getElementById('retPensionAge').value = r.pensionAge || '';
@@ -11528,6 +11547,7 @@ function saveRetirement() {
     partnerType: document.getElementById('retPartnerType')?.value || 'full',
     partnerSemiMonthlyIncome: parseFloat(document.getElementById('retPartnerSemiIncome')?.value) || 0,
     partnerSemiEndAge: parseInt(document.getElementById('retPartnerSemiEndAge')?.value) || null,
+    partnerExpenseChange: parseFloat(document.getElementById('retPartnerExpenseChange')?.value) || 0,
   };
   save();
   showNotification('出口戦略を保存しました');
@@ -11545,6 +11565,19 @@ function updateRetirementTypeUI() {
   const p3Label = document.getElementById('retExpenseP3Label');
   if (p1Label) p1Label.textContent = isSemi ? '① セミリタイア期（〜セミ終了年齢）月支出 万円' : '① 年金受給前 月支出 万円';
   if (p3Label) p3Label.textContent = isSemi ? '③ 年金受給期（年金開始〜） 月支出 万円' : '② 年金受給期（年金開始〜） 月支出 万円';
+}
+
+function switchRetireTab(who) {
+  ['self', 'partner'].forEach(w => {
+    const tab = document.getElementById(`retireTab_${w}`);
+    const content = document.getElementById(`retireTabContent_${w}`);
+    const active = w === who;
+    if (tab) {
+      tab.style.borderBottomColor = active ? 'var(--primary)' : 'transparent';
+      tab.style.color = active ? 'var(--primary)' : 'var(--text-muted)';
+    }
+    if (content) content.style.display = active ? '' : 'none';
+  });
 }
 
 function updatePartnerRetirementUI() {
@@ -13326,7 +13359,7 @@ function calcRetirementSimWithOpts(opts = {}) {
     const pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
-    // パートナーリタイア後の就労収入（本人リタイア後もパートナーが働いている場合に加算）
+    // パートナーリタイア後の就労収入・支出変化（本人リタイア後もパートナーが働いている場合に加算）
     const _partnerBirthStr = state.profile?.partnerBirth || state.profile?.partnerbirth;
     const _partnerBirthYear = _partnerBirthStr ? new Date(_partnerBirthStr).getFullYear() : null;
     const _partnerRetireAge = parseInt(r.partnerTargetAge) || null;
@@ -13358,8 +13391,11 @@ function calcRetirementSimWithOpts(opts = {}) {
     })();
     const mortgageDeduct = calcMortgageDeduction(yr, mortgageBalance);
 
+    // パートナーリタイア後の月支出変化（通勤費削減・余暇費増加など）
+    const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYear)
+      ? (parseFloat(r.partnerExpenseChange) || 0) * 12 : 0;
     const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct;
-    const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
+    const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange) - totalNonAssetIncome);
 
     // ===== 資産使い切り哲学: 全モードで生活費は必ず確保 =====
     // 各モードは「いくら多めに取り崩すか」の戦略であり、不足は発生しない
@@ -14033,8 +14069,11 @@ function calcRetirementSimWithStress(stressShock) {
       effectiveReturn = weightedReturn * 0.5;
     }
 
+    // パートナーリタイア後の月支出変化
+    const _partnerExpChange2 = (_pRetireYear2 !== null && yr >= _pRetireYear2)
+      ? (parseFloat(r.partnerExpenseChange) || 0) * 12 : 0;
     const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome2 + extra + mortgageDeduct;
-    const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
+    const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange2) - totalNonAssetIncome);
 
     // ストレステスト: 使い切り哲学同様、全モードで生活費確保
     let _baseWithdrawal;
