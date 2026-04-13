@@ -8243,28 +8243,50 @@ function renderFinCharts() {
       </div>`;
   }
 
+  // 清算イベント（投資資産の強制売却年）
+  const liquidationEvents = simData._liquidationEvents || [];
+
   for (let y = 0; y <= years; y++) {
     const yr = startYear + y;
     const age = currentAge != null ? currentAge + y : null;
     labels.push(age != null ? `${yr}\n${age}歳` : `${yr}年`);
 
     const d = simData[y] || { cashFlow: 0, totalWealth: 0 };
-    const total = Math.round(d.totalWealth * realFactor(y));
+    const total = Math.round((d.totalWealth || 0) * realFactor(y));
     totalData.push(total);
 
-    // カテゴリ別金額
+    // カテゴリ別金額（二プールモデル対応）
     const groupAmts = {};
     CAT_GROUPS.forEach(g => groupAmts[g.key] = 0);
-    growthDataAll.forEach(({ asset, data }) => {
-      const amt = (data[y] || 0) * realFactor(y);
-      let matched = false;
-      for (const g of CAT_GROUPS) {
-        if (g.types.has(asset.type)) { groupAmts[g.key] += amt; matched = true; break; }
-      }
-      if (!matched) groupAmts['other'] += amt;
-    });
-    // 現金フロー調整（ローン返済・ライフイベント費用の累計）を現金グループに加算
-    groupAmts['cash'] += d.cashFlow * realFactor(y);
+
+    if (d.cashPool !== undefined) {
+      // 新モデル: 現金プールはそのまま、投資グループは清算係数でスケール
+      groupAmts['cash'] = d.cashPool * realFactor(y);
+      const liqFactor = (d.investAssetBase || 0) > 0
+        ? Math.min(1, (d.investPool || 0) / d.investAssetBase)
+        : 1;
+      growthDataAll.forEach(({ asset, data }) => {
+        if (CASH_TYPES_SIM.has(asset.type)) return; // 現金系はcashPoolで一括処理
+        const amt = (data[y] || 0) * realFactor(y);
+        let matched = false;
+        for (const g of CAT_GROUPS) {
+          if (g.key === 'cash') continue;
+          if (g.types.has(asset.type)) { groupAmts[g.key] += amt * liqFactor; matched = true; break; }
+        }
+        if (!matched) groupAmts['other'] += amt * liqFactor;
+      });
+    } else {
+      // 旧モデルフォールバック
+      growthDataAll.forEach(({ asset, data }) => {
+        const amt = (data[y] || 0) * realFactor(y);
+        let matched = false;
+        for (const g of CAT_GROUPS) {
+          if (g.types.has(asset.type)) { groupAmts[g.key] += amt; matched = true; break; }
+        }
+        if (!matched) groupAmts['other'] += amt;
+      });
+      groupAmts['cash'] += (d.cashFlow || 0) * realFactor(y);
+    }
     CAT_GROUPS.forEach(g => catData[g.key].push(Math.round(groupAmts[g.key])));
 
     // テーブル行：現在・5年毎・マイルストーン・最終年
@@ -8290,10 +8312,22 @@ function renderFinCharts() {
       const marks = [];
       if (retireInRange)  marks.push({ idx: retireIdx,  label: '🏖️ リタイア', color: '#10B981' });
       if (pensionInRange) marks.push({ idx: pensionIdx, label: '🏛️ 年金開始', color: '#6366F1' });
-      marks.forEach(({ idx, label, color }) => {
+      // 投資清算イベントを追加（複数年ある場合は最初の年のみラベル表示）
+      liquidationEvents.forEach(({ y, amount }, i) => {
+        if (y >= 0 && y <= years) {
+          marks.push({
+            idx: y,
+            label: i === 0 ? `⚠️ 資産清算` : '',
+            color: '#EF4444',
+            dashed: [3, 3],
+            amount,
+          });
+        }
+      });
+      marks.forEach(({ idx, label, color, dashed, amount }) => {
         const x = scales.x.getPixelForValue(idx);
         ctx.save();
-        ctx.setLineDash([5, 4]);
+        ctx.setLineDash(dashed || [5, 4]);
         ctx.strokeStyle = color;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -8301,10 +8335,18 @@ function renderFinCharts() {
         ctx.lineTo(x, chartArea.bottom);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = color;
-        ctx.font = `bold 10px ${_jfSim}`;
-        ctx.textAlign = 'center';
-        ctx.fillText(label, x, chartArea.top - 6);
+        if (label) {
+          ctx.fillStyle = color;
+          ctx.font = `bold 10px ${_jfSim}`;
+          ctx.textAlign = 'center';
+          ctx.fillText(label, x, chartArea.top - 6);
+        }
+        if (amount) {
+          ctx.fillStyle = color;
+          ctx.font = `9px ${_jfSim}`;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${fmtMoney(amount)}清算`, x, chartArea.top + 14);
+        }
         ctx.restore();
       });
     }
@@ -11012,6 +11054,24 @@ function calcIntegratedSim(years, opts = {}) {
   // アセット別の成長データを計算（2パス：振替元→振替先）
   const growthData = calcAllAssetGrowth(state.assets, years);
 
+  // ── 二プールモデル: 現金プール / 投資プール ──
+  const _CASH_T = new Set(['cash','cash_emergency','cash_special','cash_reserved','cash_surplus','savings','deposit']);
+  const _cashGD   = growthData.filter(g => _CASH_T.has(g.asset.type));
+  const _investGD = growthData.filter(g => !_CASH_T.has(g.asset.type));
+
+  // 投資資産の加重平均リターン（不足時の機会損失複利計算用）
+  const _totalInvestVal = _investGD.reduce((s, g) => s + (g.asset.currentVal || 0), 0);
+  const _wInvestReturn = _totalInvestVal > 0
+    ? _investGD.reduce((s, g) => {
+        const rate = (g.asset.return != null ? g.asset.return
+          : (g.asset.annualReturn != null ? g.asset.annualReturn : 3)) / 100;
+        return s + (g.asset.currentVal || 0) * rate;
+      }, 0) / _totalInvestVal
+    : 0.05;
+
+  let _investDeficit = 0;       // 累積清算額（機会損失複利で増加）
+  const _liquidationEvents = []; // 清算発生年の記録
+
   // 配当受取アセット（cashoutモード）を抽出
   const cashoutAssets = state.assets.filter(a =>
     a.dividendMode === 'cashout' && a.dividendYield > 0
@@ -11021,21 +11081,16 @@ function calcIntegratedSim(years, opts = {}) {
     const yr = currentYear + y;
     const leCost = calcLECostByYear(yr, opts);
     const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
-    // 収支変化イベントを年別に反映（収入・支出の変化 + 一時収支）
-    const annualIncome  = getIncomeForYearWithGrowth(yr); // ② 昇給モデル込み
+    const annualIncome  = getIncomeForYearWithGrowth(yr);
     const annualExpense = getExpenseForYear(yr);
     const oneTime       = getOneTimeForYear(yr);
-    // 現在の総資産 = アセット合計のみ。cashFlowは毎年の収支累積
-    const assetTotal = growthData.reduce((s, g) => s + (g.data[y] || 0), 0);
 
     // 配当受取（cashout）アセットの年間配当をキャッシュフローに加算
-    // 課税口座（特定・一般）の場合は約20.315%の配当課税を差し引く
     const DIV_TAX_RATE = 0.20315;
     const annualDividendCashout = y === 0 ? 0 : cashoutAssets.reduce((s, a) => {
       const gd = growthData.find(g => g.asset.id === a.id);
       const prevVal = gd ? (gd.data[y - 1] || 0) : 0;
       const grossDiv = prevVal * (a.dividendYield / 100);
-      // NISA・iDeCoは非課税、特定口座・一般口座は約20.3%課税
       const isTaxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
       const netDiv = isTaxable ? grossDiv * (1 - DIV_TAX_RATE) : grossDiv;
       return s + netDiv;
@@ -11053,23 +11108,53 @@ function calcIntegratedSim(years, opts = {}) {
     })();
     const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);
 
+    // 年間収支の累積（収入 − 支出 − ライフイベント + 一時収支 + 配当 + 控除）
     const cashFlow = y === 0
       ? oneTime
       : result[y-1].cashFlow + annualIncome - annualExpense - totalLE + oneTime + annualDividendCashout + annualMortgageDeduct;
 
+    // ── プール計算 ──
+    const cashAssetBase   = _cashGD.reduce((s, g) => s + (g.data[y] || 0), 0);
+    const investAssetBase = _investGD.reduce((s, g) => s + (g.data[y] || 0), 0);
+
+    // 既存の不足累積に複利をかける（前年に清算した分の機会損失）
+    if (y > 0) _investDeficit *= (1 + _wInvestReturn);
+
+    // 仮想現金プール = 現金資産 + 累積収支
+    const virtualCash = cashAssetBase + cashFlow;
+    let liquidationThisYear = 0;
+    let adjustedCashFlow = cashFlow;
+
+    if (y > 0 && virtualCash < 0) {
+      // 現金プールが不足 → 投資資産を清算して補填
+      liquidationThisYear = -virtualCash;
+      _investDeficit += liquidationThisYear;
+      adjustedCashFlow = cashFlow + liquidationThisYear; // 清算後: cashPool ≒ 0
+      _liquidationEvents.push({ y, yr, amount: Math.round(liquidationThisYear) });
+    }
+
+    const cashPool   = Math.max(0, cashAssetBase + adjustedCashFlow);
+    const investPool = Math.max(0, investAssetBase - _investDeficit);
+
     result.push({
       year: yr,
-      cashFlow: Math.round(cashFlow),
-      assetTotal: Math.round(assetTotal),
-      totalWealth: Math.round(assetTotal + cashFlow),
+      cashFlow: Math.round(adjustedCashFlow),   // 後方互換（清算調整済み）
+      cashPool: Math.round(cashPool),
+      investPool: Math.round(investPool),
+      cashAssetBase: Math.round(cashAssetBase),
+      investAssetBase: Math.round(investAssetBase),
+      assetTotal: Math.round(cashPool + investPool),
+      totalWealth: Math.round(cashPool + investPool),
       leCost: Math.round(totalLE),
       annualIncome: Math.round(annualIncome),
       annualExpense: Math.round(annualExpense),
       oneTime: Math.round(oneTime),
       dividendCashout: Math.round(annualDividendCashout),
       mortgageDeduct: Math.round(annualMortgageDeduct),
+      liquidation: Math.round(liquidationThisYear),
     });
   }
+  result._liquidationEvents = _liquidationEvents;
   return result;
 }
 
