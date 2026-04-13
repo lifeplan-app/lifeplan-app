@@ -11149,7 +11149,8 @@ function renderRetirementPage() {
   // 本人
   document.getElementById('penEmployType').value = penData.employType || 'employee';
   document.getElementById('penKosei').value = penData.koseiYears !== undefined ? penData.koseiYears : defaultKosei;
-  const isAutoFilledIncome = penData.avgIncome === undefined && defaultIncome > 0;
+  // avgIncome が未設定、または手取り年収そのままの場合は警告表示（税込みへの修正を促す）
+  const isAutoFilledIncome = (penData.avgIncome === undefined || penData.avgIncome === defaultIncome) && defaultIncome > 0;
   document.getElementById('penAvgIncome').value = penData.avgIncome !== undefined ? penData.avgIncome : (defaultIncome || '');
   const penWarn = document.getElementById('penAvgIncomeWarn');
   if (penWarn) penWarn.style.display = isAutoFilledIncome ? '' : 'none';
