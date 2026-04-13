@@ -7967,6 +7967,7 @@ function renderExpenseList() {
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-weight:700;color:var(--danger)">${Number(e.amount).toLocaleString()} 万円</span>
+        <button class="btn btn-sm btn-secondary" onclick="openExpenseModal('${e.id}')">編集</button>
         <button class="btn btn-sm btn-danger" onclick="deleteExpense('${e.id}')">削除</button>
       </div>
     </div>`).join('');
@@ -8354,6 +8355,11 @@ function openExpenseModal(id) {
       document.getElementById('emYear').value = e.year || '';
       document.getElementById('emNote').value = e.note || '';
     }
+  } else {
+    document.getElementById('emName').value = '';
+    document.getElementById('emAmount').value = '';
+    document.getElementById('emYear').value = '';
+    document.getElementById('emNote').value = '';
   }
   document.getElementById('expenseModal').classList.add('open');
 }
@@ -9548,8 +9554,69 @@ function calcMortgage() {
       <div class="pf-stat"><div class="val" style="font-size:17px;color:var(--warning)">${Math.round(interest).toLocaleString()} 万円</div><div class="lbl">利息総額（当初）</div></div>
       <div class="pf-stat"><div class="val" style="font-size:17px">${(interest/amount*100).toFixed(1)}%</div><div class="lbl">利息割合</div></div>
     </div>`;
+  // 住宅ローン控除サマリーを更新
+  updateMortgageDeductResult();
   renderMortgageEventList();
   renderMortgageBalanceTable();
+}
+
+function updateMortgageDeductResult() {
+  const el = document.getElementById('mortgageDeductResult');
+  if (!el) return;
+  const deductStart = parseInt(document.getElementById('leMortgageDeductStart')?.value) || 0;
+  const deductYears = parseInt(document.getElementById('leMortgageDeductYears')?.value) || 0;
+  const amount = parseFloat(document.getElementById('leMortgageAmount')?.value) || 0;
+  const term = parseInt(document.getElementById('leMortgageTerm')?.value) || 35;
+  const startYear = parseInt(document.getElementById('leMortgageStartYear')?.value) || new Date().getFullYear();
+
+  if (!deductStart || !deductYears || !amount) {
+    el.innerHTML = '';
+    return;
+  }
+  const endYear = deductStart + deductYears - 1;
+  // 各年の控除額を積算（直線近似残高ベース）
+  let totalDeduct = 0;
+  const yearlyDeducts = [];
+  for (let yr = deductStart; yr <= endYear; yr++) {
+    const elapsed = yr - startYear;
+    if (elapsed < 0 || elapsed >= term) continue;
+    const balance = amount * (1 - elapsed / term);
+    const annual = Math.min(balance * 0.007, 31.5);
+    totalDeduct += annual;
+    yearlyDeducts.push({ yr, annual: Math.round(annual * 10) / 10 });
+  }
+  const firstYr = yearlyDeducts[0];
+  const lastYr = yearlyDeducts[yearlyDeducts.length - 1];
+  const avgAnnual = yearlyDeducts.length > 0 ? Math.round(totalDeduct / yearlyDeducts.length * 10) / 10 : 0;
+
+  el.innerHTML = `
+    <div style="margin-top:6px;padding:8px 10px;background:rgba(52,199,89,.08);border-radius:8px;border:.5px solid rgba(52,199,89,.25)">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:700;color:var(--secondary)">📊 控除シミュレーション</span>
+        <span style="font-size:10px;color:var(--text-muted)">（年末残高×0.7%、上限31.5万円/年）</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
+        <div style="text-align:center;padding:4px;background:rgba(255,255,255,.5);border-radius:6px">
+          <div style="font-size:13px;font-weight:700;color:var(--secondary)">${firstYr ? firstYr.annual : 0}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">初年度</div>
+        </div>
+        <div style="text-align:center;padding:4px;background:rgba(255,255,255,.5);border-radius:6px">
+          <div style="font-size:13px;font-weight:700;color:var(--secondary)">${avgAnnual}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">平均/年</div>
+        </div>
+        <div style="text-align:center;padding:4px;background:rgba(52,199,89,.15);border-radius:6px">
+          <div style="font-size:13px;font-weight:700;color:#059669">${Math.round(totalDeduct)}万円</div>
+          <div style="font-size:10px;color:var(--text-muted)">累計還付</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);line-height:1.6">
+        適用期間: ${deductStart}年〜${endYear}年（${deductYears}年間）
+        ${lastYr ? `　最終年: ${lastYr.annual}万円` : ''}
+      </div>
+      <div style="margin-top:5px;font-size:10px;color:var(--secondary);background:rgba(52,199,89,.06);padding:4px 8px;border-radius:5px">
+        ✅ 家計・資産の資産推移グラフ（現役期）および出口戦略シミュレーションの両方に反映されます
+      </div>
+    </div>`;
 }
 
 // ===== ローンイベント UI =====
@@ -9583,7 +9650,10 @@ function renderMortgageEventList() {
           <div style="font-size:13px;font-weight:600">${ev.year}年</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:3px">${detail}</div>
         </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteMortgageEvent('${ev.id}')">削除</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="editMortgageEvent('${ev.id}')">編集</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMortgageEvent('${ev.id}')">削除</button>
+        </div>
       </div>`;
   }).join('');
 }
@@ -9664,6 +9734,82 @@ function saveMortgageEvent(type, btn) {
 
 function deleteMortgageEvent(id) {
   state.lifeEvents.mortgage.events = (state.lifeEvents.mortgage.events || []).filter(e => e.id !== id);
+  renderMortgageEventList();
+  renderMortgageBalanceTable();
+}
+
+function editMortgageEvent(id) {
+  const ev = (state.lifeEvents.mortgage.events || []).find(e => e.id === id);
+  if (!ev) return;
+  const startYear = parseInt(state.lifeEvents.mortgage.startYear) || new Date().getFullYear();
+  const term = parseInt(state.lifeEvents.mortgage.term) || 35;
+  let html = '';
+  if (ev.type === 'prepay') {
+    html = `
+      <div class="form-group">
+        <label>繰り上げ返済実施年</label>
+        <input type="number" id="meYear" value="${ev.year}" min="${startYear}" max="${startYear+term}">
+      </div>
+      <div class="form-group">
+        <label>繰り上げ返済額（万円）</label>
+        <input type="number" id="meAmount" value="${ev.amount}" min="0">
+      </div>
+      <div class="form-group">
+        <label>返済方法</label>
+        <select id="meMethod">
+          <option value="term" ${ev.method !== 'payment' ? 'selected' : ''}>期間短縮型（同じ月額で期間を短縮）</option>
+          <option value="payment" ${ev.method === 'payment' ? 'selected' : ''}>返済額軽減型（同じ期間で月額を軽減）</option>
+        </select>
+      </div>`;
+  } else {
+    html = `
+      <div class="form-group">
+        <label>借り換え実施年</label>
+        <input type="number" id="meYear" value="${ev.year}" min="${startYear}" max="${startYear+term}">
+      </div>
+      <div class="form-group">
+        <label>新金利（%）</label>
+        <input type="number" id="meNewRate" step="0.01" value="${ev.newRate}" min="0">
+      </div>
+      <div class="form-group">
+        <label>新返済期間（年）</label>
+        <input type="number" id="meNewTerm" value="${ev.newTerm}" min="1" max="50">
+      </div>`;
+  }
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">${ev.type === 'prepay' ? '繰り上げ返済を編集' : '借り換えを編集'}</div>
+      ${html}
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">キャンセル</button>
+        <button class="btn btn-primary" onclick="updateMortgageEvent('${id}','${ev.type}',this)">保存する</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
+
+function updateMortgageEvent(id, type, btn) {
+  const modal = btn.closest('.modal-overlay');
+  const year = parseInt(modal.querySelector('#meYear').value);
+  if (!year) { alert('年を入力してください'); return; }
+  const events = state.lifeEvents.mortgage.events || [];
+  const idx = events.findIndex(e => e.id === id);
+  if (idx < 0) return;
+  if (type === 'prepay') {
+    const amount = parseFloat(modal.querySelector('#meAmount').value);
+    if (!amount) { alert('返済額を入力してください'); return; }
+    events[idx] = { ...events[idx], year, amount, method: modal.querySelector('#meMethod').value };
+  } else {
+    const newRate = parseFloat(modal.querySelector('#meNewRate').value);
+    const newTerm = parseInt(modal.querySelector('#meNewTerm').value);
+    if (!newRate || !newTerm) { alert('新金利と新期間を入力してください'); return; }
+    events[idx] = { ...events[idx], year, newRate, newTerm };
+  }
+  save();
+  modal.remove();
   renderMortgageEventList();
   renderMortgageBalanceTable();
 }
@@ -10319,6 +10465,10 @@ function renderLifeEventsPage() {
   document.getElementById('leCareType').value      = le.care.careType   || 'home';
   // 住まいタイプ切り替え
   switchHousingType(le.housingType || 'mortgage', false);
+  // 住宅ローン控除フィールドを先に復元してから計算
+  const r = state.retirement || {};
+  document.getElementById('leMortgageDeductStart').value = le.mortgage.deductStart || r.mortgageDeductStart || le.mortgage.startYear || '';
+  document.getElementById('leMortgageDeductYears').value = le.mortgage.deductYears || r.mortgageDeductYears || 13;
   calcMortgage();
   renderCFEvents();
   renderScholarships();
@@ -10841,9 +10991,21 @@ function calcIntegratedSim(years, opts = {}) {
       return s + netDiv;
     }, 0);
 
+    // 住宅ローン控除（現役期にも反映）
+    const mortgageBalanceInteg = (() => {
+      const m = state.lifeEvents?.mortgage || {};
+      const principal = parseFloat(m.amount) || 0;
+      const startYr = parseInt(m.startYear) || currentYear;
+      const term = parseInt(m.term) || 35;
+      const elapsed = yr - startYr;
+      if (elapsed < 0 || elapsed >= term || !principal) return 0;
+      return principal * (1 - elapsed / term);
+    })();
+    const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);
+
     const cashFlow = y === 0
       ? oneTime
-      : result[y-1].cashFlow + annualIncome - annualExpense - totalLE + oneTime + annualDividendCashout;
+      : result[y-1].cashFlow + annualIncome - annualExpense - totalLE + oneTime + annualDividendCashout + annualMortgageDeduct;
 
     result.push({
       year: yr,
@@ -10855,6 +11017,7 @@ function calcIntegratedSim(years, opts = {}) {
       annualExpense: Math.round(annualExpense),
       oneTime: Math.round(oneTime),
       dividendCashout: Math.round(annualDividendCashout),
+      mortgageDeduct: Math.round(annualMortgageDeduct),
     });
   }
   return result;
@@ -11159,7 +11322,7 @@ function renderRetirementPage() {
   document.getElementById('retMedicalModel').value  = r.medicalModel  || 'moderate';
   // 住宅ローン控除
   const m = state.lifeEvents?.mortgage || {};
-  document.getElementById('leMortgageDeductStart').value = m.deductStart || r.mortgageDeductStart || '';
+  document.getElementById('leMortgageDeductStart').value = m.deductStart || r.mortgageDeductStart || m.startYear || '';
   document.getElementById('leMortgageDeductYears').value = m.deductYears || r.mortgageDeductYears || 13;
 
   calcPensionEstimate('self');
