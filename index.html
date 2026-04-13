@@ -10549,8 +10549,14 @@ function renderLifeEventCharts() {
   const _severanceYr  = (_severance > 0 && _severanceAge > 0)
     ? currentYear + (_severanceAge - _currentAge) : null;
 
+  // 現金系アセットの現在残高を初期値として使用
+  const CF_CASH_ASSET_TYPES = new Set(['cash','deposit','cash_emergency','cash_special','cash_reserved','cash_surplus']);
+  const _initialCash = Math.round((state.assets || [])
+    .filter(a => CF_CASH_ASSET_TYPES.has(a.type))
+    .reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0));
+
   const cfIncomeSalary = [], cfIncomeOther = [], cfExpense = [], cfCash = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
-  let cumulativeCF = 0;
+  let cumulativeCF = _initialCash;
   for (let i = 0; i <= years; i++) {
     const yr = currentYear + i;
     const inc     = getIncomeForYearWithGrowth(yr);  // 給与・副業含む
@@ -10737,11 +10743,12 @@ function renderLifeEventCharts() {
                 const v = item.parsed.y;
                 const lbl = item.dataset.label;
                 if (lbl === '生活・ライフイベント支出') return ` 生活・ライフイベント: ${fmtMoney(-v)}`;
+                if (lbl === '現金性積立（貯蓄・生活防衛費等）') return ` 現金性積立: ${fmtMoney(-v)}`;
                 if (lbl === '投資活動（将来への積立）')  return ` 投資活動: ${fmtMoney(-v)}`;
                 if (lbl === '給与・副業収入')            return ` 給与・副業: +${fmtMoney(v)}`;
                 if (lbl === 'その他収入（配当・退職金等）' && v > 0) return ` その他収入: +${fmtMoney(v)}`;
                 if (lbl === 'その他収入（配当・退職金等）' && v === 0) return null;
-                if (lbl === '手元現金推移') { const sign = v >= 0 ? '+' : ''; return ` 手元現金: ${sign}${fmtMoney(v)}`; }
+                if (lbl === '手元現金推移') return null; // afterBodyで表示するため非表示
                 const sign = v >= 0 ? '+' : '';
                 return ` ${lbl}: ${sign}${fmtMoney(v)}`;
               },
@@ -10750,14 +10757,15 @@ function renderLifeEventCharts() {
                 const annual = cfAnnual[idx];
                 const cumul  = cfCumulative[idx];
                 const aSign  = annual >= 0 ? '+' : '';
-                const cSign  = cumul  >= 0 ? '+' : '';
-                return [
+                const lines = [
                   '─────────────────',
                   annual >= 0
-                    ? `✅ 年間手元収支: ${aSign}${fmtMoney(annual)}`
-                    : `🔴 年間手元収支: ${fmtMoney(annual)}`,
-                  `💰 手元現金累計: ${cSign}${fmtMoney(cumul)}`,
+                    ? `✅ 今年の収支: ${aSign}${fmtMoney(annual)}`
+                    : `🔴 今年の収支: ${fmtMoney(annual)}`,
+                  `💰 年末手元現金見込み: ${fmtMoney(cumul)}`,
                 ];
+                if (idx === 0) lines.push(`  (現在残高 ${fmtMoney(_initialCash)} が起点)`);
+                return lines;
               }
             }
           }
