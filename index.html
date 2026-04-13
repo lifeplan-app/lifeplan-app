@@ -6507,10 +6507,17 @@ function updateNisaOverflowSelect() {
   const sel = document.getElementById('amNisaOverflowTarget');
   if (!sel) return;
   const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
+  const currentOwner = document.getElementById('amOwner')?.value || 'self';
   const current = sel.value;
   sel.innerHTML = '<option value="">振替なし（積立停止のみ）</option>';
   (state.assets || [])
-    .filter(a => a.id !== editingId && !['nisa_tsumitate', 'nisa_growth'].includes(a.type))
+    .filter(a => {
+      if (a.id === editingId) return false;
+      // 同一オーナーのNISAは除外（枠の二重計算防止）
+      // 別オーナーのNISAは許可（例: パートナーNISA → 本人NISA）
+      if (['nisa_tsumitate', 'nisa_growth'].includes(a.type) && (a.owner || 'self') === currentOwner) return false;
+      return true;
+    })
     .forEach(a => {
       const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
       const opt = document.createElement('option');
