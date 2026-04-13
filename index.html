@@ -5387,8 +5387,6 @@ function showPage(id) {
   // 対象ページを表示
   const pageEl = document.getElementById('page-' + id);
   if (pageEl) pageEl.classList.add('active');
-  // ページ先頭にスクロール
-  window.scrollTo({ top: 0, behavior: 'instant' });
   // data-page属性を持つすべてのナビボタン（デスクトップnav・モバイルタブ・ドロワー）を一括更新
   document.querySelectorAll('[data-page]').forEach(b => {
     const isActive = b.dataset.page === id;
@@ -5419,6 +5417,8 @@ function showPage(id) {
   if (id === 'inheritance') renderInheritancePage();
   if (id === 'scenarios')   { renderScenariosPage(); checkAndShowDisclaimerModal(); }
   if (id === 'finance')     applyMaritalFilter();
+  // レンダー後にページ先頭へスクロール（ブラウザのスクロール復元より優先）
+  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 }
 
 // ===== PROFILE =====
@@ -15004,6 +15004,9 @@ function runPrepayCalc() {
   document.getElementById('prepaySummaryTable').innerHTML = tableHtml;
   chartArea.style.display = '';
 }
+
+// ブラウザのスクロール位置自動復元を無効化（タブ切替時に常に先頭表示するため）
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 // FAQアコーディオン（クリック）
 document.addEventListener('DOMContentLoaded', () => {
