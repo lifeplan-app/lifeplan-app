@@ -13947,8 +13947,17 @@ const WZ_STEPS = [
     sub: 'キャッシュフローの計算に使用します。',
     fields: [
       { id: 'wz_income', label: '月収（手取り）万円', type: 'number', placeholder: '30', hint: '手取り・税引後の月収入' },
-      { id: 'wz_expense', label: '月支出合計 万円', type: 'number', placeholder: '20', hint: '家賃・食費・通信費などすべて含む' },
+      { id: 'wz_expense', label: '月の生活費 万円（家賃・ローン除く）', type: 'number', placeholder: '20', hint: '食費・光熱費・通信費・保険料など。家賃・住宅ローンは次のステップで入力してください' },
       { id: 'wz_assets', label: '現在の総資産（貯蓄・投資）万円', type: 'number', placeholder: '100', hint: '預貯金・株・投資信託などすべて合計した金額' },
+    ],
+    next: '次へ →',
+  },
+  {
+    icon: '🏠',
+    title: '住まいの情報',
+    sub: '住居費はシミュレーションで別途計算されます。\n後から「ライフイベント」タブで詳細変更できます。',
+    fields: [
+      { id: 'wz_housingType', type: 'housing', label: '' },
     ],
     next: '次へ →',
   },
@@ -13989,10 +13998,33 @@ function wizardRender() {
     <div class="wz-sub">${s.sub.replace(/\n/g, '<br>')}</div>
     ${s.fields.map(f => `
       <div class="wz-field">
-        <label for="${f.id}">${f.label}</label>
+        ${f.label ? `<label for="${f.id}">${f.label}</label>` : ''}
         ${f.type === 'birth'
           ? `<input type="hidden" id="${f.id}" value="${wizardGetSavedVal(f.id)}"><div class="birth-row" id="${f.id}Row"></div>`
-          : `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}" value="${wizardGetSavedVal(f.id)}">`
+          : f.type === 'housing'
+            ? (() => {
+                const cur = wizardGetSavedVal('wz_housingType');
+                const opts = [
+                  { val: 'rent',     label: '🏘️ 賃貸' },
+                  { val: 'mortgage', label: '🏠 持ち家（住宅ローンあり）' },
+                  { val: 'owned',    label: '🏡 持ち家（ローンなし・一括購入済み）' },
+                ];
+                return `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
+                  ${opts.map(o => `<label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid ${cur===o.val?'var(--primary)':'var(--border)'};border-radius:10px;cursor:pointer;font-size:14px;transition:border-color .15s" id="wz_hl_${o.val}">
+                    <input type="radio" name="wz_housingType" value="${o.val}" ${cur===o.val?'checked':''} onchange="wzHousingChange('${o.val}')" style="accent-color:var(--primary);width:16px;height:16px">
+                    ${o.label}
+                  </label>`).join('')}
+                </div>
+                <div id="wz_rentRow" style="display:${cur==='rent'?'':'none'};margin-top:8px">
+                  <label style="font-size:13px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">月額家賃 万円（管理費込み）</label>
+                  <input type="number" id="wz_rent" placeholder="8" value="${wizardGetSavedVal('wz_rent')}" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px">
+                  <div style="font-size:11px;color:var(--text-muted);margin-top:4px">管理費・共益費なども含めた月額合計</div>
+                </div>
+                <div id="wz_mortgageNote" style="display:${cur==='mortgage'?'':'none'};margin-top:8px;padding:10px 12px;background:var(--bg-secondary,#F8FAFC);border-radius:8px;font-size:12px;color:var(--text-secondary);border-left:3px solid var(--primary)">
+                  📋 物件価格・頭金・金利・返済年数などの詳細は<br>「ライフイベント」タブの「住居計画」で設定できます。
+                </div>`;
+              })()
+            : `<input type="${f.type}" id="${f.id}" placeholder="${f.placeholder || ''}" value="${wizardGetSavedVal(f.id)}">`
         }
         ${f.hint ? `<div class="wz-hint">${f.hint}</div>` : ''}
       </div>`).join('')}
@@ -14016,6 +14048,8 @@ function wizardGetSavedVal(id) {
     wz_income:      state.finance?.income || '',
     wz_expense:     state.finance?.expense || '',
     wz_assets:      state.assets?.length > 0 ? state.assets.reduce((s, a) => s + (a.currentVal || 0), 0) : '',
+    wz_housingType: state.lifeEvents?.housingType || '',
+    wz_rent:        state.lifeEvents?.rent?.monthly || '',
     wz_retireAge:   state.retirement?.targetAge || '',
     wz_retireReturn: state.retirement?.expectedReturn || '',
   };
@@ -14050,6 +14084,19 @@ function wizardSaveStep() {
     save();
   }
   if (wzStep === 3) {
+    const housingType = document.querySelector('input[name="wz_housingType"]:checked')?.value;
+    const rent = parseFloat(document.getElementById('wz_rent')?.value) || 0;
+    if (housingType) {
+      if (!state.lifeEvents) state.lifeEvents = { children: [], mortgage: {}, rent: {}, care: {}, scholarships: [] };
+      state.lifeEvents.housingType = housingType;
+      if (housingType === 'rent') {
+        if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
+        if (rent > 0) state.lifeEvents.rent.monthly = rent;
+      }
+    }
+    save();
+  }
+  if (wzStep === 4) {
     const age = parseInt(get('wz_retireAge')) || 0;
     const ret = parseFloat(get('wz_retireReturn')) || 0;
     if (!state.retirement) state.retirement = {};
@@ -14071,6 +14118,18 @@ function wizardNext() {
 
 function wizardBack() {
   if (wzStep > 0) { wzStep--; wizardRender(); }
+}
+
+function wzHousingChange(val) {
+  const rentRow = document.getElementById('wz_rentRow');
+  const mortNote = document.getElementById('wz_mortgageNote');
+  if (rentRow) rentRow.style.display = val === 'rent' ? '' : 'none';
+  if (mortNote) mortNote.style.display = val === 'mortgage' ? '' : 'none';
+  // ラジオラベルのボーダー色を更新
+  ['rent', 'mortgage', 'owned'].forEach(v => {
+    const lbl = document.getElementById('wz_hl_' + v);
+    if (lbl) lbl.style.borderColor = v === val ? 'var(--primary)' : 'var(--border)';
+  });
 }
 
 function wizardClose() {
