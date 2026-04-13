@@ -9540,12 +9540,16 @@ function calcMortgage() {
   const total = monthly * n;
   const interest = total - amount;
   // 残高テーブル描画のため state に最新値を先に同期
+  const deductStartVal = parseInt(document.getElementById('leMortgageDeductStart').value) || null;
+  const deductYearsVal = parseInt(document.getElementById('leMortgageDeductYears').value) || 13;
   Object.assign(state.lifeEvents.mortgage, {
     amount,
     rate: annualRate,
     term,
     startYear: document.getElementById('leMortgageStartYear').value || String(new Date().getFullYear()),
     monthlyPayment: Math.round(monthly * 100) / 100,
+    deductStart: deductStartVal,
+    deductYears: deductYearsVal,
   });
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
