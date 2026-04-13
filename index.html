@@ -4893,6 +4893,24 @@ function load() {
       state.actions = [];
       save();
     }
+    // 繰り返し支出: startYear が excludeYears に含まれている場合 startYear を次の発生年に進める
+    if (state.recurringExpenses) {
+      let migrated = false;
+      state.recurringExpenses = state.recurringExpenses.map(e => {
+        if (!e.excludeYears || !e.excludeYears.includes(parseInt(e.startYear))) return e;
+        const iv = parseInt(e.intervalYears) || 1;
+        let sy = parseInt(e.startYear);
+        const excludeSet = new Set(e.excludeYears);
+        while (excludeSet.has(sy)) { sy += iv; }
+        const newExclude = e.excludeYears.filter(y => y >= sy);
+        migrated = true;
+        return { ...e, startYear: sy, excludeYears: newExclude.length > 0 ? newExclude : undefined };
+      }).map(e => {
+        if (e.excludeYears === undefined) { const copy = { ...e }; delete copy.excludeYears; return copy; }
+        return e;
+      });
+      if (migrated) save();
+    }
   }
 }
 
@@ -5858,11 +5876,18 @@ function saveRecurringExpense() {
     }
   } else {
     // 通常の全期間編集 or 新規追加
+    const existing = existingId ? (state.recurringExpenses || []).find(x => x.id === existingId) : null;
+    // startYear が変わった場合は excludeYears を全クリア、変わらない場合は引き継ぐ
+    const prevStartYear = existing ? parseInt(existing.startYear) : null;
+    const excludeYears = (existing?.excludeYears || []).filter(y =>
+      prevStartYear !== startYear ? false : y >= startYear
+    );
     const entry = {
       id: existingId || ('re_' + Date.now()),
       emoji, name, amount, intervalYears, startYear,
       endYear: endYearRaw ? parseInt(endYearRaw) : null,
       note,
+      ...(excludeYears.length > 0 ? { excludeYears } : {}),
     };
     if (existingId) {
       const idx = state.recurringExpenses.findIndex(x => x.id === existingId);
@@ -8565,10 +8590,19 @@ function tlDeleteItem(type, id, year) {
       const entry = (state.recurringExpenses || []).find(e => e.id === id);
       if (!entry) return;
       if (!confirm(`${year}年の「${entry.name}」を削除しますか？\n（この年のみ削除。全期間を削除するにはイベントページから行ってください）`)) return;
-      if (!entry.excludeYears) entry.excludeYears = [];
-      if (!entry.excludeYears.includes(year)) entry.excludeYears.push(year);
+      if (year === parseInt(entry.startYear)) {
+        // 最初の発生年を削除 → startYear を次の発生年に進める（家計・資産と同期）
+        entry.startYear = parseInt(entry.startYear) + (parseInt(entry.intervalYears) || 1);
+        // 旧startYearが excludeYears に残っていれば除去
+        if (entry.excludeYears) entry.excludeYears = entry.excludeYears.filter(y => y !== year);
+      } else {
+        // 中間の発生年を削除 → その年のみ除外
+        if (!entry.excludeYears) entry.excludeYears = [];
+        if (!entry.excludeYears.includes(year)) entry.excludeYears.push(year);
+      }
       save();
       renderTimeline();
+      renderRecurringExpenseList();
       if (document.getElementById('page-finance')?.classList.contains('active')) renderFinCharts();
       if (document.getElementById('page-lifeevents')?.classList.contains('active')) renderLifeEventCharts();
     } else {
