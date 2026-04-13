@@ -2738,11 +2738,39 @@
         <div class="form-group">
           <label>セミリタイア後の月収 万円</label>
           <input type="number" id="retSemiIncome" placeholder="10" min="0" step="0.1">
-          <div id="retSemiIncomeNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（夫婦二人分）の月収入</div>
+          <div id="retSemiIncomeNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">本人（ご自身）のセミリタイア後月収入</div>
         </div>
         <div class="form-group">
           <label>セミリタイア終了年齢（フルリタイアへ）</label>
           <input type="number" id="retSemiEndAge" placeholder="65" min="30" max="80">
+        </div>
+      </div>
+      <!-- パートナーリタイア設定 -->
+      <div id="retPartnerRetireSection" class="partner-only" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(99,102,241,.05);border-radius:10px;border:.5px solid rgba(99,102,241,.2)">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">👫 パートナーのリタイア設定</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>リタイア形態（パートナー）</label>
+            <select id="retPartnerType" onchange="updatePartnerRetirementUI()">
+              <option value="full">フルリタイア</option>
+              <option value="semi">セミリタイア（一部収入あり）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>目標リタイア年齢（パートナー）</label>
+            <input type="number" id="retPartnerTargetAge" placeholder="65" min="30" max="80">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">未入力の場合、パートナーは退職後も現役収入として加算されます</div>
+          </div>
+        </div>
+        <div class="form-row" id="retPartnerSemiRow" style="display:none">
+          <div class="form-group">
+            <label>セミリタイア後の月収 万円（パートナー）</label>
+            <input type="number" id="retPartnerSemiIncome" placeholder="10" min="0" step="0.1">
+          </div>
+          <div class="form-group">
+            <label>セミリタイア終了年齢（パートナー）</label>
+            <input type="number" id="retPartnerSemiEndAge" placeholder="65" min="30" max="80">
+          </div>
         </div>
       </div>
       <div class="phase-expense-header">
@@ -5499,9 +5527,11 @@ function applyMaritalFilter() {
   const partnerGrowthRow = document.getElementById('partnerGrowthRow');
   if (partnerGrowthRow) partnerGrowthRow.style.display = hasParter ? '' : 'none';
 
-  // 出口戦略: パートナー年金受給欄
+  // 出口戦略: パートナー年金受給欄・パートナーリタイア設定
   const retSec = document.getElementById('partnerRetireSection');
   if (retSec) retSec.style.display = hasParter ? '' : 'none';
+  const retPartnerSec = document.getElementById('retPartnerRetireSection');
+  if (retPartnerSec) retPartnerSec.style.display = hasParter ? '' : 'none';
 
   // 年金試算: パートナータブ（非表示の場合は本人タブに戻す）
   const penTab = document.getElementById('penTab_partner');
@@ -11266,7 +11296,17 @@ function renderRetirementPage() {
   document.getElementById('retMonthlyExpense2').value = r.monthlyExpense2 || '';
   document.getElementById('retMonthlyExpense3').value = r.monthlyExpense3 || '';
   document.getElementById('retLifeExpectancy').value = r.lifeExpectancy || '';
+  // パートナーリタイア設定の復元
+  const retPartnerTypeEl = document.getElementById('retPartnerType');
+  if (retPartnerTypeEl) retPartnerTypeEl.value = r.partnerType || 'full';
+  const retPartnerTargetAgeEl = document.getElementById('retPartnerTargetAge');
+  if (retPartnerTargetAgeEl) retPartnerTargetAgeEl.value = r.partnerTargetAge || '';
+  const retPartnerSemiIncomeEl = document.getElementById('retPartnerSemiIncome');
+  if (retPartnerSemiIncomeEl) retPartnerSemiIncomeEl.value = r.partnerSemiMonthlyIncome || '';
+  const retPartnerSemiEndAgeEl = document.getElementById('retPartnerSemiEndAge');
+  if (retPartnerSemiEndAgeEl) retPartnerSemiEndAgeEl.value = r.partnerSemiEndAge || '';
   updateRetirementTypeUI();
+  updatePartnerRetirementUI();
   document.getElementById('retPensionAge').value = r.pensionAge || '';
   document.getElementById('retPensionMonthly').value = r.pensionMonthly || '';
   document.getElementById('retPensionAge_p').value = r.pensionAge_p || '';
@@ -11483,6 +11523,11 @@ function saveRetirement() {
     mortgageDeductYears: parseInt(document.getElementById('leMortgageDeductYears').value) || 0,
     drawdownOrder: document.getElementById('retDrawdownOrder')?.value || 'proportional',
     cashFloor: parseFloat(document.getElementById('retCashFloor')?.value) || 0,
+    // パートナーリタイア設定
+    partnerTargetAge: parseInt(document.getElementById('retPartnerTargetAge')?.value) || null,
+    partnerType: document.getElementById('retPartnerType')?.value || 'full',
+    partnerSemiMonthlyIncome: parseFloat(document.getElementById('retPartnerSemiIncome')?.value) || 0,
+    partnerSemiEndAge: parseInt(document.getElementById('retPartnerSemiEndAge')?.value) || null,
   };
   save();
   showNotification('出口戦略を保存しました');
@@ -11500,6 +11545,12 @@ function updateRetirementTypeUI() {
   const p3Label = document.getElementById('retExpenseP3Label');
   if (p1Label) p1Label.textContent = isSemi ? '① セミリタイア期（〜セミ終了年齢）月支出 万円' : '① 年金受給前 月支出 万円';
   if (p3Label) p3Label.textContent = isSemi ? '③ 年金受給期（年金開始〜） 月支出 万円' : '② 年金受給期（年金開始〜） 月支出 万円';
+}
+
+function updatePartnerRetirementUI() {
+  const isSemi = document.getElementById('retPartnerType')?.value === 'semi';
+  const semiRow = document.getElementById('retPartnerSemiRow');
+  if (semiRow) semiRow.style.display = isSemi ? '' : 'none';
 }
 
 function autoFillRetirementExpenses() {
@@ -13275,6 +13326,22 @@ function calcRetirementSimWithOpts(opts = {}) {
     const pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
+    // パートナーリタイア後の就労収入（本人リタイア後もパートナーが働いている場合に加算）
+    const _partnerBirthStr = state.profile?.partnerBirth || state.profile?.partnerbirth;
+    const _partnerBirthYear = _partnerBirthStr ? new Date(_partnerBirthStr).getFullYear() : null;
+    const _partnerRetireAge = parseInt(r.partnerTargetAge) || null;
+    const _partnerRetireYear = (_partnerBirthYear && _partnerRetireAge) ? _partnerBirthYear + _partnerRetireAge : null;
+    const _partnerSemiEndAge = parseInt(r.partnerSemiEndAge) || null;
+    const _partnerSemiEndYear = (_partnerBirthYear && _partnerSemiEndAge) ? _partnerBirthYear + _partnerSemiEndAge : null;
+    const _partnerBaseAnnual = ((parseFloat(state.finance?.partnerIncome) || 0) * 12) + (parseFloat(state.finance?.partnerBonus) || 0);
+    let partnerWorkIncome = 0;
+    if (_partnerBaseAnnual > 0) {
+      if (_partnerRetireYear === null || yr < _partnerRetireYear) {
+        partnerWorkIncome = _partnerBaseAnnual; // まだ現役
+      } else if (r.partnerType === 'semi' && (_partnerSemiEndYear === null || yr < _partnerSemiEndYear)) {
+        partnerWorkIncome = (parseFloat(r.partnerSemiMonthlyIncome) || 0) * 12; // セミリタイア中
+      }
+    }
     const extra = extraIncomes.reduce((s, inc) => {
       const ok = (!inc.startAge || age >= inc.startAge) && (!inc.endAge || age <= inc.endAge);
       return s + (ok ? (parseFloat(inc.monthly) || 0) * 12 : 0);
@@ -13291,7 +13358,7 @@ function calcRetirementSimWithOpts(opts = {}) {
     })();
     const mortgageDeduct = calcMortgageDeduction(yr, mortgageBalance);
 
-    const totalNonAssetIncome = pension + pension_p + semi + extra + mortgageDeduct;
+    const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct;
     const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
 
     // ===== 資産使い切り哲学: 全モードで生活費は必ず確保 =====
@@ -13931,6 +13998,20 @@ function calcRetirementSimWithStress(stressShock) {
     const pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
+    // パートナーリタイア後の就労収入
+    const _pBirthStr2 = state.profile?.partnerBirth || state.profile?.partnerbirth;
+    const _pBirthYear2 = _pBirthStr2 ? new Date(_pBirthStr2).getFullYear() : null;
+    const _pRetireYear2 = (_pBirthYear2 && r.partnerTargetAge) ? _pBirthYear2 + parseInt(r.partnerTargetAge) : null;
+    const _pSemiEndYear2 = (_pBirthYear2 && r.partnerSemiEndAge) ? _pBirthYear2 + parseInt(r.partnerSemiEndAge) : null;
+    const _pBaseAnnual2 = ((parseFloat(state.finance?.partnerIncome) || 0) * 12) + (parseFloat(state.finance?.partnerBonus) || 0);
+    let partnerWorkIncome2 = 0;
+    if (_pBaseAnnual2 > 0) {
+      if (_pRetireYear2 === null || yr < _pRetireYear2) {
+        partnerWorkIncome2 = _pBaseAnnual2;
+      } else if (r.partnerType === 'semi' && (_pSemiEndYear2 === null || yr < _pSemiEndYear2)) {
+        partnerWorkIncome2 = (parseFloat(r.partnerSemiMonthlyIncome) || 0) * 12;
+      }
+    }
     const extra = extraIncomes.reduce((s, inc) => {
       const ok = (!inc.startAge || age >= inc.startAge) && (!inc.endAge || age <= inc.endAge);
       return s + (ok ? (parseFloat(inc.monthly) || 0) * 12 : 0);
@@ -13952,7 +14033,7 @@ function calcRetirementSimWithStress(stressShock) {
       effectiveReturn = weightedReturn * 0.5;
     }
 
-    const totalNonAssetIncome = pension + pension_p + semi + extra + mortgageDeduct;
+    const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome2 + extra + mortgageDeduct;
     const netExpense = Math.max(0, totalAnnualExpense - totalNonAssetIncome);
 
     // ストレステスト: 使い切り哲学同様、全モードで生活費確保
