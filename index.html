@@ -13025,8 +13025,9 @@ function getRetirementParams() {
     expenseDecayRate:  (parseFloat(r.expenseDecayRate)  || 0)   / 100,
     pensionSlide:      (parseFloat(r.pensionSlide)      || 0)   / 100,
     medicalModel:      r.medicalModel || 'moderate',
-    mortgageDeductStart: parseInt(r.mortgageDeductStart) || null,
-    mortgageDeductYears: parseInt(r.mortgageDeductYears) || 0,
+    // ライフイベントページで保存した値を優先、なければ出口戦略ページの値にフォールバック
+    mortgageDeductStart: parseInt(state.lifeEvents?.mortgage?.deductStart) || parseInt(r.mortgageDeductStart) || null,
+    mortgageDeductYears: parseInt(state.lifeEvents?.mortgage?.deductYears) || parseInt(r.mortgageDeductYears) || 0,
   };
 }
 
