@@ -11760,7 +11760,7 @@ function runRetirementSim() {
     const pName = (state.profile.partnername || 'P').slice(0, 4);
     return pAge != null ? `${d.age}歳\n${pName}${pAge}歳` : `${d.age}歳`;
   });
-  const assetsData = result.postData.map(d => d.endAssets);
+  const assetsData = result.postData.map(d => d.startAssets);  // 年初値（退職時点と一致）
   const reqLine = result.postData.map(() => result.requiredAssets);
 
   // ハイブリッドモード: フェーズ切替インデックスを検出（DOM優先で保存前の選択も反映）
@@ -11844,7 +11844,12 @@ function runRetirementSim() {
         tooltip: { callbacks: {
           title: items => {
             const d = result.postData[items[0].dataIndex];
-            return ageTooltipTitle(d.year);
+            // d.age はシミュレーションの正確な年齢（誕生月考慮済み）を使用
+            const pAge = calcPartnerAgeAtYear(d.year);
+            const pName = (state.profile?.partnername || 'パートナー').slice(0, 6);
+            let s = `${d.year}年（${d.age}歳`;
+            if (pAge != null) s += ` / ${pName}${pAge}歳`;
+            return s + '）';
           },
           label: ctx => {
             const d = result.postData[ctx.dataIndex];
@@ -12058,7 +12063,7 @@ function renderDrawdownCompare() {
       labels,
       datasets: simResults.map(s => ({
         label: s.label + (s.key === currentOrder ? ' ★' : ''),
-        data: s.data.map(d => d.endAssets),
+        data: s.data.map(d => d.startAssets),  // 年初値（退職時点と一致）
         borderColor: s.color,
         backgroundColor: s.key === currentOrder ? s.color + '18' : 'transparent',
         fill: s.key === currentOrder,
@@ -12073,7 +12078,18 @@ function renderDrawdownCompare() {
       scales: { y: { ticks: { callback: fmtMoneyAxis }, beginAtZero: true } },
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}` } }
+        tooltip: { callbacks: {
+          title: items => {
+            const d = (simResults[0].data || [])[items[0].dataIndex];
+            if (!d) return '';
+            const pAge = calcPartnerAgeAtYear(d.year);
+            const pName = (state.profile?.partnername || 'パートナー').slice(0, 6);
+            let s = `${d.year}年（${d.age}歳`;
+            if (pAge != null) s += ` / ${pName}${pAge}歳`;
+            return s + '）';
+          },
+          label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}`
+        }}
       }
     }
   });
