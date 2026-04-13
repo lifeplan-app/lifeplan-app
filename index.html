@@ -13029,8 +13029,10 @@ function calcRetirementSimWithOpts(opts = {}) {
   const currentYear = new Date().getFullYear();
   const targetAge = parseInt(r.targetAge);
   const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
-  const yearsToRetire = Math.max(0, targetAge - currentAge);
-  const retireYear = currentYear + yearsToRetire;
+  // 誕生年 + 目標年齢 = リタイア年（calcAge()の誕生日未到達による±1ズレを防ぐ）
+  const _birthYear = state.profile?.birth ? new Date(state.profile.birth).getFullYear() : null;
+  const retireYear = _birthYear ? _birthYear + targetAge : currentYear + Math.max(0, targetAge - currentAge);
+  const yearsToRetire = Math.max(0, retireYear - currentYear);
   const params = getRetirementParams();
 
   const preRetireSim = calcIntegratedSim(Math.max(yearsToRetire, 1));
