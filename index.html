@@ -5717,13 +5717,16 @@ function renderRecurringExpenseList() {
     const iv = parseInt(e.intervalYears) || 1;
     const intervalLabel = iv === 1 ? '毎年' : `${iv}年毎`;
     const endLabel = e.endYear ? `〜${e.endYear}年` : '〜ずっと';
+    const excludeYears = e.excludeYears || [];
+    const excludeNote = excludeYears.length > 0
+      ? `<span style="color:#F59E0B;font-size:11px"> ⚡${excludeYears.join('・')}年は除外</span>` : '';
     return `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--border)">
       <span style="font-size:22px;flex-shrink:0">${e.emoji || '🔁'}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:600">${e.name}</div>
         <div style="font-size:12px;color:var(--text-secondary);margin-top:2px">
-          ${Number(e.amount).toLocaleString()}万円 ／ ${intervalLabel} ／ ${e.startYear}年${endLabel}
+          ${Number(e.amount).toLocaleString()}万円 ／ ${intervalLabel} ／ ${e.startYear}年${endLabel}${excludeNote}
           ${e.note ? `<span style="color:var(--text-muted)"> — ${e.note}</span>` : ''}
         </div>
       </div>
