@@ -12200,7 +12200,9 @@ function runRetirementSim() {
           <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.startAssets)}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.pension||0)+(d.pension_p||0) ? ((d.pension||0)+(d.pension_p||0)).toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.semi+d.extra) ? (d.semi+d.extra).toLocaleString()+'万' : '－'}</td>
-          <td style="text-align:right;padding:6px 8px;color:var(--warning)">${d.assetWithdrawal ? d.assetWithdrawal.toLocaleString()+'万' : '－'}</td>
+          <td style="text-align:right;padding:6px 8px;color:${d.withdrawalShortfall>0?'var(--danger)':'var(--warning)'}">
+            ${d.assetWithdrawal ? d.assetWithdrawal.toLocaleString()+'万' : '－'}${d.withdrawalShortfall>0 ? `<br><span style="font-size:10px;color:var(--danger)" title="資金不足: 取り崩し不足 ${d.withdrawalShortfall}万円">⚠️-${d.withdrawalShortfall}万不足</span>` : ''}
+          </td>
           <td style="text-align:right;padding:6px 8px;color:var(--danger)">${Math.round(d.baseExpense).toLocaleString()}万</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leMortgage?'var(--danger)':'var(--text-muted)'}">${d.leMortgage ? d.leMortgage.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leEducation?'var(--danger)':'var(--text-muted)'}">${d.leEducation ? d.leEducation.toLocaleString()+'万' : '－'}</td>
@@ -13207,9 +13209,17 @@ function calcRetirementSimWithOpts(opts = {}) {
       _fromCash   = Math.min(_cashAvail, _wantCash);
       _fromInvest = Math.max(0, actualDeduction - _fromCash);
     }
+    const _cashBeforeDeduct = cashPool;
+    const _investBeforeDeduct = investPool;
     cashPool   = Math.max(0, cashPool   - _fromCash);
     investPool = Math.max(0, investPool - _fromInvest);
     const endAssets = cashPool + investPool;
+
+    // プールの実変化量で「実際に引き出せた額」を計算（Math.maxによるキャップを考慮）
+    const actualWithdrawn = (_cashBeforeDeduct - cashPool) + (_investBeforeDeduct - investPool);
+    const withdrawalShortfall = Math.max(0, Math.round(actualDeduction - actualWithdrawn));
+    // 資金不足: 実引き出し < 必要額（cashFloorで引き出せない場合を含む）
+    const isFundingShortfall = withdrawalShortfall > 0;
 
     postData.push({
       year: yr, age,
@@ -13221,18 +13231,20 @@ function calcRetirementSimWithOpts(opts = {}) {
       pension: Math.round(pension), pension_p: Math.round(pension_p),
       semi: Math.round(semi), extra: Math.round(extra),
       annualReturn: _annualReturn,
-      assetWithdrawal: Math.round(assetWithdrawal),
+      assetWithdrawal: Math.round(actualWithdrawn),       // 実際の取り崩し額
+      assetWithdrawalNeeded: Math.round(assetWithdrawal), // 必要だった取り崩し額
+      withdrawalShortfall,                                 // 不足額
       annualExpense: Math.round(totalAnnualExpense),
       baseExpense: Math.round(inflatedExpense),
       medicalAdd: Math.round(medicalAdd),
       mortgageDeduct: Math.round(mortgageDeduct),
       leMortgage: Math.round(leCost.mortgage), leEducation: Math.round(leCost.education + leCost.childcare), leCare: Math.round(leCost.care), leScholarship: Math.round(leCost.scholarship),
       recurringCost: Math.round(recurringCost),
-      monthlyBalance,
-      annualSurplus,
-      annualDeficit,
+      monthlyBalance: isFundingShortfall ? Math.round(-withdrawalShortfall / 12 * 10) / 10 : monthlyBalance,
+      annualSurplus: isFundingShortfall ? 0 : annualSurplus,
+      annualDeficit: isFundingShortfall ? withdrawalShortfall : annualDeficit,
       hybridPhase,
-      depleted: endAssets <= 0,
+      depleted: endAssets <= 0 || isFundingShortfall,
     });
 
     assets = endAssets;
