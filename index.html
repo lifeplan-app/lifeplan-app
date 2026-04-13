@@ -13137,31 +13137,19 @@ function setFinanceInputMode(mode) {
 
 // ===== ② 昇給モデル =====
 function getIncomeForYearWithGrowth(yr) {
-  const baseIncome = getIncomeForYear(yr); // 既存のcashFlowEvents反映済み
-  // 昇給率が設定されている場合、昇給分をオーバーライド（cashFlowEventsで上書きされていない場合のみ）
-  const growthRate = (parseFloat(state.finance.incomeGrowthRate) || 0) / 100;
-  const untilAge   = parseInt(state.finance.incomeGrowthUntilAge) || 50;
-  const partnerIncome = (parseFloat(state.finance.partnerIncome) || 0) * 12
-                       + (parseFloat(state.finance.partnerBonus) || 0); // 月収×12 + 賞与
-  const partnerGrowthRate = (parseFloat(state.finance.partnerGrowthRate) || 0) / 100;
-  // パートナー昇給停止年齢（未設定の場合は本人と同じuntilAge）
-  const partnerUntilAge = parseInt(state.finance.partnerGrowthUntilAge) || untilAge;
-  if (growthRate <= 0 && partnerIncome <= 0) return baseIncome;
-
+  const r = state.retirement || {};
   const currentYear = new Date().getFullYear();
-  const currentAge = calcAge() || 30;
+  const currentAge  = calcAge() || 30;
   const yearsElapsed = yr - currentYear;
+  const birthYear   = state.profile?.birth ? new Date(state.profile.birth).getFullYear() : null;
 
-  // 自身の昇給（untilAge まで、以降は停止時点の年収を維持）
-  const selfGrowthYears = Math.max(0, Math.min(yearsElapsed, untilAge - currentAge));
-  const selfBase = (state.finance.income || 0) * 12 + (state.finance.bonus || 0);
-  const selfGrown = selfBase * Math.pow(1 + growthRate, selfGrowthYears);
+  // ── 本人収入 ──
+  const growthRate  = (parseFloat(state.finance.incomeGrowthRate) || 0) / 100;
+  const untilAge    = parseInt(state.finance.incomeGrowthUntilAge) || 50;
+  const selfBase    = (state.finance.income || 0) * 12 + (state.finance.bonus || 0);
 
-  // パートナー収入（partnerUntilAge まで昇給、以降は停止時点を維持）
-  const partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - currentAge));
-  const partnerGrown = partnerIncome * Math.pow(1 + partnerGrowthRate, partnerGrowthYears);
-
-  // cashFlowEventsで上書きがある場合はそちら優先
+  // cashFlowEvents（転職・副業等）で上書きがある場合はそちら優先
+  const baseIncome  = getIncomeForYear(yr);
   const hasOverride = (state.cashFlowEvents || []).some(e => {
     if (e.type !== 'income_change') return false;
     const startYr = ageToYear(e.startAge);
@@ -13169,7 +13157,60 @@ function getIncomeForYearWithGrowth(yr) {
     return yr >= startYr && (endYr == null || yr < endYr);
   });
 
-  return hasOverride ? baseIncome + partnerGrown : selfGrown + partnerGrown;
+  let selfIncome;
+  if (hasOverride) {
+    selfIncome = baseIncome; // cashFlowEventsの値をそのまま使用
+  } else {
+    // 昇給モデル（untilAge 以降は停止時点を維持）
+    const selfGrowthYears = Math.max(0, Math.min(yearsElapsed, untilAge - currentAge));
+    selfIncome = selfBase * Math.pow(1 + growthRate, selfGrowthYears);
+
+    // リタイア・セミリタイア設定を反映（cashFlowEventsがない場合のみ）
+    const retireAge  = parseFloat(r.targetAge) || null;
+    const retireYear = (birthYear && retireAge) ? birthYear + retireAge : null;
+    if (retireYear && yr >= retireYear) {
+      if (r.type === 'semi') {
+        const semiEndAge  = parseFloat(r.semiEndAge) || null;
+        const semiEndYear = (birthYear && semiEndAge) ? birthYear + semiEndAge : null;
+        selfIncome = (!semiEndYear || yr < semiEndYear)
+          ? (parseFloat(r.semiMonthlyIncome) || 0) * 12
+          : 0;
+      } else {
+        selfIncome = 0; // フルリタイア
+      }
+    }
+  }
+
+  // ── パートナー収入 ──
+  const partnerBirthStr  = state.profile?.partnerBirth || state.profile?.partnerbirth;
+  const partnerBirthYear = partnerBirthStr ? new Date(partnerBirthStr).getFullYear() : null;
+  const partnerBase      = (parseFloat(state.finance.partnerIncome) || 0) * 12
+                          + (parseFloat(state.finance.partnerBonus) || 0);
+  const partnerGrowthRate = (parseFloat(state.finance.partnerGrowthRate) || 0) / 100;
+  const partnerUntilAge   = parseInt(state.finance.partnerGrowthUntilAge) || untilAge;
+
+  let partnerIncomeThisYear = 0;
+  if (partnerBase > 0) {
+    const partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - currentAge));
+    partnerIncomeThisYear = partnerBase * Math.pow(1 + partnerGrowthRate, partnerGrowthYears);
+
+    // パートナーのリタイア・セミリタイア設定を反映
+    const pRetireAge  = parseInt(r.partnerTargetAge) || null;
+    const pRetireYear = (partnerBirthYear && pRetireAge) ? partnerBirthYear + pRetireAge : null;
+    if (pRetireYear && yr >= pRetireYear) {
+      if (r.partnerType === 'semi') {
+        const pSemiEndAge  = parseInt(r.partnerSemiEndAge) || null;
+        const pSemiEndYear = (partnerBirthYear && pSemiEndAge) ? partnerBirthYear + pSemiEndAge : null;
+        partnerIncomeThisYear = (!pSemiEndYear || yr < pSemiEndYear)
+          ? (parseFloat(r.partnerSemiMonthlyIncome) || 0) * 12
+          : 0;
+      } else {
+        partnerIncomeThisYear = 0; // フルリタイア
+      }
+    }
+  }
+
+  return selfIncome + partnerIncomeThisYear;
 }
 
 function updateIncomeGrowthPreview() {
