@@ -3155,11 +3155,6 @@
     </div>
 
     <div id="retResultCard"></div>
-    <div id="retDrawdownCard" style="display:none"></div>
-    <div id="retScenarioCompareCard" style="display:none"></div>
-    <div id="retTaxCard" style="display:none"></div>
-    <div id="retStressCard" style="display:none"></div>
-    <div id="retPrepayCard" style="display:none"></div>
     <div class="card" id="retChartCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#EEF2FF">📈</span>資産推移（リタイア後）</div>
       <!-- ハイブリッドモード専用: スライダーでリアルタイムに切替年齢を調整 -->
@@ -3175,6 +3170,11 @@
       </div>
       <div style="position:relative;height:300px"><canvas id="retChart"></canvas></div>
     </div>
+    <div id="retDrawdownCard" style="display:none"></div>
+    <div id="retScenarioCompareCard" style="display:none"></div>
+    <div id="retTaxCard" style="display:none"></div>
+    <div id="retStressCard" style="display:none"></div>
+    <div id="retPrepayCard" style="display:none"></div>
     <div class="card" id="retBreakdownCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#CFFAFE">📋</span>年別収支シミュレーション</div>
       <div id="retSimNote" style="display:none"></div>
@@ -11946,12 +11946,13 @@ function runRetirementSim() {
   // 繰り返し支出・一時支出が含まれていれば注記
   const recurringCount = (state.recurringExpenses || []).length;
   const recurringNote = recurringCount > 0
-    ? `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📌 定期的な支出 ${recurringCount}件・一時支出が生活費に加算されています</div>`
+    ? `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">📌 定期的な支出 ${recurringCount}件・一時支出が「資産取り崩し」に含まれています（生活支出列には月額生活費のみ表示）</div>`
     : '';
   const simNoteHtml = `<div style="margin-bottom:8px;padding:8px 12px;background:rgba(79,70,229,.06);border-radius:8px;font-size:12px;color:var(--text-secondary);border-left:3px solid var(--primary)">
     ${modeDescMap[withdrawalType] || modeDescMap.needs}
     ${recurringNote}
   </div>`;
+  const hasRecurring = keyRows.some(d => (d.recurringCost || 0) > 0);
   document.getElementById('retBreakdownTable').innerHTML = `
     <thead>
       <tr style="border-bottom:1px solid var(--border);text-align:right">
@@ -11964,6 +11965,7 @@ function runRetirementSim() {
         <th style="padding:6px 8px;color:var(--text-secondary)">生活支出</th>
         <th style="padding:6px 8px;color:var(--danger)">ローン</th>
         <th style="padding:6px 8px;color:var(--danger)">教育費</th>
+        ${hasRecurring ? `<th style="padding:6px 8px;color:var(--danger);font-size:11px">定期・<br>一時支出</th>` : ''}
         ${hasSurplus ? `<th style="padding:6px 8px;color:var(--secondary);font-size:11px">うち余剰<br>自由資金</th>` : ''}
         <th style="padding:6px 8px;color:var(--text-secondary)">月間収支</th>
       </tr>
@@ -11987,13 +11989,14 @@ function runRetirementSim() {
         return `<tr style="border-bottom:.5px solid var(--border);${rowBg}">
           <td style="padding:6px 8px;font-weight:600">${d.age}歳 <span style="font-weight:400;color:var(--text-muted);font-size:11px">${d.year}年</span></td>
           ${isHybridMode ? `<td style="text-align:center;padding:6px 4px">${phaseBadge}</td>` : ''}
-          <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.endAssets)}</td>
+          <td style="text-align:right;padding:6px 8px;font-weight:600">${fmtMoney(d.startAssets)}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.pension||0)+(d.pension_p||0) ? ((d.pension||0)+(d.pension_p||0)).toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--secondary)">${(d.semi+d.extra) ? (d.semi+d.extra).toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--warning)">${d.assetWithdrawal ? d.assetWithdrawal.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:var(--danger)">${Math.round(d.baseExpense).toLocaleString()}万</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leMortgage?'var(--danger)':'var(--text-muted)'}">${d.leMortgage ? d.leMortgage.toLocaleString()+'万' : '－'}</td>
           <td style="text-align:right;padding:6px 8px;color:${d.leEducation?'var(--danger)':'var(--text-muted)'}">${d.leEducation ? d.leEducation.toLocaleString()+'万' : '－'}</td>
+          ${hasRecurring ? `<td style="text-align:right;padding:6px 8px;color:${(d.recurringCost||0)?'var(--danger)':'var(--text-muted)'}">${(d.recurringCost||0) ? (d.recurringCost).toLocaleString()+'万' : '－'}</td>` : ''}
           ${hasSurplus ? `<td style="text-align:right;padding:6px 8px;font-weight:600;color:${surplusColor}">${(d.annualSurplus||0)>0?'+'+d.annualSurplus.toLocaleString()+'万':'－'}</td>` : ''}
           <td style="text-align:right;padding:6px 8px;font-weight:700;color:${mbColor}">${mbDisplay}</td>
         </tr>`;
