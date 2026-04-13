@@ -6988,22 +6988,33 @@ function saveAsset() {
   showNotification('アセットを保存しました');
 }
 
+function _getAssetOwnerBirthYear() {
+  // 誕生年ベースで年齢⇔年変換（現在年齢の誤差を避けるため）
+  const owner = document.getElementById('amOwner')?.value || 'self';
+  if (owner === 'partner') {
+    const pb = state.profile?.partnerBirth || state.profile?.partnerbirth;
+    if (pb) return new Date(pb).getFullYear();
+  }
+  const sb = state.profile?.birth;
+  if (sb) return new Date(sb).getFullYear();
+  return null;
+}
+
 function syncEndYearFromAge() {
   const age = parseInt(document.getElementById('amEndAge').value);
   if (!age) { document.getElementById('amEndYear').value = ''; updateEndYearPreview(); return; }
-  const currentAge = calcAge();
-  if (!currentAge) { updateEndYearPreview(); return; }
-  const yr = new Date().getFullYear() + (age - currentAge);
-  document.getElementById('amEndYear').value = yr;
+  const birthYear = _getAssetOwnerBirthYear();
+  if (!birthYear) { updateEndYearPreview(); return; }
+  document.getElementById('amEndYear').value = birthYear + age;
   updateEndYearPreview();
 }
 
 function syncEndAgeFromYear() {
   const yr = parseInt(document.getElementById('amEndYear').value);
   if (!yr) { document.getElementById('amEndAge').value = ''; updateEndYearPreview(); return; }
-  const currentAge = calcAge();
-  if (!currentAge) { updateEndYearPreview(); return; }
-  const age = currentAge + (yr - new Date().getFullYear());
+  const birthYear = _getAssetOwnerBirthYear();
+  if (!birthYear) { updateEndYearPreview(); return; }
+  const age = yr - birthYear;
   document.getElementById('amEndAge').value = age > 0 ? age : '';
   updateEndYearPreview();
 }
