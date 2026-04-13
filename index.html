@@ -10525,7 +10525,7 @@ function renderLifeEventCharts() {
   const _severanceYr  = (_severance > 0 && _severanceAge > 0)
     ? currentYear + (_severanceAge - _currentAge) : null;
 
-  const cfIncomeSalary = [], cfIncomeOther = [], cfExpense = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
+  const cfIncomeSalary = [], cfIncomeOther = [], cfExpense = [], cfCash = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
   let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
     const yr = currentYear + i;
@@ -10565,8 +10565,9 @@ function renderLifeEventCharts() {
     cumulativeCF += Math.round(annual);
     cfIncomeSalary.push(Math.round(inc));
     cfIncomeOther.push(Math.round(otherInc));
-    cfExpense.push(-Math.round(pureExp + cashSavings + leCost + recur)); // 生活費+現金性積立+ライフイベント
-    cfInvest.push(-Math.round(investContrib));  // 投資型アセットのみ紫
+    cfExpense.push(-Math.round(pureExp + leCost + recur)); // 生活費+ライフイベント+繰り返し支出
+    cfCash.push(-Math.round(cashSavings));               // 現金性積立（普通預金・貯蓄等）
+    cfInvest.push(-Math.round(investContrib));            // 投資型アセットのみ紫
     cfAnnual.push(Math.round(annual));
     cfCumulative.push(cumulativeCF);
   }
@@ -10596,11 +10597,13 @@ function renderLifeEventCharts() {
   const cfNoteEl = document.getElementById('leCFNote');
   if (cfNoteEl) {
     const hasInvest = cfInvest.some(v => v < 0);
-    cfNoteEl.innerHTML = hasInvest
-      ? `<div style="padding:8px 12px;background:#F5F3FF;border-left:3px solid #8B5CF6;border-radius:0 8px 8px 0;font-size:11px;color:#4C1D95;line-height:1.6">
-          💜 <b>投資活動</b>（紫）はNISA・iDeCo・株・投資信託などへの積立拠出です。将来の資産として積み上がるため「損失」ではありません。<br>
-          累計収支ラインは投資活動を含む<b>実際の手元現金の推移</b>を表しています。資産の成長は「家計・資産」タブの資産推移シミュレーションでご確認ください。
-        </div>`
+    const hasCash   = cfCash.some(v => v < 0);
+    const noteLines = [];
+    if (hasCash)   noteLines.push('🩶 <b>現金性積立</b>（グレー）は普通預金・生活防衛費などへの積立です。消費ではなく手元に残る資金です。');
+    if (hasInvest) noteLines.push('💜 <b>投資活動</b>（紫）はNISA・iDeCo・株・投資信託などへの積立拠出です。将来の資産として積み上がるため「損失」ではありません。');
+    if (noteLines.length > 0) noteLines.push('累計収支ラインは全積立を含む<b>実際の手元現金の推移</b>を表しています。資産の成長は「家計・資産」タブの資産推移シミュレーションでご確認ください。');
+    cfNoteEl.innerHTML = noteLines.length > 0
+      ? `<div style="padding:8px 12px;background:#F5F3FF;border-left:3px solid #8B5CF6;border-radius:0 8px 8px 0;font-size:11px;color:#4C1D95;line-height:1.6">${noteLines.join('<br>')}</div>`
       : '';
   }
 
@@ -10636,6 +10639,16 @@ function renderLifeEventCharts() {
             label: '生活・ライフイベント支出',
             data: cfExpense,
             backgroundColor: 'rgba(255,59,48,.65)',
+            borderWidth: 0,
+            borderRadius: 0,
+            stack: 'outflow',
+            order: 3,
+            yAxisID: 'y1',
+          },
+          {
+            label: '現金性積立（貯蓄・生活防衛費等）',
+            data: cfCash,
+            backgroundColor: 'rgba(156,163,175,.65)',
             borderWidth: 0,
             borderRadius: 0,
             stack: 'outflow',
