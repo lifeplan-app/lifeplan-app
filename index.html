@@ -5557,10 +5557,10 @@ function applyMaritalFilter() {
   }
 
   // ===== テキスト言い換え（独身 ↔ パートナーあり）=====
-  // セミリタイア後の月収 補足（タブ導入後は本人のみ・世帯合計を入れる場合はパートナータブを空白に）
+  // セミリタイア後の月収 補足（本人タブは本人分のみ・パートナーはパートナータブで個別設定）
   const semiNote = document.getElementById('retSemiIncomeNote');
   if (semiNote) semiNote.textContent = hasParter
-    ? '本人のセミリタイア後月収入（世帯合計を入れる場合はパートナータブを空白に）'
+    ? '本人のセミリタイア後月収入（パートナー分はパートナータブで個別設定）'
     : '個人の月収入';
 
   // 退職後の月支出 補足
