@@ -3185,7 +3185,6 @@
       <div style="position:relative;height:300px"><canvas id="retChart"></canvas></div>
     </div>
     <div id="retDrawdownCard" style="display:none"></div>
-    <div id="retScenarioCompareCard" style="display:none"></div>
     <div id="retTaxCard" style="display:none"></div>
     <div id="retStressCard" style="display:none"></div>
     <div id="retPrepayCard" style="display:none"></div>
@@ -3205,6 +3204,9 @@
       <div id="retScenarioSummary" style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px"></div>
     </div>
 
+    <!-- ⑤ シナリオ並列比較（インフレ率 × 年金削減）-->
+    <div id="retScenarioCompareCard" style="display:none"></div>
+
     <!-- ④ 年金受給開始年齢の損益分岐 -->
     <div class="card" id="retPensionBreakevenCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#DBEAFE">📐</span>年金受給開始年齢の損益分岐点</div>
@@ -3213,55 +3215,6 @@
       </div>
       <div style="position:relative;height:260px"><canvas id="retBreakevenChart"></canvas></div>
       <div id="retBreakevenSummary" style="margin-top:10px;font-size:12px;color:var(--text-secondary);line-height:1.7"></div>
-    </div>
-
-    <!-- ⑫ 感度分析 -->
-    <div class="card" id="retSensitivityCard" style="display:none">
-      <div class="card-title"><span class="icon" style="background:#FEF9C3">🎛️</span>感度分析（if〜だったら？）</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px">スライダーを動かすと資産推移グラフがリアルタイムで更新されます</div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <label style="font-size:12px">運用利回りの変化</label>
-            <span id="sensReturnLabel" style="font-size:12px;font-weight:700;color:var(--primary)">±0%</span>
-          </div>
-          <input type="range" id="sensReturn" class="sc-slider" min="-3" max="3" step="0.5" value="0" style="--sc-color:#4F46E5;--pct:50%;width:100%" oninput="updateSensitivity();scTrack(this,-3,3,'#4F46E5')">
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <label style="font-size:12px">生活支出の変化</label>
-            <span id="sensExpenseLabel" style="font-size:12px;font-weight:700;color:var(--warning)">±0%</span>
-          </div>
-          <input type="range" id="sensExpense" class="sc-slider" min="-30" max="30" step="5" value="0" style="--sc-color:#F59E0B;--pct:50%;width:100%" oninput="updateSensitivity();scTrack(this,-30,30,'#F59E0B')">
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <label style="font-size:12px">年金額の変化</label>
-            <span id="sensPensionLabel" style="font-size:12px;font-weight:700;color:var(--secondary)">±0%</span>
-          </div>
-          <input type="range" id="sensPension" class="sc-slider" min="-30" max="10" step="5" value="0" style="--sc-color:#10B981;--pct:75%;width:100%" oninput="updateSensitivity();scTrack(this,-30,10,'#10B981')">
-        </div>
-      </div>
-      <div id="retSensitivityResult" style="display:none;margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:13px"></div>
-    </div>
-
-    <!-- ⑩ モンテカルロシミュレーション -->
-    <div class="card" id="retMonteCarloCard" style="display:none">
-      <div class="card-title"><span class="icon" style="background:#FCE7F3">🎲</span>モンテカルロシミュレーション</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
-        運用利回りをランダム変動（正規分布）させて1,000回シミュレーション。想定余命時点で資産残高がゼロを下回らない確率を求めます。
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-        <div class="form-group" style="flex:1;min-width:140px;margin:0">
-          <label>利回りの標準偏差 %</label>
-          <input type="number" id="mcStdDev" placeholder="8" min="1" max="30" step="0.5" value="8">
-        </div>
-        <div style="display:flex;align-items:flex-end">
-          <button class="btn btn-primary btn-sm" onclick="runMonteCarlo()">▶ 実行</button>
-        </div>
-      </div>
-      <div id="retMonteCarloResult" style="font-size:13px;color:var(--text-secondary)">「実行」ボタンを押してください（数秒かかります）</div>
-      <div style="position:relative;height:260px;margin-top:12px;display:none" id="mcChartWrap"><canvas id="mcChart"></canvas></div>
     </div>
 
     <!-- ⑪ FIRE後の出口戦略・配当課税コスト -->
@@ -3384,28 +3337,33 @@
 
     <!-- ===== シナリオ比較 ===== -->
     <div class="card" style="margin-top:24px;padding:20px;" id="scenarioCompSection">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <h3 style="margin:0;font-size:17px;font-weight:700;">🔀 シナリオ比較</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div>
+          <h3 style="margin:0 0 3px;font-size:17px;font-weight:700;">⚖️ プランを比べて選ぼう</h3>
+          <p style="font-size:12px;color:#888;margin:0;">3つのプランをシミュレーションして、あなたに合うリタイア戦略を決めましょう</p>
+        </div>
         <button onclick="resetScenarioComp()"
-          style="padding:6px 12px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer;color:#666;">
+          style="padding:6px 12px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap;">
           リセット
         </button>
       </div>
-      <p style="font-size:12px;color:#888;margin:0 0 16px;">退職年齢・生活費・利回りを変えて、資産推移の違いをリアルタイムで比較します。</p>
+
+      <!-- シナリオカード3列（結果バッジ＋スライダー） -->
+      <div id="scenarioCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;"></div>
+
+      <!-- 自動インサイト -->
+      <div id="scenarioInsights" style="margin-bottom:16px;"></div>
 
       <!-- グラフ -->
       <div id="scenarioCompChartWrap" style="background:#f8f9fa;border-radius:12px;padding:16px;margin-bottom:16px;">
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:12px;">
-          <span>資産残高の推移（試算・退職後）</span>
+          <span>資産残高の推移（現在〜想定余命）</span>
           <button onclick="showDisclaimerModal()" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:#B45309;" title="試算の前提を確認">ℹ️</button>
         </div>
         <div style="position:relative;height:260px;">
           <canvas id="scenarioCompChart"></canvas>
         </div>
       </div>
-
-      <!-- シナリオカード3列 -->
-      <div id="scenarioCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;"></div>
 
       <!-- 比較表 -->
       <div style="overflow-x:auto;">
@@ -3414,6 +3372,23 @@
       <p style="font-size:11px;color:#bbb;margin:10px 0 0;line-height:1.5;">
         ※ 現在入力済みの資産・年金データをベースに、各シナリオのパラメータ差分を適用した試算です。実際の結果を保証するものではありません。
       </p>
+    </div>
+
+    <!-- ⑩ モンテカルロシミュレーション -->
+    <div class="card" id="retMonteCarloCard" style="display:none;margin-top:24px">
+      <div class="card-title"><span class="icon" style="background:#FCE7F3">🎲</span>最終プランの確度チェック</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        上で選んだプランを反映したら、ここで<b>成功確率</b>を確認しましょう。運用利回りをランダム変動させて1,000回シミュレーションし、想定余命まで資産が持続する確率を算出します。
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+        <div class="form-group" style="flex:1;min-width:140px;margin:0">
+          <label>利回りの標準偏差 %<span style="font-size:10px;color:var(--text-muted);margin-left:4px">（市場の荒れ具合。株式中心なら8〜15%程度）</span></label>
+          <input type="number" id="mcStdDev" placeholder="8" min="1" max="30" step="0.5" value="8">
+        </div>
+        <button id="mcRunBtn" class="btn btn-primary" onclick="runMonteCarlo()" style="white-space:nowrap;padding:10px 20px;font-size:14px;font-weight:700;">▶ このプランで確認する</button>
+      </div>
+      <div id="retMonteCarloResult" style="font-size:13px;color:var(--text-secondary)">「このプランで確認する」を押してください</div>
+      <div style="position:relative;height:260px;margin-top:12px;display:none" id="mcChartWrap"><canvas id="mcChart"></canvas></div>
     </div>
 
     </div><!-- /retTabContent_results -->
@@ -8722,9 +8697,9 @@ function renderDashboard() {
         color: '#0EA5E9',
         page: 'lifeevents',
         items: [
-          { label: '住居計画を入力', done: !!(le.housingType && (le.mortgage?.principal > 0 || le.rent?.monthly > 0)), page: 'lifeevents' },
-          { label: '子ども・教育計画を入力', done: (le.children?.length || 0) > 0, page: 'lifeevents' },
-          { label: '支出イベントを登録', done: cfEvents.length > 0, page: 'lifeevents' },
+          { label: '住居計画を入力', done: !!(le.housingType && (le.mortgage?.amount > 0 || le.rent?.monthly > 0)), page: 'lifeevents' },
+          { label: '子ども計画を確認（0人も可）', done: Array.isArray(le.children), page: 'lifeevents' },
+          { label: '支出イベントを登録', done: cfEvents.length > 0 || (state.expenses?.length > 0) || (state.recurringExpenses?.length > 0), page: 'lifeevents' },
         ],
       },
       {
@@ -8734,8 +8709,8 @@ function renderDashboard() {
         page: 'retirement',
         items: [
           { label: 'リタイア目標年齢を設定', done: !!ret.targetAge, page: 'retirement' },
-          { label: '想定利回りを設定', done: (ret.expectedReturn || 0) > 0, page: 'retirement' },
-          { label: '年間取り崩し額を設定', done: (ret.annualWithdrawal || 0) > 0, page: 'retirement' },
+          { label: '想定利回りを設定', done: (ret.expectedReturn || 0) > 0 || assets.some(a => (parseFloat(a.annualReturn) || 0) > 0), page: 'retirement' },
+          { label: '取り崩し戦略を設定', done: !!ret.withdrawalType, page: 'retirement' },
         ],
       },
     ];
@@ -9170,10 +9145,15 @@ function fmtMoney(v) {
   if (n >= 10000) {
     const oku = n / 10000;
     return oku % 1 === 0
-      ? `${oku.toLocaleString()} 億円`
-      : `${oku.toFixed(2).replace(/\.?0+$/, '')} 億円`;
+      ? `${oku.toLocaleString()}億円`
+      : `${oku.toFixed(1)}億円`;
   }
-  return `${n.toLocaleString()} 万円`;
+  return `${n.toLocaleString()}万円`;
+}
+
+// 万円単位のまま表示（億に変換しない）
+function fmtMoneyMan(v) {
+  return `${Math.round(v).toLocaleString()}万円`;
 }
 
 function fmtMoneyAxis(v) {
@@ -11684,20 +11664,25 @@ function calcRetirementSim() {
   const targetAge = parseInt(r.targetAge);
   const lifeExpectancy = parseInt(r.lifeExpectancy) || 90;
   const yearsToRetire = Math.max(0, targetAge - currentAge);
-  const retireYear = currentYear + yearsToRetire;
   const params = getRetirementParams();
 
   // 新しい包括シミュレーションで postData を取得
   const postData = calcRetirementSimWithOpts({});
 
-  // Pre-retirement: project assets using integrated sim
-  const preRetireSim = calcIntegratedSim(Math.max(yearsToRetire, 1));
+  // retireYear は誕生年+退職年齢で正確計算（calcRetirementSimWithOpts と同じ方式）
+  const _birthYear = state.profile?.birth ? new Date(state.profile.birth).getFullYear() : null;
+  const retireYear = _birthYear ? _birthYear + targetAge : currentYear + yearsToRetire;
+  const yearsToRetireAccurate = Math.max(0, retireYear - currentYear);
+
+  // postData の退職年のstartAssetsを使うことで年別収支表と一致させる
+  // fallback: calcIntegratedSim による推計
+  const preRetireSim = calcIntegratedSim(Math.max(yearsToRetireAccurate, 1));
   const severance = parseFloat(r.severance) || 0;
   const severanceAge = parseFloat(r.severanceAge) || null;
-  // 退職金: 受取年齢がリタイア年齢以下なら退職時資産に加算
   const severanceAtRetire = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  const assetsAtRetire = (preRetireSim[yearsToRetire]?.totalWealth ||
-    state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire;
+  const assetsAtRetire = postData?.[0]?.startAssets
+    || ((preRetireSim[yearsToRetireAccurate]?.totalWealth ||
+         state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire);
 
   // Weighted average return rate from current assets
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -11907,30 +11892,42 @@ function runRetirementSim() {
           </div>
         </div>
       </div>
-      <div style="background:${result.depletionAge ? 'rgba(255,59,48,.15)' : result.finalAssets >= result.residualAssets ? 'rgba(52,199,89,.15)' : 'rgba(255,149,0,.15)'};border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <span style="font-size:20px">${result.depletionAge ? '💸' : result.finalAssets >= result.residualAssets ? '🏦' : '⚠️'}</span>
-        <div style="flex:1">
-          <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px">
-            ${result.depletionAge
-              ? `${result.depletionAge}歳で資産枯渇（想定余命 ${result.lifeExpectancy}歳まで ${result.lifeExpectancy - result.depletionAge}年分の資金不足）`
-              : `${result.lifeExpectancy}歳（想定余命）時点の残資産`
-            }
+      ${(() => {
+        const totalShortfall = Math.round(result.postData.reduce((s, d) => s + (d.withdrawalShortfall || 0), 0));
+        const shortfallYears = result.depletionAge ? result.lifeExpectancy - result.depletionAge : 0;
+        const bgColor = result.depletionAge ? 'rgba(255,59,48,.15)' : result.finalAssets >= result.residualAssets ? 'rgba(52,199,89,.15)' : 'rgba(255,149,0,.15)';
+        const icon = result.depletionAge ? '💸' : result.finalAssets >= result.residualAssets ? '🏦' : '⚠️';
+        const valueColor = result.depletionAge ? '#FF6B6B' : result.finalAssets >= result.residualAssets ? '#34C759' : '#FBBF24';
+        let labelStr, valueStr, subStr;
+        if (result.depletionAge) {
+          labelStr = `${result.depletionAge}歳で資産枯渇（想定余命 ${result.lifeExpectancy}歳まで ${shortfallYears}年分の資金不足）`;
+          if (totalShortfall > 0) {
+            valueStr = `<span style="font-size:18px;font-weight:700;color:#FF6B6B">−${fmtMoney(totalShortfall)}</span>`;
+            subStr = `<span style="color:#FF6B6B">合計不足額 ${fmtMoney(totalShortfall)}（${shortfallYears}年間 平均 ${fmtMoney(Math.round(totalShortfall/shortfallYears))}／年）</span>`;
+          } else {
+            valueStr = `<span style="font-size:18px;font-weight:700;color:#FF6B6B">${fmtMoney(result.finalAssets)}</span>`;
+            subStr = `<span style="color:#FF6B6B">${result.depletionAge}歳以降の生活費を賄えません</span>`;
+          }
+        } else {
+          labelStr = `${result.lifeExpectancy}歳（想定余命）時点の残資産`;
+          valueStr = `<span style="font-size:18px;font-weight:700;color:${valueColor}">${fmtMoney(result.finalAssets)}</span>`;
+          subStr = result.residualAssets > 0
+            ? `目標残資産 ${fmtMoney(result.residualAssets)} に対して ` + (result.finalAssets >= result.residualAssets
+                ? `<span style="color:#34C759">+${fmtMoney(result.finalAssets - result.residualAssets)} の余裕</span>`
+                : `<span style="color:#FBBF24">−${fmtMoney(result.residualAssets - result.finalAssets)} 不足</span>`)
+            : sustainableNote
+              ? `<span style="color:rgba(52,199,89,.8)">📊 ${sustainableNote}</span>`
+              : `<span style="color:#34C759">${result.lifeExpectancy}歳時点の推計残高: ${fmtMoney(result.finalAssets)}</span>`;
+        }
+        return `<div style="background:${bgColor};border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <span style="font-size:20px">${icon}</span>
+          <div style="flex:1">
+            <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:3px">${labelStr}</div>
+            <div>${valueStr}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">${subStr}</div>
           </div>
-          <div style="font-size:18px;font-weight:700;color:${result.depletionAge ? '#FF6B6B' : result.finalAssets >= result.residualAssets ? '#34C759' : '#FBBF24'}">${fmtMoney(result.finalAssets)}</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">
-            ${result.depletionAge
-              ? ``
-              : result.residualAssets > 0
-                ? `目標残資産 ${fmtMoney(result.residualAssets)} に対して ` + (result.finalAssets >= result.residualAssets
-                    ? `<span style="color:#34C759">${result.lifeExpectancy}歳時点の推計残高: +${fmtMoney(result.finalAssets - result.residualAssets)}</span>`
-                    : `<span style="color:#FBBF24">${result.lifeExpectancy}歳時点の推計残高: -${fmtMoney(result.residualAssets - result.finalAssets)}</span>`)
-                : sustainableNote
-                  ? `<span style="color:rgba(52,199,89,.8)">📊 ${sustainableNote}</span>`
-                  : `<span style="color:#34C759">${result.lifeExpectancy}歳時点の推計残高: ${fmtMoney(result.finalAssets)}</span>`
-            }
-          </div>
-        </div>
-      </div>
+        </div>`;
+      })()}
       ${monthlyDiv > 0 ? `
       <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:12px;display:flex;align-items:center;gap:12px">
         <span style="font-size:20px">💴</span>
@@ -12102,11 +12099,6 @@ function runRetirementSim() {
   // ④ 年金損益分岐 + ⑤ シナリオ比較 + ⑫ 感度分析 + ⑩ モンテカルロ
   renderPensionBreakeven();
   renderScenarioComparison(result);
-  // 感度分析・モンテカルロカードを表示
-  const senCard = document.getElementById('retSensitivityCard');
-  if (senCard) senCard.style.display = '';
-  const mcCard = document.getElementById('retMonteCarloCard');
-  if (mcCard) mcCard.style.display = '';
   // ⑪ FIRE後配当課税カードを表示・初期値を資産合計で自動セット
   const fireTaxCard = document.getElementById('retFireTaxCard');
   if (fireTaxCard) {
@@ -13452,9 +13444,11 @@ function calcAndShowScenarios() {
       const border = isBase ? 'border:2px solid #FBBF24;' : '';
       const color = res.sustained ? '#34C759' : '#FF3B30';
       const status = res.depletionAge ? `${res.depletionAge}歳で残高ゼロ` : '残高あり';
+      const riskBtn = !res.sustained ? `<div style="margin-top:5px"><button onclick="applyRiskScenarios(${inf},${pc})" style="padding:3px 7px;background:#FF3B30;color:#fff;border:none;border-radius:4px;font-size:10px;cursor:pointer;white-space:nowrap;">このリスクに備える →</button></div>` : '';
       return `<td style="padding:8px 10px;text-align:center;${border}border-radius:4px">
         <div style="font-size:12px;font-weight:700;color:${color}">${status}</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7)">${res.finalAssets.toLocaleString()}万</div>
+        ${riskBtn}
       </td>`;
     }).join('');
     return `<tr style="border-bottom:.5px solid rgba(255,255,255,.1)">
@@ -13476,6 +13470,85 @@ function calcAndShowScenarios() {
       </table></div>
     </div>`;
   card.style.display = '';
+}
+
+// リスクセル「このリスクに備える →」から呼ばれる
+function applyRiskScenarios(inf, pc) {
+  const { baseRetireAge, baseExpense } = getScenarioBase();
+  const r = state.retirement || {};
+
+  // 指定リスク下で試算する（targetAge / monthlyExpense を一時差し替え）
+  function runWithRisk(retireAge, expense) {
+    const orig = { inf: r.inflationRate, slide: r.pensionSlide, age: r.targetAge, exp: r.monthlyExpense };
+    r.inflationRate = inf; r.pensionSlide = pc;
+    r.targetAge = retireAge; r.monthlyExpense = expense;
+    const postData = calcRetirementSimWithOpts({});
+    r.inflationRate = orig.inf; r.pensionSlide = orig.slide;
+    r.targetAge = orig.age; r.monthlyExpense = orig.exp;
+    if (!postData || postData.length === 0) return false;
+    return !postData.some(d => d.depleted || d.endAssets <= 0);
+  }
+
+  // 二分探索: 最小退職年齢（baseRetireAge〜75で成立するか）
+  let lo = baseRetireAge, hi = 75, minRetireAge = null;
+  for (let i = 0; i < 12; i++) {
+    const mid = Math.round((lo + hi) / 2);
+    if (runWithRisk(mid, baseExpense)) { hi = mid; minRetireAge = mid; }
+    else { lo = mid + 1; }
+  }
+  if (minRetireAge == null) minRetireAge = Math.min(75, baseRetireAge + 5);
+
+  // 二分探索: 最低生活費（10万〜baseExpenseで成立するか）
+  let elo = 10, ehi = baseExpense, minExpense = null;
+  for (let i = 0; i < 12; i++) {
+    const mid = Math.round((elo + ehi) / 2);
+    if (runWithRisk(baseRetireAge, mid)) { ehi = mid; minExpense = mid; }
+    else { elo = mid + 1; }
+  }
+  if (minExpense == null) minExpense = Math.max(10, baseExpense - 5);
+
+  const riskLabel = `インフレ${inf}% / 年金削減${pc}%`;
+  const midAge = Math.round((baseRetireAge + minRetireAge) / 2);
+  const midExp = Math.round((baseExpense + minExpense) / 2);
+
+  state.scenarioComp = [
+    {
+      name: `${minRetireAge}歳まで働いたら？`,
+      retireAge: minRetireAge,
+      monthlyExpense: baseExpense,
+      returnMod: 0,
+      _hint: `${riskLabel}でも成立する最短退職年齢`,
+    },
+    {
+      name: `生活費${minExpense}万円に抑えたら？`,
+      retireAge: baseRetireAge,
+      monthlyExpense: minExpense,
+      returnMod: 0,
+      _hint: `${riskLabel}でも成立する最低生活費`,
+    },
+    {
+      name: '中間案（両方少し改善）',
+      retireAge: midAge,
+      monthlyExpense: midExp,
+      returnMod: 0,
+      _hint: `退職${midAge}歳・生活費${midExp}万円の中間案`,
+    },
+  ];
+  state._riskScenarioContext = riskLabel;
+  save();
+
+  // シナリオタブに切り替えて描画
+  switchRetSubTab('scenario');
+  renderScenarioComp();
+
+  // 説明文をリスクコンテキストで上書き
+  const descEl = document.querySelector('#scenarioCompSection p');
+  if (descEl) {
+    descEl.innerHTML = `<b>⚠️ リスク対策（${riskLabel}）</b>：このリスクが現実になっても成立するための3パターンを自動計算しました。スライダーで調整してみてください。`;
+  }
+
+  const el = document.getElementById('scenarioCompSection');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===== 機能3: 退職後の税金・社会保険料概算 =====
@@ -13752,8 +13825,7 @@ function runStressTest() {
   const CRASH_YEARS = 2;
 
   // 通常シナリオ
-  const normalResult = calcRetirementSimWithOpts({});
-  const normalData = normalResult?.postData;
+  const normalData = calcRetirementSimWithOpts({});
   // 暴落シナリオ
   const stressData = calcRetirementSimWithStress({ rate: CRASH_RATE, years: CRASH_YEARS });
 
@@ -13788,13 +13860,13 @@ function runStressTest() {
         <div style="background:rgba(52,199,89,.12);border-radius:10px;padding:14px;border:1px solid rgba(52,199,89,.3)">
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">通常シナリオ</div>
           <div style="font-size:14px;margin:4px 0">${normalStatus}</div>
-          <div style="font-size:16px;font-weight:700;color:#34C759;margin-top:4px">${(normalLast.endAssets||0).toLocaleString()}万円</div>
+          <div style="font-size:16px;font-weight:700;color:#34C759;margin-top:4px">${fmtMoney(normalLast.endAssets||0)}</div>
           <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">${lifeExpectancy}歳時点残高</div>
         </div>
         <div style="background:rgba(255,59,48,.12);border-radius:10px;padding:14px;border:1px solid rgba(255,59,48,.3)">
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px">暴落シナリオ（−30%）</div>
           <div style="font-size:14px;margin:4px 0">${stressStatus}</div>
-          <div style="font-size:16px;font-weight:700;color:#FF6B6B;margin-top:4px">${(stressLast.endAssets||0).toLocaleString()}万円</div>
+          <div style="font-size:16px;font-weight:700;color:#FF6B6B;margin-top:4px">${fmtMoney(stressLast.endAssets||0)}</div>
           <div style="font-size:10px;color:rgba(255,255,255,.5);margin-top:2px">${lifeExpectancy}歳時点残高</div>
         </div>
       </div>
@@ -13802,7 +13874,7 @@ function runStressTest() {
         <span style="font-size:24px">⚡</span>
         <div>
           <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:2px">暴落による影響額（${lifeExpectancy}歳時点）</div>
-          <div style="font-size:18px;font-weight:700;color:${diffColor}">${diff >= 0 ? '+' : ''}${diff.toLocaleString()}万円</div>
+          <div style="font-size:18px;font-weight:700;color:${diffColor}">${diff >= 0 ? '+' : '-'}${fmtMoney(Math.abs(diff))}</div>
           <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">
             退職直後の暴落は「sequence of returns risk」と呼ばれ、長期的な影響が特に大きくなります
           </div>
@@ -13813,37 +13885,28 @@ function runStressTest() {
 }
 
 // ===== ⑫ 感度分析 =====
-function updateSensitivity() {
-  const rV = parseFloat(document.getElementById('sensReturn').value) || 0;
-  const eV = parseFloat(document.getElementById('sensExpense').value) || 0;
-  const pV = parseFloat(document.getElementById('sensPension').value) || 0;
-  document.getElementById('sensReturnLabel').textContent  = (rV >= 0 ? '+' : '') + rV + '%';
-  document.getElementById('sensExpenseLabel').textContent = (eV >= 0 ? '+' : '') + eV + '%';
-  document.getElementById('sensPensionLabel').textContent = (pV >= 0 ? '+' : '') + pV + '%';
-
-  const result = calcRetirementSimWithOpts({ returnMod: rV / 100, expenseMod: eV / 100, pensionMod: pV / 100 });
-  if (!result) return;
-  const data = result.postData;
-  if (!data || data.length === 0) return;
-
-  const lastD = data[data.length - 1];
-  const depleted = data.find(d => d.depleted);
-  const el = document.getElementById('retSensitivityResult');
-  el.style.display = '';
-  if (depleted) {
-    el.innerHTML = `<span style="color:var(--danger);font-weight:700">⚠️ ${depleted.age}歳で資産が枯渇します</span>（この条件では${depleted.age - parseInt((state.retirement||{}).targetAge||65)}年で枯渇）`;
-  } else {
-    el.innerHTML = `<span style="color:var(--secondary);font-weight:700">✅ 余命まで資産が持ちます</span>　${parseInt((state.retirement||{}).lifeExpectancy)||90}歳時点の残高: <b>${(lastD?.endAssets||0).toLocaleString()}万円</b>`;
-  }
-}
-
 // ===== ⑩ モンテカルロシミュレーション =====
 let mcChartObj = null;
 function runMonteCarlo() {
   const r = state.retirement || {};
   const currentAge = calcAge();
   if (!currentAge || !r.targetAge) { alert('プロフィールの生年月日とリタイア年齢を設定してください'); return; }
+
+  // ローディング表示
+  const elResult = document.getElementById('retMonteCarloResult');
+  const runBtn = document.getElementById('mcRunBtn');
+  if (elResult) elResult.innerHTML = '<span style="color:var(--primary)">🎲 1,000回シミュレーション中...</span>';
+  if (runBtn) { runBtn.disabled = true; runBtn.textContent = '計算中...'; }
+
+  // 重い計算をUIスレッドが更新された後に実行
+  setTimeout(() => _runMonteCarloCalc(), 30);
+}
+function _runMonteCarloCalc() {
+  const r = state.retirement || {};
+  const currentAge = calcAge();
   const stdDev = (parseFloat(document.getElementById('mcStdDev').value) || 8) / 100;
+  const runBtn = document.getElementById('mcRunBtn');
+  const restoreBtn = () => { if (runBtn) { runBtn.disabled = false; runBtn.textContent = '▶ このプランで確認する'; } };
   const RUNS = 1000;
   const params = getRetirementParams();
 
@@ -13942,6 +14005,7 @@ function runMonteCarlo() {
       scales: { y: { title: { display: true, text: '資産残高（万円）' } } },
     },
   });
+  restoreBtn();
 }
 
 // ===== ⑦ 周期的大支出テンプレート =====
@@ -14413,6 +14477,15 @@ function runInputDiagnosis() {
   if (!p.birth) errors.push({ text: '生年月日が未入力です。年齢計算ができないため、シミュレーションが正確に動作しません。', page: 'profile' });
   else          oks.push({ text: `生年月日: ${p.birth}` });
 
+  // パートナーの生年月日チェック（パートナー月収が設定されているのに生年月日がない場合）
+  const partnerIncomeDiag = parseFloat(f.partnerIncome) || 0;
+  const partnerBirth = p.partnerBirth || p.partnerbirth || '';
+  if (partnerIncomeDiag > 0 && !partnerBirth) {
+    warns.push({ text: 'パートナーの月収が設定されていますが生年月日が未入力です。パートナーの年金受給開始年齢の計算に影響します。', page: 'profile' });
+  } else if (partnerBirth) {
+    oks.push({ text: `パートナー生年月日: ${partnerBirth}` });
+  }
+
   // ---- 家計 ----
   const income  = parseFloat(f.income)  || 0;
   const expense = parseFloat(f.expense) || 0;
@@ -14421,10 +14494,13 @@ function runInputDiagnosis() {
 
   if (expense === 0) errors.push({ text: '月支出が未入力です。キャッシュフロー計算に使用されます。', page: 'finance' });
   else {
-    if (income > 0 && expense > income) {
-      warns.push({ text: `月支出（${expense}万円）が月収（${income}万円）を超えています。住宅費・ローン等の二重計上がないか確認してください。`, page: 'finance' });
+    const partnerIncome = parseFloat(f.partnerIncome) || 0;
+    const householdIncome = income + partnerIncome;
+    if (householdIncome > 0 && expense > householdIncome) {
+      const incomeLabel = partnerIncome > 0 ? `世帯月収（${householdIncome}万円）` : `月収（${income}万円）`;
+      warns.push({ text: `月支出（${expense}万円）が${incomeLabel}を超えています。住宅費・ローン等の二重計上がないか確認してください。`, page: 'finance' });
     } else {
-      oks.push({ text: `月支出: ${expense}万円（月収比 ${Math.round(expense/income*100)}%）` });
+      oks.push({ text: `月支出: ${expense}万円（月収比 ${Math.round(expense/householdIncome*100)}%）` });
     }
   }
 
@@ -14435,35 +14511,81 @@ function runInputDiagnosis() {
     const totalAssets = assets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
     oks.push({ text: `資産 ${assets.length}件・合計 ${totalAssets.toLocaleString()}万円` });
 
+    // 重複資産の検出（同名かつ同一owner の資産が複数ある場合のみ検出）
+    const ownerNameCounts = {};
+    assets.forEach(a => {
+      const key = `${a.owner || 'self'}::${a.name}`;
+      ownerNameCounts[key] = (ownerNameCounts[key] || 0) + 1;
+    });
+    Object.entries(ownerNameCounts).forEach(([key, cnt]) => {
+      if (cnt > 1) {
+        const [owner, name] = key.split('::');
+        const ownerLabel = owner === 'partner' ? 'パートナー' : '本人';
+        warns.push({ text: `${ownerLabel}の「${name}」が${cnt}件登録されています。同じ資産の重複登録がないか確認してください。重複があると資産総額が二重計上されます。`, page: 'finance' });
+      }
+    });
+
     // 年利が異常に高い資産
     assets.forEach(a => {
-      const r = parseFloat(a.expectedReturn) || 0;
+      const r = parseFloat(a.annualReturn) || 0;
       if (r > 15) warns.push({ text: `「${a.name}」の期待年利が${r}%と高い設定です。現実的な値か確認してください（一般的な株式インデックス: 5〜7%）。`, page: 'finance' });
     });
 
-    // 配当利回りの整合性チェック
-    assets.filter(a => a.dividendYield > 0).forEach(a => {
+    // 配当利回りの整合性チェック（再投資モードのみ：受取モードは配当が別途キャッシュインカムになるため除外）
+    assets.filter(a => a.dividendYield > 0 && a.dividendMode !== 'cashout').forEach(a => {
       const d = parseFloat(a.dividendYield) || 0;
-      const r = parseFloat(a.expectedReturn) || 0;
+      const r = parseFloat(a.annualReturn) || 0;
       if (d > r) warns.push({ text: `「${a.name}」の配当利回り（${d}%）が期待年利（${r}%）を超えています。期待年利は値上がり益＋配当の合計を入力してください。`, page: 'finance' });
+    });
+
+    // 積立型資産の利回りが0%チェック
+    const cashTypes = ['cash', 'cash_emergency', 'cash_special', 'cash_reserved', 'cash_surplus'];
+    assets.filter(a => (parseFloat(a.monthly) || 0) > 0 && (parseFloat(a.annualReturn) || 0) === 0 && !cashTypes.includes(a.type)).forEach(a => {
+      warns.push({ text: `「${a.name}」は毎月${a.monthly}万円積立中ですが期待年利が0%です。運用益がシミュレーションに反映されません。`, page: 'finance' });
+    });
+
+    // NISAつみたて枠の月次積立上限チェック（年120万円 = 月10万円、本人・パートナー各別）
+    ['self', 'partner'].forEach(owner => {
+      const nisaMonthly = assets.filter(a => a.type === 'nisa_tsumitate' && (a.owner || 'self') === owner)
+        .reduce((s, a) => s + (parseFloat(a.monthly) || 0), 0);
+      if (nisaMonthly > 10) {
+        const label = owner === 'partner' ? 'パートナー' : '本人';
+        warns.push({ text: `${label}のNISAつみたて枠の月次積立合計が${nisaMonthly}万円（年${nisaMonthly * 12}万円）で、年間上限120万円を超えています。`, page: 'finance' });
+      }
     });
   }
 
   // ---- 住居 ----
   const housingType = le.housingType || 'mortgage';
   if (housingType === 'mortgage') {
-    const mp = parseFloat(le.mortgage?.principal) || 0;
+    const mp = parseFloat(le.mortgage?.amount) || 0;
     if (mp === 0) warns.push({ text: '住宅ローンの借入額が未入力です。月々のローン返済額がキャッシュフローに反映されていない可能性があります。', page: 'lifeevents' });
     else oks.push({ text: `住宅ローン: 借入${mp.toLocaleString()}万円` });
-    // 繰上返済チェック
+    // 繰上返済チェック（繰上返済年時点の投影資産と比較）
     const prepayEvents = (le.mortgage?.events || []).filter(e => e.type === 'prepay');
     if (prepayEvents.length > 0) {
       const prepayTotal = prepayEvents.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
-      // 繰上返済総額 vs 資産チェック
-      const cashAssets = assets.filter(a => ['cash', 'savings', 'bank'].includes(a.type));
-      const cashTotal  = cashAssets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
-      if (prepayTotal > cashTotal * 2) {
-        warns.push({ text: `繰上返済の合計（${prepayTotal.toLocaleString()}万円）が現金・預金（${cashTotal.toLocaleString()}万円）を大きく上回っています。繰上返済年に投資資産からの補填が必要になる場合があります。`, page: 'lifeevents', guide: 'prepay' });
+      try {
+        const simRows = calcIntegratedSim();
+        let insufficientYear = null, insufficientAmt = 0, insufficientAsset = 0;
+        prepayEvents.forEach(e => {
+          const amt = parseFloat(e.amount) || 0;
+          const row = simRows.find(r => r.year === e.year);
+          if (row && amt > (row.assetTotal || 0)) {
+            insufficientYear = e.year; insufficientAmt = amt; insufficientAsset = row.assetTotal;
+          }
+        });
+        if (insufficientYear) {
+          warns.push({ text: `${insufficientYear}年の繰上返済（${insufficientAmt.toLocaleString()}万円）が、その年の投影資産（${insufficientAsset.toLocaleString()}万円）を超えています。資金計画を確認してください。`, page: 'lifeevents', guide: 'prepay' });
+        } else {
+          oks.push({ text: `繰上返済 ${prepayTotal.toLocaleString()}万円: 繰上返済年の投影資産から賄える見込み` });
+        }
+      } catch(_) {
+        // フォールバック: 現在の全資産と比較
+        const totalAssets = assets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+        if (prepayTotal > totalAssets) {
+          warns.push({ text: `繰上返済の合計（${prepayTotal.toLocaleString()}万円）が現在の総資産（${totalAssets.toLocaleString()}万円）を超えています。資金計画を確認してください。`, page: 'lifeevents', guide: 'prepay' });
+        }
       }
     }
   } else if (housingType === 'rent') {
@@ -14476,13 +14598,24 @@ function runInputDiagnosis() {
   if (!ret.targetAge) {
     errors.push({ text: 'リタイア目標年齢が未設定です。出口戦略シミュレーションに必要です。', page: 'retirement' });
   } else {
-    oks.push({ text: `リタイア目標: ${ret.targetAge}歳` });
+    // 現在年齢との整合性チェック
+    const currentAge = p.birth ? Math.floor((new Date() - new Date(p.birth)) / (365.25 * 24 * 3600 * 1000)) : null;
+    if (currentAge !== null && ret.targetAge <= currentAge) {
+      warns.push({ text: `リタイア目標年齢（${ret.targetAge}歳）が現在年齢（${currentAge}歳）以下です。既にリタイア済みの場合はそのままで構いません。`, page: 'retirement' });
+    } else {
+      oks.push({ text: `リタイア目標: ${ret.targetAge}歳` });
+    }
   }
 
   if (!ret.monthlyExpense) {
     errors.push({ text: '退職後の月支出（①）が未入力です。必要資産額の計算に使用されます。', page: 'retirement' });
   } else {
-    oks.push({ text: `退職後月支出①: ${ret.monthlyExpense}万円` });
+    // フェーズ別支出の確認（③年金期の支出が未設定の場合のみ案内）
+    if (!ret.monthlyExpense3) {
+      oks.push({ text: `退職後月支出①: ${ret.monthlyExpense}万円（③年金期は①の値を引き継ぎ。異なる場合は「フェーズ別月支出③」を設定してください）` });
+    } else {
+      oks.push({ text: `退職後月支出: ①${ret.monthlyExpense}万円 / ③${ret.monthlyExpense3}万円` });
+    }
   }
 
   // 年金チェック
@@ -14494,16 +14627,14 @@ function runInputDiagnosis() {
     oks.push({ text: `年金: 本人${pensionMonthly}万円/月${pensionMonthlyP > 0 ? '・パートナー'+pensionMonthlyP+'万円/月' : ''}` });
   }
 
-  // 想定利回り（退職後）
-  const retReturn = parseFloat(ret.expectedReturn) || 0;
-  if (retReturn === 0) warns.push({ text: '退職後の想定利回りが0%です。実際に資産運用する場合は想定利回りを設定すると正確な試算ができます。', page: 'retirement' });
-  else if (retReturn > 10) warns.push({ text: `退職後の想定利回りが${retReturn}%と高い設定です（一般的な目安: 3〜6%）。`, page: 'retirement' });
-  else oks.push({ text: `退職後想定利回り: ${retReturn}%` });
-
-  // フェーズ別支出
-  if (ret.monthlyExpense && !ret.monthlyExpense2 && !ret.monthlyExpense3) {
-    warns.push({ text: 'フェーズ別月支出（②③）が未設定です。すべて①の値を引き継ぎます。「💡 現役支出から自動入力」で初期値を設定できます。', page: 'retirement' });
-  }
+  // 想定利回り（退職後）- 残高加重平均で算出（シミュレーションの実際の利用値）
+  const investAssets = assets.filter(a => (a.annualReturn || 0) > 0 && (a.currentVal || 0) > 0);
+  const totalInvestVal = investAssets.reduce((s, a) => s + (parseFloat(a.currentVal) || 0), 0);
+  const avgRetReturn = totalInvestVal > 0
+    ? investAssets.reduce((s, a) => s + (parseFloat(a.annualReturn) || 0) * (parseFloat(a.currentVal) || 0), 0) / totalInvestVal
+    : 0;
+  if (avgRetReturn === 0) warns.push({ text: '退職後の想定利回りが0%です。実際に資産運用する場合は家計・資産で各資産の期待年利を設定すると正確な試算ができます。', page: 'finance' });
+  else oks.push({ text: `退職後の残高加重平均利回り（参考）: 約${Math.round(avgRetReturn * 10) / 10}%` });
 
   // ---- 子ども教育費 ----
   const children = le.children || [];
@@ -15343,7 +15474,7 @@ function renderSimpleResult() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: ctx => `推計残高: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+              label: ctx => `推計残高: ${fmtMoney(ctx.parsed.y)}`
             }
           },
         },
@@ -15472,6 +15603,7 @@ function renderScenarioCards() {
   const container = document.getElementById('scenarioCards');
   if (!container) return;
   const { baseRetireAge, baseExpense } = getScenarioBase();
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
 
   container.innerHTML = (state.scenarioComp || []).map((sc, i) => {
     const color = SCENARIO_COLORS[i];
@@ -15479,53 +15611,100 @@ function renderScenarioCards() {
     const retireAge   = sc.retireAge   ?? baseRetireAge;
     const expense     = sc.monthlyExpense ?? baseExpense;
     const returnMod   = sc.returnMod   ?? 0;
+
+    // シミュレーション結果を取得して結果バッジを生成
+    const sim = calcScenarioSim(sc);
+    let badgeBg, badgeColor, badgeIcon, badgeText, subText;
+    if (!sim || sim.length === 0) {
+      badgeBg = '#f5f5f5'; badgeColor = '#999'; badgeIcon = '？';
+      badgeText = '計算中...'; subText = '';
+    } else {
+      const zeroRow = sim.find(r => r.endAssets <= 0 || r.depleted);
+      const finalAssets = sim[sim.length - 1]?.endAssets ?? 0;
+      const totalShortfall = Math.round(sim.reduce((s,d) => s + (d.withdrawalShortfall||0), 0));
+      if (zeroRow) {
+        badgeBg = '#FEE2E2'; badgeColor = '#DC2626'; badgeIcon = '✕';
+        badgeText = `${zeroRow.age}歳で枯渇`;
+        subText = totalShortfall > 0
+          ? `不足額 ${fmtMoney(totalShortfall)}`
+          : `${endAge}歳まで ${endAge - zeroRow.age}年分不足`;
+      } else if (finalAssets > 0) {
+        badgeBg = '#DCFCE7'; badgeColor = '#16A34A'; badgeIcon = '✓';
+        badgeText = `${endAge}歳で残高あり`;
+        subText = `推計残高 ${fmtMoney(finalAssets)}`;
+      } else {
+        badgeBg = '#FEF9C3'; badgeColor = '#CA8A04'; badgeIcon = '△';
+        badgeText = `${endAge}歳でギリギリ`;
+        subText = `残高 ${fmtMoney(finalAssets)}`;
+      }
+    }
+
     return `
-    <div style="border:2px solid ${color};border-radius:12px;padding:14px;background:#fff;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${label}</div>
+    <div style="border:2px solid ${color};border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:0;">
+      <!-- カードヘッダー -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${label}</div>
         <input type="text" value="${sc.name}"
           onchange="updateScenarioName(${i}, this.value)"
-          style="flex:1;border:none;font-weight:700;font-size:14px;color:#333;outline:none;background:transparent;">
+          style="flex:1;border:none;font-weight:700;font-size:14px;color:#333;outline:none;background:transparent;min-width:0;">
       </div>
 
-      <!-- 退職年齢 -->
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
-          <span>退職年齢</span>
-          <span style="font-weight:700;color:${color};" id="sc_retireAge_disp_${i}">${retireAge}歳</span>
+      <!-- 結果バッジ -->
+      <div id="sc_result_badge_${i}" style="background:${badgeBg};border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:${badgeColor};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${badgeIcon}</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:${badgeColor};">${badgeText}</div>
+          <div style="font-size:11px;color:${badgeColor};opacity:.8;">${subText}</div>
         </div>
-        <input type="range" min="45" max="75" step="1" value="${retireAge}"
-          class="sc-slider"
-          oninput="updateScenario(${i},'retireAge',+this.value);scTrack(this,45,75,'${color}')"
-          style="--sc-color:${color};${scTrackStyle(retireAge,45,75,color)}">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>45歳</span><span>75歳</span></div>
       </div>
 
-      <!-- 老後生活費 -->
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
-          <span>老後生活費</span>
-          <span style="font-weight:700;color:${color};" id="sc_monthlyExpense_disp_${i}">${expense}万円/月</span>
+      <!-- スライダー群 -->
+      <div style="flex:1;">
+        <!-- 退職年齢 -->
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+            <span>退職年齢</span>
+            <span style="font-weight:700;color:${color};" id="sc_retireAge_disp_${i}">${retireAge}歳</span>
+          </div>
+          <input type="range" min="45" max="75" step="1" value="${retireAge}"
+            class="sc-slider"
+            oninput="updateScenario(${i},'retireAge',+this.value);scTrack(this,45,75,'${color}')"
+            style="--sc-color:${color};${scTrackStyle(retireAge,45,75,color)}">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>45歳</span><span>75歳</span></div>
         </div>
-        <input type="range" min="10" max="60" step="1" value="${expense}"
-          class="sc-slider"
-          oninput="updateScenario(${i},'monthlyExpense',+this.value);scTrack(this,10,60,'${color}')"
-          style="--sc-color:${color};${scTrackStyle(expense,10,60,color)}">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>10万</span><span>60万</span></div>
+
+        <!-- 老後生活費 -->
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+            <span>老後生活費</span>
+            <span style="font-weight:700;color:${color};" id="sc_monthlyExpense_disp_${i}">${expense}万円/月</span>
+          </div>
+          <input type="range" min="10" max="60" step="1" value="${expense}"
+            class="sc-slider"
+            oninput="updateScenario(${i},'monthlyExpense',+this.value);scTrack(this,10,60,'${color}')"
+            style="--sc-color:${color};${scTrackStyle(expense,10,60,color)}">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>10万</span><span>60万</span></div>
+        </div>
+
+        <!-- 運用利回り調整 -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
+            <span>利回り調整（ベース比）</span>
+            <span style="font-weight:700;color:${color};" id="sc_returnMod_disp_${i}">${returnMod >= 0 ? '+' : ''}${returnMod}%</span>
+          </div>
+          <input type="range" min="-3" max="3" step="0.5" value="${returnMod}"
+            class="sc-slider"
+            oninput="updateScenario(${i},'returnMod',+this.value);scTrack(this,-3,3,'${color}')"
+            style="--sc-color:${color};${scTrackStyle(returnMod,-3,3,color)}">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>-3%</span><span>+3%</span></div>
+        </div>
       </div>
 
-      <!-- 運用利回り調整 -->
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:3px;">
-          <span>利回り調整（ベース比）</span>
-          <span style="font-weight:700;color:${color};" id="sc_returnMod_disp_${i}">${returnMod >= 0 ? '+' : ''}${returnMod}%</span>
-        </div>
-        <input type="range" min="-3" max="3" step="0.5" value="${returnMod}"
-          class="sc-slider"
-          oninput="updateScenario(${i},'returnMod',+this.value);scTrack(this,-3,3,'${color}')"
-          style="--sc-color:${color};${scTrackStyle(returnMod,-3,3,color)}">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>-3%</span><span>+3%</span></div>
-      </div>
+      <!-- 採用ボタン -->
+      <button onclick="applyScenario(${i})"
+        style="width:100%;padding:8px;background:${color};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+        このプランを設定に反映
+      </button>
     </div>
     `;
   }).join('');
@@ -15539,7 +15718,9 @@ function updateScenario(idx, field, value) {
   const suffix = field === 'retireAge' ? '歳' : field === 'monthlyExpense' ? '万円/月' : '%';
   const dispEl = document.getElementById(`sc_${field}_disp_${idx}`);
   if (dispEl) dispEl.textContent = (field === 'returnMod' && value >= 0 ? '+' : '') + value + suffix;
-  // グラフ・表を再描画（saveはしない）
+  // バッジだけ更新（スライダー操作中にDOM再構築しない）
+  updateScenarioResultBadge(idx);
+  renderScenarioInsights();
   renderScenarioChart();
   renderScenarioTable();
   // デバウンス付き保存
@@ -15553,14 +15734,69 @@ function updateScenarioName(idx, name) {
   renderScenarioTable();
 }
 
+// 現在の状況に応じたアダプティブシナリオを生成
+function getAdaptiveScenarios() {
+  const { baseRetireAge, baseExpense } = getScenarioBase();
+  // 現在のメインシミュレーションが枯渇しているか確認
+  const mainSim = calcRetirementSimWithOpts({});
+  const isDepleted = mainSim && mainSim.some(r => r.endAssets <= 0 || r.depleted);
+
+  if (isDepleted) {
+    // 枯渇している → 改善の余地を探るパターン
+    return [
+      {
+        name: '退職を遅らせたら？',
+        retireAge: Math.min(75, baseRetireAge + 5),
+        monthlyExpense: baseExpense,
+        returnMod: 0,
+        _hint: `退職を${Math.min(75, baseRetireAge + 5)}歳に遅らせた場合`,
+      },
+      {
+        name: '生活費を減らしたら？',
+        retireAge: baseRetireAge,
+        monthlyExpense: Math.max(10, baseExpense - 5),
+        returnMod: 0,
+        _hint: `老後の生活費を月${Math.max(10, baseExpense - 5)}万円に抑えた場合`,
+      },
+      {
+        name: '両方組み合わせたら？',
+        retireAge: Math.min(75, baseRetireAge + 3),
+        monthlyExpense: Math.max(10, baseExpense - 3),
+        returnMod: 0,
+        _hint: `退職を${Math.min(75, baseRetireAge + 3)}歳に遅らせ、生活費も月${Math.max(10, baseExpense - 3)}万円に抑えた場合`,
+      },
+    ];
+  } else {
+    // 成立している → 余裕を探るパターン
+    return [
+      {
+        name: 'もっと早く辞められる？',
+        retireAge: Math.max(45, baseRetireAge - 3),
+        monthlyExpense: baseExpense,
+        returnMod: 0,
+        _hint: `退職を${Math.max(45, baseRetireAge - 3)}歳に早めた場合`,
+      },
+      {
+        name: 'もっと使っても大丈夫？',
+        retireAge: baseRetireAge,
+        monthlyExpense: Math.min(60, baseExpense + 5),
+        returnMod: 0,
+        _hint: `老後の生活費を月${Math.min(60, baseExpense + 5)}万円に増やした場合`,
+      },
+      {
+        name: '運用を積極化したら？',
+        retireAge: baseRetireAge,
+        monthlyExpense: baseExpense,
+        returnMod: 2,
+        _hint: `現在の利回りより+2%で運用できた場合（試算）`,
+      },
+    ];
+  }
+}
+
 // リセット
 function resetScenarioComp() {
-  const { baseRetireAge, baseExpense } = getScenarioBase();
-  state.scenarioComp = [
-    { name: 'シナリオA', retireAge: baseRetireAge,     monthlyExpense: baseExpense,     returnMod: 0   },
-    { name: 'シナリオB', retireAge: baseRetireAge + 5, monthlyExpense: baseExpense,     returnMod: 0   },
-    { name: 'シナリオC', retireAge: baseRetireAge,     monthlyExpense: Math.max(10, baseExpense - 5), returnMod: 1 },
-  ];
+  state.scenarioComp = getAdaptiveScenarios();
   save();
   renderScenarioComp();
 }
@@ -15579,7 +15815,7 @@ function calcScenarioSim(sc) {
 
   let result = null;
   try {
-    result = calcRetirementSimWithOpts({ returnMod: (sc.returnMod || 0) / 100 })?.postData || null;
+    result = calcRetirementSimWithOpts({ returnMod: (sc.returnMod || 0) / 100 }) || null;
   } catch(e) {
     console.warn('calcScenarioSim error:', e);
   }
@@ -15689,7 +15925,7 @@ function renderScenarioChart() {
         tooltip: {
           callbacks: {
             label: ctx => ctx.dataset.label
-              ? `${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+              ? `${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}`
               : null
           }
         }
@@ -15711,7 +15947,7 @@ function renderScenarioChart() {
           ticks: {
             font: { size: 11 },
             color: '#aaa',
-            callback: v => `${Math.round(v).toLocaleString()}万`
+            callback: v => fmtMoneyAxis(v)
           },
           grid: { color: 'rgba(0,0,0,0.05)' }
         }
@@ -15728,7 +15964,7 @@ function renderScenarioTable() {
   const sims = (state.scenarioComp || []).map(sc => calcScenarioSim(sc));
 
   const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
-  const fmtAssets = v => v == null ? '−' : (v >= 0 ? `+${Math.round(v).toLocaleString()}万` : `${Math.round(v).toLocaleString()}万`);
+  const fmtAssets = v => v == null ? '−' : (v >= 0 ? `+${fmtMoney(v)}` : `-${fmtMoney(Math.abs(v))}`);
   const colorAssets = v => v == null ? '#aaa' : v >= 0 ? '#2e7d32' : '#c62828';
 
   // ヘッダー
@@ -15762,7 +15998,7 @@ function renderScenarioTable() {
         if (!sim) return '−';
         const retAge = (state.scenarioComp||[])[i]?.retireAge ?? baseRetireAge;
         const row = sim.find(r => r.age === retAge) || sim[0];
-        return row ? `${Math.round(row.startAssets).toLocaleString()}万円` : '−';
+        return row ? fmtMoney(row.startAssets) : '−';
       }),
       colors: null,
     },
@@ -15814,10 +16050,13 @@ function renderScenarioTable() {
 
 // シナリオ比較セクション全体を描画
 function renderScenarioComp() {
-  // 未設定の場合はデフォルト値をセット
+  // 未設定の場合はアダプティブシナリオをセット
   if (!state.scenarioComp || state.scenarioComp.every(sc => sc.retireAge == null)) {
-    const { baseRetireAge, baseExpense } = getScenarioBase();
-    if (baseRetireAge > 0) {
+    const adaptive = getAdaptiveScenarios();
+    if (adaptive.length > 0) {
+      state.scenarioComp = adaptive;
+    } else {
+      const { baseRetireAge, baseExpense } = getScenarioBase();
       state.scenarioComp = [
         { name: 'シナリオA', retireAge: baseRetireAge,     monthlyExpense: baseExpense,     returnMod: 0 },
         { name: 'シナリオB', retireAge: baseRetireAge + 5, monthlyExpense: baseExpense,     returnMod: 0 },
@@ -15825,9 +16064,144 @@ function renderScenarioComp() {
       ];
     }
   }
+  // セクション説明文を状況に応じて更新
+  const mainSim = calcRetirementSimWithOpts({});
+  const isDepleted = mainSim && mainSim.some(r => r.endAssets <= 0 || r.depleted);
+  const descEl = document.querySelector('#scenarioCompSection p');
+  if (descEl) {
+    descEl.innerHTML = isDepleted
+      ? '現在のプランでは資産が不足する試算です。<b>改善の余地があるか試してほしい3つの条件</b>を自動で用意しました。スライダーを自由に動かして探ってみてください。'
+      : '現在のプランは成立しています。<b>余裕がどれくらいあるか確認できる3つの条件</b>を自動で用意しました。スライダーを自由に動かして探ってみてください。';
+  }
   renderScenarioCards();
+  renderScenarioInsights();
   renderScenarioChart();
   renderScenarioTable();
+}
+
+// シナリオの自動インサイト生成
+function renderScenarioInsights() {
+  const el = document.getElementById('scenarioInsights');
+  if (!el) return;
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
+  const scs = state.scenarioComp || [];
+  if (scs.length < 2) { el.innerHTML = ''; return; }
+
+  const results = scs.map(sc => {
+    const sim = calcScenarioSim(sc);
+    if (!sim || sim.length === 0) return null;
+    const zeroRow = sim.find(r => r.endAssets <= 0 || r.depleted);
+    const finalAssets = sim[sim.length - 1]?.endAssets ?? 0;
+    const totalShortfall = Math.round(sim.reduce((s,d) => s + (d.withdrawalShortfall||0), 0));
+    return { zeroAge: zeroRow?.age ?? null, finalAssets, totalShortfall, ok: !zeroRow && finalAssets > 0 };
+  });
+
+  const insights = [];
+
+  // 成立プランの数
+  const okCount = results.filter(r => r?.ok).length;
+  if (okCount === 0) {
+    insights.push({ icon: '💡', text: 'すべてのプランで資産が枯渇します。退職年齢を遅くするか、生活費を見直してください。', color: '#DC2626' });
+  } else if (okCount === scs.length) {
+    const best = results.reduce((a,b,i) => (a.finalAssets||0) > (b?.finalAssets||0) ? a : {...b, i}, {...results[0], i:0});
+    insights.push({ icon: '✅', text: `すべてのプランが成立しています。最も余裕があるのは「${scs[best.i]?.name}」で、${endAge}歳時点の推計残高が ${fmtMoney(best.finalAssets)}です。`, color: '#16A34A' });
+  } else {
+    const okNames = results.map((r,i) => r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
+    const ngNames = results.map((r,i) => !r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
+    insights.push({ icon: '⚠️', text: `${okNames.join('・')}は成立、${ngNames.join('・')}は資産が枯渇します。`, color: '#D97706' });
+  }
+
+  // 退職年齢の差による影響
+  const retireAges = scs.map(sc => sc.retireAge ?? 65);
+  const minRetireIdx = retireAges.indexOf(Math.min(...retireAges));
+  const maxRetireIdx = retireAges.indexOf(Math.max(...retireAges));
+  if (retireAges[minRetireIdx] !== retireAges[maxRetireIdx] && results[minRetireIdx] && results[maxRetireIdx]) {
+    const diff = retireAges[maxRetireIdx] - retireAges[minRetireIdx];
+    const assetDiff = Math.round((results[maxRetireIdx].finalAssets || 0) - (results[minRetireIdx].finalAssets || 0));
+    if (Math.abs(assetDiff) > 50) {
+      const sign = assetDiff > 0 ? '+' : '';
+      insights.push({ icon: '📅', text: `退職を${diff}年遅らせると（${scs[minRetireIdx].name}→${scs[maxRetireIdx].name}）、${endAge}歳時点の残高が ${sign}${fmtMoney(Math.abs(assetDiff))}変わります。`, color: '#4F46E5' });
+    }
+  }
+
+  el.innerHTML = insights.map(ins => `
+    <div style="display:flex;align-items:flex-start;gap:10px;background:#F8FAFF;border:1px solid #E0E7FF;border-radius:10px;padding:12px;margin-bottom:8px;">
+      <span style="font-size:18px;line-height:1;flex-shrink:0;">${ins.icon}</span>
+      <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;">${ins.text}</p>
+    </div>
+  `).join('');
+}
+
+// シナリオ結果バッジのみを更新（スライダー操作中の軽量更新用）
+function updateScenarioResultBadge(idx) {
+  const el = document.getElementById(`sc_result_badge_${idx}`);
+  if (!el) return;
+  const sc = (state.scenarioComp || [])[idx];
+  if (!sc) return;
+  const color = SCENARIO_COLORS[idx];
+  const endAge = parseInt(state.retirement?.lifeExpectancy) || 90;
+  const sim = calcScenarioSim(sc);
+  let badgeBg, badgeColor, badgeIcon, badgeText, subText;
+  if (!sim || sim.length === 0) {
+    badgeBg = '#f5f5f5'; badgeColor = '#999'; badgeIcon = '？';
+    badgeText = '計算中...'; subText = '';
+  } else {
+    const zeroRow = sim.find(r => r.endAssets <= 0 || r.depleted);
+    const finalAssets = sim[sim.length - 1]?.endAssets ?? 0;
+    const totalShortfall = Math.round(sim.reduce((s,d) => s + (d.withdrawalShortfall||0), 0));
+    if (zeroRow) {
+      badgeBg = '#FEE2E2'; badgeColor = '#DC2626'; badgeIcon = '✕';
+      badgeText = `${zeroRow.age}歳で枯渇`;
+      subText = totalShortfall > 0
+        ? `不足額 ${fmtMoney(totalShortfall)}`
+        : `${endAge}歳まで ${endAge - zeroRow.age}年分不足`;
+    } else if (finalAssets > 0) {
+      badgeBg = '#DCFCE7'; badgeColor = '#16A34A'; badgeIcon = '✓';
+      badgeText = `${endAge}歳で残高あり`;
+      subText = `推計残高 ${fmtMoney(finalAssets)}`;
+    } else {
+      badgeBg = '#FEF9C3'; badgeColor = '#CA8A04'; badgeIcon = '△';
+      badgeText = `${endAge}歳でギリギリ`;
+      subText = `残高 ${fmtMoney(finalAssets)}`;
+    }
+  }
+  el.style.background = badgeBg;
+  el.innerHTML = `
+    <div style="width:28px;height:28px;border-radius:50%;background:${badgeColor};color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${badgeIcon}</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:${badgeColor};">${badgeText}</div>
+      <div style="font-size:11px;color:${badgeColor};opacity:.8;">${subText}</div>
+    </div>`;
+}
+
+// シナリオを設定に反映する
+function applyScenario(idx) {
+  const sc = (state.scenarioComp || [])[idx];
+  if (!sc) return;
+  if (!state.retirement) state.retirement = {};
+  const { baseRetireAge, baseExpense } = getScenarioBase();
+  const retireAge = sc.retireAge ?? baseRetireAge;
+  const expense   = sc.monthlyExpense ?? baseExpense;
+  state.retirement.targetAge      = String(retireAge);
+  state.retirement.monthlyExpense = String(expense);
+  save();
+  showNotification(`「${sc.name}」を設定に反映しました（退職${retireAge}歳、月支出${expense}万円）`);
+
+  // MCカードへスクロール＆ハイライト
+  const mcCard = document.getElementById('retMonteCarloCard');
+  if (mcCard) {
+    mcCard.style.display = '';
+    // 既存の結果をリセット
+    const resEl = document.getElementById('retMonteCarloResult');
+    if (resEl) resEl.innerHTML = '👆 反映しました。「このプランで確認する」を押して成功確率を確認しましょう';
+    const chartWrap = document.getElementById('mcChartWrap');
+    if (chartWrap) chartWrap.style.display = 'none';
+    // ハイライトアニメーション
+    mcCard.style.transition = 'box-shadow 0.3s';
+    mcCard.style.boxShadow = '0 0 0 3px #4F46E5, 0 0 20px rgba(79,70,229,0.4)';
+    setTimeout(() => { mcCard.style.boxShadow = ''; }, 2500);
+    setTimeout(() => mcCard.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+  }
 }
 
 // ===== ライフシナリオ比較 =====
@@ -16092,7 +16466,7 @@ function renderLsChart(theme) {
         tooltip: {
           callbacks: {
             label: ctx => ctx.dataset.label
-              ? `${ctx.dataset.label}: ${Math.round(ctx.parsed.y).toLocaleString()}万円`
+              ? `${ctx.dataset.label}: ${fmtMoney(ctx.parsed.y)}`
               : null
           }
         }
@@ -16139,12 +16513,12 @@ function renderLsInsights(theme, scs, sims) {
     const maxAge = scs[maxIdx].retireAge;
     const minAge = scs[minIdx].retireAge;
     const ageDiff = maxAge - minAge;
-    insightText = `<strong>${scs[maxIdx].label}（${maxAge}歳退職）</strong>は、<strong>${scs[minIdx].label}（${minAge}歳退職）</strong>と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。${ageDiff > 0 ? `${ageDiff}年長く働くことで積み上がる資産の差です。` : ''}`;
+    insightText = `<strong>${scs[maxIdx].label}（${maxAge}歳退職）</strong>は、<strong>${scs[minIdx].label}（${minAge}歳退職）</strong>と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${fmtMoney(diff)}</strong>多くなる試算です。${ageDiff > 0 ? `${ageDiff}年長く働くことで積み上がる資産の差です。` : ''}`;
   } else {
     const maxExp = scs[maxIdx].monthlyExpense;
     const minExp = scs[minIdx].monthlyExpense;
     const expDiff = maxExp - minExp;
-    insightText = `月々の生活費を<strong>${minExp}万円</strong>に抑えると、<strong>${maxExp}万円</strong>の場合と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。月<strong>${expDiff}万円</strong>の差が長期間で大きな差となります。`;
+    insightText = `月々の生活費を<strong>${minExp}万円</strong>に抑えると、<strong>${maxExp}万円</strong>の場合と比べて${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${fmtMoney(diff)}</strong>多くなる試算です。月<strong>${expDiff}万円</strong>の差が長期間で大きな差となります。`;
   }
 
   el.innerHTML = `
@@ -16541,7 +16915,7 @@ function renderLsHousingInsights(scs, sims) {
     <div style="background:#fffbe6;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;">
       <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:4px;">💡 試算からの気づき</div>
       <div style="font-size:13px;color:#78350f;line-height:1.6;">
-        <strong>${scs[maxIdx].label}</strong>は<strong>${scs[minIdx].label}</strong>と比べて、${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${diff.toLocaleString()}万円</strong>多くなる試算です。
+        <strong>${scs[maxIdx].label}</strong>は<strong>${scs[minIdx].label}</strong>と比べて、${endAge}歳時点の推計資産が<strong style="color:#4F46E5;">${fmtMoney(diff)}</strong>多くなる試算です。
         住宅コストの差が長期の資産形成に与える影響を示しています。
       </div>
     </div>
@@ -16715,9 +17089,9 @@ function toggleRetAcc(id) {
 const _RET_SUBTAB_CARDS = {
   overview:  ['retDrawdownCard', 'retChartCard'],
   cashflow:  ['retBreakdownCard', 'retPensionBreakevenCard'],
-  scenario:  ['retScenarioCard', 'scenarioCompSection'],
-  advanced:  ['retScenarioCompareCard','retTaxCard','retStressCard','retPrepayCard',
-              'retSensitivityCard','retMonteCarloCard','retFireTaxCard','retBasisCard'],
+  scenario:  ['retScenarioCard', 'scenarioCompSection', 'retScenarioCompareCard', 'retMonteCarloCard'],
+  advanced:  ['retTaxCard','retStressCard','retPrepayCard',
+              'retFireTaxCard','retBasisCard'],
 };
 
 function switchRetSubTab(tab) {
@@ -16738,8 +17112,10 @@ function switchRetSubTab(tab) {
     if (el) el.style.display = '';
   });
   // 詳細分析: 未描画のカードを自動レンダリング
+  if (tab === 'scenario') {
+    try { calcAndShowScenarios(false); } catch(e) {}
+  }
   if (tab === 'advanced') {
-    try { calcAndShowScenarios(true); } catch(e) {}
     try { showRetirementTaxCard(true); } catch(e) {}
     try { runStressTest(true); } catch(e) {}
     try { renderPrepaymentSim(); } catch(e) {}
