@@ -10491,10 +10491,10 @@ function renderLifeEventCharts() {
     // 退職金（受取年のみ一時収入として加算）
     const severanceInc = (_severanceYr !== null && yr === _severanceYr) ? _severance : 0;
     const totalInc = inc + annualDiv + severanceInc;
-    const annual  = i === 0 ? oneTime : totalInc - exp - leCost + oneTime;
+    const annual  = totalInc - exp - leCost + oneTime;
     cumulativeCF += Math.round(annual);
-    cfIncome.push(i === 0 ? 0 : Math.round(totalInc));
-    cfExpense.push(i === 0 ? 0 : -Math.round(exp + leCost + recur));
+    cfIncome.push(Math.round(totalInc));
+    cfExpense.push(-Math.round(exp + leCost + recur));
     cfAnnual.push(Math.round(annual));
     cfCumulative.push(cumulativeCF);
   }
