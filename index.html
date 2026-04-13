@@ -2661,6 +2661,7 @@
         <div id="leCFSummary" style="font-size:11px;font-weight:600"></div>
       </div>
       <div class="chart-wrap-tall"><canvas id="leCashFlowChart"></canvas></div>
+      <div id="leCFNote" style="margin-top:10px"></div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:8px 0 4px">
       <button class="btn btn-primary" onclick="saveLifeEvents();showPage('retirement')" style="padding:11px 28px;font-size:14px;border-radius:12px">
@@ -10517,6 +10518,28 @@ function renderLifeEventCharts() {
         ` ／ <span style="color:#EF4444">最大マイナス ${wStr} ${worstAnnual.toLocaleString()}万円</span>`;
     } else {
       cfSummaryEl.innerHTML = `<span style="color:#22C55E">全${surplusYrs}年 収支プラス</span>`;
+    }
+  }
+
+  // ④ 投資・積立の注意書き
+  const cfNoteEl = document.getElementById('leCFNote');
+  if (cfNoteEl) {
+    const _cy = new Date().getFullYear();
+    const monthlyInvestTotal = (state.assets || []).reduce((s, a) => {
+      const active = (!a.startYear || _cy >= parseInt(a.startYear)) && (!a.endYear || _cy <= parseInt(a.endYear));
+      return s + (active ? (parseFloat(a.monthly) || 0) : 0);
+    }, 0);
+    const annualInvestTotal = Math.round(monthlyInvestTotal * 12);
+    if (annualInvestTotal > 0) {
+      cfNoteEl.innerHTML = `
+        <div style="padding:10px 14px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;font-size:12px;color:#78350F;line-height:1.7">
+          <div style="font-weight:700;margin-bottom:4px">⚠️ このグラフの「累計収支」には投資・積立が含まれていません</div>
+          <div>現在の月次積立合計は <b>${monthlyInvestTotal.toLocaleString()}万円/月（年間 ${annualInvestTotal.toLocaleString()}万円）</b> です。<br>
+          実際の手元現金 ≈ 累計収支 − 積立拠出累計 となるため、<b>投資・積立が多い場合は累計収支よりも手元現金が大幅に少なくなります。</b><br>
+          住宅リフォーム・繰上返済などの大きな現金支出に備える際は、アセット欄の資産推移と合わせてご確認ください。</div>
+        </div>`;
+    } else {
+      cfNoteEl.innerHTML = '';
     }
   }
 
