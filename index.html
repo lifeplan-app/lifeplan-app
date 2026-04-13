@@ -10488,14 +10488,20 @@ function renderLifeEventCharts() {
     const leCost  = c.childcare + c.education + c.mortgage + c.care + c.scholarship;
     const recur   = recurringData[i];
     const oneTime = getOneTimeForYear(yr);
-    // 投資活動によるキャッシュアウト（年次積立合計）
-    const investOut = (state.assets || []).reduce((s, a) => {
-      if (!CF_INVEST_TYPES.has(a.type)) return s;
-      const start = a.startYear ? parseInt(a.startYear) : 0;
-      const end   = a.endYear   ? parseInt(a.endYear)   : 9999;
-      if (yr < start || yr > end) return s;
-      return s + (parseFloat(a.monthly) || 0) * 12;
+    // getExpenseForYear はアセット積立額を含む（B方式）
+    // → アセット積立額を分離して二重計上を防ぐ
+    const allAssetContrib = (state.assets || []).reduce((s, a) => {
+      const active = (!a.startYear || yr >= parseInt(a.startYear)) && (!a.endYear || yr <= parseInt(a.endYear));
+      return s + (active ? (parseFloat(a.monthly) || 0) * 12 + (parseFloat(a.annualBonus) || 0) : 0);
     }, 0);
+    const pureExp = exp - allAssetContrib; // 純粋な生活費のみ
+    // 投資活動：CF_INVEST_TYPES のみ紫表示、残りは生活費側に分類
+    const investContrib = (state.assets || []).reduce((s, a) => {
+      if (!CF_INVEST_TYPES.has(a.type)) return s;
+      const active = (!a.startYear || yr >= parseInt(a.startYear)) && (!a.endYear || yr <= parseInt(a.endYear));
+      return s + (active ? (parseFloat(a.monthly) || 0) * 12 + (parseFloat(a.annualBonus) || 0) : 0);
+    }, 0);
+    const cashSavings = allAssetContrib - investContrib; // 現金性積立（普通預金等）
     // その他収入: 配当受取（cashout）+ 退職金
     const annualDiv = i === 0 ? 0 : _cashoutAssets.reduce((s, a) => {
       const gd = _growthData.find(g => g.asset.id === a.id);
@@ -10507,12 +10513,13 @@ function renderLifeEventCharts() {
     const severanceInc = (_severanceYr !== null && yr === _severanceYr) ? _severance : 0;
     const otherInc = annualDiv + severanceInc;
     const totalInc = inc + otherInc;
-    const annual  = totalInc - exp - leCost + oneTime - investOut;
+    // annual = totalInc - exp（allAssetContrib込み） - leCost + oneTime（二重計上なし）
+    const annual  = totalInc - exp - leCost + oneTime;
     cumulativeCF += Math.round(annual);
     cfIncomeSalary.push(Math.round(inc));
     cfIncomeOther.push(Math.round(otherInc));
-    cfExpense.push(-Math.round(exp + leCost + recur));
-    cfInvest.push(-Math.round(investOut));
+    cfExpense.push(-Math.round(pureExp + cashSavings + leCost + recur)); // 生活費+現金性積立+ライフイベント
+    cfInvest.push(-Math.round(investContrib));  // 投資型アセットのみ紫
     cfAnnual.push(Math.round(annual));
     cfCumulative.push(cumulativeCF);
   }
@@ -10561,7 +10568,7 @@ function renderLifeEventCharts() {
           {
             label: '給与・副業収入',
             data: cfIncomeSalary,
-            backgroundColor: 'rgba(52,199,89,.70)',
+            backgroundColor: 'rgba(34,197,94,.75)',
             borderWidth: 0,
             borderRadius: 0,
             stack: 'income',
@@ -10571,7 +10578,7 @@ function renderLifeEventCharts() {
           {
             label: 'その他収入（配当・退職金等）',
             data: cfIncomeOther,
-            backgroundColor: 'rgba(134,239,172,.80)',
+            backgroundColor: 'rgba(6,182,212,.80)',
             borderWidth: 0,
             borderRadius: 2,
             stack: 'income',
