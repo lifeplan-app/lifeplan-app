@@ -13189,25 +13189,23 @@ function calcRetirementSimWithOpts(opts = {}) {
     const _annualReturn = Math.round(_cashPre * _cashBaseReturn + _investPre * Math.max(-1, _investBaseReturn + returnMod));
 
     // 取り崩し順序に基づく引き出し
+    // cashFloor は取り崩し順序のヒントのみ（ソフト優先）。資産が必要なら0まで取り崩し可能。
+    // residualAssets（残したい額）はシミュレーション終端でのチェックのみに使用。
     const _poolTotal = cashPool + investPool;
+    const _deductable = Math.min(_poolTotal, actualDeduction); // 実際に取り出せる上限
     let _fromCash = 0, _fromInvest = 0;
     if (drawdownOrder === 'cash_first') {
-      const _avail = Math.max(0, cashPool - cashFloor);
-      _fromCash   = Math.min(_avail, actualDeduction);
-      _fromInvest = Math.max(0, actualDeduction - _fromCash);
+      _fromCash   = Math.min(cashPool, _deductable);
+      _fromInvest = Math.min(investPool, Math.max(0, _deductable - _fromCash));
     } else if (drawdownOrder === 'invest_first') {
-      _fromInvest = Math.min(investPool, actualDeduction);
-      // 投資資産が不足した場合、cashFloor を超えた分の現金で補填
-      const _remain = Math.max(0, actualDeduction - _fromInvest);
-      const _cashAvail = Math.max(0, cashPool - cashFloor);
-      _fromCash = Math.min(_cashAvail, _remain);
+      _fromInvest = Math.min(investPool, _deductable);
+      _fromCash   = Math.min(cashPool, Math.max(0, _deductable - _fromInvest));
     } else { // proportional
-      const _cf   = _poolTotal > 0 ? cashPool / _poolTotal : 0.5;
-      const _wantCash = actualDeduction * _cf;
-      // cashFloor を下回らない範囲で現金から取り崩す
-      const _cashAvail = Math.max(0, cashPool - cashFloor);
-      _fromCash   = Math.min(_cashAvail, _wantCash);
-      _fromInvest = Math.max(0, actualDeduction - _fromCash);
+      const _cf = _poolTotal > 0 ? cashPool / _poolTotal : 0.5;
+      _fromCash   = Math.min(cashPool, _deductable * _cf);
+      _fromInvest = Math.min(investPool, _deductable - _fromCash);
+      // 投資で不足した分を現金で補填
+      _fromCash   = Math.min(cashPool, _fromCash + Math.max(0, _deductable - _fromCash - _fromInvest));
     }
     const _cashBeforeDeduct = cashPool;
     const _investBeforeDeduct = investPool;
