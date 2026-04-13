@@ -10459,6 +10459,13 @@ function renderLifeEventCharts() {
   }
 
   // --- 年間キャッシュフロー（強化版） ---
+  // 投資活動アセットタイプ（流動性の低い投資・積立）
+  const CF_INVEST_TYPES = new Set([
+    'nisa_tsumitate','nisa_growth','nisa_old_tsumitate','nisa_old_general',
+    'ideco','insurance',
+    'trust_allworld','trust_sp500','trust_other',
+    'japan_stock','high_dividend','etf','other',
+  ]);
   // 配当受取（cashoutモード）アセットの年別配当を事前計算
   const _DIV_TAX = 0.20315;
   const _cashoutAssets = (state.assets || []).filter(a => a.dividendMode === 'cashout' && a.dividendYield > 0);
@@ -10471,7 +10478,7 @@ function renderLifeEventCharts() {
   const _severanceYr  = (_severance > 0 && _severanceAge > 0)
     ? currentYear + (_severanceAge - _currentAge) : null;
 
-  const cfIncome = [], cfExpense = [], cfAnnual = [], cfCumulative = [];
+  const cfIncome = [], cfExpense = [], cfInvest = [], cfAnnual = [], cfCumulative = [];
   let cumulativeCF = 0;
   for (let i = 0; i <= years; i++) {
     const yr = currentYear + i;
@@ -10481,6 +10488,14 @@ function renderLifeEventCharts() {
     const leCost  = c.childcare + c.education + c.mortgage + c.care + c.scholarship;
     const recur   = recurringData[i];
     const oneTime = getOneTimeForYear(yr);
+    // 投資活動によるキャッシュアウト（年次積立合計）
+    const investOut = (state.assets || []).reduce((s, a) => {
+      if (!CF_INVEST_TYPES.has(a.type)) return s;
+      const start = a.startYear ? parseInt(a.startYear) : 0;
+      const end   = a.endYear   ? parseInt(a.endYear)   : 9999;
+      if (yr < start || yr > end) return s;
+      return s + (parseFloat(a.monthly) || 0) * 12;
+    }, 0);
     // 配当受取（cashout）の年間配当（前年末評価額ベース・課税口座は税引後）
     const annualDiv = i === 0 ? 0 : _cashoutAssets.reduce((s, a) => {
       const gd = _growthData.find(g => g.asset.id === a.id);
@@ -10492,10 +10507,11 @@ function renderLifeEventCharts() {
     // 退職金（受取年のみ一時収入として加算）
     const severanceInc = (_severanceYr !== null && yr === _severanceYr) ? _severance : 0;
     const totalInc = inc + annualDiv + severanceInc;
-    const annual  = totalInc - exp - leCost + oneTime;
+    const annual  = totalInc - exp - leCost + oneTime - investOut;
     cumulativeCF += Math.round(annual);
     cfIncome.push(Math.round(totalInc));
     cfExpense.push(-Math.round(exp + leCost + recur));
+    cfInvest.push(-Math.round(investOut));
     cfAnnual.push(Math.round(annual));
     cfCumulative.push(cumulativeCF);
   }
@@ -10521,26 +10537,16 @@ function renderLifeEventCharts() {
     }
   }
 
-  // ④ 投資・積立の注意書き
+  // ④ グラフ凡例補足
   const cfNoteEl = document.getElementById('leCFNote');
   if (cfNoteEl) {
-    const _cy = new Date().getFullYear();
-    const monthlyInvestTotal = (state.assets || []).reduce((s, a) => {
-      const active = (!a.startYear || _cy >= parseInt(a.startYear)) && (!a.endYear || _cy <= parseInt(a.endYear));
-      return s + (active ? (parseFloat(a.monthly) || 0) : 0);
-    }, 0);
-    const annualInvestTotal = Math.round(monthlyInvestTotal * 12);
-    if (annualInvestTotal > 0) {
-      cfNoteEl.innerHTML = `
-        <div style="padding:10px 14px;background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;font-size:12px;color:#78350F;line-height:1.7">
-          <div style="font-weight:700;margin-bottom:4px">⚠️ このグラフの「累計収支」には投資・積立が含まれていません</div>
-          <div>現在の月次積立合計は <b>${monthlyInvestTotal.toLocaleString()}万円/月（年間 ${annualInvestTotal.toLocaleString()}万円）</b> です。<br>
-          実際の手元現金 ≈ 累計収支 − 積立拠出累計 となるため、<b>投資・積立が多い場合は累計収支よりも手元現金が大幅に少なくなります。</b><br>
-          住宅リフォーム・繰上返済などの大きな現金支出に備える際は、アセット欄の資産推移と合わせてご確認ください。</div>
-        </div>`;
-    } else {
-      cfNoteEl.innerHTML = '';
-    }
+    const hasInvest = cfInvest.some(v => v < 0);
+    cfNoteEl.innerHTML = hasInvest
+      ? `<div style="padding:8px 12px;background:#F5F3FF;border-left:3px solid #8B5CF6;border-radius:0 8px 8px 0;font-size:11px;color:#4C1D95;line-height:1.6">
+          💜 <b>投資活動</b>（紫）はNISA・iDeCo・株・投資信託などへの積立拠出です。将来の資産として積み上がるため「損失」ではありません。<br>
+          累計収支ラインは投資活動を含む<b>実際の手元現金の推移</b>を表しています。資産の成長は「家計・資産」タブの資産推移シミュレーションでご確認ください。
+        </div>`
+      : '';
   }
 
   const cfCtx = document.getElementById('leCashFlowChart')?.getContext('2d');
@@ -10564,6 +10570,15 @@ function renderLifeEventCharts() {
             label: '支出',
             data: cfExpense,
             backgroundColor: 'rgba(255,59,48,.60)',
+            borderWidth: 0,
+            borderRadius: 2,
+            order: 3,
+            yAxisID: 'y1',
+          },
+          {
+            label: '投資活動',
+            data: cfInvest,
+            backgroundColor: 'rgba(139,92,246,.65)',
             borderWidth: 0,
             borderRadius: 2,
             order: 3,
