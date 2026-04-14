@@ -7422,7 +7422,11 @@ function renderPortfolio() {
 
   const allocData = state.assets.map(a => a.currentVal || 0);
   const allocColors = state.assets.map((_, i) => assetColor(i));
-  const allocLabels = state.assets.map(a => (a.name || (ASSET_TYPES[a.type] || ASSET_TYPES.other).label).slice(0, 12));
+  const hasPartner = state.profile?.marital === 'married' || state.profile?.marital === 'planning';
+  const ownerSuffix = a => !hasPartner ? '' : (a.owner === 'partner' ? '(妻)' : '(本)');
+  const allocLabels = state.assets.map(a =>
+    (a.name || (ASSET_TYPES[a.type] || ASSET_TYPES.other).label).slice(0, 10) + ownerSuffix(a)
+  );
 
   const ctx1 = document.getElementById('pfAllocChart').getContext('2d');
   if (pfAllocObj) pfAllocObj.destroy();
@@ -7452,7 +7456,7 @@ function renderPortfolio() {
         const at = ASSET_TYPES[g.asset.type] || ASSET_TYPES.other;
         const color = assetColor(i);
         return {
-          label: (g.asset.name || at.label).slice(0, 10),
+          label: (g.asset.name || at.label).slice(0, 10) + ownerSuffix(g.asset),
           data: g.data,
           backgroundColor: color + 'CC',
           borderColor: color,
@@ -7510,7 +7514,7 @@ function renderPortfolio() {
         ...growthData.map((g, i) => {
           const at = ASSET_TYPES[g.asset.type] || ASSET_TYPES.other;
           return {
-            label: at.emoji + ' ' + (g.asset.name || at.label).slice(0, 12),
+            label: at.emoji + ' ' + (g.asset.name || at.label).slice(0, 10) + ownerSuffix(g.asset),
             data: g.data.map((v, y) => Math.round(v * realFactor(y))),
             borderColor: assetColor(i),
             backgroundColor: 'transparent',
