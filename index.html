@@ -3384,6 +3384,7 @@
     <div id="retPrepayCard" style="display:none"></div>
     <div class="card" id="retBreakdownCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#CFFAFE">📋</span>年別収支シミュレーション</div>
+      <div id="retBreakdownStrategyTabs" style="display:none;margin-bottom:8px;overflow-x:auto"></div>
       <div id="retSimNote" style="display:none"></div>
       <div id="retAssumptionsPanel"></div>
       <div style="overflow-x:auto"><table id="retBreakdownTable" style="width:100%;font-size:12px;border-collapse:collapse"></table></div>
@@ -14265,11 +14266,23 @@ function runRetirementSim() {
   }
 
   // Breakdown table
+  renderBreakdownSection(result);
+  initBreakdownStrategyTabs();
+
+  renderDrawdownCompare();
+  // 現在アクティブなサブタブを保持（保存時に概要へ戻らないようにする）
+  const activeTab = document.querySelector('.ret-sub-tab.active')?.id?.replace('retSubTab_', '') || 'overview';
+  switchRetSubTab(activeTab);
+}
+
+// ===== 年別収支テーブル描画（取り崩し方式タブ切替対応） =====
+function renderBreakdownSection(result, displayWithdrawalType) {
+  const breakdownCard = document.getElementById('retBreakdownCard');
+  if (!breakdownCard || !result) return;
   breakdownCard.style.display = '';
   const showEvery = result.postData.length > 20 ? 5 : 1;
   const keyRows = result.postData.filter((d, i) => i % showEvery === 0 || d.depleted);
-  const withdrawalType = (state.retirement || {}).withdrawalType || 'hybrid';
-  const isFixedMode = withdrawalType === 'fixed_rate' || withdrawalType === 'fixed_amount';
+  const withdrawalType = displayWithdrawalType || (state.retirement || {}).withdrawalType || 'hybrid';
   const isHybridMode = withdrawalType === 'hybrid';
   // 余剰取り崩しが発生するモード
   const hasSurplus = result.postData.some(d => (d.annualSurplus || 0) > 0);
@@ -14280,7 +14293,31 @@ function runRetirementSim() {
   // 方式別の補足説明
   const modeDescMap = {
     needs:        `🎯 <b>最低限取り崩し</b>：生活費の不足分だけ補填。毎年の引き出しを最小限に抑えるため、資産が最も長く持続します。余裕があれば資産は増え続ける可能性も。`,
-    fixed_rate:   `📈 <b>定率取り崩し ${withdrawalRateTable}%ルール</b>：毎年資産の${withdrawalRateTable}%を上限として取り崩します。年金等の収入が支出を一部カバーする場合、資産からの引き出しはその差額（不足分）のみになります。「資産取り崩し」列は実際に資産から引き出した額、「余剰自由資金」列は（${withdrawalRateTable}%計算額 − 実際の不足額）です。`,
+    fixed_rate:   (() => {
+      const r = withdrawalRateTable;
+      return `📈 <b>定率取り崩し（${r}%上限ルール）の見方</b>
+<div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+  <div style="background:#F5F3FF;border-radius:6px;padding:8px 10px;border-left:3px solid #7C3AED">
+    <div style="font-weight:700;color:#5B21B6;margin-bottom:4px">📌 このシミュレーションの仕組み</div>
+    <div style="color:#374151;line-height:1.7">
+      「毎年 <b>資産の${r}%</b>」が取り崩せる上限。<br>
+      実際には <b>収入で不足した分だけ</b> 取り崩します。<br>
+      → 不足額 &lt; ${r}%上限 なら余剰が生まれる<br>
+      → 不足額 &gt; ${r}%上限 なら赤字（上限超過）
+    </div>
+  </div>
+  <div style="background:#FEF3C7;border-radius:6px;padding:8px 10px;border-left:3px solid #D97706">
+    <div style="font-weight:700;color:#92400E;margin-bottom:4px">📖 各列の読み方</div>
+    <div style="color:#374151;line-height:1.7">
+      <b>資産取り崩し</b>＝実際に引き出した額<br>
+      <b>うち余剰自由資金</b>＝${r}%上限 − 実取り崩し額<br>
+      　→ 旅行・趣味に追加で使える予算<br>
+      <b>月間収支</b>＝余剰を使った場合の月額換算<br>
+      　＋ならゆとり / −なら${r}%上限でも赤字
+    </div>
+  </div>
+</div>`;
+    })(),
     fixed_amount: `💴 <b>定額取り崩し</b>：生活費補填に加え、毎月${((state.retirement||{}).withdrawalMonthly||0)}万円を上乗せして引き出します。毎年一定の余裕資金を確保できます。`,
     hybrid_reverse: (() => {
       const switchAge = parseInt((state.retirement||{}).withdrawalHybridReverseSwitchAge) || 75;
@@ -14315,7 +14352,6 @@ function runRetirementSim() {
   // ===== 前提条件サマリーパネル =====
   const r2 = state.retirement || {};
   const inflationRate = state.finance?.inflationRate ?? 2;
-  // 年金：正しいフィールド名は pensionMonthly / pensionMonthly_p
   const selfPension  = parseFloat(r2.pensionMonthly)   || 0;
   const partnerPension = parseFloat(r2.pensionMonthly_p) || 0;
   const pensionMonthly = selfPension + partnerPension;
@@ -14323,9 +14359,7 @@ function runRetirementSim() {
   const pensionVal = pensionMonthly > 0
     ? `${pensionMonthly}万円/月${pensionAgeStr ? '（' + pensionAgeStr + '）' : ''}`
     : '未設定';
-  // その他収入
   const otherIncomeMonthly = (parseFloat(r2.semiRetireMonthly) || 0) + (parseFloat(r2.extraMonthly) || 0);
-  // 加重平均利回り（小数→%）
   const wReturn = result.weightedReturn != null ? (result.weightedReturn * 100).toFixed(1) : null;
   const hybridReverseSwitchAgeTable = parseInt((state.retirement || {}).withdrawalHybridReverseSwitchAge) || 75;
   const hybridReverseRateTable = parseFloat((state.retirement || {}).withdrawalHybridReverseRate) || 4;
@@ -14424,7 +14458,7 @@ function runRetirementSim() {
         </tr>`;
       }).join('')}
     </tbody>`;
-  // 注記を固定エリアに更新（再描画のたびに上書きするため積算しない）
+  // 注記を固定エリアに更新
   const simNoteEl = document.getElementById('retSimNote');
   if (simNoteEl) {
     if (simNoteHtml) {
@@ -14435,11 +14469,74 @@ function runRetirementSim() {
       simNoteEl.style.display = 'none';
     }
   }
+}
 
-  renderDrawdownCompare();
-  // 現在アクティブなサブタブを保持（保存時に概要へ戻らないようにする）
-  const activeTab = document.querySelector('.ret-sub-tab.active')?.id?.replace('retSubTab_', '') || 'overview';
-  switchRetSubTab(activeTab);
+// ===== 取り崩し方式タブの初期化 =====
+function initBreakdownStrategyTabs() {
+  const container = document.getElementById('retBreakdownStrategyTabs');
+  if (!container) return;
+  const configuredMode = (state.retirement || {}).withdrawalType || 'hybrid';
+  const strategies = [
+    { mode: 'needs',          label: '最低限',  emoji: '🎯', color: '#0369A1', bg: '#E0F2FE' },
+    { mode: 'fixed_rate',     label: '定率',    emoji: '📈', color: '#7C3AED', bg: '#EDE9FE' },
+    { mode: 'fixed_amount',   label: '定額',    emoji: '💴', color: '#B45309', bg: '#FEF3C7' },
+    { mode: 'hybrid',         label: '切替型',  emoji: '🔄', color: '#065F46', bg: '#D1FAE5' },
+    { mode: 'hybrid_reverse', label: '逆切替',  emoji: '🔁', color: '#9A3412', bg: '#FFEDD5' },
+  ];
+  container.style.display = '';
+  container.innerHTML = `
+    <div style="display:flex;gap:6px;padding:2px 0 6px;min-width:max-content;align-items:center">
+      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;margin-right:2px">方式比較：</span>
+      ${strategies.map(s => {
+        const isActive = s.mode === configuredMode;
+        return `<button class="breakdown-strategy-tab" data-mode="${s.mode}"
+          onclick="switchBreakdownStrategyTab('${s.mode}')"
+          style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${isActive ? s.color : 'var(--border)'};background:${isActive ? s.bg : '#fff'};color:${isActive ? s.color : 'var(--text-secondary)'};white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:3px">
+          ${s.emoji} ${s.label}${isActive ? ' <span style="font-size:9px;background:'+s.color+';color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>' : ''}
+        </button>`;
+      }).join('')}
+    </div>`;
+}
+
+// ===== 取り崩し方式タブ切替 =====
+function switchBreakdownStrategyTab(mode) {
+  const configuredMode = (state.retirement || {}).withdrawalType || 'hybrid';
+  const strategies = {
+    needs:          { color: '#0369A1', bg: '#E0F2FE', emoji: '🎯', label: '最低限' },
+    fixed_rate:     { color: '#7C3AED', bg: '#EDE9FE', emoji: '📈', label: '定率' },
+    fixed_amount:   { color: '#B45309', bg: '#FEF3C7', emoji: '💴', label: '定額' },
+    hybrid:         { color: '#065F46', bg: '#D1FAE5', emoji: '🔄', label: '切替型' },
+    hybrid_reverse: { color: '#9A3412', bg: '#FFEDD5', emoji: '🔁', label: '逆切替' },
+  };
+  // タブのスタイルを更新
+  document.querySelectorAll('.breakdown-strategy-tab').forEach(t => {
+    const tMode = t.dataset.mode;
+    const s = strategies[tMode] || {};
+    const isActive = tMode === mode;
+    const isConfig = tMode === configuredMode;
+    t.style.background = isActive ? s.bg : '#fff';
+    t.style.color = isActive ? s.color : 'var(--text-secondary)';
+    t.style.borderColor = isActive ? s.color : 'var(--border)';
+    t.innerHTML = `${s.emoji} ${s.label}${isConfig ? ` <span style="font-size:9px;background:${s.color};color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>` : ''}`;
+  });
+  // 一時的にwithdrawalTypeを差し替えて計算
+  if (!state.retirement) state.retirement = {};
+  const origMode = state.retirement.withdrawalType;
+  state.retirement.withdrawalType = mode;
+  const result = calcRetirementSim();
+  state.retirement.withdrawalType = origMode;
+  if (!result) return;
+  renderBreakdownSection(result, mode);
+  // タブ状態を再適用（renderBreakdownSectionがHTMLを書き換えないようになっているが念のため）
+  document.querySelectorAll('.breakdown-strategy-tab').forEach(t => {
+    const tMode = t.dataset.mode;
+    const s = strategies[tMode] || {};
+    const isActive = tMode === mode;
+    const isConfig = tMode === configuredMode;
+    t.style.background = isActive ? s.bg : '#fff';
+    t.style.color = isActive ? s.color : 'var(--text-secondary)';
+    t.style.borderColor = isActive ? s.color : 'var(--border)';
+  });
 }
 
 let _retDrawdownChartObj = null;
@@ -20192,6 +20289,11 @@ function showDisclaimerModal() {
 
 function closeDisclaimerModal() {
   document.getElementById('disclaimerModal').style.display = 'none';
+  // × で閉じた場合も承認済みとして扱い、再表示しない（利回り変更時のみ再表示）
+  if (!state.disclaimerAck) state.disclaimerAck = {};
+  state.disclaimerAck.shown = true;
+  state.disclaimerAck.rateHash = calcRateHash();
+  save();
 }
 
 function ackDisclaimer() {
