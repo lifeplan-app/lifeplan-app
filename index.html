@@ -1964,6 +1964,57 @@
 .ssn-section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .ssn-upgrade-hint { background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px;
   padding:10px 14px; font-size:13px; color:#1D4ED8; margin-top:8px; }
+
+/* ===== G: プラン管理ページ ===== */
+.plan-current-banner { display:flex; align-items:center; gap:14px; background:#F5F3FF; border:2px solid #A5B4FC; border-radius:16px; padding:18px 20px; margin-bottom:24px; }
+.plan-current-icon { font-size:32px; flex-shrink:0; }
+.plan-current-name { font-size:20px; font-weight:800; color:#4F46E5; }
+.plan-current-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
+
+.plan-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
+@media(max-width:520px){ .plan-grid { grid-template-columns:1fr; } }
+.plan-card { border:2px solid var(--border); border-radius:16px; padding:20px 14px; text-align:center; position:relative; background:#fff; transition:box-shadow .2s; }
+.plan-card:hover { box-shadow:var(--shadow-lg); }
+.plan-card--current { border-color:#6366F1; }
+.plan-card--popular { border-color:#F59E0B; }
+.plan-card__top-badge { position:absolute; top:-11px; left:50%; transform:translateX(-50%); font-size:10px; font-weight:700; padding:2px 10px; border-radius:10px; white-space:nowrap; }
+.plan-card__top-badge--current { background:#6366F1; color:#fff; }
+.plan-card__top-badge--popular { background:#F59E0B; color:#fff; }
+.plan-card__name { font-size:17px; font-weight:800; margin-bottom:2px; }
+.plan-card__price { font-size:12px; color:var(--text-muted); min-height:18px; margin-bottom:14px; }
+.plan-card__features { list-style:none; text-align:left; padding:0; margin:0 0 16px; }
+.plan-card__features li { font-size:11px; line-height:1.85; display:flex; align-items:baseline; gap:4px; }
+.plan-card__features li .fc-ok  { color:#10B981; font-weight:700; flex-shrink:0; }
+.plan-card__features li .fc-no  { color:#D1D5DB; flex-shrink:0; }
+.plan-card__features li.fc-dim  { color:var(--text-muted); }
+.plan-cta { width:100%; padding:10px 0; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.plan-cta:hover:not(:disabled) { opacity:.85; }
+.plan-cta--current { background:#F1F5F9; color:#94A3B8; cursor:default; }
+.plan-cta--std  { background:#6366F1; color:#fff; }
+.plan-cta--prem { background:linear-gradient(135deg,#7C3AED,#EC4899); color:#fff; }
+
+.plan-compare-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:10px 0; border-top:1px solid var(--border); margin-top:4px; user-select:none; }
+.plan-compare-toggle span { font-size:13px; font-weight:600; color:var(--text-muted); }
+.plan-feature-table { width:100%; border-collapse:collapse; font-size:12px; margin:12px 0 0; }
+.plan-feature-table th { padding:8px 6px; background:#F8FAFC; font-weight:700; font-size:11px; color:var(--text-muted); text-align:center; border-bottom:2px solid var(--border); }
+.plan-feature-table th:first-child { text-align:left; }
+.plan-feature-table td { padding:8px 6px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.plan-feature-table td:first-child { font-size:12px; font-weight:500; }
+.plan-feature-table td:not(:first-child) { text-align:center; font-size:13px; }
+.plan-feature-table tr:last-child td { border-bottom:none; }
+
+.plan-demo-box { background:#FFFBEB; border:1px solid #FDE68A; border-radius:12px; padding:16px; margin-top:24px; }
+.plan-demo-box__title { font-size:13px; font-weight:700; color:#92400E; margin-bottom:10px; }
+.plan-demo-btns { display:flex; gap:8px; flex-wrap:wrap; }
+.plan-demo-btn { padding:7px 16px; border-radius:8px; font-size:12px; font-weight:700; border:2px solid transparent; cursor:pointer; transition:all .15s; }
+.plan-demo-btn--active { border-color:#6366F1; background:#EEF2FF; color:#4F46E5; }
+.plan-demo-btn--inactive { background:#fff; border-color:#E5E7EB; color:#6B7280; }
+
+.plan-db-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+.plan-db-badge--free     { background:#F3F4F6; color:#6B7280; }
+.plan-db-badge--standard { background:#EEF2FF; color:#4F46E5; }
+.plan-db-badge--premium  { background:linear-gradient(90deg,#7C3AED22,#EC489922); color:#7C3AED; border:1px solid #C4B5FD; }
+@keyframes upgradePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(99,102,241,.3)} }
   </style>
 </head>
 <body>
@@ -1995,6 +2046,9 @@
     </button>
     <button class="drawer-item" data-page="scenarios" onclick="closeDrawer();showPage('scenarios')">
       <span class="d-icon">🔀</span>シナリオ
+    </button>
+    <button class="drawer-item" data-page="plan" onclick="closeDrawer();showPage('plan')" style="color:#6366F1;font-weight:700" id="drawerPlanBtn">
+      <span class="d-icon">⭐</span><span id="drawerPlanLabel">プランを管理</span>
     </button>
   </div>
 
@@ -2158,7 +2212,10 @@
     </div>
 
     <div id="welcomeBanner" class="welcome-banner">
-      <h2 id="welcomeName">あなたのライフプランへようこそ</h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <h2 id="welcomeName" style="margin:0">あなたのライフプランへようこそ</h2>
+        <button id="dbPlanBadge" onclick="showPage('plan')" style="background:none;border:none;cursor:pointer;padding:0" aria-label="プランを管理"></button>
+      </div>
       <p id="welcomeSub">ライフプランを整理して、理想の未来を描きましょう</p>
     </div>
 
@@ -4037,6 +4094,50 @@
 
 </div>
 
+<!-- ===== G: プラン管理ページ ===== -->
+<div id="page-plan" class="page">
+  <div class="section-header">
+    <h1 class="section-title">⭐ プランを管理</h1>
+    <p style="color:var(--text-muted);font-size:14px;margin:4px 0 0;">現在のプランを確認し、機能を比較できます。</p>
+  </div>
+
+  <!-- 現在のプランバナー -->
+  <div id="plan_currentBanner"></div>
+
+  <!-- プランカードグリッド -->
+  <div class="plan-grid" id="plan_cardGrid"></div>
+
+  <!-- 詳細比較テーブル（折りたたみ） -->
+  <div class="card" style="padding:16px 20px">
+    <div class="plan-compare-toggle" onclick="togglePlanCompareTable()" id="planCompareToggleBtn">
+      <span>📋 機能比較を詳しく見る</span>
+      <span id="planCompareArrow" style="font-size:12px;color:var(--text-muted)">▼</span>
+    </div>
+    <div id="planCompareTable" style="display:none">
+      <table class="plan-feature-table">
+        <thead>
+          <tr>
+            <th style="width:42%">機能</th>
+            <th>Free</th>
+            <th>Standard</th>
+            <th>Premium</th>
+          </tr>
+        </thead>
+        <tbody id="plan_featureTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- デモモード -->
+  <div class="plan-demo-box">
+    <div class="plan-demo-box__title">🔧 デモ：プランを試す（開発・体験用）</div>
+    <p style="font-size:11px;color:#92400E;margin-bottom:10px;line-height:1.6">
+      実際の決済なしにプランの機能を体験できます。設定はこのデバイスにのみ保存されます。
+    </p>
+    <div class="plan-demo-btns" id="plan_demoBtns"></div>
+  </div>
+</div>
+
 </main>
 
 <!-- ===== E: オンボーディング ===== -->
@@ -5228,13 +5329,48 @@ const UPGRADE_COPY = {
 // プラン表示名マップ
 const PLAN_NAMES = { free: 'Free', standard: 'Standard', premium: 'Premium' };
 
-/** アップグレードページを新規タブで開く（CSP: connect-src 'none' 対応）*/
+// ===== G: プラン管理 定数 =====
+const PLAN_FEATURES = [
+  { label: 'タイムライン・資産シミュレーション', free: '✅', standard: '✅', premium: '✅' },
+  { label: 'ライフイベント管理（住宅・子ども等）', free: '✅', standard: '✅', premium: '✅' },
+  { label: 'リタイア設計・出口戦略',              free: '✅', standard: '✅', premium: '✅' },
+  { label: '保険管理・相続設計',                  free: '✅', standard: '✅', premium: '✅' },
+  { label: 'PDF出力・データ書き出し',              free: '✅', standard: '✅', premium: '✅' },
+  { label: 'ポートフォリオテンプレート',           free: '1種', standard: '3種', premium: '12種' },
+  { label: 'シナリオ保存（スナップショット）',     free: '✗',  standard: '3件', premium: '無制限' },
+  { label: '月次自動スナップショット',             free: '✗',  standard: '✗',  premium: '最大24件' },
+];
+const PLAN_CARD_DEF = {
+  free: {
+    icon: '🌱', color: '#6B7280', bg: '#F9FAFB',
+    price: '無料',
+    features: ['基本シミュレーション全機能', 'スターターテンプレート1種', 'PDF出力・データ保存'],
+    disabled: ['シナリオ保存', '自動スナップショット', '追加テンプレート'],
+  },
+  standard: {
+    icon: '⭐', color: '#6366F1', bg: '#EEF2FF',
+    price: '近日公開',
+    features: ['Free の全機能', 'シナリオ保存 3件', 'テンプレート 3種（DINKS・FIRE等）'],
+    disabled: ['月次自動スナップショット', 'Premiumテンプレート（9種）'],
+  },
+  premium: {
+    icon: '💎', color: '#7C3AED', bg: '#FAF5FF',
+    price: '近日公開',
+    popular: true,
+    features: ['Standard の全機能', 'シナリオ保存 無制限', '月次自動スナップショット（最大24件）', 'テンプレート全12種'],
+    disabled: [],
+  },
+};
+
+/** アップグレードページを表示（インアプリ比較 → 将来は決済LPへ遷移）*/
 function openUpgradePage(plan) {
-  // 将来: 決済LP URLに差し替え。現時点はプレースホルダー
-  const url = plan === 'premium'
-    ? 'https://example.com/upgrade?plan=premium'
-    : 'https://example.com/upgrade?plan=standard';
-  window.open(url, '_blank', 'noopener,noreferrer');
+  closeUpgradeModal();
+  showPage('plan');
+  // プランページ表示後、対象プランのCTAをハイライト
+  requestAnimationFrame(() => {
+    const btn = document.getElementById('planCta_' + (plan || 'standard'));
+    if (btn) { btn.style.animation = 'none'; btn.offsetHeight; btn.style.animation = 'upgradePulse .6s ease 2'; }
+  });
 }
 
 // シナリオ保存件数制限
@@ -6198,6 +6334,7 @@ function showPage(id) {
   if (id === 'insurance')   renderInsurancePage();
   if (id === 'inheritance') renderInheritancePage();
   if (id === 'scenarios')   { renderScenariosPage(); checkAndShowDisclaimerModal(); }
+  if (id === 'plan')        renderPlanPage();
   if (id === 'finance')     applyMaritalFilter();
   // レンダー後にページ先頭へスクロール（ブラウザのスクロール復元より優先）
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
@@ -10658,6 +10795,7 @@ function renderDashboard() {
 
   // Welcome
   document.getElementById('welcomeName').textContent = name ? name + 'のライフプラン' : 'あなたのライフプランへようこそ';
+  _updateDashPlanBadge();
 
   // ===== ライフプラン完成ロードマップ =====
   (function renderSetupProgress() {
@@ -22222,6 +22360,113 @@ function confirmLoadScenario(id) {
 
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderPlanPage() {
+  const cur = getUserPlan();
+
+  // ── 現在のプランバナー ──
+  const def = PLAN_CARD_DEF[cur];
+  document.getElementById('plan_currentBanner').innerHTML = `
+    <div class="plan-current-banner">
+      <div class="plan-current-icon">${def.icon}</div>
+      <div>
+        <div class="plan-current-name">${PLAN_NAMES[cur]} プラン利用中</div>
+        <div class="plan-current-sub">${
+          cur === 'free' ? 'Standardにアップグレードするとシナリオ保存などの機能が使えます'
+          : cur === 'standard' ? 'Premiumにアップグレードするとシナリオ無制限・自動記録が使えます'
+          : 'すべての機能が利用可能です ✨'
+        }</div>
+      </div>
+    </div>`;
+
+  // ── プランカードグリッド ──
+  const plans = ['free', 'standard', 'premium'];
+  document.getElementById('plan_cardGrid').innerHTML = plans.map(p => {
+    const d = PLAN_CARD_DEF[p];
+    const isCurrent = p === cur;
+    const canUpgrade = PLAN_ORDER[p] > PLAN_ORDER[cur];
+    const topBadge = isCurrent
+      ? `<div class="plan-card__top-badge plan-card__top-badge--current">現在のプラン</div>`
+      : (d.popular ? `<div class="plan-card__top-badge plan-card__top-badge--popular">おすすめ</div>` : '');
+    const featHtml = [
+      ...d.features.map(f => `<li><span class="fc-ok">✓</span> ${f}</li>`),
+      ...d.disabled.map(f => `<li class="fc-dim"><span class="fc-no">✗</span> ${f}</li>`),
+    ].join('');
+    let ctaClass, ctaLabel, ctaOnclick;
+    if (isCurrent) {
+      ctaClass = 'plan-cta plan-cta--current'; ctaLabel = '利用中'; ctaOnclick = '';
+    } else if (p === 'standard') {
+      ctaClass = 'plan-cta plan-cta--std'; ctaLabel = 'Standardを見る →'; ctaOnclick = `onclick="planExternalCta('standard')"`;
+    } else {
+      ctaClass = 'plan-cta plan-cta--prem'; ctaLabel = 'Premiumを見る →'; ctaOnclick = `onclick="planExternalCta('premium')"`;
+    }
+    return `
+      <div class="plan-card${isCurrent ? ' plan-card--current' : ''}${d.popular && !isCurrent ? ' plan-card--popular' : ''}">
+        ${topBadge}
+        <div class="plan-card__name" style="color:${d.color}">${d.icon} ${PLAN_NAMES[p]}</div>
+        <div class="plan-card__price">${d.price}</div>
+        <ul class="plan-card__features">${featHtml}</ul>
+        <button id="planCta_${p}" class="${ctaClass}" ${ctaOnclick} ${isCurrent ? 'disabled' : ''}>${ctaLabel}</button>
+      </div>`;
+  }).join('');
+
+  // ── 機能比較テーブル ──
+  document.getElementById('plan_featureTbody').innerHTML = PLAN_FEATURES.map(f => {
+    const cols = ['free','standard','premium'].map(p => {
+      const val = f[p];
+      const c = val === '✅' ? 'color:#10B981;font-weight:700'
+              : val === '✗'  ? 'color:#D1D5DB'
+              : 'color:var(--text);font-weight:600';
+      return `<td style="${c}">${val}</td>`;
+    }).join('');
+    return `<tr><td>${f.label}</td>${cols}</tr>`;
+  }).join('');
+
+  // ── デモボタン ──
+  document.getElementById('plan_demoBtns').innerHTML = ['free','standard','premium'].map(p => `
+    <button class="plan-demo-btn ${p === cur ? 'plan-demo-btn--active' : 'plan-demo-btn--inactive'}"
+      onclick="setDemoPlan('${p}')">
+      ${PLAN_CARD_DEF[p].icon} ${PLAN_NAMES[p]}${p === cur ? ' ✓' : ''}
+    </button>`).join('');
+
+  // ── ドロワーのラベル更新 ──
+  const labelEl = document.getElementById('drawerPlanLabel');
+  if (labelEl) labelEl.textContent = cur === 'free' ? 'プランをアップグレード' : `プランを管理（${PLAN_NAMES[cur]}）`;
+
+  // ── ダッシュボードのバッジ更新 ──
+  _updateDashPlanBadge();
+}
+
+function togglePlanCompareTable() {
+  const tbl = document.getElementById('planCompareTable');
+  const arrow = document.getElementById('planCompareArrow');
+  if (!tbl) return;
+  const open = tbl.style.display !== 'none';
+  tbl.style.display = open ? 'none' : '';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function setDemoPlan(plan) {
+  if (!['free','standard','premium'].includes(plan)) return;
+  state._plan = plan;
+  save();
+  renderPlanPage();
+  showNotification(`プランを「${PLAN_NAMES[plan]}」に変更しました（デモ）`);
+  // ダッシュボードが表示されているならバッジ更新
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+}
+
+function planExternalCta(plan) {
+  // 将来の決済LP URL。現時点ではプレースホルダー通知
+  showNotification('💡 決済ページは近日公開予定です。しばらくお待ちください。');
+}
+
+function _updateDashPlanBadge() {
+  const badge = document.getElementById('dbPlanBadge');
+  if (!badge) return;
+  const plan = getUserPlan();
+  badge.innerHTML = `<span class="plan-db-badge plan-db-badge--${plan}">${PLAN_CARD_DEF[plan].icon} ${PLAN_NAMES[plan]}</span>`;
 }
 
 function renderScenariosPage() {
