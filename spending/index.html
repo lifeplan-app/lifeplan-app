@@ -592,6 +592,12 @@
     <div class="summary-card balance"><div class="s-label">収支</div><div class="s-value" id="sumBalance">—</div></div>
   </div>
 
+  <!-- Mini Trend Chart (月次モードのみ) -->
+  <div class="section-card" id="miniTrendSection" style="display:none;padding:12px 14px">
+    <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:8px">📈 直近6ヶ月の推移</div>
+    <div style="height:110px"><canvas id="miniTrendChart"></canvas></div>
+  </div>
+
   <!-- Domain Grid -->
   <div class="domain-grid" id="domainGrid"></div>
 
@@ -1702,6 +1708,7 @@ function switchViewMode(mode) {
   document.getElementById('monthNav').style.display  = mode === 'monthly' ? '' : 'none';
   document.getElementById('yearNav').style.display   = mode === 'annual'  ? '' : 'none';
   document.getElementById('annualTrendSection').style.display = mode === 'annual' ? '' : 'none';
+  document.getElementById('miniTrendSection').style.display = 'none'; // renderDashboard で制御
   document.getElementById('suggestionArea').style.display = mode === 'monthly' ? '' : 'none';
   if (mode === 'monthly') {
     // 年間ビューで見ていた年と月次の年がズレていれば合わせる
@@ -1886,6 +1893,8 @@ function renderDashboard() {
 
   if (!hasData) {
     if (catChartInstance) { catChartInstance.destroy(); catChartInstance = null; }
+    if (miniTrendChartInstance) { miniTrendChartInstance.destroy(); miniTrendChartInstance = null; }
+    document.getElementById('miniTrendSection').style.display = 'none';
     renderSuggestions(null);
     return;
   }
@@ -1905,28 +1914,37 @@ function renderDashboard() {
   balEl.textContent = (balance >= 0 ? '+' : '') + fmt(balance);
   balEl.style.color = balance >= 0 ? 'var(--secondary)' : 'var(--danger)';
 
-  // 月平均支出との比較
+  // 前月比バッジ
+  const [cy, cm] = currentMonth.split('-').map(Number);
+  const prevMk = cm === 1 ? `${cy-1}-12` : `${cy}-${String(cm-1).padStart(2,'0')}`;
+  const prevData = state.months[prevMk];
   const avgEl = document.getElementById('sumExpenseAvg');
-  const allMonths = Object.entries(state.months)
-    .filter(([k]) => k !== currentMonth && (state.months[k].totalExpense || 0) > 0);
-  if (allMonths.length > 0) {
-    const avg = Math.round(allMonths.reduce((s, [, m]) => s + (m.totalExpense || 0), 0) / allMonths.length);
-    const diff = totalExpense - avg;
-    const sign = diff > 0 ? '+' : '';
-    const diffColor = diff > 0 ? 'var(--danger)' : 'var(--secondary)';
-    avgEl.innerHTML = `平均 ${fmt(avg)}<br><span style="color:${diffColor};font-weight:700">${sign}${fmt(diff)}</span>`;
+  if (prevData?.totalExpense > 0) {
+    const prevExp = prevData.totalExpense;
+    const pct = Math.round((totalExpense - prevExp) / prevExp * 100);
+    const arrow = pct > 0 ? '▲' : '▼';
+    const color = pct > 0 ? 'var(--danger)' : 'var(--secondary)';
+    avgEl.innerHTML = `<span style="color:${color};font-weight:700">${arrow}${Math.abs(pct)}%</span> <span style="color:var(--text-muted)">前月比</span>`;
   } else {
     avgEl.innerHTML = '';
   }
 
-  // Domain Grid
+  // Domain Grid（前月比チップ付き）
+  const prevDomains = prevData?.domainTotals || {};
   const domainEl = document.getElementById('domainGrid');
   domainEl.innerHTML = Object.entries(DOMAINS).map(([id, d]) => {
     const amount = domainTotals[id] || 0;
     const ratio = totalExpense > 0 ? (amount / totalExpense * 100) : 0;
+    const prevAmt = prevDomains[id] || 0;
+    let chipHtml = '';
+    if (prevAmt > 0 && amount > 0) {
+      const dp = Math.round((amount - prevAmt) / prevAmt * 100);
+      const chipColor = dp > 0 ? 'var(--danger)' : 'var(--secondary)';
+      chipHtml = `<span style="font-size:10px;color:${chipColor};font-weight:600;margin-left:4px">${dp > 0 ? '▲' : '▼'}${Math.abs(dp)}%</span>`;
+    }
     return `
       <div class="domain-card" style="border-left-color:${d.color}">
-        <div class="d-label">${d.emoji} ${d.label}</div>
+        <div class="d-label">${d.emoji} ${d.label}${chipHtml}</div>
         <div class="d-amount" style="color:${d.color}">${fmt(amount)}</div>
         <div class="d-ratio">${ratio.toFixed(1)}%</div>
         <div class="domain-bar">
@@ -1938,6 +1956,9 @@ function renderDashboard() {
   // Category Chart
   renderCatChart(categoryTotals, totalExpense);
 
+  // Mini Trend Chart
+  renderMiniTrend(currentMonth);
+
   // Budget Summary & Category List
   renderBudgetSummary(categoryTotals);
   renderCatList(categoryTotals, totalExpense);
@@ -1948,6 +1969,87 @@ function renderDashboard() {
 
   // Suggestions
   renderSuggestions(monthData);
+}
+
+let miniTrendChartInstance = null;
+
+function renderMiniTrend(pivotMonth) {
+  const section = document.getElementById('miniTrendSection');
+
+  // 直近6ヶ月のキーを降順で取得（pivot含む）
+  const allKeys = Object.keys(state.months).sort();
+  const pivotIdx = allKeys.indexOf(pivotMonth);
+  const endIdx = pivotIdx >= 0 ? pivotIdx : allKeys.length - 1;
+  const keys = allKeys.slice(Math.max(0, endIdx - 5), endIdx + 1);
+
+  if (keys.length < 2) {
+    section.style.display = 'none';
+    if (miniTrendChartInstance) { miniTrendChartInstance.destroy(); miniTrendChartInstance = null; }
+    return;
+  }
+  section.style.display = '';
+
+  const labels = keys.map(k => {
+    const [, m] = k.split('-');
+    return `${parseInt(m)}月`;
+  });
+  const expenseData = keys.map(k => state.months[k]?.totalExpense || 0);
+  const incomeData  = keys.map(k => state.months[k]?.income || 0);
+  const hasIncome   = incomeData.some(v => v > 0);
+
+  if (miniTrendChartInstance) { miniTrendChartInstance.destroy(); miniTrendChartInstance = null; }
+
+  const ctx = document.getElementById('miniTrendChart').getContext('2d');
+  const datasets = [{
+    label: '支出',
+    data: expenseData,
+    borderColor: '#FF3B30',
+    backgroundColor: 'rgba(255,59,48,.08)',
+    fill: true,
+    tension: 0.35,
+    pointRadius: 3,
+    pointBackgroundColor: expenseData.map((v, i) => keys[i] === pivotMonth ? '#FF3B30' : '#fff'),
+    pointBorderColor: '#FF3B30',
+    pointBorderWidth: 2,
+    borderWidth: 2,
+  }];
+  if (hasIncome) {
+    datasets.push({
+      label: '収入',
+      data: incomeData,
+      borderColor: '#34C759',
+      backgroundColor: 'transparent',
+      fill: false,
+      tension: 0.35,
+      pointRadius: 2,
+      borderWidth: 1.5,
+      borderDash: [4, 3],
+    });
+  }
+
+  miniTrendChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: hasIncome, position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            label: (item) => ` ${item.dataset.label}: ${fmt(item.raw)}`,
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: '#f0f0f0' }, ticks: { font: { size: 10 },
+          callback: v => v >= 10000 ? `${Math.round(v/10000)}万` : `${Math.round(v/1000)}k`,
+        }},
+      },
+    },
+  });
 }
 
 function renderCatChart(categoryTotals, totalExpense) {
