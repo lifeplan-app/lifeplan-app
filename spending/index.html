@@ -723,6 +723,34 @@
 <!-- ===================== PAGE: SYNC ===================== -->
 <div class="page" id="page-sync">
 
+  <!-- Lifeplan connection status -->
+  <div class="section-card" id="lifeplanConnCard" style="padding:14px 16px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px;flex-shrink:0" id="lifeplanConnIcon">🔍</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700" id="lifeplanConnTitle">確認中...</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px" id="lifeplanConnDesc"></div>
+      </div>
+      <a href="../" id="lifeplanConnOpenLink" style="display:none;flex-shrink:0;padding:6px 12px;background:var(--primary);color:white;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">開く →</a>
+    </div>
+    <!-- Change preview (shown when connected + have spending data) -->
+    <div id="syncChangePreview" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">連携後の変更プレビュー（月間生活費）</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">現在</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text)" id="previewCurrentVal">—</div>
+        </div>
+        <span style="font-size:18px;color:var(--text-muted);flex-shrink:0">→</span>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">連携後</div>
+          <div style="font-size:16px;font-weight:700;color:var(--primary)" id="previewNewVal">—</div>
+        </div>
+        <span id="previewDiff" style="margin-left:4px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- Calculation basis -->
   <div class="section-card">
     <div class="section-title">📐 月間生活費の計算</div>
@@ -3306,6 +3334,77 @@ function onIrregularAmountInput() {
   }
 }
 
+// ライフプラン接続カードの更新
+function updateLifeplanConnCard(monthlyTotal) {
+  let lp = null;
+  try { lp = JSON.parse(localStorage.getItem('lifeplan_v1') || 'null'); } catch(e) {}
+
+  const iconEl    = document.getElementById('lifeplanConnIcon');
+  const titleEl   = document.getElementById('lifeplanConnTitle');
+  const descEl    = document.getElementById('lifeplanConnDesc');
+  const openLink  = document.getElementById('lifeplanConnOpenLink');
+  const previewEl = document.getElementById('syncChangePreview');
+  const syncBtn   = document.getElementById('syncBtn');
+  if (!iconEl) return;
+
+  if (!lp) {
+    // ライフプランデータが存在しない
+    iconEl.textContent = '⚠️';
+    titleEl.textContent = 'ライフプランのデータが見つかりません';
+    titleEl.style.color = 'var(--warning, #FF9500)';
+    descEl.textContent  = 'ライフプランアプリを一度開いてデータを作成してください';
+    openLink.style.display = '';
+    if (previewEl) previewEl.style.display = 'none';
+    if (syncBtn) syncBtn.disabled = true;
+    return;
+  }
+
+  // 接続済み
+  iconEl.textContent = '✅';
+  titleEl.textContent = 'ライフプランと接続済み';
+  titleEl.style.color = 'var(--secondary, #34C759)';
+  openLink.style.display = 'none';
+
+  const currentExpense = lp.finance?.expense ?? null;
+  const syncedAt = state.lifeplanSync?.syncedAt;
+  if (syncedAt) {
+    const d = new Date(syncedAt);
+    const ts = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    descEl.textContent = `最終連携: ${ts}` + (currentExpense != null ? ` ／ 現在の月間生活費: ${currentExpense}万円` : '');
+  } else {
+    descEl.textContent = currentExpense != null
+      ? `現在の月間生活費: ${currentExpense}万円（未連携）`
+      : '未連携 — 初回の連携を行ってください';
+  }
+
+  // 変更プレビュー
+  if (monthlyTotal != null && previewEl) {
+    const newManYen = toManYen(monthlyTotal);
+    previewEl.style.display = '';
+    document.getElementById('previewCurrentVal').textContent = currentExpense != null ? currentExpense + '万円' : '未設定';
+    document.getElementById('previewNewVal').textContent = newManYen + '万円';
+    const diffEl = document.getElementById('previewDiff');
+    if (currentExpense == null) {
+      diffEl.textContent = '新規設定';
+      diffEl.style.cssText = 'background:#EFF6FF;color:var(--primary);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px';
+    } else {
+      const diff = Math.round((newManYen - currentExpense) * 10) / 10;
+      if (Math.abs(diff) < 0.1) {
+        diffEl.textContent = '変化なし';
+        diffEl.style.cssText = 'background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px';
+      } else {
+        const sign = diff > 0 ? '+' : '';
+        diffEl.textContent = sign + diff + '万円';
+        diffEl.style.cssText = diff > 0
+          ? 'background:#FFF7ED;color:#C2410C;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px'
+          : 'background:#F0FDF4;color:#065F46;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px';
+      }
+    }
+  } else if (previewEl) {
+    previewEl.style.display = 'none';
+  }
+}
+
 function renderSync() {
   const excludeHousing = document.getElementById('excludeHousingChk')?.checked ?? true;
   const excludeFamily  = document.getElementById('excludeFamilyChk')?.checked || false;
@@ -3319,6 +3418,7 @@ function renderSync() {
     document.getElementById('syncFamilyRow').style.display = 'none';
     document.getElementById('syncBasisInfo').textContent = '';
     document.getElementById('syncBtn').disabled = true;
+    updateLifeplanConnCard(null);
     renderIrregularList();
     return;
   }
@@ -3327,6 +3427,7 @@ function renderSync() {
   document.getElementById('syncVariable').textContent = fmt(vals.monthlyVariable);
   document.getElementById('syncMonthly').textContent = fmtManYen(vals.monthlyTotal);
   document.getElementById('syncBtn').disabled = false;
+  updateLifeplanConnCard(vals.monthlyTotal);
 
   // 住宅費除外行
   const housingRow = document.getElementById('syncHousingRow');
@@ -3535,14 +3636,6 @@ function syncToLifeplan() {
   const vals = calcSyncValues(syncAvgMonths, { excludeHousing, excludeFamily });
   if (!vals) { showNotification('連携するデータがありません'); return; }
 
-  const manYen = toManYen(vals.monthlyTotal);
-  const notes = [];
-  if (excludeHousing && vals.housingAvg > 0) notes.push(`住宅費 ${fmt(vals.housingAvg)}/月 を除外`);
-  if (excludeFamily  && vals.familyAvg  > 0) notes.push(`家族生活費 ${fmt(vals.familyAvg)}/月 を除外`);
-  const familyNote = notes.length > 0 ? `\n（${notes.join('、')}）` : '';
-  const msg = `ライフプランの月間生活費を ${manYen}万円 に更新します。${familyNote}\nよろしいですか？`;
-  if (!confirm(msg)) return;
-
   // Write to lifeplan_v1
   let lp;
   try {
@@ -3553,9 +3646,25 @@ function syncToLifeplan() {
   }
 
   if (!lp) {
-    showNotification('ライフプランアプリのデータが見つかりません');
+    showNotification('ライフプランアプリのデータが見つかりません。先にライフプランアプリを開いてください。');
+    updateLifeplanConnCard(vals.monthlyTotal);
     return;
   }
+
+  const manYen = toManYen(vals.monthlyTotal);
+  const currentExpense = lp.finance?.expense ?? null;
+  const notes = [];
+  if (excludeHousing && vals.housingAvg > 0) notes.push(`住宅費 ${fmt(vals.housingAvg)}/月 を除外`);
+  if (excludeFamily  && vals.familyAvg  > 0) notes.push(`家族生活費 ${fmt(vals.familyAvg)}/月 を除外`);
+  const excludeNote = notes.length > 0 ? `\n（${notes.join('、')}）` : '';
+  const currentNote = currentExpense != null
+    ? `\n現在: ${currentExpense}万円 → 連携後: ${manYen}万円`
+    : `\n月間生活費を ${manYen}万円 に設定します`;
+  const basedStr = vals.basedOnMonths.length > 0
+    ? `\n（${vals.basedOnMonths[0].replace('-','年')}月〜${vals.basedOnMonths[vals.basedOnMonths.length-1].replace('-','年')}月の${vals.basedOnMonths.length}ヶ月平均）`
+    : '';
+  const msg = `ライフプランの月間生活費を更新します。${currentNote}${basedStr}${excludeNote}\n\nよろしいですか？`;
+  if (!confirm(msg)) return;
 
   if (!lp.finance) lp.finance = {};
   lp.finance.expense = manYen;
@@ -3622,6 +3731,21 @@ function syncToLifeplan() {
   saveState();
 
   renderSync();
+
+  // 連携後アクション: ライフプランへのリンクを強調表示
+  const afterLink = document.getElementById('syncAfterLink');
+  if (afterLink) {
+    afterLink.style.display = '';
+    afterLink.innerHTML = `
+      <div style="background:#F0FDF4;border:1px solid #A7F3D0;border-radius:12px;padding:14px 16px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:#065F46;margin-bottom:8px">✅ 連携が完了しました</div>
+        <div style="font-size:12px;color:#059669;margin-bottom:12px">月間生活費 <strong>${manYen}万円</strong> をライフプランに反映しました</div>
+        <a href="../" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:#16A34A;color:white;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
+          📊 ライフプランで確認する →
+        </a>
+      </div>`;
+  }
+
   showNotification('ライフプランに連携しました ✓');
 }
 
