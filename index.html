@@ -4147,6 +4147,11 @@
         <button class="sc-compare-main-tab" id="scCompareMainTab_breakdown" onclick="switchCompareMainTab('breakdown')">📋 年別収支</button>
       </div>
     </div>
+    <!-- 取り崩し方式（両パネル共通） -->
+    <div style="padding:10px 16px 0;background:#F5F7FF;border-bottom:1px solid #E0E7FF">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">取り崩し方式（全シナリオ共通）</div>
+      <div class="sc-mode-sub-tabs" id="scModeSubTabs" style="padding-bottom:10px"></div>
+    </div>
 
     <!-- 資産推移パネル -->
     <div class="sc-compare-panel" id="scComparePanel_chart">
@@ -4158,10 +4163,6 @@
 
     <!-- 年別収支パネル -->
     <div class="sc-compare-panel" id="scComparePanel_breakdown" style="display:none">
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">取り崩し方式（全シナリオ共通）</div>
-        <div class="sc-mode-sub-tabs" id="scModeSubTabs"></div>
-      </div>
       <div class="sc-breakdown-tabs" id="scBreakdownTabs"></div>
       <div class="sc-breakdown-body">
         <div id="scBreakdownContent"></div>
