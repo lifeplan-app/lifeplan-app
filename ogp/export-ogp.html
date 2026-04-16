@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>OGP画像エクスポートツール</title>
+  <style>
+    body { font-family: sans-serif; padding: 24px; background: #f5f5f5; }
+    h1 { font-size: 18px; margin-bottom: 16px; }
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    img { width: 600px; height: 315px; display: block; border-radius: 4px; border: 1px solid #ddd; margin: 12px 0; }
+    button { padding: 8px 20px; background: #1a56a0; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    button:hover { background: #1443a0; }
+    .note { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.6; }
+    .steps { font-size: 13px; color: #333; line-height: 2; }
+    .steps li { list-style: decimal; margin-left: 20px; }
+  </style>
+</head>
+<body>
+<h1>🖼 OGP画像エクスポートツール</h1>
+
+<div class="card">
+  <h2 style="font-size:15px;margin-bottom:8px">📋 手順</h2>
+  <ol class="steps">
+    <li>各画像をブラウザで開く（右クリック → 新しいタブで開く）</li>
+    <li>ブラウザの「印刷」→「PDFとして保存」 または スクリーンショットで1200×630pxで保存</li>
+    <li>PNG形式で <code>ogp/lifeplan-ogp.png</code> / <code>ogp/spending-ogp.png</code> として保存</li>
+    <li><code>index.html</code> の <code>og:image</code> の URL を実際のドメインに書き換える</li>
+  </ol>
+  <p class="note">⚠️ Facebook・X（Twitter）・LINE は PNG/JPEG のみ対応。SVG は非対応です。<br>
+  推奨ツール: <strong>Figma</strong>（SVGをインポートしてPNGエクスポート）または <strong>Squoosh</strong>・<strong>CloudConvert</strong></p>
+</div>
+
+<div class="card">
+  <h2 style="font-size:15px;margin-bottom:4px">ライフプランアプリ OGP</h2>
+  <p class="note">1200 × 630 px</p>
+  <img src="lifeplan-ogp.svg" alt="ライフプランアプリ OGP">
+  <a href="lifeplan-ogp.svg" download="lifeplan-ogp.svg">
+    <button>SVGをダウンロード</button>
+  </a>
+</div>
+
+<div class="card">
+  <h2 style="font-size:15px;margin-bottom:4px">支出管理アプリ OGP</h2>
+  <p class="note">1200 × 630 px</p>
+  <img src="spending-ogp.svg" alt="支出管理アプリ OGP">
+  <a href="spending-ogp.svg" download="spending-ogp.svg">
+    <button style="background:#10B981">SVGをダウンロード</button>
+  </a>
+</div>
+
+</body>
+</html>
