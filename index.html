@@ -1852,6 +1852,77 @@
 .tpl-plan-free     { background: #D1FAE5; color: #065F46; }
 .tpl-plan-standard { background: #E0E7FF; color: #3730A3; }
 .tpl-plan-premium  { background: #FEF3C7; color: #92400E; }
+/* ===== E: オンボーディング ===== */
+#onboarding-overlay {
+  display:none; position:fixed; inset:0; z-index:9000;
+  background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#2563EB 100%);
+  align-items:center; justify-content:center; padding:16px;
+  animation:onbFadeIn .3s ease;
+}
+#onboarding-overlay.open { display:flex; }
+@keyframes onbFadeIn { from{opacity:0} to{opacity:1} }
+.onb-box {
+  background:#fff; border-radius:24px; max-width:520px; width:100%;
+  max-height:92vh; overflow-y:auto; padding:32px 28px 28px;
+  box-shadow:0 32px 80px rgba(0,0,0,0.3); position:relative;
+}
+.onb-progress { display:flex; gap:6px; margin-bottom:28px; justify-content:center; }
+.onb-dot { width:8px; height:8px; border-radius:50%; background:#E5E7EB; transition:background .2s; }
+.onb-dot.active { background:#4F46E5; width:24px; border-radius:4px; }
+.onb-dot.done { background:#A5B4FC; }
+.onb-step-label { font-size:11px; color:#9CA3AF; text-align:center; margin-bottom:20px; letter-spacing:.04em; text-transform:uppercase; }
+.onb-title { font-size:22px; font-weight:800; color:#111; margin:0 0 8px; line-height:1.3; }
+.onb-subtitle { font-size:14px; color:#6B7280; margin:0 0 24px; line-height:1.7; white-space:pre-line; }
+.onb-field { margin-bottom:16px; }
+.onb-field label { font-size:13px; font-weight:600; color:#374151; display:block; margin-bottom:5px; }
+.onb-field input[type=text],.onb-field input[type=number],.onb-field input[type=date] {
+  width:100%; box-sizing:border-box; padding:11px 14px; border:1.5px solid #D1D5DB;
+  border-radius:10px; font-size:15px; font-family:inherit; transition:border-color .15s;
+}
+.onb-field input:focus { outline:none; border-color:#4F46E5; }
+.onb-field .hint { font-size:12px; color:#9CA3AF; margin-top:4px; }
+.onb-toggle-row { display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; background:#F9FAFB; border-radius:10px; margin-bottom:8px; }
+.onb-toggle-row span { font-size:14px; color:#374151; font-weight:500; }
+.onb-toggle { position:relative; display:inline-block; width:44px; height:24px; }
+.onb-toggle input { opacity:0; width:0; height:0; }
+.onb-slider { position:absolute; cursor:pointer; inset:0; background:#D1D5DB; border-radius:12px; transition:.2s; }
+.onb-slider::before { position:absolute; content:''; height:18px; width:18px; left:3px; bottom:3px;
+  background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.onb-toggle input:checked + .onb-slider { background:#4F46E5; }
+.onb-toggle input:checked + .onb-slider::before { transform:translateX(20px); }
+.onb-partner-section { padding:12px 14px; background:#EEF2FF; border-radius:10px; margin-bottom:8px;
+  display:none; }
+.onb-partner-section.show { display:block; }
+.onb-tpl-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.onb-tpl-card { border:2px solid #E5E7EB; border-radius:12px; padding:14px 12px; cursor:pointer;
+  transition:border-color .15s, background .15s; text-align:center; }
+.onb-tpl-card:hover { border-color:#4F46E5; background:#F5F3FF; }
+.onb-tpl-card.selected { border-color:#4F46E5; background:#EEF2FF; }
+.onb-tpl-card.locked { opacity:.5; cursor:default; background:#F9FAFB; }
+.onb-tpl-card.locked:hover { border-color:#E5E7EB; background:#F9FAFB; }
+.onb-tpl-emoji { font-size:24px; margin-bottom:6px; }
+.onb-tpl-name { font-size:13px; font-weight:700; color:#111; }
+.onb-tpl-sub { font-size:11px; color:#6B7280; margin-top:2px; }
+.onb-asset-row { display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-bottom:1px solid #F3F4F6; }
+.onb-asset-row:last-child { border-bottom:none; }
+.onb-footer { display:flex; flex-direction:column; gap:8px; margin-top:24px; }
+.onb-btn-primary { width:100%; padding:14px; background:#4F46E5; color:#fff; font-size:16px;
+  font-weight:700; border:none; border-radius:12px; cursor:pointer; transition:opacity .15s; }
+.onb-btn-primary:hover { opacity:.92; }
+.onb-btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+.onb-btn-secondary { width:100%; padding:12px; background:#F3F4F6; color:#374151; font-size:14px;
+  font-weight:600; border:none; border-radius:12px; cursor:pointer; }
+.onb-btn-secondary:hover { background:#E5E7EB; }
+.onb-skip { text-align:center; font-size:12px; color:#9CA3AF; background:none; border:none;
+  cursor:pointer; padding:4px; text-decoration:underline; }
+.onb-hint-toggle { font-size:12px; color:#4F46E5; cursor:pointer; background:none; border:none;
+  padding:0; text-decoration:underline; margin-top:2px; }
+.onb-hint-box { background:#EEF2FF; border-radius:8px; padding:10px 12px; font-size:12px;
+  color:#3730A3; margin-top:6px; display:none; line-height:1.6; }
+.onb-hint-box.show { display:block; }
+.onb-finish-icon { font-size:56px; text-align:center; margin-bottom:12px; }
 /* ===== F: Upgrade誘導UI ===== */
 .upgrade-badge { font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:600; display:inline-block; }
 .upgrade-badge--standard { background:#E0E7FF; color:#3730A3; }
@@ -3968,6 +4039,16 @@
 
 </main>
 
+<!-- ===== E: オンボーディング ===== -->
+<div id="onboarding-overlay" role="dialog" aria-modal="true">
+  <div class="onb-box">
+    <div class="onb-progress" id="onbProgress"></div>
+    <div class="onb-step-label" id="onbStepLabel"></div>
+    <div id="onbContent"></div>
+    <div class="onb-footer" id="onbFooter"></div>
+  </div>
+</div>
+
 <!-- ===== SETUP WIZARD ===== -->
 <div id="wizardOverlay">
   <div id="wizardBox">
@@ -5485,6 +5566,9 @@ function load() {
     }
     if (!state.savedScenarios) state.savedScenarios = [];
     if (!state.autoSnapshots)  state.autoSnapshots  = [];
+    if (!state.disclaimerAck.onboarding && state.disclaimerAck.onboarding !== null) {
+      state.disclaimerAck.onboarding = null;
+    }
     // Premium: 月次自動スナップショット（月初アクセス時に1回）
     if (getUserPlan() === 'premium') takeAutoSnapshot();
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
@@ -10674,6 +10758,18 @@ function renderDashboard() {
           ${!item.done && !locked ? `<button onclick="showPage('${item.page}')" style="flex-shrink:0;padding:3px 8px;background:${ph.color};color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap">進む →</button>` : ''}
         </div>`).join('');
 
+      // E: オンボーディングボタン（フェーズ1・未完了時）
+      const onbStatus = state.disclaimerAck?.onboarding;
+      const showOnbBtn = phIdx === 0 && !complete;
+      const onbBtnHtml = showOnbBtn ? `<div style="margin-top:8px">
+        ${!onbStatus
+          ? `<button onclick="openOnboardingFromDashboard()" style="padding:7px 14px;background:#4F46E5;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🚀 設定ウィザードを起動</button>`
+          : (onbStatus.skipped
+            ? `<button onclick="openOnboardingFromDashboard()" style="padding:5px 12px;background:none;color:#6B7280;border:1px solid #D1D5DB;border-radius:8px;font-size:11px;cursor:pointer">↩ 設定ウィザードを再起動</button>`
+            : '')
+        }
+      </div>` : '';
+
       return `
         <div style="position:relative">
           <!-- フェーズ行 -->
@@ -10698,6 +10794,7 @@ function renderDashboard() {
                 <span style="font-size:11px;font-weight:600;color:${complete ? '#10B981' : locked ? 'var(--text-muted)' : ph.color};flex-shrink:0;margin-left:8px">${done}/${total}</span>
               </div>
               ${showItems ? `<div style="background:${ph.bg};border-radius:8px;padding:8px 10px">${itemsHtml}</div>` : ''}
+              ${onbBtnHtml}
             </div>
           </div>
         </div>`;
@@ -11193,6 +11290,372 @@ function formatDate(d) {
   if (!d) return '';
   const dt = new Date(d);
   return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
+}
+
+// ===== E: オンボーディングフロー =====
+
+const ONBOARDING_COPY = {
+  welcome: {
+    title:    '100年のお金を、\n今日から管理しよう',
+    subtitle: '生年月日と収入を入力するだけで\n将来の資産推移をシミュレーションできます',
+    cta:      'はじめる（約3分）',
+    skip:     '詳細設定から始める →',
+  },
+  steps: ['プロフィール', '収入', 'プランを選ぶ', '資産確認', '完了'],
+  finish: {
+    title:         'シミュレーション準備完了！',
+    cta_primary:   'タイムラインを見る',
+    cta_secondary: 'ダッシュボードへ',
+  },
+};
+
+const onboardingState = {
+  currentStep: 0,
+  totalSteps: 5,
+  selectedTemplateId: null,
+  draft: {},
+};
+
+function shouldShowOnboarding() {
+  if (state.disclaimerAck?.onboarding) return false;
+  if (state.profile?.name)          return false;
+  if ((state.finance?.income || 0) > 0) return false;
+  if ((state.assets?.length || 0)  > 0) return false;
+  return true;
+}
+
+function openOnboarding(startStep) {
+  onboardingState.currentStep = (startStep != null) ? startStep : 0;
+  onboardingState.selectedTemplateId = null;
+  onboardingState.draft = {};
+  document.getElementById('onboarding-overlay').classList.add('open');
+  _renderOnboarding();
+}
+
+function closeOnboarding() {
+  document.getElementById('onboarding-overlay').classList.remove('open');
+}
+
+function onboardingSkip() {
+  if (!state.disclaimerAck) state.disclaimerAck = {};
+  state.disclaimerAck.onboarding = { completedAt: null, skipped: true, templateId: null, version: 1 };
+  save();
+  closeOnboarding();
+  showPage('dashboard');
+}
+
+function _renderOnboarding() {
+  const step = onboardingState.currentStep;
+  const TOTAL = onboardingState.totalSteps; // Steps 1-5
+
+  // Progress dots (Step 1〜5 のみカウント)
+  const progEl = document.getElementById('onbProgress');
+  const labelEl = document.getElementById('onbStepLabel');
+  if (step === 0) {
+    progEl.innerHTML = '';
+    labelEl.textContent = '';
+  } else {
+    progEl.innerHTML = ONBOARDING_COPY.steps.map((_, i) => {
+      const idx = i + 1;
+      const cls = idx < step ? 'done' : idx === step ? 'active' : '';
+      return `<div class="onb-dot ${cls}"></div>`;
+    }).join('');
+    labelEl.textContent = `ステップ ${step} / ${TOTAL}　${ONBOARDING_COPY.steps[step - 1]}`;
+  }
+
+  // Content & Footer
+  const content = document.getElementById('onbContent');
+  const footer  = document.getElementById('onbFooter');
+  content.innerHTML = _onbStepHTML(step);
+  footer.innerHTML  = _onbFooterHTML(step);
+
+  // Post-render hooks
+  _onbPostRender(step);
+}
+
+function _onbStepHTML(step) {
+  switch(step) {
+    case 0: return `
+      <div style="text-align:center;padding:8px 0 4px">
+        <div style="font-size:52px;margin-bottom:16px">🌱</div>
+        <h2 class="onb-title" style="text-align:center;white-space:pre-line">${ONBOARDING_COPY.welcome.title}</h2>
+        <p class="onb-subtitle" style="text-align:center">${ONBOARDING_COPY.welcome.subtitle}</p>
+      </div>`;
+
+    case 1: return `
+      <h2 class="onb-title">👤 プロフィール</h2>
+      <p class="onb-subtitle" style="margin-bottom:16px">年齢をもとに退職年や年金を計算します</p>
+      <div class="onb-field">
+        <label for="onb_birth">生年月日 <span style="color:#DC2626">*</span></label>
+        <input type="date" id="onb_birth" value="${state.profile?.birth || ''}" max="${new Date().toISOString().slice(0,10)}">
+        <div class="hint" style="font-size:11px;color:#9CA3AF;margin-top:3px">年齢・退職年・年金計算に使用します</div>
+      </div>
+      <div class="onb-toggle-row">
+        <span>パートナー（配偶者・パートナー）がいる</span>
+        <label class="onb-toggle">
+          <input type="checkbox" id="onb_hasPartner" ${state.profile?.marital === 'married' ? 'checked' : ''} onchange="onbTogglePartner(this.checked)">
+          <span class="onb-slider"></span>
+        </label>
+      </div>
+      <div class="onb-partner-section" id="onbPartnerSection" ${state.profile?.marital === 'married' ? 'style="display:block"' : ''}>
+        <div class="onb-field" style="margin-bottom:0">
+          <label for="onb_partnerBirth">パートナーの生年月日（任意）</label>
+          <input type="date" id="onb_partnerBirth" value="${state.profile?.partnerBirth || ''}" max="${new Date().toISOString().slice(0,10)}">
+        </div>
+      </div>`;
+
+    case 2: return `
+      <h2 class="onb-title">💰 収入</h2>
+      <p class="onb-subtitle" style="margin-bottom:16px">手取り収入を入力してください</p>
+      <div class="onb-field">
+        <label for="onb_income">月収・手取り（万円）<span style="color:#DC2626">*</span></label>
+        <input type="number" id="onb_income" placeholder="25" min="0" step="0.5" value="${state.finance?.income || ''}">
+        <button class="onb-hint-toggle" onclick="onbToggleHint()" style="margin-top:4px">手取りがわからない場合は？</button>
+        <div class="onb-hint-box" id="onbHintBox">
+          💡 額面給与の <strong>75〜85%</strong> が手取りの目安です。<br>
+          例：額面30万円 → 手取り約22〜25万円（月収22〜25万円と入力）
+        </div>
+      </div>
+      <div class="onb-field">
+        <label for="onb_bonus">年間ボーナス（万円・任意）</label>
+        <input type="number" id="onb_bonus" placeholder="0" min="0" step="1" value="${state.finance?.bonus || ''}">
+      </div>
+      ${state.profile?.marital === 'married' ? `
+      <div class="onb-field">
+        <label for="onb_partnerIncome">パートナー月収・手取り（万円・任意）</label>
+        <input type="number" id="onb_partnerIncome" placeholder="0" min="0" step="0.5" value="${state.finance?.partnerIncome || ''}">
+      </div>` : ''}`;
+
+    case 3: {
+      const plan = getUserPlan();
+      const tplHtml = PORTFOLIO_TEMPLATES.slice(0, 6).map(tpl => {
+        const accessible = PLAN_ORDER[plan] >= PLAN_ORDER[tpl.plan];
+        const sel = onboardingState.selectedTemplateId === tpl.id ? ' selected' : '';
+        const locked = !accessible ? ' locked' : '';
+        return `<div class="onb-tpl-card${locked}${sel}" onclick="${accessible ? `onbSelectTemplate('${tpl.id}')` : `showTemplateLockedModal('${tpl.id}')`}">
+          ${!accessible ? `<div style="font-size:10px;margin-bottom:4px"><span class="upgrade-badge upgrade-badge--${tpl.plan}">${UPGRADE_COPY.template_locked.badge(PLAN_NAMES[tpl.plan])}</span></div>` : ''}
+          <div class="onb-tpl-emoji">${tpl.emoji}</div>
+          <div class="onb-tpl-name">${tpl.name}</div>
+          <div class="onb-tpl-sub">${tpl.subtitle}</div>
+        </div>`;
+      }).join('');
+      return `
+        <h2 class="onb-title">📋 プランを選ぶ</h2>
+        <p class="onb-subtitle" style="margin-bottom:16px">ライフスタイルに近いテンプレートを選択すると、資産設定をまとめて読み込みます</p>
+        <div class="onb-tpl-grid">${tplHtml}</div>
+        <div class="upgrade-banner" style="margin-bottom:8px">
+          <span class="upgrade-banner__text">🌟 ${UPGRADE_COPY.template_locked.step3_banner}</span>
+        </div>`;
+    }
+
+    case 4: {
+      const assets = state.assets || [];
+      if (assets.length === 0) {
+        return `
+          <h2 class="onb-title">✅ 資産確認</h2>
+          <p class="onb-subtitle">テンプレートをスキップしました。あとで「家計・資産」ページから追加できます。</p>`;
+      }
+      const rows = assets.map(a => {
+        const t = ASSET_TYPES[a.type] || { emoji: '💰' };
+        const isPlaceholder = a._isPlaceholder;
+        return `<div class="onb-asset-row">
+          <span style="font-size:20px">${t.emoji}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:#111">${escapeHtml(a.name)}</div>
+            <div style="font-size:11px;color:#9CA3AF">${t.label}</div>
+          </div>
+          ${isPlaceholder
+            ? `<div style="display:flex;align-items:center;gap:4px">
+                <input type="number" id="onb_ph_${a.id}" value="${a.currentVal || 200}" min="0" step="10"
+                  style="width:80px;padding:6px 8px;border:1.5px solid #4F46E5;border-radius:8px;font-size:13px;text-align:right">
+                <span style="font-size:12px;color:#6B7280">万円</span>
+               </div>`
+            : `<span style="font-size:13px;color:#374151">${a.monthly ? a.monthly + '万/月' : (a.currentVal || 0) + '万円'}</span>`
+          }
+        </div>`;
+      }).join('');
+      return `
+        <h2 class="onb-title">💎 資産確認</h2>
+        <p class="onb-subtitle" style="margin-bottom:12px">テンプレートの内容を確認してください。<br><span style="color:#4F46E5;font-size:12px">💡 現在の預金残高（💰）だけ実際の金額に変更できます</span></p>
+        <div style="margin-bottom:8px">${rows}</div>
+        <p style="font-size:12px;color:#9CA3AF;margin:8px 0 0">他のアセットはあとで「家計・資産」ページから調整できます</p>`;
+    }
+
+    case 5: {
+      const name = state.profile?.name ? state.profile.name + 'さんの' : '';
+      return `
+        <div style="text-align:center;padding:8px 0">
+          <div class="onb-finish-icon">✅</div>
+          <h2 class="onb-title" style="text-align:center">${ONBOARDING_COPY.finish.title}</h2>
+          <p class="onb-subtitle" style="text-align:center">${name}資産推移グラフが作成されました。<br>タイムラインでシミュレーション結果を確認しましょう。</p>
+        </div>`;
+    }
+    default: return '';
+  }
+}
+
+function _onbFooterHTML(step) {
+  switch(step) {
+    case 0: return `
+      <button class="onb-btn-primary" onclick="onbNext()">${ONBOARDING_COPY.welcome.cta}</button>
+      <button class="onb-skip" onclick="onboardingSkip()">${ONBOARDING_COPY.welcome.skip}</button>`;
+    case 1: return `
+      <button class="onb-btn-primary" id="onbNextBtn" onclick="onbNext()">次へ →</button>
+      <button class="onb-skip" onclick="onboardingSkip()">スキップして後で設定する</button>`;
+    case 2: return `
+      <button class="onb-btn-primary" id="onbNextBtn" onclick="onbNext()">次へ →</button>
+      <button class="onb-btn-secondary" onclick="onbBack()">← 戻る</button>`;
+    case 3: return `
+      <button class="onb-btn-primary" id="onbNextBtn" onclick="onbNext()">${onboardingState.selectedTemplateId ? 'このプランで進む →' : 'ゼロから入力する（テンプレートなし）→'}</button>
+      <button class="onb-btn-secondary" onclick="onbBack()">← 戻る</button>`;
+    case 4: return `
+      <button class="onb-btn-primary" onclick="onbNext()">確認完了 →</button>
+      <button class="onb-btn-secondary" onclick="onbBack()">← 戻る</button>`;
+    case 5: return `
+      <button class="onb-btn-primary" onclick="onbFinish('timeline')">${ONBOARDING_COPY.finish.cta_primary}</button>
+      <button class="onb-btn-secondary" onclick="onbFinish('dashboard')">${ONBOARDING_COPY.finish.cta_secondary}</button>`;
+    default: return '';
+  }
+}
+
+function _onbPostRender(step) {
+  // Step 1: birth field validation → enable/disable next
+  if (step === 1) {
+    const input = document.getElementById('onb_birth');
+    if (input) input.addEventListener('input', _onbUpdateNextBtn);
+    _onbUpdateNextBtn();
+  }
+  // Step 2: income validation
+  if (step === 2) {
+    const input = document.getElementById('onb_income');
+    if (input) input.addEventListener('input', _onbUpdateNextBtn);
+    _onbUpdateNextBtn();
+  }
+}
+
+function _onbUpdateNextBtn() {
+  const step = onboardingState.currentStep;
+  const btn  = document.getElementById('onbNextBtn');
+  if (!btn) return;
+  if (step === 1) {
+    const birth = document.getElementById('onb_birth')?.value;
+    btn.disabled = !birth;
+  } else if (step === 2) {
+    const income = parseFloat(document.getElementById('onb_income')?.value) || 0;
+    btn.disabled = income <= 0;
+  }
+}
+
+function onbTogglePartner(checked) {
+  const sec = document.getElementById('onbPartnerSection');
+  if (sec) sec.style.display = checked ? 'block' : 'none';
+}
+
+function onbToggleHint() {
+  const box = document.getElementById('onbHintBox');
+  if (box) box.classList.toggle('show');
+}
+
+function onbSelectTemplate(templateId) {
+  onboardingState.selectedTemplateId = templateId;
+  // Re-render template cards to show selected state
+  document.querySelectorAll('.onb-tpl-card').forEach(el => el.classList.remove('selected'));
+  event.currentTarget?.classList.add('selected');
+  // Update footer button label
+  const btn = document.getElementById('onbNextBtn');
+  if (btn) btn.textContent = 'このプランで進む →';
+}
+
+function onbNext() {
+  const step = onboardingState.currentStep;
+  const get  = id => document.getElementById(id)?.value || '';
+
+  if (step === 1) {
+    const birth = get('onb_birth');
+    if (!birth) { document.getElementById('onb_birth')?.focus(); return; }
+    state.profile.birth = birth;
+    const hasPartner = document.getElementById('onb_hasPartner')?.checked;
+    state.profile.marital    = hasPartner ? 'married' : 'single';
+    const partnerBirth = get('onb_partnerBirth');
+    if (partnerBirth) state.profile.partnerBirth = partnerBirth;
+    save();
+  }
+
+  if (step === 2) {
+    const income = parseFloat(get('onb_income')) || 0;
+    if (income <= 0) { document.getElementById('onb_income')?.focus(); return; }
+    state.finance.income = income;
+    const bonus = parseFloat(get('onb_bonus')) || 0;
+    if (bonus > 0) state.finance.bonus = bonus;
+    const partnerIncome = parseFloat(get('onb_partnerIncome')) || 0;
+    if (partnerIncome > 0) state.finance.partnerIncome = partnerIncome;
+    save();
+  }
+
+  if (step === 3) {
+    if (onboardingState.selectedTemplateId) {
+      // applyTemplate without confirm（既存確認ダイアログを回避）
+      const tpl = PORTFOLIO_TEMPLATES.find(t => t.id === onboardingState.selectedTemplateId);
+      if (tpl && PLAN_ORDER[getUserPlan()] >= PLAN_ORDER[tpl.plan]) {
+        const currentYear = new Date().getFullYear();
+        state.assets = tpl.assets.map(a => ({
+          ...a, id: uid(), createdAt: Date.now(),
+          taxType: (typeof TAX_TYPE_DEFAULT !== 'undefined' ? TAX_TYPE_DEFAULT[a.type] : null) || 'tokutei',
+          startYear: currentYear, endYear: null, endAge: null,
+          dividendMode: a.dividendYield ? 'receive' : 'reinvest', owner: 'self',
+        }));
+        if (tpl.recurringExpenses?.length > 0) {
+          state.recurringExpenses = [...(state.recurringExpenses || []),
+            ...tpl.recurringExpenses.map(e => ({ ...e, id: uid(), createdAt: Date.now() }))];
+        }
+        save();
+      }
+    }
+  }
+
+  if (step === 4) {
+    // Save placeholder cash value
+    (state.assets || []).forEach(a => {
+      if (a._isPlaceholder) {
+        const val = parseFloat(document.getElementById('onb_ph_' + a.id)?.value);
+        if (!isNaN(val)) a.currentVal = val;
+        delete a._isPlaceholder;
+      }
+    });
+    save();
+  }
+
+  onboardingState.currentStep++;
+  _renderOnboarding();
+}
+
+function onbBack() {
+  if (onboardingState.currentStep > 1) {
+    onboardingState.currentStep--;
+    _renderOnboarding();
+  }
+}
+
+function onbFinish(page) {
+  // Mark onboarding complete
+  if (!state.disclaimerAck) state.disclaimerAck = {};
+  state.disclaimerAck.onboarding = {
+    completedAt: new Date().toISOString(),
+    skipped: false,
+    templateId: onboardingState.selectedTemplateId || null,
+    version: 1,
+  };
+  save();
+  closeOnboarding();
+  // Re-render dashboard to update roadmap
+  if (typeof renderDashboard === 'function') renderDashboard();
+  showPage(page || 'dashboard');
+  showNotification('セットアップ完了！シミュレーションを開始します ✅');
+}
+
+function openOnboardingFromDashboard() {
+  // ダッシュボードから再起動（Step 0をスキップしてStep 1から）
+  openOnboarding(1);
 }
 
 // ===== F: Upgrade誘導モーダル =====
@@ -18571,6 +19034,12 @@ function wizardClose() {
 }
 
 function wizardAutoShow() {
+  // 新オンボーディングを優先表示
+  if (shouldShowOnboarding()) {
+    openOnboarding(0);
+    return;
+  }
+  // 既存ウィザード（後方互換）
   const done = localStorage.getItem('lifeplan_wizard_done');
   const hasData = !!(state.profile?.name || state.finance?.income);
   if (!done && !hasData) {
