@@ -223,6 +223,11 @@
     .suggestion-banner .sug-actions { display: flex; gap: 8px; }
     .sug-cta { font-size: 12px; font-weight: 600; color: #fff; padding: 5px 12px; border-radius: 20px; text-decoration: none; border: none; cursor: pointer; }
     .sug-dismiss { font-size: 12px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 5px; }
+    .sug-badge { display: inline-block; font-size: 10px; font-weight: 700; color: #fff; padding: 2px 7px; border-radius: 10px; margin-bottom: 5px; }
+    .sug-impact { margin: 6px 0 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; font-size: 12px; line-height: 1.5; }
+    .sug-impact strong { color: var(--primary); }
+    .sug-impact-note { display: block; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .suggestion-banner.sug-strong { box-shadow: 0 2px 8px rgba(0,0,0,.10); }
 
     /* ── Empty State ── */
     .empty-state {
@@ -1276,40 +1281,63 @@ const ZAIM_SKIP_CATS = new Set([
   '税・社会保険', '金融', '振替',
 ]);
 
+// ── アフィリエイトリンク（URLはリリース後に差し替え）──────────
+const AFFILIATE_LINKS = {
+  telecom:   { label: '格安SIMを比較する',    url: '#affiliate-telecom' },
+  insurance: { label: '保険を無料相談する',    url: '#affiliate-insurance' },
+  subscr:    { label: 'サブスク診断ツール',    url: '#affiliate-subscr' },
+  food:      { label: '食費節約のヒントを見る', url: '#affiliate-food' },
+  nisa:      { label: 'NISAで資産を増やす',   url: '#affiliate-nisa' },
+};
+
 const SUGGESTION_TRIGGERS = [
-  // ── 既存トリガー ──
+  // ── 通信費 ──
   {
     id: 'telecom_high',
     emoji: '📱',
     check: (d) => (d.categoryTotals?.telecom || 0) > 8000,
+    avgCheck: (avg) => (avg.cats.telecom || 0) > 8000,
     getValue: (d) => d.categoryTotals?.telecom || 0,
+    getAvgValue: (avg) => avg.cats.telecom || 0,
     color: '#5856D6',
     title: '通信費を見直す余地があるかもしれません',
-    detail: (v) => `通信費が月 ${fmt(v)} です。格安SIMへの乗り換えで月々の固定費を削減できる場合があります。`,
-    cta: '格安SIMを比較する',
-    href: '#affiliate-telecom',
+    detail: (v) => `通信費が月平均 ${fmt(v)} です。格安SIMへの乗り換えで月々の固定費を削減できる場合があります。`,
+    affiliateKey: 'telecom',
+    savingsEstimate: (avg) => Math.max(0, avg - 3000),
+    savingsNote: '格安SIM（月約3,000円）に乗り換えた場合の試算',
   },
+  // ── 保険料 ──
   {
     id: 'insurance_ratio',
     emoji: '🛡️',
     check: (d) => d.income > 0 && (d.categoryTotals?.insurance || 0) / d.income > 0.15,
+    avgCheck: (avg) => {
+      const income = state.income?.monthly || 0;
+      return income > 0 && (avg.cats.insurance || 0) / income > 0.15;
+    },
     getValue: (d) => d.categoryTotals?.insurance || 0,
+    getAvgValue: (avg) => avg.cats.insurance || 0,
     color: '#FF9500',
     title: '保険料が収入の15%を超えています',
-    detail: (v) => `保険料が月 ${fmt(v)} です。保険内容を定期的に見直すことで、必要な保障を保ちながら支出を適正化できる場合があります。`,
-    cta: '保険を見直す',
-    href: '#affiliate-insurance',
+    detail: (v) => `保険料が月平均 ${fmt(v)} です。保険内容を定期的に見直すことで、必要な保障を保ちながら支出を適正化できる場合があります。`,
+    affiliateKey: 'insurance',
+    savingsEstimate: (avg) => Math.round(avg * 0.1),
+    savingsNote: '保険料を10%見直した場合の試算',
   },
+  // ── サブスク ──
   {
     id: 'subscr_accumulate',
     emoji: '▶️',
     check: (d) => (d.categoryTotals?.subscr || 0) > 5000,
+    avgCheck: (avg) => (avg.cats.subscr || 0) > 5000,
     getValue: (d) => d.categoryTotals?.subscr || 0,
+    getAvgValue: (avg) => avg.cats.subscr || 0,
     color: '#FF2D55',
     title: 'サブスク費用が積み上がっています',
-    detail: (v) => `サブスク合計が月 ${fmt(v)} です。使っていないサービスがないか、定期的に確認してみましょう。`,
-    cta: '節約方法を見る',
-    href: '#affiliate-subscr',
+    detail: (v) => `サブスク合計が月平均 ${fmt(v)} です。使っていないサービスがないか、定期的に確認してみましょう。`,
+    affiliateKey: 'subscr',
+    savingsEstimate: (avg) => Math.round(avg * 0.3),
+    savingsNote: '不要なサブスク30%削減した場合の試算',
   },
   // ── 気づき系（リンクなし）──
   {
@@ -1332,8 +1360,6 @@ const SUGGESTION_TRIGGERS = [
     color: '#34C759',
     title: '食費が先月より増えています',
     detail: (v) => `食費が先月より ${v.pct}% 増えています（先月 ${fmt(v.prev)} → 今月 ${fmt(v.curr)}）。外食の頻度などを振り返ってみましょう。`,
-    cta: null,
-    href: null,
   },
   {
     id: 'deficit',
@@ -1343,8 +1369,6 @@ const SUGGESTION_TRIGGERS = [
     color: '#CC0000',
     title: '今月は支出が収入を超えています',
     detail: (v) => `${fmt(v)} の赤字です。どのカテゴリで予算オーバーしているか確認してみましょう。`,
-    cta: null,
-    href: null,
   },
   // ── 問いかけ系 ──
   {
@@ -1354,16 +1378,23 @@ const SUGGESTION_TRIGGERS = [
       const income = state.income?.monthly || 0;
       return income > 0 && (d.domainTotals?.monthly_fixed || 0) / income > 0.6;
     },
+    avgCheck: (avg) => {
+      const income = state.income?.monthly || 0;
+      return income > 0 && (avg.domains.monthly_fixed || 0) / income > 0.6;
+    },
     getValue: (d) => {
       const income = state.income?.monthly || 0;
       const fixed = d.domainTotals?.monthly_fixed || 0;
       return { fixed, pct: Math.round(fixed / income * 100) };
     },
+    getAvgValue: (avg) => {
+      const income = state.income?.monthly || 0;
+      const fixed = avg.domains.monthly_fixed || 0;
+      return { fixed, pct: Math.round(fixed / income * 100) };
+    },
     color: '#007AFF',
     title: '固定費が収入の60%を超えています',
     detail: (v) => `毎月固定費が収入の ${v.pct}%（${fmt(v.fixed)}）です。削減できる固定費がないか見直してみましょう。`,
-    cta: null,
-    href: null,
   },
   // ── 一般論・情報誘導系 ──
   {
@@ -1373,15 +1404,24 @@ const SUGGESTION_TRIGGERS = [
       const income = state.income?.monthly || 0;
       return income > 0 && (d.categoryTotals?.food || 0) / income > 0.25;
     },
+    avgCheck: (avg) => {
+      const income = state.income?.monthly || 0;
+      return income > 0 && (avg.cats.food || 0) / income > 0.25;
+    },
     getValue: (d) => {
       const income = state.income?.monthly || 0;
       return { food: d.categoryTotals?.food || 0, pct: Math.round((d.categoryTotals?.food || 0) / income * 100) };
     },
+    getAvgValue: (avg) => {
+      const income = state.income?.monthly || 0;
+      return { food: avg.cats.food || 0, pct: Math.round((avg.cats.food || 0) / income * 100) };
+    },
     color: '#34C759',
     title: '食費が収入の25%を超えています',
     detail: (v) => `食費が収入の ${v.pct}%（${fmt(v.food)}）です。一般的に食費は収入の15〜20%が目安とされています。`,
-    cta: '食費節約のヒントを見る',
-    href: '#affiliate-food',
+    affiliateKey: 'food',
+    savingsEstimate: (avg) => Math.round((avg.cats?.food || 0) * 0.1),
+    savingsNote: '食費を10%見直した場合の試算',
   },
 ];
 
@@ -1961,28 +2001,115 @@ function renderCatList(categoryTotals, totalExpense) {
   }).join('');
 }
 
+// 直近 nMonths のカテゴリ別・ドメイン別平均を計算
+function calcSuggestionAvg(nMonths) {
+  const keys = Object.keys(state.months).sort().slice(-nMonths);
+  if (!keys.length) return null;
+  const n = keys.length;
+  const cats = {}, domains = {};
+  for (const k of keys) {
+    const d = state.months[k];
+    for (const [id, amt] of Object.entries(d.categoryTotals || {})) cats[id] = (cats[id] || 0) + amt;
+    for (const [id, amt] of Object.entries(d.domainTotals || {})) domains[id] = (domains[id] || 0) + amt;
+  }
+  Object.keys(cats).forEach(k => cats[k] /= n);
+  Object.keys(domains).forEach(k => domains[k] /= n);
+  return { cats, domains, nMonths: n, keys };
+}
+
+// 月 monthlySavings 円の節約が将来いくらになるか（複利計算）
+function calcSavingsImpact(monthlySavings) {
+  let years = 30;
+  let rate = 0.03; // デフォルト年利3%
+  try {
+    const lp = JSON.parse(localStorage.getItem('lifeplan_v1') || 'null');
+    if (lp) {
+      if (lp.profile?.birth) {
+        const age = new Date().getFullYear() - parseInt(lp.profile.birth.split('-')[0]);
+        years = Math.max(5, 75 - age);
+      }
+      if (lp.assets?.length) {
+        const totalBal = lp.assets.reduce((s, a) => s + (a.amount || 0), 0);
+        if (totalBal > 0) {
+          const wr = lp.assets.reduce((s, a) => s + (a.return || 0) * (a.amount || 0), 0) / totalBal;
+          if (wr > 0 && wr < 20) rate = wr / 100;
+        }
+      }
+    }
+  } catch (_) {}
+  const r12 = rate / 12;
+  const n = years * 12;
+  const fv = monthlySavings * ((Math.pow(1 + r12, n) - 1) / r12);
+  return { amount: Math.round(fv / 10000), years, rate: Math.round(rate * 1000) / 10 };
+}
+
 function renderSuggestions(monthData) {
   const el = document.getElementById('suggestionArea');
   if (!monthData) { el.innerHTML = ''; return; }
 
+  // 3ヶ月平均データ
+  const avg3 = calcSuggestionAvg(3);
+  // lifeplan_v1 存在チェック（節約インパクト表示可否）
+  const hasLifeplan = !!localStorage.getItem('lifeplan_v1');
+
   const banners = SUGGESTION_TRIGGERS
     .filter(t => {
       if (state.suggestions.find(s => s.id === `${t.id}_${currentMonth}` && s.dismissed)) return false;
+      // 平均チェックがあれば平均ベース、なければ単月ベース
+      if (t.avgCheck && avg3) return t.avgCheck(avg3);
       return t.check(monthData);
     })
     .map(t => {
-      const val = t.getValue(monthData);
       const sugId = `${t.id}_${currentMonth}`;
-      const ctaHtml = t.href
-        ? `<a class="sug-cta" style="background:${t.color}" href="${t.href}" target="_blank"
-            onclick="trackSuggestionAction('${sugId}')">${t.cta} <span style="font-size:9px;opacity:.8">PR</span></a>`
+
+      // 表示値: 平均ベースを優先
+      const val = (t.getAvgValue && avg3) ? t.getAvgValue(avg3) : t.getValue(monthData);
+
+      // 3ヶ月連続でトリガーしているか（強提案バッジ）
+      let isStrong = false;
+      if (t.avgCheck && avg3?.keys?.length >= 3) {
+        isStrong = avg3.keys.every(k => {
+          const d = state.months[k];
+          if (!d) return false;
+          return t.check(d);
+        });
+      }
+
+      // 節約インパクト計算
+      let impactHtml = '';
+      if (t.savingsEstimate && hasLifeplan) {
+        const avgVal = avg3 ? (t.getAvgValue ? t.getAvgValue(avg3) : null) : null;
+        // getAvgValue が数値を返す場合のみ計算
+        const avgNum = typeof avgVal === 'number' ? avgVal : null;
+        if (avgNum !== null && avgNum > 0) {
+          const savings = t.savingsEstimate(avgNum);
+          if (savings > 500) {
+            const impact = calcSavingsImpact(savings);
+            impactHtml = `
+              <div class="sug-impact">
+                💰 月 ${fmt(savings)} 節約した場合 →
+                <strong>${impact.years}年で +${impact.amount}万円</strong>
+                <span class="sug-impact-note">年利${impact.rate}%複利 ／ ${t.savingsNote || '試算'}<br>※試算です。将来の運用成果を保証するものではありません。</span>
+              </div>`;
+          }
+        }
+      }
+
+      // CTAリンク
+      const link = t.affiliateKey ? AFFILIATE_LINKS[t.affiliateKey] : null;
+      const ctaHtml = link
+        ? `<a class="sug-cta" style="background:${t.color}" href="${link.url}" target="_blank"
+            onclick="trackSuggestionAction('${sugId}')">${link.label} <span style="font-size:9px;opacity:.8">PR</span></a>`
         : '';
+
       return `
-        <div class="suggestion-banner" style="border-left-color:${t.color}" id="sug_${sugId}">
+        <div class="suggestion-banner${isStrong ? ' sug-strong' : ''}" style="border-left-color:${t.color}" id="sug_${sugId}">
           <div style="font-size:24px">${t.emoji || '💡'}</div>
           <div class="sug-body">
+            ${isStrong ? `<div class="sug-badge" style="background:${t.color}">3ヶ月連続</div>` : ''}
             <div class="sug-title">${t.title}</div>
             <div class="sug-detail">${t.detail(val)}</div>
+            ${impactHtml}
             <div class="sug-actions">
               ${ctaHtml}
               <button class="sug-dismiss" onclick="dismissSuggestion('${sugId}')">✕ 閉じる</button>
