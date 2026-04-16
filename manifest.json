@@ -1,0 +1,28 @@
+{
+  "name": "ライフプランアプリ",
+  "short_name": "ライフプラン",
+  "description": "人生100年時代の資産・キャッシュフローシミュレーター。老後資金・住宅・教育費をまとめて管理。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8fa",
+  "theme_color": "#1a56a0",
+  "lang": "ja",
+  "dir": "ltr",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "icon-lifeplan.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-lifeplan.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
