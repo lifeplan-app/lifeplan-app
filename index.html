@@ -1965,6 +1965,33 @@
 .ssn-upgrade-hint { background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px;
   padding:10px 14px; font-size:13px; color:#1D4ED8; margin-top:8px; }
 
+/* ===== K: シナリオ比較 ===== */
+.sc-check-row { display:flex; align-items:center; gap:10px; }
+.sc-check-row input[type=checkbox] { width:16px; height:16px; accent-color:#4F46E5; cursor:pointer; flex-shrink:0; }
+.sc-compare-trigger-wrap { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.sc-compare-btn { padding:9px 20px; border-radius:10px; border:none; background:#4F46E5; color:#fff; font-size:14px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.sc-compare-btn:disabled { opacity:.45; cursor:default; }
+.sc-compare-area { margin-top:24px; border:2px solid #E0E7FF; border-radius:14px; overflow:hidden; }
+.sc-compare-area-header { background:#EEF2FF; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.sc-compare-main-tabs { display:flex; gap:6px; }
+.sc-compare-main-tab { padding:7px 16px; border-radius:8px; border:1.5px solid #C7D2FE; background:#fff; color:#4F46E5; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+.sc-compare-main-tab.active { background:#4F46E5; color:#fff; border-color:#4F46E5; }
+.sc-compare-panel { padding:16px; }
+.sc-highlight-tabs { display:flex; gap:0; border-bottom:2px solid #E0E7FF; margin-bottom:14px; flex-wrap:wrap; }
+.sc-highlight-tab { padding:7px 16px; border:none; background:none; cursor:pointer; font-size:13px; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all .15s; }
+.sc-mode-sub-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.sc-mode-tab { padding:5px 12px; border-radius:16px; border:1.5px solid #e0e0e0; background:#fff; color:#666; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.sc-mode-tab.active { background:#4F46E5; color:#fff; border-color:#4F46E5; }
+.sc-breakdown-tabs { display:flex; gap:4px; margin-bottom:-1px; flex-wrap:wrap; }
+.sc-breakdown-tab { padding:7px 16px; border-radius:8px 8px 0 0; border:1.5px solid #e0e0e0; border-bottom:none; background:#f5f5f5; font-size:13px; font-weight:400; cursor:pointer; transition:background .15s; }
+.sc-breakdown-tab.active { background:#fff; font-weight:700; }
+.sc-breakdown-body { border:1.5px solid #e0e0e0; border-radius:0 8px 8px 8px; padding:14px; }
+.sc-summary-bar { display:flex; gap:0; margin-bottom:14px; border:1px solid #e0e0e0; border-radius:10px; overflow:hidden; }
+.sc-summary-item { flex:1; padding:12px 10px; text-align:center; border-right:1px solid #e0e0e0; background:#FAFAFA; }
+.sc-summary-item:last-child { border-right:none; }
+.sc-summary-label { font-size:11px; color:var(--text-muted); margin-bottom:4px; }
+.sc-summary-value { font-size:16px; font-weight:700; }
+
 /* ===== G: プラン管理ページ ===== */
 .plan-current-banner { display:flex; align-items:center; gap:14px; background:#F5F3FF; border:2px solid #A5B4FC; border-radius:16px; padding:18px 20px; margin-bottom:24px; }
 .plan-current-icon { font-size:32px; flex-shrink:0; }
@@ -4104,6 +4131,42 @@
       <span id="ssn_plan_note"></span>
     </p>
     <div id="savedScenarioList"></div>
+    <!-- K: 比較トリガー -->
+    <div class="sc-compare-trigger-wrap" id="scCompareTriggerWrap">
+      <button class="sc-compare-btn" id="scCompareTriggerBtn" disabled onclick="startScenarioCompare()">2件以上選択してください</button>
+      <span style="font-size:12px;color:var(--text-muted)">最大3件まで比較できます</span>
+    </div>
+  </div>
+
+  <!-- K: 比較エリア -->
+  <div class="sc-compare-area" id="scenarioCompareArea" style="display:none">
+    <div class="sc-compare-area-header">
+      <div style="font-size:15px;font-weight:700;color:#3730A3">📊 シナリオ比較</div>
+      <div class="sc-compare-main-tabs">
+        <button class="sc-compare-main-tab active" id="scCompareMainTab_chart" onclick="switchCompareMainTab('chart')">📈 資産推移</button>
+        <button class="sc-compare-main-tab" id="scCompareMainTab_breakdown" onclick="switchCompareMainTab('breakdown')">📋 年別収支</button>
+      </div>
+    </div>
+
+    <!-- 資産推移パネル -->
+    <div class="sc-compare-panel" id="scComparePanel_chart">
+      <div class="sc-highlight-tabs" id="scHighlightTabs"></div>
+      <div style="position:relative;height:260px">
+        <canvas id="scCompareChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 年別収支パネル -->
+    <div class="sc-compare-panel" id="scComparePanel_breakdown" style="display:none">
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px">取り崩し方式（全シナリオ共通）</div>
+        <div class="sc-mode-sub-tabs" id="scModeSubTabs"></div>
+      </div>
+      <div class="sc-breakdown-tabs" id="scBreakdownTabs"></div>
+      <div class="sc-breakdown-body">
+        <div id="scBreakdownContent"></div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -22349,7 +22412,23 @@ function renderSavedScenarioList() {
   const list = state.savedScenarios || [];
   const plan  = getUserPlan();
   const limit = SCENARIO_LIMITS[plan].saved;
+  const canCompare = limit > 0; // Standard以上
   let html = '';
+
+  // K: 現在のプランは常に先頭にチェックボックス付きで表示
+  if (canCompare) {
+    const curChecked = _compareSelected.has('__current__');
+    html += `<div class="ssn-card" style="border-left:3px solid #4F46E5">
+      <div class="sc-check-row" style="flex:1;min-width:0">
+        <input type="checkbox" id="sc_cb___current__" ${curChecked ? 'checked' : ''}
+          onchange="toggleCompareSelect('__current__')">
+        <div class="ssn-card__meta" style="flex:1">
+          <div class="ssn-card__name" style="color:#4F46E5">★ 現在のプラン</div>
+          <div class="ssn-card__date">比較の基準として使用</div>
+        </div>
+      </div>
+    </div>`;
+  }
 
   // T-06: ダウングレード警告（Freeで保存済みシナリオがある場合）
   if (limit === 0 && list.length > 0) {
@@ -22366,21 +22445,26 @@ function renderSavedScenarioList() {
         <button class="upgrade-banner__link" onclick="showUpgradeModal('scenario_save')">詳しく見る →</button>
       </div>`;
     } else {
-      html += '<div style="color:var(--text-muted);font-size:14px;padding:16px 0;text-align:center;">保存済みシナリオはありません</div>';
+      html += '<div style="color:var(--text-muted);font-size:14px;padding:12px 0 4px;text-align:center;">保存済みシナリオはありません<br><span style="font-size:12px">「今のプランを保存」でシナリオを追加できます</span></div>';
     }
   } else {
     html += list.map(sc => {
       const date = sc.updatedAt ? sc.updatedAt.slice(0, 10) : sc.createdAt.slice(0, 10);
       const canLoad = limit > 0;
+      const isChecked = _compareSelected.has(sc.id);
       return `<div class="ssn-card">
-        <div class="ssn-card__meta">
-          <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
-          ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
-          <div class="ssn-card__date">更新: ${date}</div>
-        </div>
-        <div class="ssn-card__actions">
-          ${canLoad ? `<button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>` : ''}
-          <button class="btn btn-sm btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="deleteScenario('${sc.id}')">削除</button>
+        ${canCompare ? `<div class="sc-check-row" style="flex:1;min-width:0">
+          <input type="checkbox" id="sc_cb_${sc.id}" ${isChecked ? 'checked' : ''}
+            onchange="toggleCompareSelect('${sc.id}')">` : '<div style="flex:1;min-width:0">'}
+          <div class="ssn-card__meta" style="flex:1">
+            <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
+            ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
+            <div class="ssn-card__date">更新: ${date}</div>
+          </div>
+          <div class="ssn-card__actions">
+            ${canLoad ? `<button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>` : ''}
+            <button class="btn btn-sm btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="deleteScenario('${sc.id}')">削除</button>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -22586,6 +22670,282 @@ function _renderSpendingSyncBanner() {
   const drawerLabel = document.getElementById('drawerSpendingLabel');
   if (drawerLabel) drawerLabel.textContent = '支出管理アプリ（連携中 ✓）';
 }
+
+// ===== K: シナリオ比較 =====
+let _compareSelected = new Set(['__current__']);
+let _compareWithdrawMode = null;
+let _compareChartObj = null;
+let _compareActiveTab = 'chart';
+let _compareActiveScId = '__current__';
+
+function toggleCompareSelect(id) {
+  if (_compareSelected.has(id)) {
+    if (_compareSelected.size <= 1) {
+      // 最低1件は残す。チェックを戻す
+      const cb = document.getElementById('sc_cb_' + id);
+      if (cb) cb.checked = true;
+      return;
+    }
+    _compareSelected.delete(id);
+  } else {
+    if (_compareSelected.size >= 3) {
+      showNotification('比較は最大3件までです');
+      const cb = document.getElementById('sc_cb_' + id);
+      if (cb) cb.checked = false;
+      return;
+    }
+    _compareSelected.add(id);
+  }
+  _updateCompareBtn();
+}
+
+function _updateCompareBtn() {
+  const btn = document.getElementById('scCompareTriggerBtn');
+  if (!btn) return;
+  const n = _compareSelected.size;
+  btn.disabled = n < 2;
+  btn.textContent = n >= 2 ? `${n}件を比較する →` : '2件以上選択してください';
+}
+
+function _calcCompareData(id, withdrawMode) {
+  const origState = state;
+  if (id !== '__current__') {
+    const sc = (state.savedScenarios || []).find(s => s.id === id);
+    if (!sc) return null;
+    state = { ...sc.snapshot, savedScenarios: origState.savedScenarios, autoSnapshots: origState.autoSnapshots };
+  }
+  if (withdrawMode && state.retirement) {
+    state = { ...state, retirement: { ...state.retirement, withdrawalType: withdrawMode } };
+  }
+  let postData = null, timeline = null;
+  try {
+    postData = calcRetirementSimWithOpts({});
+    timeline = calcScenarioFullTimeline({});
+  } catch(e) {}
+  const name = id === '__current__' ? '★ 現在のプラン' : (origState.savedScenarios || []).find(s => s.id === id)?.name || id;
+  state = origState;
+  return { postData, timeline, name, id };
+}
+
+function startScenarioCompare() {
+  const ids = [..._compareSelected];
+  const withdrawMode = _compareWithdrawMode || state.retirement?.withdrawalType || 'needs';
+  _compareWithdrawMode = withdrawMode;
+  _compareActiveScId = ids[0];
+
+  const data = ids.map((id, i) => {
+    const d = _calcCompareData(id, withdrawMode);
+    if (!d) return null;
+    d.color = COMPARE_COLORS[i % COMPARE_COLORS.length];
+    return d;
+  }).filter(Boolean);
+
+  if (data.length < 2) { showNotification('比較データが取得できませんでした'); return; }
+
+  const area = document.getElementById('scenarioCompareArea');
+  if (area) { area.style.display = ''; setTimeout(() => area.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }
+
+  _renderCompareHighlightTabs(data);
+  _renderCompareChart(data);
+  _renderCompareModeSubTabs(withdrawMode);
+  _renderCompareBreakdownTabs(data);
+  switchCompareBreakdownTab(data[0].id);
+  switchCompareMainTab('chart');
+}
+
+function _renderCompareHighlightTabs(dataArr) {
+  const wrap = document.getElementById('scHighlightTabs');
+  if (!wrap) return;
+  wrap._data = dataArr;
+  wrap.innerHTML = dataArr.map(d => `
+    <button class="sc-highlight-tab" data-id="${d.id}" onclick="switchCompareHighlight('${d.id}')"
+      style="color:${d.color};font-weight:${d.id === _compareActiveScId ? '700' : '400'};border-bottom-color:${d.id === _compareActiveScId ? d.color : 'transparent'}">
+      ${escapeHtml(d.name)}
+    </button>`).join('');
+}
+
+function _renderCompareChart(dataArr) {
+  const canvas = document.getElementById('scCompareChart');
+  if (!canvas) return;
+  const allAges = dataArr.flatMap(d => (d.timeline || []).map(r => r.age));
+  if (!allAges.length) return;
+  const minAge = Math.min(...allAges), maxAge = Math.max(...allAges);
+  const labels = [];
+  for (let a = minAge; a <= maxAge; a++) labels.push(`${a}歳`);
+  const datasets = dataArr.map((d, i) => {
+    const ageMap = {};
+    (d.timeline || []).forEach(r => { ageMap[r.age] = r.endAssets; });
+    return {
+      label: d.name,
+      data: labels.map((_, j) => ageMap[minAge + j] ?? null),
+      borderColor: d.color,
+      backgroundColor: d.color + '18',
+      borderWidth: i === 0 ? 3 : 1.5,
+      fill: false, tension: 0.3, pointRadius: 0, pointHoverRadius: 4,
+    };
+  });
+  if (_compareChartObj) { _compareChartObj.destroy(); _compareChartObj = null; }
+  canvas._compareData = dataArr;
+  _compareChartObj = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 12 } } },
+        tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y != null ? Math.round(ctx.parsed.y).toLocaleString() + '万円' : '—'}` } }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+        y: { ticks: { callback: v => v.toLocaleString() + '万' } }
+      }
+    }
+  });
+}
+
+function switchCompareHighlight(id) {
+  _compareActiveScId = id;
+  const canvas = document.getElementById('scCompareChart');
+  const dataArr = canvas?._compareData;
+  if (_compareChartObj && dataArr) {
+    _compareChartObj.data.datasets.forEach((ds, i) => {
+      const isActive = dataArr[i]?.id === id;
+      ds.borderWidth = isActive ? 4 : 1;
+      const col = dataArr[i]?.color || '#999';
+      ds.borderColor = isActive ? col : col + '44';
+    });
+    _compareChartObj.update('none');
+  }
+  document.querySelectorAll('.sc-highlight-tab').forEach(btn => {
+    const isActive = btn.dataset.id === id;
+    const wrap = document.getElementById('scHighlightTabs');
+    const d = wrap?._data?.find(x => x.id === btn.dataset.id);
+    btn.style.fontWeight = isActive ? '700' : '400';
+    btn.style.borderBottomColor = isActive && d ? d.color : 'transparent';
+  });
+}
+
+function _renderCompareModeSubTabs(currentMode) {
+  const wrap = document.getElementById('scModeSubTabs');
+  if (!wrap) return;
+  const modes = [
+    { id: 'needs', label: '🎯 最低限' },
+    { id: 'fixed_rate', label: '📈 定率' },
+    { id: 'fixed_amount', label: '💴 定額' },
+    { id: 'hybrid', label: '🔄 切替型' },
+    { id: 'hybrid_reverse', label: '🔁 逆切替' },
+  ];
+  wrap.innerHTML = modes.map(m => `
+    <button class="sc-mode-tab${m.id === currentMode ? ' active' : ''}" onclick="switchCompareModeTab('${m.id}')">${m.label}</button>
+  `).join('');
+}
+
+function switchCompareModeTab(mode) {
+  _compareWithdrawMode = mode;
+  const ids = [..._compareSelected];
+  const data = ids.map((id, i) => {
+    const d = _calcCompareData(id, mode);
+    if (!d) return null;
+    d.color = COMPARE_COLORS[i % COMPARE_COLORS.length];
+    return d;
+  }).filter(Boolean);
+  if (!data.length) return;
+  _renderCompareHighlightTabs(data);
+  _renderCompareChart(data);
+  _renderCompareModeSubTabs(mode);
+  _renderCompareBreakdownTabs(data);
+  switchCompareBreakdownTab(data[0].id);
+}
+
+function _renderCompareBreakdownTabs(dataArr) {
+  const wrap = document.getElementById('scBreakdownTabs');
+  if (!wrap) return;
+  wrap._data = dataArr;
+  wrap.innerHTML = dataArr.map((d, i) => `
+    <button class="sc-breakdown-tab${i === 0 ? ' active' : ''}" id="scBdTab_${d.id}"
+      onclick="switchCompareBreakdownTab('${d.id}')" style="color:${d.color}">
+      ${escapeHtml(d.name)}
+    </button>`).join('');
+}
+
+function switchCompareBreakdownTab(id) {
+  const wrap = document.getElementById('scBreakdownTabs');
+  const dataArr = wrap?._data;
+  if (!dataArr) return;
+  const d = dataArr.find(x => x.id === id);
+  if (!d) return;
+  // タブの active 切り替え
+  dataArr.forEach(x => {
+    const btn = document.getElementById('scBdTab_' + x.id);
+    if (btn) btn.classList.toggle('active', x.id === id);
+  });
+  const content = document.getElementById('scBreakdownContent');
+  if (!content) return;
+  const postData = d.postData;
+  if (!postData || !postData.length) {
+    content.innerHTML = '<p style="color:var(--text-muted);padding:16px;text-align:center">データなし（退職シミュレーションの設定を確認してください）</p>';
+    return;
+  }
+  // サマリー計算
+  const lifeEx = parseInt(state.retirement?.lifeExpectancy) || 90;
+  const lastRow = postData.find(r => r.age >= lifeEx) || postData[postData.length - 1];
+  const depRow = postData.find(r => r.depleted);
+  const mbRows = postData.filter(r => r.monthlyBalance != null);
+  const avgMb = mbRows.length ? mbRows.reduce((s, r) => s + r.monthlyBalance, 0) / mbRows.length : 0;
+  const finalAssets = Math.round(lastRow?.endAssets || 0);
+  const assetColor = finalAssets >= 0 ? '#059669' : '#DC2626';
+  let html = `<div class="sc-summary-bar">
+    <div class="sc-summary-item">
+      <div class="sc-summary-label">${lifeEx}歳時点の残高</div>
+      <div class="sc-summary-value" style="color:${assetColor}">${finalAssets.toLocaleString()}万円</div>
+    </div>
+    <div class="sc-summary-item">
+      <div class="sc-summary-label">資産枯渇</div>
+      <div class="sc-summary-value" style="color:${depRow ? '#DC2626' : '#059669'}">${depRow ? depRow.age + '歳' : 'なし'}</div>
+    </div>
+    <div class="sc-summary-item">
+      <div class="sc-summary-label">月収支平均</div>
+      <div class="sc-summary-value" style="color:${avgMb >= 0 ? '#059669' : '#EA580C'}">${(avgMb >= 0 ? '+' : '') + Math.round(avgMb * 10) / 10}万/月</div>
+    </div>
+  </div>`;
+  // テーブル（5年ごと + 枯渇行）
+  const keyRows = postData.filter((r, i) => i % 5 === 0 || r.depleted);
+  html += `<div style="overflow-x:auto"><table style="width:100%;font-size:12px;border-collapse:collapse">
+    <thead><tr style="background:#F8FAFC">
+      <th style="padding:8px;text-align:left;border-bottom:2px solid #e0e0e0;white-space:nowrap">年齢</th>
+      <th style="padding:8px;text-align:right;border-bottom:2px solid #e0e0e0;white-space:nowrap">総資産</th>
+      <th style="padding:8px;text-align:right;border-bottom:2px solid #e0e0e0;white-space:nowrap">年金収入</th>
+      <th style="padding:8px;text-align:right;border-bottom:2px solid #e0e0e0;white-space:nowrap">生活支出</th>
+      <th style="padding:8px;text-align:right;border-bottom:2px solid #e0e0e0;white-space:nowrap">月収支</th>
+    </tr></thead>
+    <tbody>${keyRows.map(r => {
+      const mb = r.monthlyBalance;
+      const mbColor = mb == null ? '' : mb >= 0 ? '#059669' : '#DC2626';
+      const pension = (r.pension || 0) + (r.pension_p || 0);
+      return `<tr style="${r.depleted ? 'background:#FEF2F2' : ''}">
+        <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0">${r.age}歳${r.depleted ? ' ⚠️' : ''}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right">${Math.round(r.endAssets || 0).toLocaleString()}万</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right">${pension ? Math.round(pension).toLocaleString() + '万' : '—'}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right">${r.annualExpense ? Math.round(r.annualExpense).toLocaleString() + '万' : '—'}</td>
+        <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right;color:${mbColor}">${mb != null ? (mb >= 0 ? '+' : '') + Math.round(mb * 10) / 10 + '万/月' : '—'}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+  content.innerHTML = html;
+}
+
+function switchCompareMainTab(tab) {
+  _compareActiveTab = tab;
+  ['chart', 'breakdown'].forEach(t => {
+    const panel = document.getElementById('scComparePanel_' + t);
+    const btn = document.getElementById('scCompareMainTab_' + t);
+    if (panel) panel.style.display = t === tab ? '' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+}
+
+// COMPARE_COLORS (既存 SCENARIO_COLORS と同じ色系だが独立定義)
+const COMPARE_COLORS = ['#4F46E5', '#10B981', '#F59E0B'];
 
 function renderScenariosPage() {
   const theme = state.lifeScenario?.activeTheme || 'retireAge';
