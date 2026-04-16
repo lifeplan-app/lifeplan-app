@@ -1811,6 +1811,47 @@
   pointer-events:none; max-width:240px; line-height:1.6;
   box-shadow:0 4px 16px rgba(0,0,0,.3); display:none;
 }
+/* ===== テンプレートカード ===== */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+.tpl-card {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, opacity .15s;
+  background: var(--surface);
+  position: relative;
+}
+.tpl-card:not(.tpl-card--locked):hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px rgba(99,102,241,.15);
+}
+.tpl-card--locked {
+  opacity: .55;
+  cursor: default;
+}
+.tpl-card__emoji { font-size: 28px; line-height: 1; margin-bottom: 8px; display: block; }
+.tpl-card__name  { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.tpl-card__sub   { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+.tpl-card__tags  { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 9px; }
+.tpl-tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 10px;
+  background: var(--surface2); color: var(--text-secondary); font-weight: 500;
+}
+.tpl-card__assets { font-size: 10.5px; color: var(--text-secondary); line-height: 1.7; }
+.tpl-card__lock {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 10px; font-weight: 600; color: #6B7280;
+  background: #F3F4F6; padding: 2px 7px; border-radius: 8px;
+}
+.tpl-plan-free     { background: #D1FAE5; color: #065F46; }
+.tpl-plan-standard { background: #E0E7FF; color: #3730A3; }
+.tpl-plan-premium  { background: #FEF3C7; color: #92400E; }
   </style>
 </head>
 <body>
@@ -2428,7 +2469,10 @@
         <div style="display:flex;align-items:center;gap:8px">
           <span class="icon" style="background:#EDE9FE">💎</span>資産アセット管理
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openAssetModal()">＋ アセットを追加</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="openTemplateModal()" title="テンプレートから始める">📋 テンプレート</button>
+          <button class="btn btn-primary btn-sm" onclick="openAssetModal()">＋ アセットを追加</button>
+        </div>
       </div>
       <div id="assetList"></div>
     </div>
@@ -4885,6 +4929,27 @@
   </div>
 </div>
 
+<!-- ===== テンプレートモーダル ===== -->
+<div class="modal-overlay" id="templateModal" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:680px;max-height:88vh;overflow-y:auto">
+    <div class="modal-title" style="position:sticky;top:0;background:var(--surface);z-index:1;padding-bottom:12px">
+      📋 ポートフォリオテンプレート
+      <button onclick="closeTemplateModal()" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+      ライフスタイルに合ったテンプレートを選ぶと、アセット・定期支出をまとめて読み込めます。<br>
+      金額はあくまで目安です。適用後にご自身の実績値に変更してください。
+    </p>
+    <div id="templateCardGrid" class="tpl-grid"></div>
+    <div style="margin-top:16px;padding:10px 12px;background:var(--surface2);border-radius:10px;font-size:11px;color:var(--text-muted)">
+      🔒 グレーアウトのテンプレートは Standard / Premium プランで利用できます（準備中）
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTemplateModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
 // ===== DATA =====
@@ -4918,6 +4983,172 @@ const ASSET_TYPE_GROUPS = [
   { label: '株式・ETF',                    types: ['japan_stock', 'high_dividend', 'etf'] },
   { label: '現金・預金',                    types: ['cash_emergency', 'cash_special', 'cash_reserved', 'cash_surplus', 'cash'] },
   { label: 'その他',                        types: ['other'] },
+];
+
+// ===== プラン管理 =====
+/** 現在のユーザープランを返す。将来は決済システムと連携。 */
+function getUserPlan() {
+  return state._plan || 'free';  // 'free' | 'standard' | 'premium'
+}
+const PLAN_ORDER = { free: 0, standard: 1, premium: 2 };
+
+// ===== ポートフォリオテンプレート定義 =====
+// _isPlaceholder: true → 金額はあくまで目安。UI上でもヒント表示のみ（ロックなし）
+const PORTFOLIO_TEMPLATES = [
+  {
+    id: 'starter', plan: 'free',
+    name: 'スタータープラン', subtitle: 'まずここから始めよう',
+    emoji: '🚀', tags: ['初心者', 'NISA', 'シンプル'],
+    assets: [
+      { type: 'cash',          name: '現在の預金',     currentVal: 200, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate',name: 'つみたてNISA',   currentVal: 0,   monthly: 3,   annualReturn: 5 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 0,   monthly: 1,   annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'dinks', plan: 'standard',
+    name: 'DINKSプラン', subtitle: '共働き・子なしで資産最大化',
+    emoji: '💑', tags: ['DINKS', '共働き', 'NISA', 'iDeCo'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 500, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 5,   annualReturn: 5 },
+      { type: 'nisa_growth',    name: 'NISA成長投資枠',currentVal: 0,   monthly: 5,   annualReturn: 6 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 100, monthly: 0,   annualReturn: 0.1 },
+    ],
+    recurringExpenses: [
+      { emoji: '✈️', name: '海外旅行', amount: 30, intervalYears: 1, startYear: new Date().getFullYear(), endYear: null, note: '' },
+    ],
+  },
+  {
+    id: 'fire', plan: 'standard',
+    name: 'FIREプラン', subtitle: '早期リタイアを目指す高積立',
+    emoji: '🔥', tags: ['FIRE', '高積立', '投資信託'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 500, monthly: 0,    annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 5,    annualReturn: 5 },
+      { type: 'nisa_growth',    name: 'NISA成長投資枠',currentVal: 0,   monthly: 10,   annualReturn: 6 },
+      { type: 'trust_allworld', name: 'オルカン（課税）',currentVal: 0,  monthly: 5,   annualReturn: 7 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3,  annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 100, monthly: 0,    annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'family', plan: 'premium',
+    name: '子育て世帯プラン', subtitle: '教育費を見据えたバランス型',
+    emoji: '👨‍👩‍👧', tags: ['子育て', 'NISA', '教育費'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 300, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 3,   annualReturn: 5 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 100, monthly: 0,   annualReturn: 0.1 },
+      { type: 'cash_reserved',  name: '教育費積立',    currentVal: 0,   monthly: 2,   annualReturn: 0.3 },
+    ],
+    recurringExpenses: [
+      { emoji: '🎌', name: '家族旅行', amount: 20, intervalYears: 1, startYear: new Date().getFullYear(), endYear: null, note: '' },
+    ],
+  },
+  {
+    id: 'dividend', plan: 'premium',
+    name: '配当収入プラン', subtitle: '不労所得を育てるインカム重視',
+    emoji: '💴', tags: ['配当', '高配当株', 'ETF', 'NISA'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 500, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 3,   annualReturn: 5 },
+      { type: 'nisa_growth',    name: 'NISA高配当ETF', currentVal: 0,   monthly: 10,  annualReturn: 5, dividendYield: 3.0 },
+      { type: 'high_dividend',  name: '高配当株（課税）',currentVal: 0,  monthly: 5,  annualReturn: 4, dividendYield: 3.5 },
+      { type: 'etf',            name: 'ETF（VTI等）',  currentVal: 0,   monthly: 3,   annualReturn: 6 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3, annualReturn: 4 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'mortgage', plan: 'premium',
+    name: '住宅ローン並行プラン', subtitle: 'ローン返済中も資産形成を続ける',
+    emoji: '🏠', tags: ['住宅ローン', 'NISA', 'iDeCo'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 300, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 2,   annualReturn: 5 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 1.2, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 100, monthly: 0.5, annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'freelance', plan: 'premium',
+    name: 'フリーランス・自営業プラン', subtitle: '不安定収入でも備えを万全に',
+    emoji: '💻', tags: ['フリーランス', '自営業', 'iDeCo上限', '節税'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 500, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 5,   annualReturn: 5 },
+      { type: 'ideco',          name: 'iDeCo（上限）', currentVal: 0,   monthly: 6.8, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 200, monthly: 0,   annualReturn: 0.1 },
+      { type: 'cash_reserved',  name: '税金・保険料積立',currentVal: 0,  monthly: 3,  annualReturn: 0.3 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'senior_retire', plan: 'premium',
+    name: 'シニア・退職間近プラン', subtitle: '守りながら増やすシニア向け',
+    emoji: '🧓', tags: ['退職間近', '配当', '安定運用'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 1000, monthly: 0,  annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,    monthly: 3,  annualReturn: 5 },
+      { type: 'high_dividend',  name: '高配当株',       currentVal: 0,   monthly: 5,  annualReturn: 4, dividendYield: 3.5 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 300,  monthly: 0,  annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'single', plan: 'premium',
+    name: 'おひとりさまプラン', subtitle: '自分のペースで着実に積み立て',
+    emoji: '🙋', tags: ['独身', 'NISA', 'iDeCo', 'シンプル'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 200, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 3.3, annualReturn: 5 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 0,   monthly: 1,   annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'parental_leave', plan: 'premium',
+    name: '育休・時短勤務プラン', subtitle: '収入減少期も家計を守る',
+    emoji: '🍼', tags: ['育休', '時短', '教育費', '家計管理'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 300, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 1,   annualReturn: 5 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 100, monthly: 0,   annualReturn: 0.1 },
+      { type: 'cash_reserved',  name: '保育料・教育費積立',currentVal: 0,monthly: 1,  annualReturn: 0.3 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'second_career', plan: 'premium',
+    name: 'セカンドキャリアプラン', subtitle: '転職・独立前後の資産防衛',
+    emoji: '🔄', tags: ['転職', '独立', 'キャリアチェンジ'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',    currentVal: 500, monthly: 0,   annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_tsumitate', name: 'つみたてNISA',  currentVal: 0,   monthly: 3,   annualReturn: 5 },
+      { type: 'ideco',          name: 'iDeCo',         currentVal: 0,   monthly: 2.3, annualReturn: 4 },
+      { type: 'cash_emergency', name: '生活防衛資金',  currentVal: 200, monthly: 0,   annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
+  {
+    id: 'inheritance_prep', plan: 'premium',
+    name: '相続・資産承継プラン', subtitle: '次世代へつなぐ資産設計',
+    emoji: '🏛️', tags: ['相続', '資産承継', '配当', '大口投資'],
+    assets: [
+      { type: 'cash',           name: '現在の預金',     currentVal: 2000, monthly: 0,  annualReturn: 0.1, _isPlaceholder: true },
+      { type: 'nisa_growth',    name: 'NISA成長投資枠', currentVal: 0,    monthly: 20, annualReturn: 6 },
+      { type: 'high_dividend',  name: '高配当株',        currentVal: 0,   monthly: 10, annualReturn: 4, dividendYield: 3.5 },
+      { type: 'cash_emergency', name: '生活防衛資金',   currentVal: 300,  monthly: 0,  annualReturn: 0.1 },
+    ],
+    recurringExpenses: [],
+  },
 ];
 
 // 初回ユーザー向けデフォルト「おすすめ」順（日本の一般的なライフプランユーザー想定）
@@ -6645,7 +6876,14 @@ let editingAssetId = null;
 function renderAssets() {
   const el = document.getElementById('assetList');
   if (!state.assets.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">💎</div><p>アセットを追加して詳細シミュレーションを始めましょう</p></div>`;
+    el.innerHTML = `<div class="empty" style="padding:24px 16px">
+      <div class="empty-icon">💎</div>
+      <p style="margin-bottom:14px">アセットを追加して詳細シミュレーションを始めましょう</p>
+      <button class="btn btn-primary" onclick="openTemplateModal()" style="margin-bottom:8px;width:100%;max-width:260px">
+        📋 テンプレートから始める
+      </button>
+      <div style="font-size:11px;color:var(--text-muted)">ライフスタイル別に資産設定をまとめて読み込めます</div>
+    </div>`;
     return;
   }
 
@@ -7499,6 +7737,91 @@ function checkAssetLimit() {
   } else {
     warnEl.style.display = 'none';
   }
+}
+
+// ===== ポートフォリオテンプレート =====
+function openTemplateModal() {
+  renderTemplateCards();
+  document.getElementById('templateModal').classList.add('open');
+}
+function closeTemplateModal() {
+  document.getElementById('templateModal').classList.remove('open');
+}
+
+function renderTemplateCards() {
+  const plan = getUserPlan();
+  const grid = document.getElementById('templateCardGrid');
+  if (!grid) return;
+  grid.innerHTML = PORTFOLIO_TEMPLATES.map(tpl => {
+    const accessible = PLAN_ORDER[plan] >= PLAN_ORDER[tpl.plan];
+    const planLabel = { free: 'Free', standard: 'Standard', premium: 'Premium' }[tpl.plan];
+    const planClass = `tpl-plan-${tpl.plan}`;
+    const assetPreview = tpl.assets.slice(0, 4).map(a => {
+      const t = ASSET_TYPES[a.type] || { emoji: '💰' };
+      const valStr = a._isPlaceholder ? `${a.currentVal}万（目安）` : (a.monthly ? `${a.monthly}万/月` : `${a.currentVal}万`);
+      return `${t.emoji} ${a.name}（${valStr})`;
+    }).join('<br>') + (tpl.assets.length > 4 ? `<br><span style="color:var(--text-muted)">他${tpl.assets.length - 4}件…</span>` : '');
+    const tagsHtml = tpl.tags.map(t => `<span class="tpl-tag">${t}</span>`).join('');
+    if (!accessible) {
+      return `<div class="tpl-card tpl-card--locked">
+        <span class="tpl-card__lock">🔒 ${planLabel}以上</span>
+        <span class="tpl-card__emoji">${tpl.emoji}</span>
+        <div class="tpl-card__name">${tpl.name}</div>
+        <div class="tpl-card__sub">${tpl.subtitle}</div>
+        <div class="tpl-card__tags">${tagsHtml}</div>
+        <div class="tpl-card__assets">${assetPreview}</div>
+      </div>`;
+    }
+    return `<div class="tpl-card" onclick="applyTemplate('${tpl.id}')">
+      <span class="tpl-card__emoji">${tpl.emoji}</span>
+      <div class="tpl-card__name">${tpl.name}<span class="tpl-tag ${planClass}" style="margin-left:6px;vertical-align:middle">${planLabel}</span></div>
+      <div class="tpl-card__sub">${tpl.subtitle}</div>
+      <div class="tpl-card__tags">${tagsHtml}</div>
+      <div class="tpl-card__assets">${assetPreview}</div>
+    </div>`;
+  }).join('');
+}
+
+function applyTemplate(templateId) {
+  const tpl = PORTFOLIO_TEMPLATES.find(t => t.id === templateId);
+  if (!tpl) return;
+  // プランチェック
+  if (PLAN_ORDER[getUserPlan()] < PLAN_ORDER[tpl.plan]) {
+    showNotification('このテンプレートは ' + ({ standard: 'Standard', premium: 'Premium' }[tpl.plan]) + ' プラン以上でご利用いただけます');
+    return;
+  }
+  // 既存資産がある場合は確認
+  if (state.assets.length > 0) {
+    if (!confirm(`現在の資産設定（${state.assets.length}件）をテンプレートで上書きします。よろしいですか？`)) return;
+  }
+  const currentYear = new Date().getFullYear();
+  // アセット適用
+  state.assets = tpl.assets.map(a => ({
+    ...a,
+    id: uid(),
+    createdAt: Date.now(),
+    taxType: TAX_TYPE_DEFAULT[a.type] || 'tokutei',
+    startYear: currentYear,
+    endYear: null,
+    endAge: null,
+    note: a.note || '',
+    dividendMode: a.dividendYield ? 'receive' : 'reinvest',
+    owner: 'self',
+  }));
+  // 定期支出を追加（既存に追記）
+  if (tpl.recurringExpenses && tpl.recurringExpenses.length > 0) {
+    if (!state.recurringExpenses) state.recurringExpenses = [];
+    tpl.recurringExpenses.forEach(r => {
+      state.recurringExpenses.push({ ...r, id: uid(), createdAt: Date.now() });
+    });
+  }
+  save();
+  closeTemplateModal();
+  renderAssets();
+  renderPortfolio();
+  if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+  if (document.getElementById('page-timeline')?.classList.contains('active')) renderTimeline();
+  showNotification(`「${tpl.name}」を適用しました ✅`);
 }
 
 // ===== アセット種別セレクト動的生成 =====
