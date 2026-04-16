@@ -1852,6 +1852,17 @@
 .tpl-plan-free     { background: #D1FAE5; color: #065F46; }
 .tpl-plan-standard { background: #E0E7FF; color: #3730A3; }
 .tpl-plan-premium  { background: #FEF3C7; color: #92400E; }
+/* ===== D: 保存済みシナリオ ===== */
+.ssn-card { display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:#f8f9fa; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; margin-bottom:8px; }
+.ssn-card__meta { flex:1; min-width:0; }
+.ssn-card__name { font-size:14px; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ssn-card__memo { font-size:12px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ssn-card__date { font-size:11px; color:#9CA3AF; margin-top:4px; }
+.ssn-card__actions { display:flex; gap:6px; flex-shrink:0; }
+.ssn-section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.ssn-upgrade-hint { background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px;
+  padding:10px 14px; font-size:13px; color:#1D4ED8; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -3910,6 +3921,19 @@
   <!-- テーマごとのコンテンツ -->
   <div id="ls_themeContent"></div>
 
+  <!-- 保存済みシナリオ -->
+  <div class="card" style="margin-top:32px">
+    <div class="ssn-section-header">
+      <div class="card-title" style="margin-bottom:0"><span class="icon" style="background:#E0E7FF">💾</span>保存済みシナリオ</div>
+      <button class="btn btn-primary btn-sm" onclick="openSaveScenarioModal()">＋ 今のプランを保存</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin:6px 0 16px;line-height:1.6">
+      現在の設定をスナップショットとして保存できます。読み込むと全設定を復元します。<br>
+      <span id="ssn_plan_note"></span>
+    </p>
+    <div id="savedScenarioList"></div>
+  </div>
+
 </div>
 
 </main>
@@ -4930,6 +4954,41 @@
 </div>
 
 <!-- ===== テンプレートモーダル ===== -->
+<!-- ===== D: シナリオ保存モーダル ===== -->
+<div class="modal-overlay" id="saveScenarioModal" role="dialog" aria-modal="true"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:16px;">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title">💾 シナリオを保存</div>
+      <button class="modal-close" onclick="closeSaveScenarioModal()">✕</button>
+    </div>
+    <div style="padding:16px 20px 8px">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+        現在のプラン設定（資産・収入・支出など）をスナップショットとして保存します。<br>
+        保存したシナリオは「シナリオ」ページからいつでも読み込めます。
+      </p>
+      <div style="margin-bottom:12px">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px">シナリオ名 <span style="color:#DC2626">*</span></label>
+        <input id="ssnName" type="text" maxlength="20" placeholder="例: 2026年の計画" class="input-field"
+          style="width:100%;box-sizing:border-box"
+          onkeydown="if(event.key==='Enter')submitSaveScenario()">
+        <div style="font-size:11px;color:#9CA3AF;margin-top:3px">20文字以内</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px">メモ（任意）</label>
+        <textarea id="ssnMemo" maxlength="100" placeholder="このシナリオについての説明..." class="input-field"
+          style="width:100%;box-sizing:border-box;resize:vertical;min-height:60px;font-family:inherit;font-size:13px"></textarea>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:3px">100文字以内</div>
+      </div>
+      <div id="ssnLimitInfo" style="font-size:12px;color:#6B7280;margin-bottom:16px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeSaveScenarioModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="submitSaveScenario()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="templateModal" role="dialog" aria-modal="true">
   <div class="modal" style="max-width:680px;max-height:88vh;overflow-y:auto">
     <div class="modal-title" style="position:sticky;top:0;background:var(--surface);z-index:1;padding-bottom:12px">
@@ -4991,6 +5050,13 @@ function getUserPlan() {
   return state._plan || 'free';  // 'free' | 'standard' | 'premium'
 }
 const PLAN_ORDER = { free: 0, standard: 1, premium: 2 };
+
+// シナリオ保存件数制限
+const SCENARIO_LIMITS = {
+  free:     { saved: 0,        auto: 0  },
+  standard: { saved: 3,        auto: 0  },
+  premium:  { saved: Infinity, auto: 24 },
+};
 
 // ===== ポートフォリオテンプレート定義 =====
 // _isPlaceholder: true → 金額はあくまで目安。UI上でもヒント表示のみ（ロックなし）
@@ -5201,6 +5267,8 @@ let state = {
   },
   disclaimerAck: { shown: false, rateHash: '' },
   assetTypeStats: {},   // アセット種別使用回数統計 { [typeId]: number }
+  savedScenarios: [],   // 手動保存シナリオ（Standard: 最大3件 / Premium: 無制限）
+  autoSnapshots:  [],   // 月次自動スナップショット（Premium: 最大24件）
   scenarioComp: [
     { name: 'シナリオA', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
@@ -5310,6 +5378,10 @@ function load() {
         if (a.type) state.assetTypeStats[a.type] = (state.assetTypeStats[a.type] || 0) + 1;
       });
     }
+    if (!state.savedScenarios) state.savedScenarios = [];
+    if (!state.autoSnapshots)  state.autoSnapshots  = [];
+    // Premium: 月次自動スナップショット（月初アクセス時に1回）
+    if (getUserPlan() === 'premium') takeAutoSnapshot();
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
       { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
       { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
@@ -5388,7 +5460,13 @@ function load() {
 }
 
 function save() {
-  localStorage.setItem('lifeplan_v1', JSON.stringify(state));
+  try {
+    localStorage.setItem('lifeplan_v1', JSON.stringify(state));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      showNotification('⚠️ ストレージ容量が不足しています。古いシナリオを削除してください。', 'warn');
+    }
+  }
 }
 
 // ===== かんたん試算モード ユーティリティ =====
@@ -10996,6 +11074,19 @@ function formatDate(d) {
   if (!d) return '';
   const dt = new Date(d);
   return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
+}
+
+/**
+ * showUpgradeModal(trigger)
+ * F: Upgrade誘導UI で本実装予定。それまではシンプルなアラートで代替。
+ * trigger: 'scenario_save' | 'asset_limit' | etc.
+ */
+function showUpgradeModal(trigger) {
+  const messages = {
+    scenario_save: 'シナリオの保存はStandardプラン以上でご利用いただけます（最大3件）。\nPremiumプランでは無制限に保存できます。',
+  };
+  const msg = messages[trigger] || 'この機能はアップグレードが必要です。';
+  alert('🔒 プランのアップグレードが必要です\n\n' + msg);
 }
 
 function showNotification(msg) {
@@ -21199,6 +21290,195 @@ function runAndShowResults() {
 }
 
 // シナリオページのメインレンダリング
+// ===== D: シナリオ保存 =====
+
+// --- コア CRUD ---
+function saveCurrentScenario(name, memo) {
+  memo = memo || '';
+  const plan  = getUserPlan();
+  const limit = SCENARIO_LIMITS[plan].saved;
+  const count = (state.savedScenarios || []).length;
+  if (count >= limit) {
+    showUpgradeModal('scenario_save');
+    return false;
+  }
+  const { savedScenarios, autoSnapshots, ...snapshotBase } = state;
+  const snapshot = JSON.parse(JSON.stringify(snapshotBase));
+  const now = new Date().toISOString();
+  if (!state.savedScenarios) state.savedScenarios = [];
+  state.savedScenarios.push({
+    id:        'sc_' + Date.now(),
+    name:      name.slice(0, 20),
+    memo:      memo.slice(0, 100),
+    createdAt: now,
+    updatedAt: now,
+    snapshot,
+  });
+  save();
+  showNotification('「' + name.slice(0, 20) + '」を保存しました ✅');
+  return true;
+}
+
+function loadScenario(id) {
+  const sc = (state.savedScenarios || []).find(s => s.id === id);
+  if (!sc) return;
+  const { savedScenarios, autoSnapshots } = state;
+  Object.assign(state, sc.snapshot, { savedScenarios, autoSnapshots });
+  save();
+  showPage('dashboard');
+  showNotification('「' + sc.name + '」を読み込みました');
+}
+
+function deleteScenario(id) {
+  const sc = (state.savedScenarios || []).find(s => s.id === id);
+  if (!sc) return;
+  if (!confirm('「' + sc.name + '」を削除しますか？この操作は元に戻せません。')) return;
+  state.savedScenarios = state.savedScenarios.filter(s => s.id !== id);
+  save();
+  renderSavedScenarioList();
+}
+
+function updateScenarioMeta(id, updates) {
+  const sc = (state.savedScenarios || []).find(s => s.id === id);
+  if (!sc) return;
+  if (updates.name !== undefined) sc.name = updates.name.slice(0, 20);
+  if (updates.memo !== undefined) sc.memo = updates.memo.slice(0, 100);
+  sc.updatedAt = new Date().toISOString();
+  save();
+}
+
+// --- 自動スナップショット（Premium） ---
+function takeAutoSnapshot() {
+  if (getUserPlan() !== 'premium') return;
+  const month   = new Date().toISOString().slice(0, 7);
+  const already = (state.autoSnapshots || []).find(s => s.month === month);
+  if (already) return;
+  const { savedScenarios, autoSnapshots, ...snapshotBase } = state;
+  const snap = {
+    id:        'auto_' + month,
+    month,
+    label:     month.slice(0, 4) + '年' + month.slice(5, 7) + '月の状態',
+    createdAt: new Date().toISOString(),
+    snapshot:  JSON.parse(JSON.stringify(snapshotBase)),
+  };
+  if (!state.autoSnapshots) state.autoSnapshots = [];
+  state.autoSnapshots.unshift(snap);
+  if (state.autoSnapshots.length > 24) state.autoSnapshots = state.autoSnapshots.slice(0, 24);
+  save();
+}
+
+// --- 比較シミュレーション ---
+function calcTimelineFromSnapshot(snapshot) {
+  const originalState = state;
+  state = {
+    ...snapshot,
+    savedScenarios: originalState.savedScenarios,
+    autoSnapshots:  originalState.autoSnapshots,
+  };
+  let result;
+  try {
+    result = typeof calcFullTimeline === 'function' ? calcFullTimeline() : calcScenarioFullTimeline({});
+  } catch(e) {
+    result = null;
+  }
+  state = originalState;
+  return result;
+}
+
+// --- 保存モーダルUI ---
+function openSaveScenarioModal() {
+  const plan  = getUserPlan();
+  const limit = SCENARIO_LIMITS[plan].saved;
+  const count = (state.savedScenarios || []).length;
+
+  if (limit === 0) {
+    showUpgradeModal('scenario_save');
+    return;
+  }
+
+  const modal = document.getElementById('saveScenarioModal');
+  if (!modal) return;
+  document.getElementById('ssnName').value = '';
+  document.getElementById('ssnMemo').value = '';
+  const limitInfo = document.getElementById('ssnLimitInfo');
+  if (limitInfo) {
+    if (limit === Infinity) {
+      limitInfo.textContent = '保存済み: ' + count + '件';
+    } else {
+      limitInfo.textContent = '保存済み: ' + count + ' / ' + limit + '件';
+      if (count >= limit) {
+        limitInfo.style.color = '#DC2626';
+      } else {
+        limitInfo.style.color = '#6B7280';
+      }
+    }
+  }
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('ssnName').focus(), 50);
+}
+
+function closeSaveScenarioModal() {
+  const modal = document.getElementById('saveScenarioModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function submitSaveScenario() {
+  const name = (document.getElementById('ssnName').value || '').trim();
+  if (!name) { document.getElementById('ssnName').focus(); return; }
+  const memo = (document.getElementById('ssnMemo').value || '').trim();
+  const ok = saveCurrentScenario(name, memo);
+  if (ok) {
+    closeSaveScenarioModal();
+    renderSavedScenarioList();
+  }
+}
+
+// --- 保存済みシナリオ一覧 ---
+function renderSavedScenarioList() {
+  const el = document.getElementById('savedScenarioList');
+  if (!el) return;
+  const list = state.savedScenarios || [];
+  const plan  = getUserPlan();
+  const limit = SCENARIO_LIMITS[plan].saved;
+
+  if (list.length === 0) {
+    const freeMsg = limit === 0
+      ? '<div class="ssn-upgrade-hint">💡 Standardプラン以上で最大3件のシナリオを保存できます。</div>'
+      : '';
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:20px 0;text-align:center;">保存済みシナリオはありません</div>' + freeMsg;
+    return;
+  }
+
+  el.innerHTML = list.map(sc => {
+    const date = sc.updatedAt ? sc.updatedAt.slice(0, 10) : sc.createdAt.slice(0, 10);
+    const readOnly = PLAN_ORDER[plan] < PLAN_ORDER['standard'];
+    return `<div class="ssn-card">
+      <div class="ssn-card__meta">
+        <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
+        ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
+        <div class="ssn-card__date">更新: ${date}</div>
+      </div>
+      <div class="ssn-card__actions">
+        ${readOnly ? '' : `<button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>`}
+        <button class="btn btn-sm btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="deleteScenario('${sc.id}')">削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmLoadScenario(id) {
+  const sc = (state.savedScenarios || []).find(s => s.id === id);
+  if (!sc) return;
+  const choice = confirm(
+    '「' + sc.name + '」を読み込みます。\n\n現在のプランを上書きします。\n\n「OK」: そのまま読み込む\n「キャンセル」: 中止'
+  );
+  if (choice) loadScenario(id);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function renderScenariosPage() {
   const theme = state.lifeScenario?.activeTheme || 'retireAge';
   const bannerWrap = document.getElementById('ls_discBannerWrap');
@@ -21213,6 +21493,24 @@ function renderScenariosPage() {
     btn.style.borderColor = active ? '#4F46E5' : '#e0e0e0';
   });
   renderLifeScenarioTheme(theme);
+  // 保存済みシナリオ一覧
+  renderSavedScenarioList();
+  // プラン別注記
+  const noteEl = document.getElementById('ssn_plan_note');
+  if (noteEl) {
+    const plan = getUserPlan();
+    const limit = SCENARIO_LIMITS[plan].saved;
+    if (limit === 0) {
+      noteEl.innerHTML = '🔒 Standardプラン以上でシナリオの保存が利用できます。';
+      noteEl.style.color = '#DC2626';
+    } else if (limit === Infinity) {
+      noteEl.textContent = 'Premium: 無制限に保存できます。';
+      noteEl.style.color = '#059669';
+    } else {
+      noteEl.textContent = 'Standard: 最大' + limit + '件保存できます。';
+      noteEl.style.color = '#4F46E5';
+    }
+  }
 }
 </script>
 
