@@ -850,6 +850,73 @@
 
 </div>
 
+<!-- ===================== ONBOARDING OVERLAY ===================== -->
+<div id="onboardingOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto">
+  <div style="max-width:480px;margin:0 auto;padding:32px 20px 40px;min-height:100%;display:flex;flex-direction:column;justify-content:center">
+
+    <!-- App icon + title -->
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px">💸</div>
+      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 10px">支出管理アプリへようこそ</h1>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:0">
+        毎月の支出を4つの領域に分けて管理します。<br>実際の支出データをライフプランに連携すると<br>シミュレーションの精度がぐっと上がります。
+      </p>
+    </div>
+
+    <!-- 4 domains grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px">
+      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:4px">🏠</div>
+        <div style="font-size:12px;font-weight:700;color:#2563EB">毎月固定費</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">家賃・保険<br>スマホ・サブスク</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:4px">🛒</div>
+        <div style="font-size:12px;font-weight:700;color:#16A34A">毎月変動費</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">食費・日用品<br>交通・医療</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:4px">📅</div>
+        <div style="font-size:12px;font-weight:700;color:#D97706">不定期固定費</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">車検・年払い保険<br>固定資産税</div>
+      </div>
+      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
+        <div style="font-size:20px;margin-bottom:4px">🎉</div>
+        <div style="font-size:12px;font-weight:700;color:#DC2626">不定期変動費</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">旅行・外食<br>冠婚葬祭・趣味</div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-align:center;margin-bottom:12px">まずどこから始めますか？</div>
+
+    <button onclick="startOnboardingCSV()"
+      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:10px">
+      <span style="font-size:28px;flex-shrink:0">📥</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">CSVで取り込む</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">MoneyForward・Zaim 対応。過去データも一括取込</div>
+      </div>
+      <span style="font-size:18px;color:var(--text-muted)">›</span>
+    </button>
+
+    <button onclick="startOnboardingManual()"
+      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:24px">
+      <span style="font-size:28px;flex-shrink:0">✏️</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">手動で入力する</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">今月の支出を直接入力。すぐに始められる</div>
+      </div>
+      <span style="font-size:18px;color:var(--text-muted)">›</span>
+    </button>
+
+    <button onclick="skipOnboarding()"
+      style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;width:100%;padding:8px;text-align:center">
+      あとでやる（スキップ）
+    </button>
+  </div>
+</div>
+
 <!-- ===================== MODAL: Budget Settings ===================== -->
 <div class="modal-overlay" id="budgetModal">
   <div class="modal">
@@ -1578,6 +1645,7 @@ function createInitialState() {
       // 賞与リスト [{ label: '夏季賞与', amount: 300000 }, ...]
       bonuses: [],
     },
+    _onboardingDone: false,
   };
 }
 
@@ -1593,6 +1661,7 @@ function loadState() {
       if (!state.lifeplanSync)   state.lifeplanSync = createInitialState().lifeplanSync;
       if (!state.settings)       state.settings = createInitialState().settings;
       if (!state.income)         state.income = createInitialState().income;
+      if (state._onboardingDone === undefined) state._onboardingDone = Object.keys(state.months || {}).length > 0;
       if (state.settings.bonusInCalc === undefined) state.settings.bonusInCalc = true;
       if (state.income.overtime === undefined) state.income.overtime = null;
       // 「家族生活費」カテゴリが未追加なら追加（マイグレーション）
@@ -1633,6 +1702,37 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem('spending_v1', JSON.stringify(state));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════════════════════════
+function showOnboardingIfNeeded() {
+  if (state._onboardingDone) return;
+  if (Object.keys(state.months || {}).length > 0) return;
+  document.getElementById('onboardingOverlay').style.display = '';
+}
+
+function _closeOnboarding() {
+  state._onboardingDone = true;
+  saveState();
+  document.getElementById('onboardingOverlay').style.display = 'none';
+}
+
+function startOnboardingCSV() {
+  _closeOnboarding();
+  showTab('import');
+}
+
+function startOnboardingManual() {
+  _closeOnboarding();
+  showTab('ledger');
+  // 少し遅らせて手動入力モーダルを開く（タブ切り替え後）
+  setTimeout(() => openManualModal(), 120);
+}
+
+function skipOnboarding() {
+  _closeOnboarding();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -4621,6 +4721,7 @@ window.addEventListener('load', () => {
   }
 
   renderDashboard();
+  showOnboardingIfNeeded();
 });
 </script>
 <script>
