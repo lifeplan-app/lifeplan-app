@@ -609,7 +609,11 @@
 
   <!-- Category List -->
   <div class="section-card" id="catListSection">
-    <div class="section-title">📋 カテゴリ一覧</div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>📋 カテゴリ一覧</span>
+      <button onclick="openBudgetModal()" style="font-size:12px;font-weight:600;color:var(--primary);background:none;border:1px solid var(--primary);border-radius:20px;padding:3px 10px;cursor:pointer">💰 予算設定</button>
+    </div>
+    <div id="budgetSummary"></div>
     <div id="catList"></div>
   </div>
 
@@ -788,6 +792,22 @@
     </a>
   </div>
 
+</div>
+
+<!-- ===================== MODAL: Budget Settings ===================== -->
+<div class="modal-overlay" id="budgetModal">
+  <div class="modal">
+    <div class="modal-title">
+      <button class="modal-close" onclick="closeBudgetModal()">✕</button>
+      💰 カテゴリ別 予算設定
+    </div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">月ごとの予算を設定すると、支出の進捗バーで確認できます。</p>
+    <div id="budgetModalList"></div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeBudgetModal()">キャンセル</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveBudgetModal()">保存する</button>
+    </div>
+  </div>
 </div>
 
 <!-- ===================== MODAL: Category Mapping ===================== -->
@@ -1423,6 +1443,25 @@ const SUGGESTION_TRIGGERS = [
     savingsEstimate: (avg) => Math.round((avg.cats?.food || 0) * 0.1),
     savingsNote: '食費を10%見直した場合の試算',
   },
+  // ── 予算超過 ──
+  {
+    id: 'budget_over',
+    emoji: '📊',
+    check: (d) => {
+      const over = state.categories.filter(c => c.budget && (d.categoryTotals?.[c.id] || 0) > c.budget);
+      return over.length >= 2;
+    },
+    getValue: (d) => {
+      const over = state.categories.filter(c => c.budget && (d.categoryTotals?.[c.id] || 0) > c.budget);
+      return over;
+    },
+    color: '#CC0000',
+    title: '複数のカテゴリで予算を超えています',
+    detail: (over) => {
+      const names = over.map(c => c.name).join('・');
+      return `${names} が予算超過です。支出を振り返って来月の計画に活かしましょう。`;
+    },
+  },
 ];
 
 // ── 4領域の説明と例示 ──
@@ -1786,6 +1825,7 @@ function renderAnnualView() {
 
   // Category Chart & List
   renderCatChart(categoryTotals, totalExpense);
+  renderBudgetSummary(categoryTotals);
   renderCatList(categoryTotals, totalExpense);
 }
 
@@ -1898,7 +1938,8 @@ function renderDashboard() {
   // Category Chart
   renderCatChart(categoryTotals, totalExpense);
 
-  // Category List
+  // Budget Summary & Category List
+  renderBudgetSummary(categoryTotals);
   renderCatList(categoryTotals, totalExpense);
 
   // Income Health
@@ -1970,16 +2011,22 @@ function renderCatList(categoryTotals, totalExpense) {
     const ratio = totalExpense > 0 ? (amount / totalExpense * 100).toFixed(1) : 0;
     const barW = maxAmount > 0 ? (amount / maxAmount * 100).toFixed(1) : 0;
     const dColor = domainMap[c.domain]?.color || '#ccc';
-    const budgetBar = c.budget ? `
-      <div style="margin-top:4px">
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:2px">
-          <span>予算 ${fmt(c.budget)}</span>
-          <span style="color:${amount > c.budget ? 'var(--danger)' : 'var(--secondary)'}">${Math.round(amount / c.budget * 100)}%</span>
-        </div>
-        <div style="height:3px;background:var(--surface3);border-radius:2px;overflow:hidden">
-          <div style="height:100%;width:${Math.min(amount / c.budget * 100, 100)}%;background:${amount > c.budget ? 'var(--danger)' : 'var(--secondary)'};border-radius:2px;transition:width .3s"></div>
-        </div>
-      </div>` : '';
+    const budgetBar = c.budget ? (() => {
+      const pct = Math.round(amount / c.budget * 100);
+      const barColor = pct >= 100 ? 'var(--danger)' : pct >= 80 ? '#FF9500' : 'var(--secondary)';
+      const icon = pct >= 100 ? '🚨' : pct >= 80 ? '⚠️' : '✓';
+      const labelColor = pct >= 100 ? 'var(--danger)' : pct >= 80 ? '#FF9500' : 'var(--text-muted)';
+      return `
+        <div style="margin-top:5px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:3px">
+            <span style="color:var(--text-muted)">予算 ${fmt(c.budget)}</span>
+            <span style="color:${labelColor};font-weight:600">${icon} ${pct}%</span>
+          </div>
+          <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${Math.min(pct, 100)}%;background:${barColor};border-radius:3px;transition:width .4s"></div>
+          </div>
+        </div>`;
+    })() : '';
     return `
       <div class="cat-item">
         <span class="cat-emoji">${c.emoji}</span>
@@ -1999,6 +2046,83 @@ function renderCatList(categoryTotals, totalExpense) {
         </div>
       </div>`;
   }).join('');
+}
+
+// ── 予算サマリーカード ────────────────────────────────────────
+function renderBudgetSummary(categoryTotals) {
+  const el = document.getElementById('budgetSummary');
+  if (!el) return;
+
+  const catsWithBudget = state.categories.filter(c => c.budget);
+  if (!catsWithBudget.length) { el.innerHTML = ''; return; }
+
+  const totalBudget = catsWithBudget.reduce((s, c) => s + c.budget, 0);
+  const totalActual = catsWithBudget.reduce((s, c) => s + (categoryTotals[c.id] || 0), 0);
+  const pct = Math.round(totalActual / totalBudget * 100);
+  const barColor = pct >= 100 ? 'var(--danger)' : pct >= 85 ? '#FF9500' : 'var(--secondary)';
+  const overCount = catsWithBudget.filter(c => (categoryTotals[c.id] || 0) > c.budget).length;
+
+  el.innerHTML = `
+    <div style="margin:8px 0 12px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:700;color:var(--text-secondary)">今月の予算合計</span>
+        <span style="font-size:12px;color:var(--text-muted)">${fmt(totalActual)} / ${fmt(totalBudget)}</span>
+      </div>
+      <div style="height:8px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-bottom:6px">
+        <div style="height:100%;width:${Math.min(pct,100)}%;background:${barColor};border-radius:4px;transition:width .4s"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px">
+        <span style="color:${barColor};font-weight:600">${pct}% 使用</span>
+        ${overCount > 0
+          ? `<span style="color:var(--danger);font-weight:600">🚨 ${overCount}カテゴリが超過</span>`
+          : pct >= 85
+            ? `<span style="color:#FF9500;font-weight:600">⚠️ 残り ${fmt(totalBudget - totalActual)}</span>`
+            : `<span style="color:var(--text-muted)">残り ${fmt(totalBudget - totalActual)}</span>`
+        }
+      </div>
+    </div>`;
+}
+
+// ── 予算設定モーダル ──────────────────────────────────────────
+function openBudgetModal() {
+  const list = document.getElementById('budgetModalList');
+  const domains = { monthly_fixed: '毎月固定費', monthly_variable: '毎月変動費', irregular_fixed: '不定期固定費', irregular_variable: '不定期変動費' };
+  const byDomain = {};
+  for (const cat of state.categories) {
+    if (!byDomain[cat.domain]) byDomain[cat.domain] = [];
+    byDomain[cat.domain].push(cat);
+  }
+  list.innerHTML = Object.entries(byDomain).map(([domain, cats]) => `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${domains[domain] || domain}</div>
+      ${cats.map(cat => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:18px;width:26px;text-align:center">${cat.emoji}</span>
+          <span style="flex:1;font-size:13px;font-weight:600">${cat.name}</span>
+          <div style="position:relative">
+            <input type="number" id="bm_${cat.id}" value="${cat.budget || ''}" min="0" step="1000"
+              placeholder="未設定"
+              style="width:100px;padding:6px 26px 6px 8px;font-size:13px;text-align:right;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)">
+            <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none">円</span>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+  document.getElementById('budgetModal').classList.add('open');
+}
+
+function closeBudgetModal() {
+  document.getElementById('budgetModal').classList.remove('open');
+}
+
+function saveBudgetModal() {
+  for (const cat of state.categories) {
+    const input = document.getElementById('bm_' + cat.id);
+    if (input) cat.budget = parseInt(input.value) || null;
+  }
+  saveState();
+  closeBudgetModal();
+  if (currentTab === 'dashboard') renderDashboard();
+  showNotification('予算を保存しました ✓');
 }
 
 // 直近 nMonths のカテゴリ別・ドメイン別平均を計算
