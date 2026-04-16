@@ -1903,7 +1903,7 @@
     <button class="header-icon-btn desktop-only" onclick="document.getElementById('importFileInput').click()">📥 読み込み</button>
     <button class="header-icon-btn desktop-only" onclick="openInputDiagnosis()">🔍 入力サポート</button>
     <button class="header-icon-btn desktop-only" onclick="openDataSettings()" style="color:var(--text-muted)">⚙️ データ設定</button>
-    <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
+    <input type="file" id="importFileInput" accept=".json,.lifeplan" style="display:none" onchange="importData(event)">
   </div>
 </header>
 
@@ -2151,16 +2151,14 @@
         </div>
         <div class="form-group">
           <label>職業</label>
-          <input type="text" id="profileJob" placeholder="会社員、自営業など">
+          <select id="profileJob">
+            <option value="">選択してください</option>
+            <option value="employee">会社員・公務員</option>
+            <option value="self_employed">自営業・フリーランス</option>
+            <option value="homemaker">専業主婦/夫</option>
+            <option value="other">その他</option>
+          </select>
         </div>
-      </div>
-      <div class="form-group">
-        <label>現在の居住地</label>
-        <input type="text" id="profileLocation" placeholder="東京都渋谷区">
-      </div>
-      <div class="form-group">
-        <label>自己紹介・現状メモ</label>
-        <textarea id="profileBio" placeholder="現在の状況や背景を記入してください..."></textarea>
       </div>
     </div>
 
@@ -2186,10 +2184,6 @@
           <input type="hidden" id="profilePartnerBirth">
           <div class="birth-row" id="profilePartnerBirthRow"></div>
         </div>
-      </div>
-      <div class="form-group">
-        <label>家族・将来計画メモ</label>
-        <textarea id="profileFamily" placeholder="家族に関する計画や希望を記入してください..."></textarea>
       </div>
     </div>
 
@@ -2923,7 +2917,11 @@
         <div class="form-group">
           <label id="retExpenseP1Label">① リタイア直後〜年金前 月支出 万円</label>
           <input type="number" id="retMonthlyExpense" placeholder="25" min="0">
-          <div id="retMonthlyExpenseNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（二人分）の月支出</div>
+          <div id="retMonthlyExpenseNote" style="font-size:11px;color:var(--text-muted);margin-top:3px">世帯合計（パートナー含む）の月支出</div>
+          <div style="font-size:11px;background:#FEF3C7;border-left:3px solid #F59E0B;padding:5px 10px;border-radius:5px;margin-top:4px">
+            ⚠️ <b>住宅ローン・家賃はここに含めないでください。</b><br>
+            ライフイベント「住居計画」で設定した金額がシミュレーションの「ローン/家賃」列に自動反映されます。
+          </div>
         </div>
         <div class="form-group">
           <label>想定余命（年齢）</label>
@@ -3363,10 +3361,11 @@
     <div id="retResultCard"></div>
     <div class="card" id="retChartCard" style="display:none">
       <div class="card-title"><span class="icon" style="background:#EEF2FF">📈</span>資産推移（リタイア後）</div>
-      <!-- ハイブリッドモード専用: スライダーでリアルタイムに切替年齢を調整 -->
+      <div id="retChartStrategyTabs" style="display:none;margin-bottom:8px;overflow-x:auto"></div>
+      <!-- ハイブリッド/逆切替モード専用: スライダーでリアルタイムに切替年齢を調整 -->
       <div id="retChartSliderArea" style="display:none;background:#F5F3FF;border-radius:10px;padding:10px 14px;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:12px;font-weight:600;color:#5B21B6;white-space:nowrap">🔄 切替年齢</span>
+          <span id="retChartSliderModeLabel" style="font-size:12px;font-weight:600;color:#5B21B6;white-space:nowrap">🔄 切替年齢</span>
           <input type="range" id="retChartSwitchSlider" min="60" max="100" step="1" value="75"
             style="flex:1;min-width:120px;accent-color:#8B5CF6"
             oninput="onHybridSliderChange(this.value)">
@@ -3387,7 +3386,8 @@
       <div id="retBreakdownStrategyTabs" style="display:none;margin-bottom:8px;overflow-x:auto"></div>
       <div id="retSimNote" style="display:none"></div>
       <div id="retAssumptionsPanel"></div>
-      <div style="overflow-x:auto"><table id="retBreakdownTable" style="width:100%;font-size:12px;border-collapse:collapse"></table></div>
+      <div id="retBreakdownViewToggleWrap" style="display:flex;justify-content:flex-end;margin-bottom:4px"></div>
+      <div style="overflow-x:auto;max-height:520px;overflow-y:auto"><table id="retBreakdownTable" style="width:100%;font-size:12px;border-collapse:collapse"></table></div>
     </div>
 
     <!-- ④ シナリオ比較 -->
@@ -4087,12 +4087,12 @@
     <div style="margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">💾 バックアップ（エクスポート）</div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">ブラウザのデータ消去やPC変更時に備え、定期的にバックアップを保存することをお勧めします。</p>
-      <button class="btn btn-primary" onclick="exportData();closeDataSettings()" style="width:100%">📥 データをJSONファイルに書き出す</button>
+      <button class="btn btn-primary" onclick="closeDataSettings();exportData()" style="width:100%">🔐 データを書き出す（暗号化対応）</button>
     </div>
 
     <div style="margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">📤 データ読み込み（インポート）</div>
-      <button class="btn btn-secondary" onclick="closeDataSettings();document.querySelector('[onclick=\"importData()\"]')?.click()" style="width:100%">JSONファイルから読み込む</button>
+      <button class="btn btn-secondary" onclick="closeDataSettings();document.getElementById('importFileInput').click()" style="width:100%">.lifeplan / .json ファイルから読み込む</button>
     </div>
 
     <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
@@ -4573,6 +4573,26 @@
         </div>
       </div>
       <div id="amTargetNote" style="display:none;font-size:12px;color:var(--text-muted);padding:6px 8px;background:var(--surface);border-radius:8px;margin-top:4px"></div>
+      <!-- 第2目標 -->
+      <div id="amTargetVal2Wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">🎯² 第2目標金額</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;line-height:1.6">
+          振替先が満枠になって戻ってきた資金を受け取り、さらに上の目標まで積み上げます。<br>
+          例：生活防衛資金 300万→NISA→NISA満枠後に生活防衛資金を500万へ
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>第2目標金額（万円）<span style="font-size:11px;color:var(--text-muted);font-weight:400">　第1目標達成後に受取可能に</span></label>
+            <input type="number" id="amTargetVal2" placeholder="例: 500" min="0" step="1" oninput="updateTargetNote()">
+          </div>
+          <div class="form-group">
+            <label style="font-size:12px">第2目標達成後の振替先</label>
+            <select id="amOverflowTarget2">
+              <option value="">振替なし（積立停止のみ）</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -5499,82 +5519,137 @@ function printLifePlan() {
   setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
 }
 
-function exportData() {
+// ===== 暗号化ユーティリティ（固定アプリ鍵・AES-256-GCM）=====
+const _LP_KEY_RAW = new Uint8Array([
+  0x4c,0x69,0x66,0x65,0x50,0x6c,0x61,0x6e,
+  0x41,0x70,0x70,0x4b,0x65,0x79,0x32,0x30,
+  0x32,0x36,0x5f,0x78,0x4b,0x39,0x6d,0x50,
+  0x32,0x6e,0x51,0x72,0x54,0x35,0x76,0x57
+]);
+
+async function _lpGetCryptoKey(usage) {
+  return crypto.subtle.importKey('raw', _LP_KEY_RAW, { name: 'AES-GCM' }, false, [usage]);
+}
+
+async function encryptLifeplan(plaintext) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await _lpGetCryptoKey('encrypt');
+  const enc = new TextEncoder();
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const combined = new Uint8Array(12 + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), 12);
+  return 'LIFEPLAN_ENCRYPTED_V1:' + btoa(String.fromCharCode(...combined));
+}
+
+async function decryptLifeplan(encryptedStr) {
+  if (!encryptedStr.startsWith('LIFEPLAN_ENCRYPTED_V1:')) throw new Error('invalid_format');
+  const combined = Uint8Array.from(atob(encryptedStr.slice(22)), c => c.charCodeAt(0));
+  const iv   = combined.slice(0, 12);
+  const data = combined.slice(12);
+  const key  = await _lpGetCryptoKey('decrypt');
+  try {
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    return new TextDecoder().decode(decrypted);
+  } catch {
+    throw new Error('decrypt_failed');
+  }
+}
+
+// ===== エクスポート =====
+async function exportData() {
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
-  const filename = `lifeplan_backup_${ts}.json`;
+  const filename = `lifeplan_backup_${ts}.lifeplan`;
   const json = JSON.stringify({ _version: 'lifeplan_v1', _exportedAt: now.toISOString(), ...state }, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showNotification(`💾 ${filename} を書き出しました`);
+  try {
+    const encrypted = await encryptLifeplan(json);
+    const blob = new Blob([encrypted], { type: 'application/octet-stream' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    localStorage.setItem('lifeplan_last_export', Date.now().toString());
+    showNotification(`🔐 ${filename} を暗号化して書き出しました`);
+  } catch (e) {
+    showNotification('書き出しに失敗しました: ' + e.message, 'error');
+  }
 }
 
-function importData(event) {
+// ===== インポート処理 =====
+function _applyImportedData(jsonStr, fileName) {
+  const data = JSON.parse(jsonStr);
+  if (!data._version && !data.profile && !data.assets) {
+    showNotification('⚠️ 対応していないファイル形式です');
+    return;
+  }
+  const { _version, _exportedAt, ...imported } = data;
+  if (!confirm(`「${fileName}」のデータを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
+  state = {
+    profile: {},
+    goals: [],
+    expenses: [],
+    actions: [],
+    finance: {},
+    assets: [],
+    lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [] },
+    cashFlowEvents: [],
+    actuals: [],
+    retirement: {},
+    insurance: { items: [], needs: {} },
+    inheritance: { giftPlans: [] },
+    recurringExpenses: [],
+    ...imported,
+  };
+  if (!state.assets) state.assets = [];
+  if (!state.cashFlowEvents) state.cashFlowEvents = [];
+  if (!state.lifeEvents) state.lifeEvents = { children: [], mortgage: {}, care: {} };
+  if (!state.lifeEvents.children) state.lifeEvents.children = [];
+  if (!state.lifeEvents.mortgage) state.lifeEvents.mortgage = {};
+  if (!state.lifeEvents.mortgage.events) state.lifeEvents.mortgage.events = [];
+  if (!state.lifeEvents.housingType) state.lifeEvents.housingType = 'mortgage';
+  if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
+  if (!state.lifeEvents.care) state.lifeEvents.care = {};
+  if (!state.lifeEvents.scholarships) state.lifeEvents.scholarships = [];
+  if (!state.retirement) state.retirement = {};
+  if (!state.insurance) state.insurance = { items: [], needs: {} };
+  if (!state.insurance.items) state.insurance.items = [];
+  if (!state.insurance.needs) state.insurance.needs = {};
+  if (!state.inheritance) state.inheritance = { giftPlans: [] };
+  if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
+  if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
+  if (!state.recurringExpenses) state.recurringExpenses = [];
+  state.goals = (state.goals || []).map(g => ({ tasks: [], progressMode: 'manual', ...g }));
+  save();
+  showPage('dashboard');
+  showNotification(`✅ データを読み込みました（${fileName}）`);
+}
+
+async function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      // バージョンチェック
-      if (!data._version && !data.profile && !data.assets) {
-        showNotification('⚠️ 対応していないファイル形式です');
-        return;
-      }
-      // _version/_exportedAt キーを除いて state に反映
-      const { _version, _exportedAt, ...imported } = data;
-      if (!confirm(`「${file.name}」のデータを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
-      // マイグレーションを適用して読み込み
-      state = {
-        profile: {},
-        goals: [],
-        expenses: [],
-        actions: [],
-        finance: {},
-        assets: [],
-        lifeEvents: { children: [], housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [] },
-        cashFlowEvents: [],
-        actuals: [],
-        retirement: {},
-        insurance: { items: [], needs: {} },
-        inheritance: { giftPlans: [] },
-        recurringExpenses: [],
-        ...imported,
-      };
-      if (!state.assets) state.assets = [];
-      if (!state.cashFlowEvents) state.cashFlowEvents = [];
-      if (!state.lifeEvents) state.lifeEvents = { children: [], mortgage: {}, care: {} };
-      if (!state.lifeEvents.children) state.lifeEvents.children = [];
-      if (!state.lifeEvents.mortgage) state.lifeEvents.mortgage = {};
-      if (!state.lifeEvents.mortgage.events) state.lifeEvents.mortgage.events = [];
-      if (!state.lifeEvents.housingType) state.lifeEvents.housingType = 'mortgage';
-      if (!state.lifeEvents.rent) state.lifeEvents.rent = {};
-      if (!state.lifeEvents.care) state.lifeEvents.care = {};
-      if (!state.lifeEvents.scholarships) state.lifeEvents.scholarships = [];
-      if (!state.retirement) state.retirement = {};
-      if (!state.insurance) state.insurance = { items: [], needs: {} };
-      if (!state.insurance.items) state.insurance.items = [];
-      if (!state.insurance.needs) state.insurance.needs = {};
-      if (!state.inheritance) state.inheritance = { giftPlans: [] };
-      if (!state.inheritance.giftPlans) state.inheritance.giftPlans = [];
-      if (!state.inheritance.checklistManual) state.inheritance.checklistManual = {};
-      if (!state.recurringExpenses) state.recurringExpenses = [];
-      state.goals = (state.goals || []).map(g => ({ tasks: [], progressMode: 'manual', ...g }));
-      save();
-      showPage('dashboard');
-      showNotification(`✅ データを読み込みました（${file.name}）`);
-    } catch {
-      showNotification('⚠️ ファイルの読み込みに失敗しました。JSONファイルを確認してください。');
-    }
-  };
-  reader.readAsText(file);
-  // 同じファイルを再選択できるようリセット
   event.target.value = '';
+
+  const text = await file.text();
+  let jsonText = text;
+
+  if (file.name.endsWith('.lifeplan') || text.startsWith('LIFEPLAN_ENCRYPTED_V1:')) {
+    try {
+      jsonText = await decryptLifeplan(text.trim());
+    } catch (e) {
+      showNotification('ファイルの復号に失敗しました。ファイルが破損しているか、別の端末のデータの可能性があります。', 'error');
+      return;
+    }
+  }
+
+  // .json 後方互換 + 復号済みデータの適用
+  try {
+    _applyImportedData(jsonText, file.name);
+  } catch (e) {
+    showNotification('⚠️ データの読み込みに失敗しました: ' + e.message);
+  }
 }
 
 function uid() {
@@ -5699,7 +5774,7 @@ function loadProfileForm() {
   initBirthRow('profileBirthRow', 'profileBirth');
   initBirthRow('profilePartnerBirthRow', 'profilePartnerBirth');
 
-  ['Name','Birth','Gender','Job','Location','Bio','Marital','Family','Values','Vision','PartnerBirth','PartnerName'].forEach(k => {
+  ['Name','Birth','Gender','Job','Marital','Values','Vision','PartnerBirth','PartnerName'].forEach(k => {
     const el = document.getElementById('profile' + k);
     if (el) el.value = p[k.toLowerCase()] || '';
   });
@@ -5788,20 +5863,30 @@ function applyMaritalFilter() {
 }
 
 function saveProfile() {
+  const jobVal = document.getElementById('profileJob').value;
   state.profile = {
     name: document.getElementById('profileName').value,
     birth: document.getElementById('profileBirth').value,
     gender: document.getElementById('profileGender').value,
-    job: document.getElementById('profileJob').value,
-    location: document.getElementById('profileLocation').value,
-    bio: document.getElementById('profileBio').value,
+    job: jobVal,
     marital: document.getElementById('profileMarital').value,
     children: document.getElementById('profileChildren').value,
-    family: document.getElementById('profileFamily').value,
     values: document.getElementById('profileValues').value,
     vision: document.getElementById('profileVision').value,
     partnerbirth: document.getElementById('profilePartnerBirth').value,
   };
+  // 職業選択に応じて年金種別を自動設定
+  if (!state.finance) state.finance = {};
+  if (jobVal === 'employee') {
+    state.finance.pensionType = 'kousei';
+    // 年金ページの雇用形態セレクトにも反映
+    const penEmployEl = document.getElementById('penEmployType');
+    if (penEmployEl) penEmployEl.value = 'employee';
+  } else if (jobVal === 'self_employed' || jobVal === 'homemaker' || jobVal === 'other') {
+    state.finance.pensionType = 'kokumin';
+    const penEmployEl = document.getElementById('penEmployType');
+    if (penEmployEl) penEmployEl.value = 'self';
+  }
   save();
   showNotification('プロフィールを保存しました');
   maybeShowRatePresetWizard();
@@ -6588,6 +6673,17 @@ function renderAssets() {
     if (!assets.length) return '';
     const gCurrent = assets.reduce((s, a) => s + (a.currentVal || 0), 0);
     const gMonthly = assets.reduce((s, a) => s + (a.monthly || 0), 0);
+    // 年間配当合計（配当利回りが設定されているアセットのみ）
+    const DIV_TAX_RATE = 0.20315;
+    const gAnnualDiv = assets.reduce((s, a) => {
+      if (!a.dividendYield || a.dividendYield <= 0) return s;
+      const gross = (a.currentVal || 0) * (a.dividendYield / 100);
+      const isTaxable = (a.taxType === 'tokutei' || a.taxType === 'ippan');
+      return s + (isTaxable ? gross * (1 - DIV_TAX_RATE) : gross);
+    }, 0);
+    const divNote = gAnnualDiv > 0
+      ? `&nbsp;配当 <strong style="color:${colorAccent}">${Math.round(gAnnualDiv * 10) / 10}万/年</strong>`
+      : '';
     return `
       <div style="margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:${bgAccent};border-radius:8px;margin-bottom:6px;border-left:4px solid ${colorAccent}">
@@ -6596,6 +6692,7 @@ function renderAssets() {
           <span style="margin-left:auto;font-size:12px;color:var(--text-secondary)">
             残高 <strong style="color:${colorAccent}">${gCurrent.toLocaleString()}万</strong>
             &nbsp;積立 <strong style="color:${colorAccent}">${gMonthly.toLocaleString()}万/月</strong>
+            ${divNote}
           </span>
         </div>
         ${assets.map(a => assetCard(a, _growthData, colorAccent)).join('')}
@@ -6741,6 +6838,28 @@ function assetCard(a, growthData, ownerColor) {
     const overflowStr = overflowAsset
       ? `達成後は「${escHtml(overflowAsset.name || '')}」へ自動振替`
       : '達成後は積立停止';
+    // 第2目標
+    let target2Html = '';
+    if (a.targetVal2 > 0) {
+      const cur2 = a.currentVal || 0;
+      const pct2 = Math.min(100, Math.round(cur2 / a.targetVal2 * 100));
+      const remaining2 = Math.max(0, a.targetVal2 - cur2);
+      const barColor2  = remaining2 === 0 ? 'var(--secondary)' : 'var(--accent, #8b5cf6)';
+      const overflow2Asset = a.overflowTargetId2
+        ? state.assets.find(x => x.id === a.overflowTargetId2) : null;
+      const overflow2Str = overflow2Asset
+        ? `達成後は「${escHtml(overflow2Asset.name || '')}」へ自動振替`
+        : '達成後は積立停止';
+      target2Html = `
+        <div style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+          🎯² 第2目標 ${a.targetVal2.toLocaleString()}万円
+          <span style="color:${barColor2};font-weight:600;margin-left:4px">${remaining2===0?'✅ 達成済み':'残り'+remaining2.toLocaleString()+'万円'}</span>
+          <span style="color:var(--text-muted);margin-left:6px">— ${overflow2Str}</span>
+        </div>
+        <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:3px;overflow:hidden">
+          <div style="height:100%;width:${pct2}%;background:${barColor2};border-radius:2px;transition:width .3s"></div>
+        </div>`;
+    }
     targetHtml = `
       <div style="margin-top:6px;font-size:11px;color:var(--text-muted)">
         🎯 目標 ${a.targetVal.toLocaleString()}万円
@@ -6749,7 +6868,7 @@ function assetCard(a, growthData, ownerColor) {
       </div>
       <div style="height:4px;background:var(--surface3);border-radius:2px;margin-top:3px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;transition:width .3s"></div>
-      </div>`;
+      </div>${target2Html}`;
   }
 
   // ── 積立タイムライン表示 ──
@@ -7155,18 +7274,34 @@ function updateTargetAssetSelect() {
   if (overflowRow) overflowRow.style.display = '';
 
   const editingId = typeof editingAssetId !== 'undefined' ? editingAssetId : null;
+  const buildOptions = (selEl, currentVal2) => {
+    selEl.innerHTML = '<option value="">振替なし（積立停止のみ）</option>';
+    (state.assets || [])
+      .filter(a => a.id !== editingId)
+      .forEach(a => {
+        const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = `${t.emoji} ${a.name || t.label}`;
+        selEl.appendChild(opt);
+      });
+    if (currentVal2) selEl.value = currentVal2;
+  };
+
   const current = sel.value;
-  sel.innerHTML = '<option value="">振替なし（積立停止のみ）</option>';
-  (state.assets || [])
-    .filter(a => a.id !== editingId)
-    .forEach(a => {
-      const t = ASSET_TYPES[a.type] || ASSET_TYPES.other;
-      const opt = document.createElement('option');
-      opt.value = a.id;
-      opt.textContent = `${t.emoji} ${a.name || t.label}`;
-      sel.appendChild(opt);
-    });
-  if (current) sel.value = current;
+  buildOptions(sel, current);
+
+  // 第2目標の振替先セレクトも更新
+  const sel2 = document.getElementById('amOverflowTarget2');
+  if (sel2) buildOptions(sel2, sel2.value);
+
+  // 第2目標セクション表示制御：第1目標 + 振替先が設定されている場合に表示
+  const targetVal2Wrap = document.getElementById('amTargetVal2Wrap');
+  if (targetVal2Wrap) {
+    const tv = parseFloat(document.getElementById('amTargetVal')?.value) || 0;
+    const hasOverflow = sel.value !== '';
+    targetVal2Wrap.style.display = (tv > 0 && hasOverflow) ? '' : 'none';
+  }
 }
 
 function updateTargetNote() {
@@ -7180,6 +7315,14 @@ function updateTargetNote() {
   const showWrap = monthly > 0 || currentVal > 0;
   wrap.style.display = showWrap ? '' : 'none';
   if (!targetVal) { noteEl.style.display = 'none'; return; }
+
+  // 第2目標セクション表示制御（early return より前に実行）
+  const _tv2Wrap = document.getElementById('amTargetVal2Wrap');
+  if (_tv2Wrap) {
+    const _ovSel = document.getElementById('amOverflowTarget');
+    _tv2Wrap.style.display = (_ovSel?.value) ? '' : 'none';
+  }
+
   if (!monthly) {
     // 積立なし（振替元から受け取る場合）：目標到達チェックのみ表示
     if (currentVal >= targetVal) {
@@ -7211,6 +7354,14 @@ function updateTargetNote() {
     : `達成後は積立停止（余剰は手元キャッシュへ）。`;
   noteEl.textContent = `📅 目標達成予定：約 ${years}年後（${achieveYear}年）。${overflowStr}`;
   noteEl.style.display = 'block';
+
+  // 第2目標セクション表示制御（amTargetVal 変更時にも連動）
+  const targetVal2Wrap = document.getElementById('amTargetVal2Wrap');
+  if (targetVal2Wrap) {
+    const overflowSel2 = document.getElementById('amOverflowTarget');
+    const hasOverflow2 = overflowSel2?.value !== '';
+    targetVal2Wrap.style.display = (targetVal > 0 && hasOverflow2) ? '' : 'none';
+  }
 }
 
 function updateDividendModeNote() {
@@ -7378,6 +7529,7 @@ function openAssetModal(id) {
     document.getElementById('amDividendMode').value = a.dividendMode || 'reinvest';
     document.getElementById('amNisaBasis').value = a.nisaBasis || '';
     document.getElementById('amTargetVal').value = a.targetVal || '';
+    if (document.getElementById('amTargetVal2')) document.getElementById('amTargetVal2').value = a.targetVal2 || '';
     document.getElementById('amStartYear').value = a.startYear || '';
     document.getElementById('amEndYear').value = a.endYear || '';
     document.getElementById('amEndAge').value = a.endAge || '';
@@ -7394,6 +7546,7 @@ function openAssetModal(id) {
     document.getElementById('amDividendMode').value = 'reinvest';
     document.getElementById('amNisaBasis').value = '';
     document.getElementById('amTargetVal').value = '';
+    if (document.getElementById('amTargetVal2')) document.getElementById('amTargetVal2').value = '';
     document.getElementById('amStartYear').value = new Date().getFullYear();
     document.getElementById('amEndYear').value = '';
     document.getElementById('amEndAge').value = '';
@@ -7403,6 +7556,8 @@ function openAssetModal(id) {
     if (_selOvf) _selOvf.value = '';
     const _selNisaOvf = document.getElementById('amNisaOverflowTarget');
     if (_selNisaOvf) _selNisaOvf.value = '';
+    const _selOvf2 = document.getElementById('amOverflowTarget2');
+    if (_selOvf2) _selOvf2.value = '';
     if (document.getElementById('amOwner')) { document.getElementById('amOwner').value = 'self'; document.getElementById('amOwnerBtnSelf')?.classList.add('owner-btn-active'); document.getElementById('amOwnerBtnPartner')?.classList.remove('owner-btn-active'); }
     // 新規作成時はバッジ非表示
     const _newBadge = document.getElementById('amRateOverrideBadge');
@@ -7420,6 +7575,7 @@ function openAssetModal(id) {
   // 振替先は onAssetTypeChange → updateTargetAssetSelect() で再構築してから設定
   const savedOverflow      = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId     || '') : '';
   const savedNisaOverflow  = id ? (state.assets.find(x=>x.id===id)?.nisaOverflowTargetId || '') : '';
+  const savedOverflow2     = id ? (state.assets.find(x=>x.id===id)?.overflowTargetId2    || '') : '';
   setTimeout(() => {
     const sel = document.getElementById('amOverflowTarget');
     if (sel && savedOverflow) sel.value = savedOverflow;
@@ -7428,6 +7584,8 @@ function openAssetModal(id) {
       const nSel = document.getElementById('amNisaOverflowTarget');
       if (nSel) nSel.value = savedNisaOverflow;
     }
+    const sel2 = document.getElementById('amOverflowTarget2');
+    if (sel2 && savedOverflow2) sel2.value = savedOverflow2;
     updateTargetNote();
   }, 0);
   updateEndYearPreview();
@@ -7454,7 +7612,9 @@ function saveAsset() {
     nisaBasis: parseFloat(document.getElementById('amNisaBasis').value) || 0,
     nisaOverflowTargetId: document.getElementById('amNisaOverflowTarget')?.value || '',
     targetVal: parseFloat(document.getElementById('amTargetVal').value) || 0,
+    targetVal2: parseFloat(document.getElementById('amTargetVal2')?.value) || 0,
     overflowTargetId: document.getElementById('amOverflowTarget').value || '',
+    overflowTargetId2: document.getElementById('amOverflowTarget2')?.value || '',
     startYear: parseInt(document.getElementById('amStartYear').value) || null,
     endYear: parseInt(document.getElementById('amEndYear').value) || null,
     endAge: parseInt(document.getElementById('amEndAge').value) || null,
@@ -7559,6 +7719,7 @@ function deleteAsset(id) {
   // 削除されたアセットを振替先に指定していた他アセットの参照をクリア
   state.assets.forEach(a => {
     if (a.overflowTargetId === id)     a.overflowTargetId = '';
+    if (a.overflowTargetId2 === id)    a.overflowTargetId2 = '';
     if (a.nisaOverflowTargetId === id) a.nisaOverflowTargetId = '';
   });
   save();
@@ -7594,19 +7755,23 @@ function calcAssetGrowth(a, years, extraContribs = []) {
   let cumulativeBasis = a.nisaBasis || 0;
 
   // 目標金額（達成後に積立停止→余剰をoverflowsへ）
-  const targetVal = a.targetVal || 0;
+  const targetVal  = a.targetVal  || 0;
+  // 第2目標金額（targetVal達成後に振替先が満枠になって戻ってきた分をさらに積み上げる上限）
+  const targetVal2 = a.targetVal2 || 0;
 
   // 旧NISA判定：endYear後に特定口座へ自動移管
   const isOldNisa = !!(t?.noNewContrib && a.endYear);
 
   const values    = [];
-  const overflows = [];
+  const overflows  = []; // 第1目標超過 or 通常余剰 → overflowTargetId へ
+  const overflows2 = []; // 第2目標超過余剰 → overflowTargetId2 へ
 
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const isActive = (!a.startYear || yr >= a.startYear) && (!a.endYear || yr <= a.endYear);
     let annualContrib = isActive ? (a.monthly || 0) * 12 + (a.annualBonus || 0) : 0;
-    let overflow = 0;
+    let overflow  = 0;
+    let overflow2 = 0;
 
     if (y > 0) {
       const prev = values[y - 1];
@@ -7620,10 +7785,17 @@ function calcAssetGrowth(a, years, extraContribs = []) {
       const extraThisYear = extraContribs[y] || 0;
 
       // ① 目標金額チェック：前年末時点で目標達成済みなら積立停止
-      // ※ 自分の積立だけでなく振替元からの extra も余剰として次へ渡す
       if (targetVal > 0 && prev >= targetVal) {
-        overflow = annualContrib + extraThisYear; // 全額（自己積立 + 振替受け取り分）を余剰へ
-        annualContrib = 0;
+        if (targetVal2 > 0 && prev < targetVal2) {
+          // 第2目標フェーズ：自己積立はoverflowTargetIdへ流す、振替受け取りのみ積み上げ
+          overflow = annualContrib; // 自分の積立は第1振替先に流す
+          annualContrib = extraThisYear; // 振替で戻ってきた分だけ受け取る
+        } else {
+          // 第1目標達成 かつ 第2目標なし or 第2目標も達成済み
+          overflow2 = targetVal2 > 0 ? annualContrib + extraThisYear : 0;
+          overflow  = targetVal2 > 0 ? 0 : annualContrib + extraThisYear;
+          annualContrib = 0;
+        }
       } else {
         // ② NISA年間上限キャップ
         if (annualContrib > 0 && annualLimit) {
@@ -7650,19 +7822,37 @@ function calcAssetGrowth(a, years, extraContribs = []) {
       // ⑤ 目標達成後の成長チェック（目標達成の年）
       let finalVal = Math.round(grown * 10) / 10;
       if (targetVal > 0 && prev < targetVal && finalVal > targetVal && overflow === 0) {
-        // 今年目標を超えた→超過分をoverflowへ（簡易近似）
+        // 今年第1目標を超えた→超過分をoverflowへ（簡易近似）
         overflow = Math.round((finalVal - targetVal) * 10) / 10;
         finalVal = targetVal;
+      }
+      // 第2目標達成チェック（第2目標フェーズで今年超えた場合）
+      if (targetVal2 > 0 && prev >= targetVal && prev < targetVal2 && finalVal > targetVal2 && overflow2 === 0) {
+        overflow2 = Math.round((finalVal - targetVal2) * 10) / 10;
+        finalVal  = targetVal2;
+      }
+
+      // ⑥ 目標維持フェーズのハードキャップ
+      // prev === targetVal の場合のみ発動（初期残高が目標超の場合は無効）
+      // 利息超過分は消滅（overflow には加算しない）
+      if (targetVal > 0 && prev >= targetVal) {
+        if (targetVal2 > 0 && prev === targetVal2 && finalVal > targetVal2) {
+          finalVal = targetVal2;
+        } else if (targetVal2 === 0 && prev === targetVal && finalVal > targetVal) {
+          finalVal = targetVal;
+        }
       }
 
       values.push(finalVal);
       overflows.push(Math.round(overflow * 10) / 10);
+      overflows2.push(Math.round(overflow2 * 10) / 10);
     } else {
       values.push(a.currentVal || 0);
       overflows.push(0);
+      overflows2.push(0);
     }
   }
-  return { values, overflows };
+  return { values, overflows, overflows2 };
 }
 
 // 全アセットの成長データを2パスで計算（振替元→振替先の依存を解決）
@@ -7770,12 +7960,12 @@ function calcAllAssetGrowth(assets, years) {
   // 非NISAアセットをトポロジカル順（振替元→振替先）で処理
   const otherIds = new Set(otherAssets.map(a => a.id));
 
-  // in-degree: 非NISAアセット間の振替依存数
+  // in-degree: 非NISAアセット間の振替依存数（overflowTargetId2 も含む）
   const inDegree = {};
   otherAssets.forEach(a => { inDegree[a.id] = 0; });
   otherAssets.forEach(a => {
-    const tid = a.overflowTargetId;
-    if (tid && otherIds.has(tid)) inDegree[tid]++;
+    if (a.overflowTargetId  && otherIds.has(a.overflowTargetId))  inDegree[a.overflowTargetId]++;
+    if (a.overflowTargetId2 && otherIds.has(a.overflowTargetId2)) inDegree[a.overflowTargetId2]++;
   });
 
   const resultMap = {};
@@ -7786,11 +7976,11 @@ function calcAllAssetGrowth(assets, years) {
     const a = queue.shift();
     const extra = extraMap[a.id] || [];
     const r = calcAssetGrowth(a, years, extra);
-    resultMap[a.id] = { asset: a, data: r.values, overflows: r.overflows };
+    resultMap[a.id] = { asset: a, data: r.values, overflows: r.overflows, overflows2: r.overflows2 };
 
+    // 第1振替先（overflowTargetId）へ余剰を積み上げ
     const tid = a.overflowTargetId;
     if (tid) {
-      // 余剰を振替先のextraMapに積み上げ
       if (r.overflows.some(v => v > 0)) {
         if (!extraMap[tid]) extraMap[tid] = new Array(years + 1).fill(0);
         r.overflows.forEach((v, y) => { extraMap[tid][y] += v; });
@@ -7803,6 +7993,20 @@ function calcAllAssetGrowth(assets, years) {
         }
       }
     }
+
+    // 第2振替先（overflowTargetId2）へ余剰を積み上げ
+    const tid2 = a.overflowTargetId2;
+    if (tid2 && r.overflows2 && r.overflows2.some(v => v > 0)) {
+      if (!extraMap[tid2]) extraMap[tid2] = new Array(years + 1).fill(0);
+      r.overflows2.forEach((v, y) => { extraMap[tid2][y] += v; });
+      if (otherIds.has(tid2)) {
+        inDegree[tid2]--;
+        if (inDegree[tid2] === 0) {
+          const target2 = otherAssets.find(x => x.id === tid2);
+          if (target2) queue.push(target2);
+        }
+      }
+    }
   }
 
   // サイクルや孤立（in-degreeが残ったアセット）を処理
@@ -7810,7 +8014,7 @@ function calcAllAssetGrowth(assets, years) {
     if (!resultMap[a.id]) {
       const extra = extraMap[a.id] || [];
       const r = calcAssetGrowth(a, years, extra);
-      resultMap[a.id] = { asset: a, data: r.values, overflows: r.overflows };
+      resultMap[a.id] = { asset: a, data: r.values, overflows: r.overflows, overflows2: r.overflows2 };
     }
   });
 
@@ -7833,6 +8037,9 @@ function calcAllAssetGrowth(assets, years) {
   Object.values(resultMap).forEach(g => {
     if (!g.asset.overflowTargetId) {
       g.overflows.forEach((v, idx) => { if (v > 0) wastedContribsByYear[idx] += v; });
+    }
+    if (!g.asset.overflowTargetId2 && g.overflows2) {
+      g.overflows2.forEach((v, idx) => { if (v > 0) wastedContribsByYear[idx] += v; });
     }
   });
 
@@ -12901,6 +13108,8 @@ function saveInsurance() {
 
 // ===== RETIREMENT / EXIT STRATEGY =====
 let retChartObj = null;
+let _lastRetirementResult = null; // タブ切替用キャッシュ（チャート/テーブル共通）
+let _lastBreakdownMode = null;    // テーブル表示の最終取り崩しモード
 let dbAssetChartObj = null;
 
 function renderRetirementPage() {
@@ -13199,34 +13408,17 @@ function autoFillRetirementExpenses() {
   const fmt = v => Math.round(v * 2) / 2; // 0.5万単位に丸め
 
   // ===== ベース支出の決定 =====
-  // ボタン押下時は常に現役支出（生活費＋住居費）から再計算してセットする
+  // 住宅ローン・家賃はライフイベントで別管理のため生活費（finance.expense）のみをベースとする
+  // 通勤費（0.5万/月）はリタイア後に不要になるため差し引く
 
   let baseMonthly, baseSource;
 
   {
     const currentMonthlyLiving = parseFloat(state.finance?.expense) || 0;
-    const le = state.lifeEvents || {};
-    let currentMonthlyHousing = 0;
-    if (le.housingType === 'rent' && le.rent?.monthly) {
-      currentMonthlyHousing = parseFloat(le.rent.monthly) || 0;
-    } else if ((le.housingType === 'mortgage' || !le.housingType) && le.mortgage?.monthlyPayment) {
-      currentMonthlyHousing = parseFloat(le.mortgage.monthlyPayment) || 0;
-    }
-    const targetAge = parseInt(r.targetAge) || 60;
-    const currentYear = new Date().getFullYear();
-    const currentAge = calcAge() || 40;
-    const retireYear = currentYear + (targetAge - currentAge);
-    const le2 = state.lifeEvents || {};
-    const mortgageEndYear = le2.mortgage?.startYear && le2.mortgage?.term
-      ? parseInt(le2.mortgage.startYear) + parseInt(le2.mortgage.term)
-      : 9999;
-    const mortgagePaidOff = retireYear >= mortgageEndYear;
     const commuteCost = 0.5;
-    const rawBase = mortgagePaidOff
-      ? currentMonthlyLiving - commuteCost
-      : (currentMonthlyLiving + currentMonthlyHousing) - commuteCost;
+    const rawBase = currentMonthlyLiving - commuteCost;
     baseMonthly = Math.max(10, rawBase);
-    baseSource = `現役支出 ${(currentMonthlyLiving + currentMonthlyHousing).toFixed(1)}万円から試算`;
+    baseSource = `月の生活費 ${currentMonthlyLiving.toFixed(1)}万円から試算（通勤費 ${commuteCost}万控除）`;
     // ①も現役支出ベースで更新
     document.getElementById('retMonthlyExpense').value = fmt(baseMonthly * 0.85);
   }
@@ -13243,12 +13435,12 @@ function autoFillRetirementExpenses() {
     : 3;
 
   // ===== ②③を導出 =====
-  // ① をベースに「フェーズが進むほど支出が減る」比率で算出
-  // セミリタイア期（①）はユーザーが自分で決めた値 → そのまま
-  // 待機期（②）は ① × 88%（現役比75%/85%）
-  // 年金期（③）は ① × 76% + 医療費（現役比65%/85% + medical）
-  const p2 = fmt(Math.max(10, baseMonthly * (75 / 85)));
-  const p3 = fmt(Math.max(10, baseMonthly * (65 / 85) + avgMedical));
+  // 現役支出（baseMonthly）を基準に段階的に減少
+  // ① 年金受給前 / セミリタイア期: 現役比 85%
+  // ② 待機期:                      現役比 75%（≈ ① × 88%）
+  // ③ 年金受給期:                  現役比 65% + 医療費加算
+  const p2 = fmt(Math.max(10, baseMonthly * 0.75));
+  const p3 = fmt(Math.max(10, baseMonthly * 0.65 + avgMedical));
 
   if (isSemi) document.getElementById('retMonthlyExpense2').value = p2;
   document.getElementById('retMonthlyExpense3').value = p3;
@@ -13256,19 +13448,28 @@ function autoFillRetirementExpenses() {
   // ===== 根拠の説明を表示 =====
   const noteEl = document.getElementById('retExpenseAutoNote');
   if (noteEl) {
-    const p1Display = parseFloat(document.getElementById('retMonthlyExpense').value);
+    // 住居費の取り扱い注記を事前生成
+    const _le = state.lifeEvents || {};
+    let housingNote = '';
+    if (_le.housingType === 'rent' && _le.rent?.monthly) {
+      housingNote = '<div style="margin-top:4px;padding:4px 8px;background:#FEF3C7;border-radius:4px;font-size:10px;color:#92400E">'
+        + '\uD83C\uDFE0 家賃 <b>' + _le.rent.monthly + '万/月</b>（管理費等含む）はシミュレーションの「ローン/家賃」列に自動計上されます</div>';
+    } else if ((_le.housingType === 'mortgage' || !_le.housingType) && _le.mortgage?.monthlyPayment) {
+      housingNote = '<div style="margin-top:4px;padding:4px 8px;background:#FEF3C7;border-radius:4px;font-size:10px;color:#92400E">'
+        + '\uD83C\uDFE0 住宅ローン <b>' + _le.mortgage.monthlyPayment + '万/月</b>はシミュレーションの「ローン/家賃」列に自動計上されます（ローン完済後は自動消滅）</div>';
+    }
+
     noteEl.style.display = '';
-    noteEl.innerHTML = `
-      <div style="font-weight:600;margin-bottom:4px">💡 自動入力の根拠（ベース: ${baseSource}）</div>
-      <div>・① ${isSemi ? 'セミリタイア期' : '年金受給前'}：<b>${p1Display}万/月</b>（入力値をそのまま使用）</div>
-      ${isSemi ? `<div>・② 待機期：① × 88% = <b>${p2}万/月</b>（フルリタイア・余暇中心、就労費不要分を減額）</div>` : ''}
-      <div>・${isSemi ? '③' : '②'} 年金受給期：① × 76% + 医療費増加（平均 <b>+${avgMedical.toFixed(1)}万/月</b>）= <b>${p3}万/月</b></div>
-      <div style="margin-top:5px;font-size:10px;color:var(--text-muted)">
-        【医療費の根拠】65〜74歳: +1万/月、75〜84歳: +5万/月、85歳〜: +10万/月（moderate水準）の加重平均<br>
-        【支出逓減の根拠】FP一般基準：退職後は現役比70〜80%、加齢とともに外出・旅行が減少<br>
-        ※ あくまで目安です。実態に合わせて調整し、保存してください。
-      </div>
-    `;
+    noteEl.innerHTML = '<div style="font-weight:600;margin-bottom:4px">&#x1F4A1; 自動入力の根拠（' + baseSource + '）</div>'
+      + '<div>・① ' + (isSemi ? 'セミリタイア期' : '年金受給前') + '：月の生活費 × 85% = <b>' + fmt(baseMonthly * 0.85) + '万/月</b></div>'
+      + (isSemi ? '<div>・② 待機期：月の生活費 × 75% = <b>' + p2 + '万/月</b>（フルリタイア・余暇中心、就労費不要分を減額）</div>' : '')
+      + '<div>・' + (isSemi ? '③' : '②') + ' 年金受給期：月の生活費 × 65% + 医療費増加（平均 <b>+' + avgMedical.toFixed(1) + '万/月</b>）= <b>' + p3 + '万/月</b></div>'
+      + housingNote
+      + '<div style="margin-top:5px;font-size:10px;color:var(--text-muted)">'
+      + '【医療費の根拠】65〜74歳: +1万/月、75〜84歳: +5万/月、85歳〜: +10万/月（moderate水準）の加重平均<br>'
+      + '【支出逓減の根拠】FP一般基準：退職後は現役比70〜80%、加齢とともに外出・旅行が減少<br>'
+      + '※ 住居費・ローンは上記に含まれません（ライフイベントから別途自動計上）。あくまで目安です。実態に合わせて調整してください。'
+      + '</div>';
   }
 }
 
@@ -13415,17 +13616,24 @@ function onHybridSliderChange(val) {
   const age = parseInt(val);
   const label = document.getElementById('retChartSliderLabel');
   if (label) label.textContent = `${age}歳`;
-  // フォームの入力値もリアルタイム同期
-  const switchAgeInput = document.getElementById('retHybridSwitchAge');
-  if (switchAgeInput) switchAgeInput.value = age;
-  // stateを更新（withdrawalTypeも現在のDOM値で同期してから再シミュレーション）
   if (!state.retirement) state.retirement = {};
-  state.retirement.withdrawalHybridSwitchAge = age;
-  // スライダーはhybridモード専用なのでwithdrawalTypeを確実にhybridに同期
+  // DOM の withdrawalType を優先（保存前のタブ切替状態も反映）
   const domType = document.getElementById('retWithdrawalType')?.value;
   if (domType) state.retirement.withdrawalType = domType;
+  const currentType = state.retirement.withdrawalType || 'hybrid';
+  if (currentType === 'hybrid_reverse') {
+    // 逆切替: 専用フォーム入力値も同期
+    state.retirement.withdrawalHybridReverseSwitchAge = age;
+    const reverseInput = document.getElementById('retHybridReverseSwitchAge');
+    if (reverseInput) reverseInput.value = age;
+  } else {
+    // 切替型（hybrid）: 既存動作
+    state.retirement.withdrawalHybridSwitchAge = age;
+    const switchAgeInput = document.getElementById('retHybridSwitchAge');
+    if (switchAgeInput) switchAgeInput.value = age;
+  }
   runRetirementSim();
-  save(); // スライダー操作を即時永続化
+  save();
 }
 
 // ===== 年金自動試算 =====
@@ -14047,202 +14255,10 @@ function runRetirementSim() {
   });
 
   // Chart
-  chartCard.style.display = '';
-  const ctx = document.getElementById('retChart').getContext('2d');
-  if (retChartObj) retChartObj.destroy();
-  const labels = result.postData.map(d => {
-    const pAge = calcPartnerAgeAtYear(d.year);
-    const pName = 'パートナー';
-    return pAge != null ? `${d.age}歳\n${pName}${pAge}歳` : `${d.age}歳`;
-  });
-  const assetsData = result.postData.map(d => d.startAssets);  // 年初値（退職時点と一致）
-  const reqLine = result.postData.map(() => result.requiredAssets);
-
-  // ハイブリッドモード: フェーズ切替インデックスを検出（DOM優先で保存前の選択も反映）
   const withdrawalTypeNow = document.getElementById('retWithdrawalType')?.value || (state.retirement || {}).withdrawalType || 'hybrid';
-  const hybridSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
-  const hybridSwitchIdx = withdrawalTypeNow === 'hybrid'
-    ? result.postData.findIndex(d => d.hybridPhase === 2)
-    : -1;
-
-  // フェーズ①（定率）とフェーズ②（不足補填）で線の色を変える
-  const assetsBorderColor = withdrawalTypeNow === 'hybrid'
-    ? result.postData.map((d, i) => d.hybridPhase === 2 ? 'rgba(239,68,68,0.9)' : 'rgba(79,70,229,0.9)')
-    : '#4F46E5';
-
-  // ハイブリッド切替ラインを垂直線で描画するカスタムプラグイン
-  const hybridMarkerPlugin = {
-    id: 'hybridMarker',
-    afterDraw(chart) {
-      if (hybridSwitchIdx < 0) return;
-      const xScale = chart.scales.x;
-      const x = xScale.getPixelForValue(hybridSwitchIdx);
-      const { top, bottom } = chart.chartArea;
-      const c = chart.ctx;
-      c.save();
-      c.strokeStyle = 'rgba(139,92,246,0.85)';
-      c.lineWidth = 2;
-      c.setLineDash([6, 3]);
-      c.beginPath();
-      c.moveTo(x, top);
-      c.lineTo(x, bottom);
-      c.stroke();
-      c.setLineDash([]);
-      c.fillStyle = 'rgba(139,92,246,0.85)';
-      c.font = '11px sans-serif';
-      c.textAlign = 'center';
-      c.fillText(`${hybridSwitchAgeNow}歳～不足補填`, x, top + 14);
-      c.restore();
-    }
-  };
-
-  retChartObj = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: '総資産',
-          data: assetsData,
-          borderColor: withdrawalTypeNow === 'hybrid' ? '#4F46E5' : '#4F46E5',
-          segment: withdrawalTypeNow === 'hybrid' ? {
-            borderColor: ctx2 => {
-              const idx = ctx2.p1DataIndex;
-              return result.postData[idx]?.hybridPhase === 2 ? 'rgba(239,68,68,0.85)' : 'rgba(79,70,229,0.85)';
-            }
-          } : undefined,
-          backgroundColor: 'rgba(79,70,229,.12)',
-          fill: true, tension: .4, pointRadius: 3,
-          pointBackgroundColor: withdrawalTypeNow === 'hybrid'
-            ? result.postData.map(d => d.hybridPhase === 2 ? 'rgba(239,68,68,0.85)' : 'rgba(79,70,229,0.85)')
-            : '#4F46E5',
-        },
-        {
-          label: result.requiredAssetsLabel || '必要資産ライン',
-          data: reqLine,
-          borderColor: '#FF9500',
-          borderDash: [6, 4],
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false,
-        },
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { ticks: { maxTicksLimit: 10 } },
-        y: { ticks: { callback: fmtMoneyAxis }, beginAtZero: true }
-      },
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: { callbacks: {
-          title: items => {
-            const d = result.postData[items[0].dataIndex];
-            // d.age はシミュレーションの正確な年齢（誕生月考慮済み）を使用
-            const pAge = calcPartnerAgeAtYear(d.year);
-            const pName = ('パートナー').slice(0, 6);
-            let s = `${d.year}年（${d.age}歳`;
-            if (pAge != null) s += ` / ${pName}${pAge}歳`;
-            return s + '）';
-          },
-          label: ctx => {
-            const d = result.postData[ctx.dataIndex];
-            const phaseLabel = withdrawalTypeNow === 'hybrid' && d?.hybridPhase
-              ? ` [P${d.hybridPhase}]` : '';
-            return ` ${ctx.dataset.label}${phaseLabel}: ${fmtMoney(ctx.parsed.y)}`;
-          }
-        }}
-      }
-    },
-    plugins: [hybridMarkerPlugin],
-  });
-
-  // ハイブリッドモード: スライダーを表示・初期値セット
-  const sliderArea = document.getElementById('retChartSliderArea');
-  if (sliderArea) {
-    // DOM優先（保存前の選択中状態も正しく反映）、なければstateで判断
-    const domType = document.getElementById('retWithdrawalType')?.value;
-    const isHybridNow = (domType || (state.retirement || {}).withdrawalType) === 'hybrid';
-    sliderArea.style.display = isHybridNow ? '' : 'none';
-    if (isHybridNow) {
-      const slider = document.getElementById('retChartSwitchSlider');
-      const label  = document.getElementById('retChartSliderLabel');
-      const switchAge = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
-      if (slider) slider.value = switchAge;
-      if (label)  label.textContent = `${switchAge}歳`;
-    }
-  }
-
-  // ①②③④ チャートサマリーバー＋アノテーション
-  const summaryBar = document.getElementById('retChartSummaryBar');
-  const annotationEl = document.getElementById('retChartAnnotation');
-
-  if (summaryBar) {
-    // ③ 取り崩し額サマリー（リタイア初年度データから算出）
-    const d0 = result.postData[0];
-    const monthlyW = d0 ? Math.round(d0.assetWithdrawal / 12) : 0;
-    const monthlyR = d0 ? Math.round((d0.annualReturn || 0) / 12) : 0;
-    const netBurden = Math.max(0, monthlyW - monthlyR);
-    summaryBar.innerHTML = `
-      <div style="display:flex;gap:0;flex-wrap:wrap;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;margin-bottom:12px">
-        <div style="flex:1;min-width:130px;padding:4px 8px 4px 0;border-right:1px solid #E2E8F0">
-          <div style="font-size:10px;color:#64748B;margin-bottom:2px">💸 月間取り崩し額</div>
-          <div style="font-weight:700;color:#4F46E5;font-size:15px">${monthlyW.toLocaleString()}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
-        </div>
-        <div style="flex:1;min-width:130px;padding:4px 8px;border-right:1px solid #E2E8F0">
-          <div style="font-size:10px;color:#64748B;margin-bottom:2px">📈 月間運用益（推計）</div>
-          <div style="font-weight:700;color:#16A34A;font-size:15px">${monthlyR.toLocaleString()}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
-        </div>
-        <div style="flex:1;min-width:130px;padding:4px 0 4px 8px">
-          <div style="font-size:10px;color:#64748B;margin-bottom:2px">⚖️ 実質月負担（差引）</div>
-          <div style="font-weight:700;color:${netBurden > 15 ? '#DC2626' : '#CA8A04'};font-size:15px">${netBurden.toLocaleString()}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
-        </div>
-      </div>`;
-  }
-
-  if (annotationEl) {
-    // ② ハイブリッドフェーズ凡例
-    const phaseNote = withdrawalTypeNow === 'hybrid' && hybridSwitchIdx >= 0
-      ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:11px;background:rgba(79,70,229,.1);color:#4338CA;border-radius:6px;padding:2px 8px;font-weight:600">● Phase 1（〜${hybridSwitchAgeNow}歳）定率取り崩し</span>
-          <span style="font-size:11px;background:rgba(239,68,68,.1);color:#DC2626;border-radius:6px;padding:2px 8px;font-weight:600">● Phase 2（${hybridSwitchAgeNow}歳〜）不足補填モード</span>
-        </div>`
-      : '';
-
-    // ① オレンジ破線の説明
-    const legendNote = `<div style="font-size:11px;color:#64748B;display:flex;align-items:center;gap:6px">
-      <span style="display:inline-block;width:24px;height:0;border-top:2px dashed #FF9500;flex-shrink:0"></span>
-      <span>オレンジ破線 = 最低保有ライン（月支出 × 残り余命の現在価値）</span>
-    </div>`;
-
-    // ④ ワンライン診断
-    let diagnosis = '';
-    if (result.depletionAge) {
-      const diff = result.lifeExpectancy - result.depletionAge;
-      diagnosis = `<div style="margin-top:8px;padding:8px 12px;background:#FEF2F2;border-radius:8px;border-left:3px solid #EF4444;font-size:12px;color:#7F1D1D">
-        ⚠️ このペースでは <b>${result.depletionAge}歳</b> 時点で資産がゼロになります（想定余命より <b>${diff}年早い</b>）
-      </div>`;
-    } else {
-      diagnosis = `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E;font-size:12px;color:#14532D">
-        ✅ ${result.lifeExpectancy}歳時点で <b>${fmtMoney(result.finalAssets)}</b> の資産が残る見込みです
-      </div>`;
-    }
-
-    annotationEl.innerHTML = `<div style="margin-top:10px">${phaseNote}${legendNote}${diagnosis}</div>`;
-  }
-
-  // 算出根拠の説明文をモード別に更新
-  const basisCalcMethodEl = document.getElementById('retBasisCalcMethod');
-  if (basisCalcMethodEl) {
-    const methodDescMap = {
-      fixed_rate:   `定率取り崩し（${Math.round((parseFloat(state.retirement?.withdrawalRate)||4))}%ルール）。年間必要額の加重平均 ÷ 取り崩し率 で必要資産を算出します。資産残高に比例して取り崩すため理論上は枯渇しませんが、生活費を下回る場合は補填します。`,
-      hybrid:       `切替型（前半定率→後半補填）。後半フェーズ（補填期）の必要資産PVを切替年齢時点で算出し、前半フェーズの純成長率（利回り－取り崩し率）でリタイア時点まで割り戻します。`,
-      needs:        `3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。`,
-      fixed_amount: `3フェーズ現在価値（PV）法 ＋ 定額上乗せ。基本生活費に毎月の追加取り崩し額を加えた総支出を3期間に分けてPV計算します。`,
-    };
-    basisCalcMethodEl.textContent = methodDescMap[withdrawalTypeNow] || methodDescMap.needs;
-  }
+  _lastRetirementResult = result;
+  _renderRetChartSection(result, withdrawalTypeNow);
+  initChartStrategyTabs(withdrawalTypeNow);
 
   // ④ 年金損益分岐 + ⑤ シナリオ比較 + ⑫ 感度分析 + ⑩ モンテカルロ
   renderPensionBreakeven();
@@ -14275,15 +14291,303 @@ function runRetirementSim() {
   switchRetSubTab(activeTab);
 }
 
+// ===== チャート描画（取り崩し方式タブ切替対応） =====
+function _renderRetChartSection(result, displayMode) {
+  const chartCard = document.getElementById('retChartCard');
+  if (!chartCard || !result) return;
+  chartCard.style.display = '';
+
+  const wt = displayMode || (state.retirement || {}).withdrawalType || 'hybrid';
+  const isHybrid = wt === 'hybrid';
+  const isHybridReverse = wt === 'hybrid_reverse';
+  const isPhaseMode = isHybrid || isHybridReverse;
+
+  const hybridSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
+  const hybridReverseSwitchAgeNow = parseInt((state.retirement || {}).withdrawalHybridReverseSwitchAge) || 75;
+  const phaseSwitchAge = isHybrid ? hybridSwitchAgeNow : hybridReverseSwitchAgeNow;
+  const phaseSwitchIdx = isPhaseMode ? result.postData.findIndex(d => d.hybridPhase === 2) : -1;
+
+  // フェーズ色: hybrid=紫→赤、hybrid_reverse=緑→橙
+  const phase1Color = isHybridReverse ? 'rgba(16,185,129,0.85)' : 'rgba(79,70,229,0.85)';
+  const phase2Color = isHybridReverse ? 'rgba(249,115,22,0.85)' : 'rgba(239,68,68,0.85)';
+
+  const labels = result.postData.map(d => {
+    const pAge = calcPartnerAgeAtYear(d.year);
+    return pAge != null ? `${d.age}歳\nパートナー${pAge}歳` : `${d.age}歳`;
+  });
+  const assetsData = result.postData.map(d => d.startAssets);
+  const reqLine    = result.postData.map(() => result.requiredAssets);
+
+  // フェーズ切替ライン垂直線プラグイン
+  const phaseMarkerPlugin = {
+    id: 'phaseMarker',
+    afterDraw(chart) {
+      if (phaseSwitchIdx < 0) return;
+      const xScale = chart.scales.x;
+      const x = xScale.getPixelForValue(phaseSwitchIdx);
+      const { top, bottom } = chart.chartArea;
+      const c = chart.ctx;
+      c.save();
+      c.strokeStyle = isHybridReverse ? 'rgba(249,115,22,0.85)' : 'rgba(139,92,246,0.85)';
+      c.lineWidth = 2; c.setLineDash([6, 3]);
+      c.beginPath(); c.moveTo(x, top); c.lineTo(x, bottom); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle = isHybridReverse ? 'rgba(249,115,22,0.9)' : 'rgba(139,92,246,0.9)';
+      c.font = '11px sans-serif'; c.textAlign = 'center';
+      c.fillText(`${phaseSwitchAge}歳〜${isHybridReverse ? '定率' : '補填'}`, x, top + 14);
+      c.restore();
+    }
+  };
+
+  const ctx = document.getElementById('retChart').getContext('2d');
+  if (retChartObj) retChartObj.destroy();
+  retChartObj = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '総資産',
+          data: assetsData,
+          borderColor: '#4F46E5',
+          segment: isPhaseMode ? {
+            borderColor: ctx2 => result.postData[ctx2.p1DataIndex]?.hybridPhase === 2 ? phase2Color : phase1Color
+          } : undefined,
+          backgroundColor: 'rgba(79,70,229,.12)',
+          fill: true, tension: .4, pointRadius: 3,
+          pointBackgroundColor: isPhaseMode
+            ? result.postData.map(d => d.hybridPhase === 2 ? phase2Color : phase1Color)
+            : '#4F46E5',
+        },
+        {
+          label: result.requiredAssetsLabel || '最低保有ライン',
+          data: reqLine,
+          borderColor: '#FF9500', borderDash: [6, 4], borderWidth: 2,
+          pointRadius: 0, fill: false,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { maxTicksLimit: 10 } },
+        y: { ticks: { callback: fmtMoneyAxis }, beginAtZero: true }
+      },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: {
+          title: items => {
+            const d = result.postData[items[0].dataIndex];
+            const pAge = calcPartnerAgeAtYear(d.year);
+            let s = `${d.year}年（${d.age}歳`;
+            if (pAge != null) s += ` / パートナー${pAge}歳`;
+            return s + '）';
+          },
+          label: ctx2 => {
+            const d = result.postData[ctx2.dataIndex];
+            const phaseLabel = isPhaseMode && d?.hybridPhase ? ` [P${d.hybridPhase}]` : '';
+            return ` ${ctx2.dataset.label}${phaseLabel}: ${fmtMoney(ctx2.parsed.y)}`;
+          }
+        }}
+      }
+    },
+    plugins: [phaseMarkerPlugin],
+  });
+
+  // スライダー: hybrid / hybrid_reverse 両対応
+  const sliderArea = document.getElementById('retChartSliderArea');
+  if (sliderArea) {
+    sliderArea.style.display = isPhaseMode ? '' : 'none';
+    if (isPhaseMode) {
+      const slider = document.getElementById('retChartSwitchSlider');
+      const label  = document.getElementById('retChartSliderLabel');
+      if (slider) {
+        const sliderMin = result.targetAge || 60;
+        const sliderMax = Math.max(sliderMin + 1, (result.lifeExpectancy || 90) - 1);
+        slider.min = sliderMin;
+        slider.max = sliderMax;
+        const clampedVal = Math.min(sliderMax, Math.max(sliderMin, phaseSwitchAge));
+        slider.value = clampedVal;
+        if (label) label.textContent = `${clampedVal}歳`;
+      }
+      const sliderModeLabel = document.getElementById('retChartSliderModeLabel');
+      if (sliderModeLabel) sliderModeLabel.textContent = isHybridReverse ? '🔁 切替年齢' : '🔄 切替年齢';
+    }
+  }
+
+  // サマリーバー
+  const summaryBar = document.getElementById('retChartSummaryBar');
+  if (summaryBar) {
+    const d0 = result.postData[0];
+    // assetWithdrawalNeeded = 戦略上の目標取り崩し額（income超過でも4%等の方式に基づく額を表示）
+    // assetWithdrawal       = 実際にプールから引き出した額（収入で賄えれば0）
+    const monthlyStrategy = d0 ? Math.round((d0.assetWithdrawalNeeded || 0) / 12) : 0;
+    const monthlyActual   = d0 ? Math.round((d0.assetWithdrawal    || 0) / 12) : 0;
+    const monthlySurplus  = Math.max(0, monthlyStrategy - monthlyActual); // 収入余剰で賄われる分
+    const monthlyR = d0 ? Math.round((d0.annualReturn || 0) / 12) : 0;
+    // 実質月負担 = 戦略取り崩し + 残支出 - 運用益（実際の家計負担感）
+    const monthlyExpenseTotal = d0 ? Math.round((d0.annualExpense || 0) / 12) : 0;
+    const monthlyIncome       = d0 ? Math.round(((d0.totalNonAssetIncome || 0)) / 12) : 0;
+    const netBurden = Math.max(0, monthlyExpenseTotal - monthlyIncome - monthlyR);
+    const surplNote = monthlySurplus > 0
+      ? `<div style="font-size:10px;color:#16A34A;margin-top:2px">うち収入で充当: ${monthlySurplus}万/月</div>` : '';
+    const retireAssetsNote = result.assetsAtRetire
+      ? `<div style="font-size:11px;color:#475569;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:5px 12px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <span style="font-size:13px">🏦</span>
+          <span>リタイア時点の予測資産: <strong style="color:#1D4ED8">${fmtMoney(result.assetsAtRetire)}</strong>（${result.targetAge}歳時点）</span>
+        </div>` : '';
+    summaryBar.innerHTML = retireAssetsNote + `
+      <div style="display:flex;gap:0;flex-wrap:wrap;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 16px;margin-bottom:12px">
+        <div style="flex:1;min-width:130px;padding:4px 8px 4px 0;border-right:1px solid #E2E8F0">
+          <div style="font-size:10px;color:#64748B;margin-bottom:2px">💸 月間取り崩し目標額</div>
+          <div style="font-weight:700;color:#4F46E5;font-size:15px">${monthlyStrategy.toLocaleString()}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
+          ${surplNote}
+        </div>
+        <div style="flex:1;min-width:130px;padding:4px 8px;border-right:1px solid #E2E8F0">
+          <div style="font-size:10px;color:#64748B;margin-bottom:2px">📈 月間運用益（推計）</div>
+          <div style="font-weight:700;color:#16A34A;font-size:15px">${monthlyR.toLocaleString()}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
+        </div>
+        <div style="flex:1;min-width:130px;padding:4px 0 4px 8px">
+          <div style="font-size:10px;color:#64748B;margin-bottom:2px">⚖️ 実質月負担（支出−収入−運用益）</div>
+          <div style="font-weight:700;color:${netBurden > 15 ? '#DC2626' : netBurden > 0 ? '#CA8A04' : '#16A34A'};font-size:15px">${netBurden > 0 ? netBurden.toLocaleString() : '0'}万円<span style="font-size:11px;font-weight:400;color:#94A3B8">/月</span></div>
+        </div>
+      </div>`;
+  }
+
+  // アノテーション
+  const annotationEl = document.getElementById('retChartAnnotation');
+  if (annotationEl) {
+    let phaseNote = '';
+    if (isHybrid && phaseSwitchIdx >= 0) {
+      phaseNote = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:11px;background:rgba(79,70,229,.1);color:#4338CA;border-radius:6px;padding:2px 8px;font-weight:600">● P① 〜${phaseSwitchAge}歳: 定率取り崩し</span>
+        <span style="font-size:11px;background:rgba(239,68,68,.1);color:#DC2626;border-radius:6px;padding:2px 8px;font-weight:600">● P② ${phaseSwitchAge}歳〜: 不足補填モード</span>
+      </div>`;
+    } else if (isHybridReverse && phaseSwitchIdx >= 0) {
+      phaseNote = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:11px;background:rgba(16,185,129,.1);color:#065F46;border-radius:6px;padding:2px 8px;font-weight:600">● P① 〜${phaseSwitchAge}歳: 不足補填（資産温存）</span>
+        <span style="font-size:11px;background:rgba(249,115,22,.1);color:#9A3412;border-radius:6px;padding:2px 8px;font-weight:600">● P② ${phaseSwitchAge}歳〜: 定率取り崩し</span>
+      </div>`;
+    }
+    const legendNote = `<div style="font-size:11px;color:#64748B;display:flex;align-items:center;gap:6px">
+      <span style="display:inline-block;width:24px;height:0;border-top:2px dashed #FF9500;flex-shrink:0"></span>
+      <span>オレンジ破線 = 最低保有ライン（月支出 × 残り余命の現在価値）</span>
+    </div>`;
+    const diagnosis = result.depletionAge
+      ? `<div style="margin-top:8px;padding:8px 12px;background:#FEF2F2;border-radius:8px;border-left:3px solid #EF4444;font-size:12px;color:#7F1D1D">⚠️ このペースでは <b>${result.depletionAge}歳</b> 時点で資産がゼロになります（想定余命より <b>${result.lifeExpectancy - result.depletionAge}年早い</b>）</div>`
+      : `<div style="margin-top:8px;padding:8px 12px;background:#F0FDF4;border-radius:8px;border-left:3px solid #22C55E;font-size:12px;color:#14532D">✅ ${result.lifeExpectancy}歳時点で <b>${fmtMoney(result.finalAssets)}</b> の資産が残る見込みです</div>`;
+    annotationEl.innerHTML = `<div style="margin-top:10px">${phaseNote}${legendNote}${diagnosis}</div>`;
+  }
+
+  // 算出根拠の説明文をモード別に更新
+  const basisCalcMethodEl = document.getElementById('retBasisCalcMethod');
+  if (basisCalcMethodEl) {
+    const methodDescMap = {
+      fixed_rate:     `定率取り崩し（${Math.round((parseFloat(state.retirement?.withdrawalRate)||4))}%ルール）。年間必要額の加重平均 ÷ 取り崩し率 で必要資産を算出します。`,
+      hybrid:         `切替型（前半定率→後半補填）。後半フェーズ（補填期）の必要資産PVを切替年齢時点で算出し、前半フェーズの純成長率（利回り－取り崩し率）でリタイア時点まで割り戻します。`,
+      hybrid_reverse: `逆切替型（前半補填→後半定率）。前半フェーズ（補填期）の必要資産PVをリタイア時点で算出し、後半フェーズ開始時の資産を複利計算で算出します。`,
+      needs:          `3フェーズ現在価値（PV）法。① セミリタイア期 → ② 待機期（フルリタイア〜年金前） → ③ 年金受給期 の各期間に必要な資産を複利割引率で現在価値に換算し合算します。`,
+      fixed_amount:   `3フェーズ現在価値（PV）法 ＋ 定額上乗せ。基本生活費に毎月の追加取り崩し額を加えた総支出を3期間に分けてPV計算します。`,
+    };
+    basisCalcMethodEl.textContent = methodDescMap[wt] || methodDescMap.needs;
+  }
+}
+
+// ===== チャートの方式タブ初期化 =====
+function initChartStrategyTabs(configuredMode) {
+  const container = document.getElementById('retChartStrategyTabs');
+  if (!container) return;
+  const strategies = [
+    { mode: 'needs',          label: '最低限', emoji: '🎯', color: '#0369A1', bg: '#E0F2FE' },
+    { mode: 'fixed_rate',     label: '定率',   emoji: '📈', color: '#7C3AED', bg: '#EDE9FE' },
+    { mode: 'fixed_amount',   label: '定額',   emoji: '💴', color: '#B45309', bg: '#FEF3C7' },
+    { mode: 'hybrid',         label: '切替型', emoji: '🔄', color: '#065F46', bg: '#D1FAE5' },
+    { mode: 'hybrid_reverse', label: '逆切替', emoji: '🔁', color: '#9A3412', bg: '#FFEDD5' },
+  ];
+  container.style.display = '';
+  container.innerHTML = `<div style="display:flex;gap:6px;padding:2px 0 6px;min-width:max-content;align-items:center">
+    <span style="font-size:11px;color:var(--text-muted);white-space:nowrap;margin-right:2px">方式比較：</span>
+    ${strategies.map(s => {
+      const isActive = s.mode === configuredMode;
+      return `<button class="chart-strategy-tab" data-mode="${s.mode}"
+        onclick="switchStrategyView('${s.mode}')"
+        style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${isActive ? s.color : 'var(--border)'};background:${isActive ? s.bg : '#fff'};color:${isActive ? s.color : 'var(--text-secondary)'};white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:3px">
+        ${s.emoji} ${s.label}${isActive ? ` <span style="font-size:9px;background:${s.color};color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>` : ''}
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+
+// ===== チャート・テーブル統合タブ切替 =====
+function switchStrategyView(mode) {
+  if (!state.retirement) state.retirement = {};
+  const configuredMode = state.retirement.withdrawalType || 'hybrid';
+  const strategies = {
+    needs:          { color: '#0369A1', bg: '#E0F2FE', emoji: '🎯', label: '最低限' },
+    fixed_rate:     { color: '#7C3AED', bg: '#EDE9FE', emoji: '📈', label: '定率' },
+    fixed_amount:   { color: '#B45309', bg: '#FEF3C7', emoji: '💴', label: '定額' },
+    hybrid:         { color: '#065F46', bg: '#D1FAE5', emoji: '🔄', label: '切替型' },
+    hybrid_reverse: { color: '#9A3412', bg: '#FFEDD5', emoji: '🔁', label: '逆切替' },
+  };
+
+  // 一時的に withdrawal type を差し替えて計算
+  const origMode = state.retirement.withdrawalType;
+  state.retirement.withdrawalType = mode;
+  const result = calcRetirementSim();
+  state.retirement.withdrawalType = origMode;
+  if (!result) return;
+
+  // チャートを更新
+  _renderRetChartSection(result, mode);
+
+  // テーブルを更新
+  renderBreakdownSection(result, mode);
+
+  // チャートタブのスタイル更新
+  document.querySelectorAll('.chart-strategy-tab').forEach(t => {
+    const tMode = t.dataset.mode;
+    const s = strategies[tMode] || {};
+    const isActive = tMode === mode;
+    const isConfig = tMode === configuredMode;
+    t.style.background = isActive ? s.bg : '#fff';
+    t.style.color = isActive ? s.color : 'var(--text-secondary)';
+    t.style.borderColor = isActive ? s.color : 'var(--border)';
+    t.innerHTML = `${s.emoji} ${s.label}${isConfig ? ` <span style="font-size:9px;background:${s.color};color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>` : ''}`;
+  });
+
+  // テーブルタブのスタイル更新
+  document.querySelectorAll('.breakdown-strategy-tab').forEach(t => {
+    const tMode = t.dataset.mode;
+    const s = strategies[tMode] || {};
+    const isActive = tMode === mode;
+    const isConfig = tMode === configuredMode;
+    t.style.background = isActive ? s.bg : '#fff';
+    t.style.color = isActive ? s.color : 'var(--text-secondary)';
+    t.style.borderColor = isActive ? s.color : 'var(--border)';
+    t.innerHTML = `${s.emoji} ${s.label}${isConfig ? ` <span style="font-size:9px;background:${s.color};color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>` : ''}`;
+  });
+
+  // 現在のサブタブの表示状態を復元（チャートカード等が意図しないタブに表示されるのを防ぐ）
+  const currentSubTab = document.querySelector('.ret-sub-tab.active')?.id?.replace('retSubTab_', '') || 'overview';
+  switchRetSubTab(currentSubTab);
+}
+
 // ===== 年別収支テーブル描画（取り崩し方式タブ切替対応） =====
 function renderBreakdownSection(result, displayWithdrawalType) {
   const breakdownCard = document.getElementById('retBreakdownCard');
   if (!breakdownCard || !result) return;
   breakdownCard.style.display = '';
-  const showEvery = result.postData.length > 20 ? 5 : 1;
-  const keyRows = result.postData.filter((d, i) => i % showEvery === 0 || d.depleted);
+  // 5年ごと集約がデフォルト。compact=false の場合のみ全年齢表示
+  if (breakdownCard.dataset.compact === undefined || breakdownCard.dataset.compact === '') {
+    breakdownCard.dataset.compact = 'true';
+  }
+  const isCompact = breakdownCard.dataset.compact !== 'false';
+  const keyRows = isCompact
+    ? result.postData.filter((d, i) => i % 5 === 0 || d.depleted)
+    : result.postData;
   const withdrawalType = displayWithdrawalType || (state.retirement || {}).withdrawalType || 'hybrid';
-  const isHybridMode = withdrawalType === 'hybrid';
+  _lastBreakdownMode = withdrawalType;
+  const isHybridMode = withdrawalType === 'hybrid' || withdrawalType === 'hybrid_reverse';
   // 余剰取り崩しが発生するモード
   const hasSurplus = result.postData.some(d => (d.annualSurplus || 0) > 0);
   const hybridSwitchAgeTable = parseInt((state.retirement || {}).withdrawalHybridSwitchAge) || 75;
@@ -14322,7 +14626,8 @@ function renderBreakdownSection(result, displayWithdrawalType) {
           `「毎年 <b>資産の${r}%</b>」が取り崩せる上限。<br>
           実際には <b>収入で不足した分だけ</b> 取り崩します。<br>
           → 不足額 &lt; ${r}%上限 ＝余剰が生まれる<br>
-          → 不足額 &gt; ${r}%上限 ＝赤字（上限超過）` },
+          → 不足額 &gt; ${r}%上限 ＝赤字（上限超過）<br>
+          <span style="color:#7C3AED;font-weight:600">※ 車検・保険など<b>一時・定期支出は${r}%キャップ対象外</b>。<br>&emsp;その年に発生する分は全額引き出します。</span>` },
         { color:'#B45309', bg:'#FEF3C7', body:
           `<b>資産取り崩し</b>＝実際に引き出した額<br>
           <b>うち余剰自由資金</b>＝${r}%上限 − 実取り崩し額<br>
@@ -14355,7 +14660,8 @@ function renderBreakdownSection(result, displayWithdrawalType) {
           `<b>前半（〜${switchAge}歳）</b>：収入で不足した分だけ補填。<br>
           &emsp;資産をできるだけ温存・運用益で増やす。<br>
           <b>後半（${switchAge}歳〜）</b>：毎年 <b>資産の${rate}%</b> を上限に取り崩し。<br>
-          &emsp;${switchAge}歳時点の資産が大きいほど余剰が増える。` },
+          &emsp;${switchAge}歳時点の資産が大きいほど余剰が増える。<br>
+          <span style="color:#9A3412;font-weight:600">※ 車検・保険など<b>一時・定期支出は${rate}%キャップ対象外</b>。<br>&emsp;後半フェーズでも発生年に全額引き出します。</span>` },
         { color:'#9A3412', bg:'#FFF7ED', body:
           `<b>前半の月間収支</b>＝（収入＋補填 − 支出）÷ 12<br>
           &emsp;収支ゼロ〜小幅マイナスが続く想定<br>
@@ -14454,18 +14760,27 @@ function renderBreakdownSection(result, displayWithdrawalType) {
     </div>`;
   const assumpEl = document.getElementById('retAssumptionsPanel');
   if (assumpEl) assumpEl.innerHTML = assumpHtml;
+
+  // 表示切替ボタン（全年齢 / 5年ごと集約）
+  const toggleWrap = document.getElementById('retBreakdownViewToggleWrap');
+  if (toggleWrap) {
+    toggleWrap.innerHTML = `<button onclick="toggleBreakdownCompact()" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid var(--border);background:${isCompact?'#4F46E5':'#fff'};color:${isCompact?'#fff':'var(--text-secondary)'};cursor:pointer;white-space:nowrap">
+      ${isCompact ? '📋 全年齢表示' : '📑 5年ごとに集約'}
+    </button>`;
+  }
+
   const hasRecurring = keyRows.some(d => (d.recurringCost || 0) > 0);
   document.getElementById('retBreakdownTable').innerHTML = `
     <thead>
       <tr style="border-bottom:1px solid var(--border);text-align:right">
         <th style="text-align:left;padding:6px 8px;font-weight:600;color:var(--text-secondary)">年齢${calcPartnerAgeAtYear(result.retireYear) != null ? '<span style="font-size:9px;font-weight:400;color:var(--text-muted)">（本人／パートナー）</span>' : ''}/年</th>
-        ${isHybridMode ? `<th style="padding:6px 4px;color:#8B5CF6;font-size:11px" class="th-tip" data-tip="P①=高運用フェーズ / P②=補填フェーズ">モード<span class="tip-icon">ⓘ</span></th>` : ''}
+        ${isHybridMode ? `<th style="padding:6px 4px;color:#8B5CF6;font-size:11px" class="th-tip" data-tip="${withdrawalType === 'hybrid_reverse' ? 'P①=補填フェーズ / P②=定率フェーズ' : 'P①=高運用フェーズ / P②=補填フェーズ'}">モード<span class="tip-icon">ⓘ</span></th>` : ''}
         <th class="th-tip" data-tip="その年初時点の総資産（現金＋投資）" style="padding:6px 8px;color:var(--text-secondary)">総資産<span class="tip-icon">ⓘ</span></th>
         <th class="th-tip" data-tip="公的年金の年間受給額（本人＋パートナー合算）" style="padding:6px 8px;color:var(--text-secondary)">年金<span class="tip-icon">ⓘ</span></th>
         <th class="th-tip" data-tip="セミリタイア収入・副業・配当収入など年金以外の収入合計" style="padding:6px 8px;color:var(--text-secondary)">その他収入<span class="tip-icon">ⓘ</span></th>
         <th class="th-tip" data-tip="収入で不足する分を資産から補填する額。定期・一時支出も含む" style="padding:6px 8px;color:var(--text-secondary)">資産取り崩し<span class="tip-icon">ⓘ</span></th>
         <th class="th-tip" data-tip="生活費×12＋医療費加算＋介護費（インフレ率で毎年上昇）。*印は医療費・介護費を含む年" style="padding:6px 8px;color:var(--text-secondary)">生活支出<span class="tip-icon">ⓘ</span></th>
-        <th class="th-tip" data-tip="その年の住宅ローン返済額（ライフイベント設定より）" style="padding:6px 8px;color:var(--danger)">ローン<span class="tip-icon">ⓘ</span></th>
+        <th class="th-tip" data-tip="住宅ローン返済額または家賃（ライフイベント「住居計画」の設定より自動計上。ローンは完済年に消滅）" style="padding:6px 8px;color:var(--danger);font-size:11px">ローン/<br>家賃<span class="tip-icon">ⓘ</span></th>
         <th class="th-tip" data-tip="教育費・習い事など子ども関連コスト（ライフイベント設定より）" style="padding:6px 8px;color:var(--danger)">教育費<span class="tip-icon">ⓘ</span></th>
         ${hasRecurring ? `<th class="th-tip" data-tip="車検・保険年払いなど定期支出＋登録済み一時支出の合計" style="padding:6px 8px;color:var(--danger);font-size:11px">定期・<br>一時支出<span class="tip-icon">ⓘ</span></th>` : ''}
         ${hasSurplus ? `<th class="th-tip" data-tip="取り崩し額から生活費・各支出を差し引いた自由に使えるお金" style="padding:6px 8px;color:var(--secondary);font-size:11px">うち余剰<br>自由資金<span class="tip-icon">ⓘ</span></th>` : ''}
@@ -14523,6 +14838,16 @@ function renderBreakdownSection(result, displayWithdrawalType) {
   }
 }
 
+// ===== テーブル表示密度トグル =====
+function toggleBreakdownCompact() {
+  const card = document.getElementById('retBreakdownCard');
+  if (!card) return;
+  card.dataset.compact = card.dataset.compact === 'true' ? 'false' : 'true';
+  if (_lastRetirementResult) {
+    renderBreakdownSection(_lastRetirementResult, _lastBreakdownMode || (state.retirement || {}).withdrawalType || 'hybrid');
+  }
+}
+
 // ===== 取り崩し方式タブの初期化 =====
 function initBreakdownStrategyTabs() {
   const container = document.getElementById('retBreakdownStrategyTabs');
@@ -14542,7 +14867,7 @@ function initBreakdownStrategyTabs() {
       ${strategies.map(s => {
         const isActive = s.mode === configuredMode;
         return `<button class="breakdown-strategy-tab" data-mode="${s.mode}"
-          onclick="switchBreakdownStrategyTab('${s.mode}')"
+          onclick="switchStrategyView('${s.mode}')"
           style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid ${isActive ? s.color : 'var(--border)'};background:${isActive ? s.bg : '#fff'};color:${isActive ? s.color : 'var(--text-secondary)'};white-space:nowrap;transition:all .15s;display:inline-flex;align-items:center;gap:3px">
           ${s.emoji} ${s.label}${isActive ? ' <span style="font-size:9px;background:'+s.color+';color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>' : ''}
         </button>`;
@@ -14550,45 +14875,9 @@ function initBreakdownStrategyTabs() {
     </div>`;
 }
 
-// ===== 取り崩し方式タブ切替 =====
+// ===== 取り崩し方式タブ切替（switchStrategyView に委譲） =====
 function switchBreakdownStrategyTab(mode) {
-  const configuredMode = (state.retirement || {}).withdrawalType || 'hybrid';
-  const strategies = {
-    needs:          { color: '#0369A1', bg: '#E0F2FE', emoji: '🎯', label: '最低限' },
-    fixed_rate:     { color: '#7C3AED', bg: '#EDE9FE', emoji: '📈', label: '定率' },
-    fixed_amount:   { color: '#B45309', bg: '#FEF3C7', emoji: '💴', label: '定額' },
-    hybrid:         { color: '#065F46', bg: '#D1FAE5', emoji: '🔄', label: '切替型' },
-    hybrid_reverse: { color: '#9A3412', bg: '#FFEDD5', emoji: '🔁', label: '逆切替' },
-  };
-  // タブのスタイルを更新
-  document.querySelectorAll('.breakdown-strategy-tab').forEach(t => {
-    const tMode = t.dataset.mode;
-    const s = strategies[tMode] || {};
-    const isActive = tMode === mode;
-    const isConfig = tMode === configuredMode;
-    t.style.background = isActive ? s.bg : '#fff';
-    t.style.color = isActive ? s.color : 'var(--text-secondary)';
-    t.style.borderColor = isActive ? s.color : 'var(--border)';
-    t.innerHTML = `${s.emoji} ${s.label}${isConfig ? ` <span style="font-size:9px;background:${s.color};color:#fff;padding:1px 4px;border-radius:8px;margin-left:2px">設定中</span>` : ''}`;
-  });
-  // 一時的にwithdrawalTypeを差し替えて計算
-  if (!state.retirement) state.retirement = {};
-  const origMode = state.retirement.withdrawalType;
-  state.retirement.withdrawalType = mode;
-  const result = calcRetirementSim();
-  state.retirement.withdrawalType = origMode;
-  if (!result) return;
-  renderBreakdownSection(result, mode);
-  // タブ状態を再適用（renderBreakdownSectionがHTMLを書き換えないようになっているが念のため）
-  document.querySelectorAll('.breakdown-strategy-tab').forEach(t => {
-    const tMode = t.dataset.mode;
-    const s = strategies[tMode] || {};
-    const isActive = tMode === mode;
-    const isConfig = tMode === configuredMode;
-    t.style.background = isActive ? s.bg : '#fff';
-    t.style.color = isActive ? s.color : 'var(--text-secondary)';
-    t.style.borderColor = isActive ? s.color : 'var(--border)';
-  });
+  switchStrategyView(mode);
 }
 
 let _retDrawdownChartObj = null;
@@ -14624,6 +14913,7 @@ function renderDrawdownCompare() {
       投資資産（NISA・株式等）は成長率が高いため、後で使うほど複利メリットが増し、資産寿命が伸びます。<b>★ は現在の設定</b>。
     </div>
     <div class="chart-wrap" style="height:260px"><canvas id="retDrawdownChart"></canvas></div>
+    <div id="retDrawdownNote" style="margin-top:8px"></div>
     <div id="retDrawdownPoolChart" style="margin-top:16px"></div>
     <div id="retDrawdownSummary" style="margin-top:12px"></div>
   </div>`;
@@ -14668,13 +14958,102 @@ function renderDrawdownCompare() {
     }
   });
 
-  // 現在の設定のプール内訳グラフ（現金 vs 投資）
+  // ===== 重なり判定ノート =====
   const curData = simResults.find(s => s.key === currentOrder)?.data || [];
+  const noteEl = document.getElementById('retDrawdownNote');
+  if (noteEl && curData.length > 0) {
+    const d0 = curData[0];
+    const cashAmt   = (d0.cashPool || 0) + (d0.emergencyPool || 0);
+    const investAmt = (d0.indexPool ?? d0.investPool ?? 0) + (d0.dividendPool || 0);
+    const totalAmt  = cashAmt + investAmt;
+    const cashPct   = totalAmt > 0 ? Math.round(cashAmt   / totalAmt * 100) : 0;
+    const investPct = totalAmt > 0 ? Math.round(investAmt / totalAmt * 100) : 0;
+    const initialAssets = d0.startAssets || totalAmt || 1;
+
+    // 3戦略の最終資産の最大差（全枯渇の場合は延命年数で比較）
+    const getFinal = s => {
+      const dep = s.data.find(d => d.depleted);
+      if (dep) return { depleted: true, age: dep.age, val: 0 };
+      const last = s.data[s.data.length - 1];
+      return { depleted: false, age: lifeEx, val: last?.endAssets || 0 };
+    };
+    const finals = simResults.map(s => getFinal(s));
+    const maxVal  = Math.max(...finals.map(f => f.depleted ? 0 : f.val));
+    const minVal  = Math.min(...finals.map(f => f.depleted ? 0 : f.val));
+    const spread  = maxVal - minVal;
+    const spreadPct = Math.round(spread / initialAssets * 100 * 10) / 10;
+
+    if (spreadPct < 3) {
+      noteEl.innerHTML = '<div style="background:#F1F5F9;border-left:3px solid #94A3B8;border-radius:0 8px 8px 0;padding:9px 13px;font-size:11px;color:#475569;line-height:1.8">'
+        + '<b>💡 3つの線がほぼ重なっている理由</b><br>'
+        + 'リタイア時点の資産構成が <b>投資系 ' + investPct + '% ／ 現金系 ' + cashPct + '%</b> のため、取り崩し順序を変えても結果がほとんど変わりません。<br>'
+        + '「現金優先」にしても現金がすぐ尽きて投資資産の取り崩しになるため、3戦略の差（' + lifeEx + '歳時点）は <b>' + fmtMoney(Math.round(spread)) + '</b>（初期資産の約' + spreadPct + '%）にとどまります。<br>'
+        + '<span style="color:#64748B">取り崩し順序よりも <b>取り崩し方式</b>（定率・定額・ハイブリッド等）や <b>生活費水準</b> の方が資産寿命への影響が大きいです。</span>'
+        + '</div>';
+    } else if (spreadPct < 10) {
+      noteEl.innerHTML = '<div style="background:#FFFBEB;border-left:3px solid #F59E0B;border-radius:0 8px 8px 0;padding:9px 13px;font-size:11px;color:#78350F;line-height:1.8">'
+        + '<b>📊 グラフの読み方</b><br>'
+        + '資産構成（投資系 ' + investPct + '% ／ 現金系 ' + cashPct + '%）により、戦略間の差は <b>' + fmtMoney(Math.round(spread)) + '</b>（約' + spreadPct + '%）です。<br>'
+        + '現金系の比率が高いほど取り崩し順序の選択が資産寿命に影響します。下の表で最良の戦略を確認してみましょう。'
+        + '</div>';
+    } else {
+      noteEl.innerHTML = '<div style="background:#F0FDF4;border-left:3px solid #16A34A;border-radius:0 8px 8px 0;padding:9px 13px;font-size:11px;color:#166534;line-height:1.8">'
+        + '<b>📊 グラフの読み方</b><br>'
+        + '資産構成（投資系 ' + investPct + '% ／ 現金系 ' + cashPct + '%）により、戦略間で <b>' + fmtMoney(Math.round(spread)) + '</b>（約' + spreadPct + '%）の差が生じています。<br>'
+        + '取り崩し順序の選択が資産寿命に影響しています。下の表で最良の戦略への変更を検討してみましょう。'
+        + '</div>';
+    }
+  }
+
+  // 現在の設定のプール内訳グラフ（現金 vs 投資）
   if (curData.length > 0 && curData[0].cashPool != null) {
     const poolEl = document.getElementById('retDrawdownPoolChart');
     if (poolEl) {
-      poolEl.innerHTML = `<div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px">現在の設定（${scenarios.find(s=>s.key===currentOrder)?.label}）での現金 / 投資 内訳推移</div>
-        <div style="height:180px"><canvas id="retDrawdownPoolCanvas"></canvas></div>`;
+      // プール観察コメントを動的生成
+      const _cashDepleteAge  = (() => { for (const d of curData) { if ((d.cashPool || 0) < 10) return d.age; } return null; })();
+      const _indexFinal      = curData[curData.length - 1]?.indexPool ?? curData[curData.length - 1]?.investPool ?? 0;
+      const _indexFirst      = curData[0]?.indexPool ?? curData[0]?.investPool ?? 0;
+      const _emergFinal      = curData[curData.length - 1]?.emergencyPool ?? 0;
+      const _indexGrowPct    = _indexFirst > 0 ? Math.round((_indexFinal / _indexFirst - 1) * 100) : null;
+      const _hasDiv          = curData.some(d => (d.dividendPool ?? 0) > 10);
+      const _hasEmerg        = curData.some(d => (d.emergencyPool ?? 0) > 10);
+
+      const observations = [];
+      if (_cashDepleteAge !== null) {
+        observations.push('💵 <b>通常現金は ' + _cashDepleteAge + '歳頃に枯渇</b> → 以降はインデックス資産の取り崩しに移行します');
+      } else {
+        observations.push('💵 通常現金は <b>想定余命まで残り続けます</b>（取り崩し不足で余裕あり）');
+      }
+      if (_indexGrowPct !== null) {
+        if (_indexGrowPct > 0) {
+          observations.push('📈 インデックス資産は複利で成長し、<b>最終的に' + (_indexGrowPct) + '% 増加</b>しています（取り崩しを上回る運用益）');
+        } else {
+          observations.push('📈 インデックス資産は取り崩しが進み、<b>最終的に' + Math.abs(_indexGrowPct) + '% 減少</b>しています');
+        }
+      }
+      if (_hasDiv) {
+        observations.push('💴 高配当・ETFプールは配当収入として別途キャッシュフローに計上されています（元本は温存）');
+      }
+      if (_hasEmerg && _emergFinal > 100) {
+        observations.push('🛟 生活防衛資金（' + fmtMoney(Math.round(_emergFinal)) + '）は想定余命まで温存されています');
+      }
+
+      const obsHtml = observations.map(o => '<li style="margin-bottom:3px">' + o + '</li>').join('');
+
+      poolEl.innerHTML = '<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">'
+        + '<div style="font-size:12px;font-weight:600;color:var(--text-secondary)">現在の設定（' + (scenarios.find(s => s.key === currentOrder)?.label || '') + '）での資産プール内訳推移</div>'
+        + '<div style="font-size:11px;color:var(--text-muted)">各プールの残高が時系列でどう変化するかを示します</div>'
+        + '</div>'
+        + '<div style="height:180px"><canvas id="retDrawdownPoolCanvas"></canvas></div>'
+        + '<div style="margin-top:8px;background:#F8FAFC;border-radius:8px;padding:9px 13px;font-size:11px;color:#475569;line-height:1.8">'
+        + '<b>📋 このグラフの読み方</b>'
+        + '<ul style="margin:5px 0 0 0;padding-left:18px">'
+        + '<li style="margin-bottom:3px">各色の帯が各プールの残高を表し、帯が細くなるほどそのプールが減っています</li>'
+        + '<li style="margin-bottom:3px">帯が消える = そのプールが枯渇し、次の優先順位のプールに移行したことを意味します</li>'
+        + obsHtml
+        + '</ul>'
+        + '</div>';
+
       const pCtx = document.getElementById('retDrawdownPoolCanvas')?.getContext('2d');
       if (pCtx) {
         new Chart(pCtx, {
@@ -15654,10 +16033,32 @@ function calcRetirementSimWithOpts(opts = {}) {
         s + (a.currentVal || 0) * ((parseFloat(a.dividendYield) || 0) / 100), 0) / _divCurr
     : 0;
   const _divCapitalReturn = Math.max(0, _divTotalReturn - _divYield); // キャピタルゲインのみ
-  let emergencyPool = assetsAtRetire * _emergRatio;
-  let cashPool      = assetsAtRetire * _cashRatio;
-  let indexPool     = assetsAtRetire * _indexRatio;
-  let dividendPool  = assetsAtRetire * _divRatio;
+
+  // ===== 生活防衛資金プールの初期値: targetVal（上限額）を尊重した実額計算 =====
+  // 比率スケールではなく「現在残高を上限キャップ付きで yearsToRetire 年分複利成長」させた額を使用
+  const _emergAtRetire = _allAssets
+    .filter(a => a.type === 'cash_emergency')
+    .reduce((s, a) => {
+      const rate    = ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn ?? 0.1))) / 100;
+      const monthly = a.monthly || 0;
+      // targetVal2 が設定されている場合は第2目標を最終上限とする
+      const finalCap = (a.targetVal2 > 0) ? a.targetVal2
+                     : (a.targetVal > 0)  ? a.targetVal
+                     : Infinity;
+      let bal = a.currentVal || 0;
+      for (let y = 0; y < yearsToRetire; y++) {
+        bal = Math.min(finalCap, bal * (1 + rate) + (bal < finalCap ? Math.min(monthly * 12, finalCap - bal) : 0));
+      }
+      return s + Math.min(bal, finalCap < Infinity ? finalCap : bal);
+    }, 0);
+
+  const _emergPoolInit = Math.min(_emergAtRetire, assetsAtRetire);
+  const _nonEmergRemainder = Math.max(0, assetsAtRetire - _emergPoolInit);
+  const _nonEmergCurr = _cashCurr + _indexCurr + _divCurr;
+  let emergencyPool = _emergPoolInit;
+  let cashPool      = _nonEmergCurr > 0 ? _nonEmergRemainder * (_cashCurr  / _nonEmergCurr) : _nonEmergRemainder * _cashRatio;
+  let indexPool     = _nonEmergCurr > 0 ? _nonEmergRemainder * (_indexCurr / _nonEmergCurr) : _nonEmergRemainder * _indexRatio;
+  let dividendPool  = _nonEmergCurr > 0 ? _nonEmergRemainder * (_divCurr   / _nonEmergCurr) : _nonEmergRemainder * _divRatio;
   const drawdownOrder = opts.drawdownOrder || r.drawdownOrder || 'proportional';
   const cashFloor = parseFloat(opts.cashFloor != null ? opts.cashFloor : r.cashFloor) || 0;
 
@@ -15797,11 +16198,22 @@ function calcRetirementSimWithOpts(opts = {}) {
       : Math.max(baseWithdrawal, netExpense);
 
     // actualDeduction: 実際に資産プールから引き出す額
-    // 定率モード: min(rate×資産, 不足額) → 余剰は引き出さず資産に残る
+    // 定率モード:
+    //   ・通常生活費（インフレ調整済み生活費＋医療費など）: rate×資産でキャップ（余剰は資産に残して複利運用）
+    //   ・一時支出・定期支出(recurringCost+plannedOneTime): 4%キャップの対象外・常に全額確保
     // 他モード: assetWithdrawal のまま（生活費を確保する）
-    const actualDeduction = _isRateMode
-      ? Math.min(assetWithdrawal, netExpense)
-      : assetWithdrawal;
+    let actualDeduction;
+    if (_isRateMode) {
+      // 一時支出・定期支出の「資産負担分」を分離（収入で賄えない残額）
+      const exceptionalExpense = recurringCost + plannedOneTimeExpense;
+      const exceptionalNet = Math.max(0, Math.min(exceptionalExpense, netExpense));
+      const regularNetExpense = Math.max(0, netExpense - exceptionalNet);
+      // 通常生活費は rate×資産 でキャップ、一時・定期支出は全額引き出す
+      const fromRate = Math.min(assetWithdrawal, regularNetExpense);
+      actualDeduction = fromRate + exceptionalNet;
+    } else {
+      actualDeduction = assetWithdrawal;
+    }
 
     // 余剰 / 不足
     const annualSurplus = Math.round(Math.max(0, assetWithdrawal - netExpense));
@@ -17242,9 +17654,6 @@ function checkBackupReminder() {
   }
 }
 
-// exportData のラッパー：最終バックアップ日時を記録
-const _origExportData = typeof exportData === 'function' ? exportData : null;
-
 // ===== SETUP WIZARD =====
 const WZ_STEPS = [
   {
@@ -18238,17 +18647,6 @@ applyMaritalFilter();
 wizardAutoShow();
 consentInit();
 checkBackupReminder();
-
-// exportData に最終バックアップ日時記録を追加
-(function() {
-  const orig = window.exportData;
-  if (typeof orig === 'function') {
-    window.exportData = function() {
-      orig();
-      localStorage.setItem('lifeplan_last_export', Date.now().toString());
-    };
-  }
-})();
 
 // ===== 利回り前提設定モーダル 制御関数 =====
 // スライダー表示更新
@@ -20374,9 +20772,9 @@ function toggleRetAcc(id) {
 const _RET_SUBTAB_CARDS = {
   overview:  ['retDrawdownCard', 'retChartCard'],
   cashflow:  ['retBreakdownCard', 'retPensionBreakevenCard'],
-  scenario:  ['retScenarioCard', 'scenarioCompSection', 'retScenarioCompareCard'],
+  scenario:  ['retScenarioCard', 'scenarioCompSection', 'retScenarioCompareCard', 'retMonteCarloCard'],
   advanced:  ['retTaxCard','retStressCard','retPrepayCard',
-              'retFireTaxCard','retBasisCard','retMonteCarloCard'],
+              'retFireTaxCard','retBasisCard'],
 };
 
 function switchRetSubTab(tab) {
