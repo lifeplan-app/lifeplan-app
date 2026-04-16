@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ライフプランアプリ — 人生100年を、自分の手で設計する</title>
   <meta name="description" content="収入・支出・資産・ライフイベントを入力するだけで、リタイアまでの資産シミュレーションが動き始める無料のライフプランニングツールです。データはすべてブラウザ内に保存されます。">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a56a0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ライフプラン">
+  <link rel="apple-touch-icon" href="icon-lifeplan.svg">
   <!-- OGP -->
   <meta property="og:title" content="ライフプランアプリ">
   <meta property="og:description" content="人生100年を、自分の手で設計する。無料のライフプランニングシミュレーター。">
@@ -23263,5 +23271,12 @@ function renderScenariosPage() {
     </div>
   </div>
 </div>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
+</script>
 </body>
 </html>

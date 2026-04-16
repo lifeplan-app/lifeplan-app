@@ -4,6 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>支出管理 — 毎月の支出を見える化する</title>
+  <meta name="description" content="家計の支出を4領域で管理。CSVインポートでマネーフォワード・Zaim対応。データはブラウザ内に保存。">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#10B981">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="支出管理">
+  <link rel="apple-touch-icon" href="icon-spending.svg">
+  <!-- OGP -->
+  <meta property="og:title" content="支出管理アプリ">
+  <meta property="og:description" content="家計の支出を4領域で管理するアプリ。CSVインポート対応。">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root {
@@ -4476,6 +4490,13 @@ window.addEventListener('load', () => {
 
   renderDashboard();
 });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a56a0"/>
+  <!-- 折れ線グラフ -->
+  <polyline points="80,360 160,280 240,300 320,200 400,160 440,120"
+    fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="80,360 160,280 240,300 320,200 400,160 440,120"
+    fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 終点ドット -->
+  <circle cx="440" cy="120" r="20" fill="#60B4FF"/>
+  <!-- X軸 -->
+  <line x1="72" y1="390" x2="460" y2="390" stroke="rgba(255,255,255,0.4)" stroke-width="8" stroke-linecap="round"/>
+</svg>
