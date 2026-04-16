@@ -4378,38 +4378,7 @@
     <div class="form-group">
       <label>アセット種別</label>
       <select id="amType" onchange="onAssetTypeChange()">
-        <optgroup label="非課税口座（新NISA）">
-          <option value="nisa_tsumitate">🌱 つみたてNISA / 新NISA積立枠</option>
-          <option value="nisa_growth">📈 新NISA 成長投資枠</option>
-          <option value="ideco">🏛️ iDeCo（個人型確定拠出年金）</option>
-        </optgroup>
-        <optgroup label="非課税口座（旧NISA・運用中）">
-          <option value="nisa_old_tsumitate">🌿 旧つみたてNISA（〜2042年末）</option>
-          <option value="nisa_old_general">📋 旧一般NISA（〜2027年末）</option>
-        </optgroup>
-        <optgroup label="保険">
-          <option value="insurance">🛡️ 積立保険</option>
-        </optgroup>
-        <optgroup label="投資信託">
-          <option value="trust_allworld">🌍 投資信託（全世界株・オルカン）</option>
-          <option value="trust_sp500">🇺🇸 投資信託（S&P500）</option>
-          <option value="trust_other">📊 投資信託（その他）</option>
-        </optgroup>
-        <optgroup label="株式・ETF">
-          <option value="japan_stock">🗾 日本株</option>
-          <option value="high_dividend">💴 高配当株</option>
-          <option value="etf">📉 ETF</option>
-        </optgroup>
-        <optgroup label="現金・預金">
-          <option value="cash_emergency">🛟 生活防衛資金</option>
-          <option value="cash_special">🗓️ 特別費</option>
-          <option value="cash_reserved">🏷️ 用途が決まっている資金（中長期）</option>
-          <option value="cash_surplus">💹 余剰資金</option>
-          <option value="cash">💵 現金・預金（その他）</option>
-        </optgroup>
-        <optgroup label="その他">
-          <option value="other">✨ その他</option>
-        </optgroup>
+        <!-- buildAssetTypeSelect() が動的に生成 -->
       </select>
       <div id="assetTypeNote" style="font-size:12px;color:var(--text-muted);margin-top:6px"></div>
     </div>
@@ -4940,6 +4909,24 @@ const ASSET_TYPES = {
   other:          { label: 'その他',                      emoji: '✨', color: '#84CC16', bg: '#ECFCCB', defaultReturn: 3,   note: '不動産・債券・仮想通貨など。' },
 };
 
+// ─── アセット種別グループ定義（動的セレクト用）───
+const ASSET_TYPE_GROUPS = [
+  { label: '非課税口座（新NISA）',         types: ['nisa_tsumitate', 'nisa_growth', 'ideco'] },
+  { label: '非課税口座（旧NISA・運用中）',   types: ['nisa_old_tsumitate', 'nisa_old_general'] },
+  { label: '保険',                         types: ['insurance'] },
+  { label: '投資信託',                      types: ['trust_allworld', 'trust_sp500', 'trust_other'] },
+  { label: '株式・ETF',                    types: ['japan_stock', 'high_dividend', 'etf'] },
+  { label: '現金・預金',                    types: ['cash_emergency', 'cash_special', 'cash_reserved', 'cash_surplus', 'cash'] },
+  { label: 'その他',                        types: ['other'] },
+];
+
+// 初回ユーザー向けデフォルト「おすすめ」順（日本の一般的なライフプランユーザー想定）
+const ASSET_TYPE_RECOMMENDED = [
+  'nisa_tsumitate', 'ideco', 'cash_emergency',
+  'trust_allworld', 'trust_sp500', 'nisa_growth',
+  'cash', 'cash_reserved', 'high_dividend', 'insurance',
+];
+
 const CATS = {
   career:   { label: '仕事・キャリア', color: '#4F46E5', bg: '#EEF2FF', emoji: '💼' },
   health:   { label: '健康・運動',     color: '#10B981', bg: '#D1FAE5', emoji: '🏃' },
@@ -4982,6 +4969,7 @@ let state = {
     investStyle: 'balanced', // 'conservative'|'balanced'|'aggressive'
   },
   disclaimerAck: { shown: false, rateHash: '' },
+  assetTypeStats: {},   // アセット種別使用回数統計 { [typeId]: number }
   scenarioComp: [
     { name: 'シナリオA', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
@@ -5084,6 +5072,13 @@ function load() {
       ]},
     };
     if (!state.disclaimerAck) state.disclaimerAck = { shown: false, rateHash: '' };
+    // アセット種別使用統計：既存ユーザーは現在のassetsから初期値を生成
+    if (!state.assetTypeStats) {
+      state.assetTypeStats = {};
+      (state.assets || []).forEach(a => {
+        if (a.type) state.assetTypeStats[a.type] = (state.assetTypeStats[a.type] || 0) + 1;
+      });
+    }
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
       { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
       { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
@@ -7506,6 +7501,73 @@ function checkAssetLimit() {
   }
 }
 
+// ===== アセット種別セレクト動的生成 =====
+/**
+ * <select id="amType"> を動的に再構築する。
+ * @param {string|null} selectedType - 編集時の初期選択値。null のとき「よく使う/おすすめ」先頭を選択。
+ */
+function buildAssetTypeSelect(selectedType = null) {
+  const sel = document.getElementById('amType');
+  if (!sel) return;
+  sel.innerHTML = '';
+
+  // ── ⭐ よく使うタイプ / おすすめ ──
+  const stats = state.assetTypeStats || {};
+  const hasStats = Object.values(stats).some(v => v > 0);
+  const topTypes = hasStats
+    ? Object.entries(stats)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([t]) => t)
+        .filter(t => ASSET_TYPES[t])        // 定義にないtypeを除外
+    : ASSET_TYPE_RECOMMENDED.slice(0, 5);
+
+  if (topTypes.length > 0) {
+    const grp = document.createElement('optgroup');
+    grp.label = '⭐ ' + (hasStats ? 'よく使うタイプ' : 'おすすめ');
+    topTypes.forEach(type => {
+      const t = ASSET_TYPES[type];
+      if (!t) return;
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = `${t.emoji} ${t.label}`;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  }
+
+  // ── 全アセットタイプ（7グループ）──
+  ASSET_TYPE_GROUPS.forEach(({ label, types }) => {
+    const grp = document.createElement('optgroup');
+    grp.label = label;
+    types.forEach(type => {
+      const t = ASSET_TYPES[type];
+      if (!t) return;
+      const opt = document.createElement('option');
+      opt.value = type;
+      opt.textContent = `${t.emoji} ${t.label}`;
+      grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
+  });
+
+  // 初期選択値を設定
+  const fallback = topTypes[0] || 'nisa_tsumitate';
+  sel.value = selectedType || fallback;
+  // 存在しない value が指定された場合の保険
+  if (!sel.value) sel.value = fallback;
+}
+
+/**
+ * アセット新規保存時に種別使用統計を更新する。
+ * @param {string} type - ASSET_TYPES のキー
+ */
+function recordAssetTypeUsage(type) {
+  if (!type || !ASSET_TYPES[type]) return;
+  if (!state.assetTypeStats) state.assetTypeStats = {};
+  state.assetTypeStats[type] = (state.assetTypeStats[type] || 0) + 1;
+}
+
 function openAssetModal(id) {
   editingAssetId = id || null;
   document.getElementById('assetModalTitle').textContent = id ? 'アセットを編集' : 'アセットを追加';
@@ -7517,7 +7579,7 @@ function openAssetModal(id) {
   if (_ownerWrap) _ownerWrap.style.display = _hasPartner ? '' : 'none';
   if (id) {
     const a = state.assets.find(x => x.id === id);
-    document.getElementById('amType').value = a.type;
+    buildAssetTypeSelect(a.type);
     document.getElementById('amName').value = a.name || '';
     if (document.getElementById('amOwner')) { const ov = a.owner || 'self'; document.getElementById('amOwner').value = ov; document.getElementById('amOwnerBtnSelf')?.classList.toggle('owner-btn-active', ov==='self'); document.getElementById('amOwnerBtnPartner')?.classList.toggle('owner-btn-active', ov==='partner'); }
     document.getElementById('amCurrentVal').value = a.currentVal || '';
@@ -7538,7 +7600,7 @@ function openAssetModal(id) {
     const overrideBadge = document.getElementById('amRateOverrideBadge');
     if (overrideBadge) overrideBadge.style.display = a.rateOverridden ? 'flex' : 'none';
   } else {
-    document.getElementById('amType').value = 'nisa_tsumitate';
+    buildAssetTypeSelect(null);
     document.getElementById('amName').value = '';
     document.getElementById('amCurrentVal').value = '';
     document.getElementById('amMonthly').value = '';
@@ -7625,6 +7687,7 @@ function saveAsset() {
     if (idx >= 0) state.assets[idx] = { ...state.assets[idx], ...data };
   } else {
     state.assets.push({ id: uid(), createdAt: Date.now(), ...data });
+    recordAssetTypeUsage(type);  // 新規追加時のみ統計を更新
   }
 
   // 利回りがプリセットと異なる場合は rateOverridden フラグを立てる
