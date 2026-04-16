@@ -766,6 +766,13 @@
     同じドメインのライフプランアプリのデータを更新します。<br>連携前に確認ダイアログが表示されます。
   </p>
 
+  <!-- 連携後のリンク（連携済みの場合のみ表示） -->
+  <div id="syncAfterLink" style="display:none;margin-top:14px;text-align:center">
+    <a href="../index.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#E0F2FE;color:#0369A1;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
+      📊 ライフプランアプリで確認する →
+    </a>
+  </div>
+
 </div>
 
 <!-- ===================== MODAL: Category Mapping ===================== -->
@@ -2671,10 +2678,19 @@ function renderSync() {
   }
 
   // Sync status
-  if (state.lifeplanSync.syncedAt) {
-    const d = new Date(state.lifeplanSync.syncedAt);
-    document.getElementById('syncStatus').textContent =
-      `最終連携: ${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  const syncedAt = state.lifeplanSync.syncedAt;
+  const statusEl = document.getElementById('syncStatus');
+  const linkEl   = document.getElementById('syncAfterLink');
+  if (syncedAt) {
+    const d = new Date(syncedAt);
+    const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const exp = state.lifeplanSync.monthlyExpense;
+    statusEl.innerHTML = `<span style="color:#10B981;font-weight:600">✓ 最終連携: ${dateStr}</span>`
+      + (exp ? `<br><span style="color:var(--text-muted)">ライフプランの月間生活費: ${exp}万円</span>` : '');
+    if (linkEl) linkEl.style.display = '';
+  } else {
+    statusEl.textContent = '';
+    if (linkEl) linkEl.style.display = 'none';
   }
 
   renderIrregularList();
@@ -2905,10 +2921,16 @@ function syncToLifeplan() {
     }
   }
 
+  // ライフプランアプリ側の自動検知用フラグを埋め込む
+  const syncTs = new Date().toISOString();
+  lp._spendingSyncedAt   = syncTs;         // 最終連携タイムスタンプ
+  lp._spendingExpense    = manYen;          // 連携した月間生活費（万円）
+  lp._spendingBasedOn    = vals.basedOnMonths; // 集計根拠の月キー配列
+
   localStorage.setItem('lifeplan_v1', JSON.stringify(lp));
 
   // Update sync state
-  state.lifeplanSync.syncedAt = new Date().toISOString();
+  state.lifeplanSync.syncedAt = syncTs;
   state.lifeplanSync.monthlyExpense = manYen;
   state.lifeplanSync.basedOnMonths = vals.basedOnMonths;
   state.lifeplanSync.basedOnAvgMonths = syncAvgMonths;

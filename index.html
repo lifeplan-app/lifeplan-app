@@ -2054,6 +2054,16 @@
 
   <div class="drawer-divider"></div>
 
+  <!-- 支出管理アプリ -->
+  <div class="drawer-section">
+    <div class="drawer-section-label">連携アプリ</div>
+    <a class="drawer-item" href="./spending/" style="text-decoration:none;color:#059669;font-weight:700" id="drawerSpendingLink">
+      <span class="d-icon">💰</span><span id="drawerSpendingLabel">支出管理アプリ</span>
+    </a>
+  </div>
+
+  <div class="drawer-divider"></div>
+
   <!-- ツール -->
   <div class="drawer-section">
     <div class="drawer-section-label">ツール</div>
@@ -2281,6 +2291,9 @@
         <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:4px" id="dbFireNote"></div>
       </div>
     </div>
+
+    <!-- 支出管理アプリ連携バナー -->
+    <div id="dashSpendingSyncBanner" style="display:none;margin-bottom:16px"></div>
 
     <!-- 警告・アラートバナー -->
     <div id="dashAlerts" style="display:none;margin-bottom:16px"></div>
@@ -2514,6 +2527,7 @@
             <span style="font-size:11px;font-weight:400;color:var(--text-muted)">（投資・積立は含めず入力）</span>
           </label>
           <input type="number" id="finExpense" placeholder="25" min="0">
+          <div id="finExpenseSyncBadge" style="display:none;margin-top:6px"></div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
             💡 食費・光熱費・通信費・保険料など、日常の生活にかかる費用を入力してください。<br>
             ⚠️ 住宅ローン・家賃はライフイベント「住居計画」で登録してください（ここに含めると二重計上になります）。<br>
@@ -5705,6 +5719,11 @@ function load() {
     if (!state.disclaimerAck.onboarding && state.disclaimerAck.onboarding !== null) {
       state.disclaimerAck.onboarding = null;
     }
+    // 支出管理アプリ連携フラグのマイグレーション
+    if (state._spendingSyncedAt   === undefined) state._spendingSyncedAt   = null;
+    if (state._spendingExpense     === undefined) state._spendingExpense    = null;
+    if (state._spendingBasedOn     === undefined) state._spendingBasedOn   = null;
+    if (state._spendingAckedAt     === undefined) state._spendingAckedAt   = null;
     // Premium: 月次自動スナップショット（月初アクセス時に1回）
     if (getUserPlan() === 'premium') takeAutoSnapshot();
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
@@ -5793,6 +5812,52 @@ function save() {
     }
   }
 }
+
+// ===== 支出管理アプリ連携: 自動検知 =====
+/**
+ * localStorage の lifeplan_v1 に支出管理アプリが書き込んだ新しいフラグを検知し、
+ * ダッシュボードへ自動反映する。
+ * - 同一タブ内では `storage` イベントが発火しないため `visibilitychange` でも補完。
+ */
+function _checkSpendingSync() {
+  try {
+    const raw = localStorage.getItem('lifeplan_v1');
+    if (!raw) return;
+    const fresh = JSON.parse(raw);
+    const newTs = fresh._spendingSyncedAt;
+    if (!newTs) return;
+    if (newTs === state._spendingSyncedAt) return; // 変化なし
+
+    // 新しい連携データを検知 → state に反映して保存
+    state._spendingSyncedAt = newTs;
+    state._spendingExpense  = fresh._spendingExpense  ?? state._spendingExpense;
+    state._spendingBasedOn  = fresh._spendingBasedOn  ?? state._spendingBasedOn;
+    if (fresh.finance?.expense !== undefined) {
+      state.finance = { ...state.finance, expense: fresh.finance.expense };
+    }
+    if (Array.isArray(fresh.recurringExpenses)) {
+      state.recurringExpenses = fresh.recurringExpenses;
+    }
+    save();
+
+    // ページを再描画
+    if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+    if (document.getElementById('page-finance')?.classList.contains('active'))   renderFinance();
+
+    const d = new Date(newTs);
+    const label = `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    showNotification(`💡 支出管理アプリの連携データを反映しました（${label}）`);
+  } catch(e) { /* 無視 */ }
+}
+
+// visibilitychange: タブに戻ってきたとき（同一タブ切り替え含む）
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) _checkSpendingSync();
+});
+// storage: 別タブ/別ウィンドウからの変更（iOS Safari は非対応だが補助）
+window.addEventListener('storage', (e) => {
+  if (e.key === 'lifeplan_v1') _checkSpendingSync();
+});
 
 // ===== かんたん試算モード ユーティリティ =====
 // 手取り年収（万円）から年金月額（万円/月）を推計
@@ -9286,6 +9351,17 @@ function renderFinance() {
   document.getElementById('finIncome').value = f.income || '';
   document.getElementById('finBonus').value = f.bonus || '';
   document.getElementById('finExpense').value = f.expense || '';
+  // 支出管理アプリからの連携バッジ
+  (function() {
+    const badgeEl = document.getElementById('finExpenseSyncBadge');
+    if (!badgeEl) return;
+    const syncedAt = state._spendingSyncedAt;
+    if (!syncedAt) { badgeEl.style.display = 'none'; return; }
+    const d = new Date(syncedAt);
+    const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    badgeEl.style.display = '';
+    badgeEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;border-radius:20px;font-size:11px;font-weight:700">🔗 支出管理アプリから連携（${dateStr}）</span>`;
+  })();
   document.getElementById('simYears').value = f.simYears || 10;
   document.getElementById('inflationRate').value = f.inflationRate ?? 2;
 
@@ -10796,6 +10872,7 @@ function renderDashboard() {
   // Welcome
   document.getElementById('welcomeName').textContent = name ? name + 'のライフプラン' : 'あなたのライフプランへようこそ';
   _updateDashPlanBadge();
+  _renderSpendingSyncBanner();
 
   // ===== ライフプラン完成ロードマップ =====
   (function renderSetupProgress() {
@@ -22467,6 +22544,47 @@ function _updateDashPlanBadge() {
   if (!badge) return;
   const plan = getUserPlan();
   badge.innerHTML = `<span class="plan-db-badge plan-db-badge--${plan}">${PLAN_CARD_DEF[plan].icon} ${PLAN_NAMES[plan]}</span>`;
+}
+
+function _renderSpendingSyncBanner() {
+  const banner = document.getElementById('dashSpendingSyncBanner');
+  if (!banner) return;
+  const syncedAt = state._spendingSyncedAt;
+  if (!syncedAt) {
+    // 未連携 → 支出管理アプリへの誘導バナー
+    banner.style.display = '';
+    banner.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px">
+        <span style="font-size:22px;flex-shrink:0">💰</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#166534">支出管理アプリと連携すると月間生活費が自動更新されます</div>
+          <div style="font-size:11px;color:#4ADE80;margin-top:2px">実際の支出データをもとにシミュレーション精度が上がります</div>
+        </div>
+        <a href="./spending/" style="flex-shrink:0;padding:7px 14px;background:#16A34A;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">開く →</a>
+      </div>`;
+    return;
+  }
+  // 連携済み → ステータスバナー
+  const d = new Date(syncedAt);
+  const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const exp = state._spendingExpense;
+  const basedOn = state._spendingBasedOn;
+  const basedStr = basedOn?.length ? `（${basedOn[0].replace('-','年')}月〜${basedOn[basedOn.length-1].replace('-','年')}月の平均）` : '';
+  banner.style.display = '';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px">
+      <span style="font-size:22px;flex-shrink:0">🔗</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#065F46">支出管理アプリと連携中</div>
+        <div style="font-size:11px;color:#059669;margin-top:2px">
+          月間生活費: <strong>${exp ?? '—'}万円</strong>${basedStr} ／ 最終連携: ${dateStr}
+        </div>
+      </div>
+      <a href="./spending/" style="flex-shrink:0;padding:7px 14px;background:#fff;color:#059669;border:1px solid #A7F3D0;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">支出を確認 →</a>
+    </div>`;
+  // ドロワーのラベルも更新
+  const drawerLabel = document.getElementById('drawerSpendingLabel');
+  if (drawerLabel) drawerLabel.textContent = '支出管理アプリ（連携中 ✓）';
 }
 
 function renderScenariosPage() {
