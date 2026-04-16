@@ -499,6 +499,14 @@
       .summary-row { grid-template-columns: 1fr 1fr 1fr; }
       .summary-card .s-value { font-size: 13px; }
     }
+
+    /* ── Entry Edit Button ── */
+    .entry-edit-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 14px; padding: 2px 4px; opacity: .6;
+      line-height: 1;
+    }
+    .entry-edit-btn:hover { opacity: 1; }
   </style>
 </head>
 <body>
@@ -819,7 +827,7 @@
   <div class="modal">
     <div class="modal-title">
       <button class="modal-close" onclick="closeManualModal()">✕</button>
-      支出・収入を入力
+      <span id="manualModalTitle">支出・収入を入力</span>
     </div>
 
     <!-- 支出/収入 タブ -->
@@ -942,6 +950,7 @@
       <button id="settingsTabCat"    class="settings-tab active" onclick="switchSettingsTab('cat')">カテゴリ設定</button>
       <button id="settingsTabMap"    class="settings-tab"        onclick="switchSettingsTab('map')">マッピング設定</button>
       <button id="settingsTabIncome" class="settings-tab"        onclick="switchSettingsTab('income')">収入設定</button>
+      <button id="settingsTabData"   class="settings-tab"        onclick="switchSettingsTab('data')">データ</button>
     </div>
 
     <!-- Panel: カテゴリ設定 -->
@@ -957,6 +966,22 @@
         <span class="domain-badge" style="background:#E3F9E9;color:#34C759">📊 毎月変動費</span>
         <span class="domain-badge" style="background:#FFF3E0;color:#FF9500">📅 不定期固定費</span>
         <span class="domain-badge" style="background:#F5E9FF;color:#AF52DE">🎉 特別費</span>
+      </div>
+      <div id="addCatForm" style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-muted)">＋ 新しいカテゴリを追加</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input id="newCatEmoji" type="text" placeholder="絵文字" maxlength="2" style="width:50px;text-align:center;font-size:18px;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)">
+          <input id="newCatName" type="text" placeholder="カテゴリ名（例: ペット）" class="form-input" style="flex:1;font-size:13px">
+        </div>
+        <div style="display:flex;gap:6px">
+          <select id="newCatDomain" class="form-select" style="flex:1;font-size:12px">
+            <option value="monthly_fixed">📌 毎月固定費</option>
+            <option value="monthly_variable" selected>📊 毎月変動費</option>
+            <option value="irregular_fixed">📅 不定期固定費</option>
+            <option value="irregular_variable">🎉 特別費</option>
+          </select>
+          <button class="btn btn-primary" style="padding:0 14px;font-size:13px" onclick="addCustomCategory()">追加</button>
+        </div>
       </div>
       <div id="catSettingsList"></div>
       <div style="display:flex;gap:8px;margin-top:16px">
@@ -1038,6 +1063,20 @@
         <button class="btn btn-primary" style="flex:1" onclick="saveIncomeSettings()">保存</button>
       </div>
     </div>
+
+    <!-- Panel: データ -->
+    <div id="settingsPanelData" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+        <button class="btn btn-secondary" style="width:100%" onclick="exportSpendingData()">📤 データをエクスポート（JSON）</button>
+        <div>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:6px" onclick="document.getElementById('spendingImportInput').click()">📥 データをインポート（JSON）</button>
+          <input type="file" id="spendingImportInput" accept=".json" style="display:none" onchange="importSpendingData(event)">
+          <p style="font-size:11px;color:var(--text-muted);line-height:1.6">⚠️ インポートすると現在のデータが上書きされます</p>
+        </div>
+        <button class="btn btn-danger-outline" style="width:100%;font-size:12px" onclick="resetAllSpendingData()">🗑 すべてのデータを削除</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1843,6 +1882,16 @@ function renderCatList(categoryTotals, totalExpense) {
     const ratio = totalExpense > 0 ? (amount / totalExpense * 100).toFixed(1) : 0;
     const barW = maxAmount > 0 ? (amount / maxAmount * 100).toFixed(1) : 0;
     const dColor = domainMap[c.domain]?.color || '#ccc';
+    const budgetBar = c.budget ? `
+      <div style="margin-top:4px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:2px">
+          <span>予算 ${fmt(c.budget)}</span>
+          <span style="color:${amount > c.budget ? 'var(--danger)' : 'var(--secondary)'}">${Math.round(amount / c.budget * 100)}%</span>
+        </div>
+        <div style="height:3px;background:var(--surface3);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${Math.min(amount / c.budget * 100, 100)}%;background:${amount > c.budget ? 'var(--danger)' : 'var(--secondary)'};border-radius:2px;transition:width .3s"></div>
+        </div>
+      </div>` : '';
     return `
       <div class="cat-item">
         <span class="cat-emoji">${c.emoji}</span>
@@ -1854,6 +1903,7 @@ function renderCatList(categoryTotals, totalExpense) {
           <div class="cat-bar" style="margin-top:4px">
             <div class="cat-bar-fill" style="width:${barW}%;background:${c.color};height:4px;border-radius:2px"></div>
           </div>
+          ${budgetBar}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div class="cat-amount">${fmt(amount)}</div>
@@ -2017,6 +2067,7 @@ function renderLedgerList() {
                   </div>
                   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
                     <span style="font-size:14px;font-weight:700;color:${e.isIncome ? 'var(--secondary)' : 'var(--text-primary)'}">${e.isIncome ? '+' : ''}${fmt(e.amount)}</span>
+                    ${!e.isIncome ? `<button class="entry-edit-btn" onclick="openEditEntry('${k}','${e.id}')">✏️</button>` : ''}
                     <button class="data-list-delete" onclick="deleteEntry('${k}','${e.id}')">×</button>
                   </div>
                 </div>`;
@@ -2464,11 +2515,17 @@ function pruneRawEntries() {
 // ═══════════════════════════════════════════════════════════════
 // MANUAL ENTRY
 // ═══════════════════════════════════════════════════════════════
+let _editingEntry = null;
+let _editingMk = null;
+
 function openManualModal() {
+  _editingEntry = null;
+  _editingMk = null;
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('mDate').value = today;
   document.getElementById('mAmount').value = '';
   document.getElementById('mDesc').value = '';
+  document.getElementById('manualModalTitle').textContent = '支出・収入を入力';
   // Populate category select
   const sel = document.getElementById('mCategory');
   sel.innerHTML = Object.entries(DOMAINS).map(([dId, d]) => {
@@ -2479,6 +2536,37 @@ function openManualModal() {
     </optgroup>`;
   }).join('');
 
+  switchManualTab('expense');
+  updateCategoryHint();
+  document.getElementById('manualModal').classList.add('open');
+}
+
+function openEditEntry(mk, entryId) {
+  const monthData = state.months[mk];
+  if (!monthData) return;
+  const entry = (monthData.entries || []).find(e => e.id === entryId);
+  if (!entry) return;
+
+  _editingEntry = entry;
+  _editingMk = mk;
+
+  // Populate category select
+  const sel = document.getElementById('mCategory');
+  sel.innerHTML = Object.entries(DOMAINS).map(([dId, d]) => {
+    const cats = state.categories.filter(c => c.domain === dId);
+    if (!cats.length) return '';
+    return `<optgroup label="${d.emoji} ${d.label}">
+      ${cats.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('')}
+    </optgroup>`;
+  }).join('');
+
+  document.getElementById('mDate').value = entry.date;
+  document.getElementById('mAmount').value = entry.amount;
+  document.getElementById('mDesc').value = entry.description || '';
+  if (entry.categoryId) {
+    document.getElementById('mCategory').value = entry.categoryId;
+  }
+  document.getElementById('manualModalTitle').textContent = '支出を編集';
   switchManualTab('expense');
   updateCategoryHint();
   document.getElementById('manualModal').classList.add('open');
@@ -2511,6 +2599,8 @@ function switchManualTab(tab) {
 
 function closeManualModal() {
   document.getElementById('manualModal').classList.remove('open');
+  _editingEntry = null;
+  _editingMk = null;
 }
 
 function saveManualEntry(continueAdding = false) {
@@ -2531,6 +2621,49 @@ function saveManualEntry(continueAdding = false) {
 
   const date = dateVal;
   const mk = date.slice(0, 7);
+
+  // 編集モード
+  if (_editingEntry !== null && _editingMk !== null) {
+    const monthData = state.months[_editingMk];
+    if (monthData) {
+      const idx = (monthData.entries || []).findIndex(e => e.id === _editingEntry.id);
+      if (idx !== -1) {
+        // 日付が変わった場合は別月への移動が必要
+        if (_editingMk !== mk) {
+          // 元の月から削除
+          monthData.entries.splice(idx, 1);
+          monthData.importedEntryIds = (monthData.importedEntryIds || []).filter(id => id !== _editingEntry.id);
+          const agg0 = aggregateEntries(monthData.entries, state.categories);
+          Object.assign(monthData, agg0);
+          // 新しい月に追加
+          if (!state.months[mk]) {
+            state.months[mk] = {
+              income: 0, categoryTotals: {}, domainTotals: {},
+              totalExpense: 0, entries: [], importedEntryIds: [],
+              importedAt: new Date().toISOString(), isManual: true,
+            };
+          }
+          const updatedEntry = { ..._editingEntry, date, amount, categoryId: catId, description: desc };
+          const newMonthData = state.months[mk];
+          newMonthData.entries = [...(newMonthData.entries || []), updatedEntry];
+          newMonthData.importedEntryIds = [...(newMonthData.importedEntryIds || []), updatedEntry.id];
+          const agg1 = aggregateEntries(newMonthData.entries, state.categories);
+          Object.assign(newMonthData, agg1);
+        } else {
+          // 同じ月内で更新
+          monthData.entries[idx] = { ..._editingEntry, date, amount, categoryId: catId, description: desc };
+          const agg = aggregateEntries(monthData.entries, state.categories);
+          Object.assign(monthData, agg);
+        }
+      }
+    }
+    saveState();
+    if (currentTab === 'ledger') renderLedger();
+    if (currentTab === 'dashboard') { currentMonth = mk; renderDashboard(); }
+    closeManualModal();
+    showNotification('編集しました');
+    return;
+  }
 
   if (!state.months[mk]) {
     state.months[mk] = {
@@ -3271,12 +3404,14 @@ let currentSettingsTab = 'cat';
 
 function switchSettingsTab(tab) {
   currentSettingsTab = tab;
-  document.getElementById('settingsTabCat').classList.toggle('active', tab === 'cat');
-  document.getElementById('settingsTabMap').classList.toggle('active', tab === 'map');
+  document.getElementById('settingsTabCat').classList.toggle('active',    tab === 'cat');
+  document.getElementById('settingsTabMap').classList.toggle('active',    tab === 'map');
   document.getElementById('settingsTabIncome').classList.toggle('active', tab === 'income');
+  document.getElementById('settingsTabData').classList.toggle('active',   tab === 'data');
   document.getElementById('settingsPanelCat').style.display    = tab === 'cat'    ? '' : 'none';
   document.getElementById('settingsPanelMap').style.display    = tab === 'map'    ? '' : 'none';
   document.getElementById('settingsPanelIncome').style.display = tab === 'income' ? '' : 'none';
+  document.getElementById('settingsPanelData').style.display   = tab === 'data'   ? '' : 'none';
   if (tab === 'map')    renderMappingSettings();
   if (tab === 'income') renderIncomeSettings();
 }
@@ -3614,9 +3749,11 @@ function openCatSettings(tab = 'cat') {
   document.getElementById('settingsTabCat').classList.toggle('active',    tab === 'cat');
   document.getElementById('settingsTabMap').classList.toggle('active',    tab === 'map');
   document.getElementById('settingsTabIncome').classList.toggle('active', tab === 'income');
+  document.getElementById('settingsTabData').classList.toggle('active',   tab === 'data');
   document.getElementById('settingsPanelCat').style.display    = tab === 'cat'    ? '' : 'none';
   document.getElementById('settingsPanelMap').style.display    = tab === 'map'    ? '' : 'none';
   document.getElementById('settingsPanelIncome').style.display = tab === 'income' ? '' : 'none';
+  document.getElementById('settingsPanelData').style.display   = tab === 'data'   ? '' : 'none';
   if (tab === 'income') renderIncomeSettings();
 
   const domainOptions = Object.entries(DOMAINS).map(([id, d]) =>
@@ -3628,9 +3765,11 @@ function openCatSettings(tab = 'cat') {
       <div class="cat-setting-row">
         <span class="cat-setting-emoji">${cat.emoji}</span>
         <span class="cat-setting-name">${cat.name}</span>
+        <input type="number" class="cat-budget-input" data-cat-id="${cat.id}" placeholder="予算（円）" value="${cat.budget || ''}" min="0" step="1000" style="width:90px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:right;background:var(--surface);color:var(--text)">
         <select class="cat-setting-select" data-cat-id="${cat.id}" style="border-left:3px solid ${DOMAINS[cat.domain]?.color || '#ccc'}">
           ${domainOptions.replace(`value="${cat.domain}"`, `value="${cat.domain}" selected`)}
         </select>
+        ${cat._custom ? `<button style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:2px 4px;line-height:1;flex-shrink:0" onclick="deleteCustomCategory('${cat.id}')" title="削除">🗑</button>` : ''}
       </div>`
     ).join('');
 
@@ -3657,6 +3796,15 @@ function saveCatSettings() {
     if (cat && cat.domain !== sel.value) {
       cat.domain = sel.value;
       changed = true;
+    }
+    // 予算値を保存
+    const budgetInput = document.querySelector(`.cat-budget-input[data-cat-id="${sel.dataset.catId}"]`);
+    if (budgetInput && cat) {
+      const newBudget = parseInt(budgetInput.value) || null;
+      if (cat.budget !== newBudget) {
+        cat.budget = newBudget;
+        changed = true;
+      }
     }
   });
 
@@ -3692,6 +3840,100 @@ function recalcAllDomainTotals() {
     monthData.domainTotals = domainTotals;
     monthData.totalExpense = Object.values(domainTotals).reduce((s, v) => s + v, 0);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM CATEGORY
+// ═══════════════════════════════════════════════════════════════
+function addCustomCategory() {
+  const emoji = document.getElementById('newCatEmoji').value.trim();
+  const name  = document.getElementById('newCatName').value.trim();
+  const domain = document.getElementById('newCatDomain').value;
+
+  if (!emoji) { showNotification('絵文字を入力してください'); document.getElementById('newCatEmoji').focus(); return; }
+  if (!name)  { showNotification('カテゴリ名を入力してください'); document.getElementById('newCatName').focus(); return; }
+  if (state.categories.find(c => c.name === name)) {
+    showNotification('同じ名前のカテゴリがすでに存在します');
+    return;
+  }
+
+  const newCat = {
+    id: 'custom_' + Date.now(),
+    name,
+    emoji,
+    domain,
+    color: '#8E8E93',
+    budget: null,
+    sortOrder: 999,
+    _custom: true,
+  };
+  state.categories.push(newCat);
+  saveState();
+  showNotification(`「${name}」を追加しました ✓`);
+  openCatSettings('cat');
+}
+
+function deleteCustomCategory(id) {
+  const cat = state.categories.find(c => c.id === id);
+  if (!cat) return;
+  if (!confirm(`「${cat.name}」を削除しますか？\n（このカテゴリの集計データは残りますが、新規入力には使えなくなります）`)) return;
+  state.categories = state.categories.filter(c => c.id !== id);
+  recalcAllDomainTotals();
+  saveState();
+  showNotification(`「${cat.name}」を削除しました`);
+  openCatSettings('cat');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATA EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════════════
+function exportSpendingData() {
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const today = new Date();
+  const dateStr = today.getFullYear().toString()
+    + String(today.getMonth() + 1).padStart(2, '0')
+    + String(today.getDate()).padStart(2, '0');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `spending_backup_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNotification('エクスポートしました ✓');
+}
+
+function importSpendingData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported || typeof imported !== 'object') throw new Error('不正なデータ形式');
+      if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) {
+        event.target.value = '';
+        return;
+      }
+      Object.assign(state, imported);
+      saveState();
+      renderDashboard();
+      closeCatSettings();
+      showNotification('インポートしました ✓');
+    } catch (err) {
+      showNotification('インポートに失敗しました: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function resetAllSpendingData() {
+  if (!confirm('すべてのデータを削除します。この操作は取り消せません。\n本当に削除しますか？')) return;
+  localStorage.removeItem('spending_v1');
+  location.reload();
 }
 
 // ═══════════════════════════════════════════════════════════════
