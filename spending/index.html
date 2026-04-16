@@ -663,12 +663,14 @@
     <div class="import-icon">📄</div>
     <div class="import-title">CSVファイルを読み込む</div>
     <div class="import-desc">
-      マネーフォワードMEなどの家計簿アプリから<br>エクスポートしたCSVファイルに対応しています。
+      対応アプリ: <strong>マネーフォワードME</strong> ・ <strong>Zaim</strong><br>
+      文字コード（UTF-8 / Shift-JIS）は自動検出。フォーマットも自動判定します。
     </div>
     <button class="btn btn-primary btn-full" onclick="document.getElementById('csvFileInput').click()">
       📂 CSVファイルを選択
     </button>
     <input type="file" id="csvFileInput" accept=".csv" style="display:none" onchange="handleCSVFile(event)">
+    <div id="csvFormatBadge" style="display:none;margin-top:10px;text-align:center;font-size:12px;color:#059669;font-weight:600"></div>
   </div>
 
   <!-- Import History -->
@@ -1226,6 +1228,52 @@ const MF_SKIP_KEYS = new Set([
   'その他::事業経費',               // 家計外（事業用）
   'その他::せどり仕入れ',           // 家計外
   'その他::副業投資',               // 家計外
+]);
+
+// ── Zaim カテゴリマッピング ──────────────────────────────────
+const ZAIM_CATEGORY_MAP = {
+  // 食費
+  '食費': 'food', '食費::外食': 'food', '食費::食材': 'food',
+  '食費::カフェ・喫茶店': 'food', '食費::デリバリー・テイクアウト': 'food',
+  // 日用品
+  '日用品': 'daily', '日用品::消耗品': 'daily', '日用品::ドラッグストア': 'daily',
+  '日用品::ホームセンター': 'daily',
+  // 交通
+  '交通費': 'transport', '交通費::電車・バス': 'transport', '交通費::タクシー': 'transport',
+  '交通費::ガソリン': 'transport', '交通費::駐車場': 'transport', '交通費::自転車': 'transport',
+  '自動車': 'transport', '自動車::ガソリン代': 'transport', '自動車::駐車場代': 'transport',
+  '自動車::車検・整備': 'annual', '自動車::税金': 'annual',
+  // 住居
+  '住居費': 'housing', '住居費::家賃': 'housing', '住居費::住宅ローン': 'housing',
+  '住居費::管理費・共益費': 'housing', '住居費::修繕・リフォーム': 'special',
+  // 通信
+  '通信費': 'telecom', '通信費::携帯電話': 'telecom', '通信費::インターネット': 'telecom',
+  '通信費::固定電話': 'telecom', '通信費::放送': 'subscr',
+  // 光熱費
+  '水道・光熱費': 'utility', '水道・光熱費::電気代': 'utility', '水道・光熱費::ガス代': 'utility',
+  '水道・光熱費::水道代': 'utility',
+  // 保険
+  '保険': 'insurance', '保険::生命保険': 'insurance', '保険::医療保険': 'insurance',
+  '保険::自動車保険': 'insurance', '保険::火災保険': 'insurance',
+  // 医療・健康
+  '医療・健康': 'health', '医療・健康::医療費': 'health', '医療・健康::薬': 'health',
+  '医療・健康::フィットネス': 'health', '医療・健康::サプリ': 'health',
+  // サブスク
+  '月額サービス': 'subscr', '月額サービス::動画配信': 'subscr', '月額サービス::音楽配信': 'subscr',
+  '月額サービス::電子書籍': 'subscr',
+  // 娯楽・特別費
+  '娯楽・趣味': 'special', '娯楽・趣味::旅行': 'special', '娯楽・趣味::映画・音楽': 'special',
+  '娯楽・趣味::書籍・雑誌': 'special', '娯楽・趣味::ゲーム': 'special',
+  '衣服・美容': 'special', '衣服・美容::衣服・靴': 'special', '衣服・美容::美容院': 'special',
+  '衣服・美容::化粧品': 'special',
+  '教育': 'special', '教育::授業料': 'special', '教育::教材・参考書': 'special',
+  '交際費': 'special', '交際費::飲み会': 'food', '交際費::プレゼント': 'special',
+  'その他': 'special',
+};
+
+// Zaim でスキップすべきカテゴリ（振替・投資・二重計上）
+const ZAIM_SKIP_CATS = new Set([
+  '税・社会保険', '金融', '振替',
 ]);
 
 const SUGGESTION_TRIGGERS = [
@@ -2174,20 +2222,67 @@ function handleCSVFile(event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const entries = parseMFCSV(e.target.result);
+      const buf = e.target.result;
+      const text = decodeCSVBuffer(buf);
+      const fmt = detectCSVFormat(text);
+
+      // フォーマットバッジ更新
+      const badge = document.getElementById('csvFormatBadge');
+      if (badge) {
+        if (fmt === 'mf')   badge.innerHTML = '<span style="background:#E0F2FE;color:#0284C7;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">📊 マネーフォワード ME</span>';
+        else if (fmt === 'zaim') badge.innerHTML = '<span style="background:#F0FDF4;color:#16A34A;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">📊 Zaim</span>';
+        else badge.innerHTML = '<span style="background:#FEF9C3;color:#92400E;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">⚠️ 形式不明</span>';
+      }
+
+      let entries;
+      if (fmt === 'zaim') {
+        entries = parseZaimCSV(text);
+      } else {
+        entries = parseMFCSV(text);
+      }
+
       if (!entries.length) { showNotification('データが見つかりませんでした'); return; }
       openMappingWizard(entries);
     } catch(err) {
       showNotification('CSVの読み込みに失敗しました: ' + err.message);
     }
   };
-  reader.readAsText(file, 'Shift-JIS');
+  reader.readAsArrayBuffer(file);
+}
+
+// UTF-8 BOM / Shift-JIS 自動判定デコード
+function decodeCSVBuffer(buf) {
+  const bytes = new Uint8Array(buf);
+  // UTF-8 BOM (EF BB BF)
+  if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    return new TextDecoder('utf-8').decode(buf);
+  }
+  // UTF-8 heuristic: try decoding and check for replacement char
+  try {
+    const utf8 = new TextDecoder('utf-8', { fatal: true }).decode(buf);
+    return utf8;
+  } catch (_) {
+    // Fall back to Shift-JIS
+    return new TextDecoder('shift-jis').decode(buf);
+  }
+}
+
+// CSV フォーマット自動判定
+function detectCSVFormat(text) {
+  const firstLines = text.replace(/^\uFEFF/, '').split(/\r?\n/).slice(0, 5).join('\n');
+  // Zaim: 日付,方向,カテゴリ,品目 が特徴
+  if (firstLines.includes('方向') && firstLines.includes('品目')) return 'zaim';
+  // MF: 日付,内容,金額（円）or 大項目
+  if (firstLines.includes('内容') && (firstLines.includes('大項目') || firstLines.includes('金額'))) return 'mf';
+  // どちらにも「日付」と「金額」があれば MF として試みる
+  if (firstLines.includes('日付') && firstLines.includes('金額')) return 'mf';
+  return 'unknown';
 }
 
 // マッピングキー（大項目::中項目 または 大項目）で検索
 function mapCategoryByKey(key) {
   if (!key) return null;
-  return state.csvConfig.categoryMap[key] || MF_CATEGORY_MAP[key] || null;
+  return state.csvConfig.categoryMap[key] || MF_CATEGORY_MAP[key] || ZAIM_CATEGORY_MAP[key] || null;
 }
 
 // 大項目のみで検索（後方互換）
@@ -2275,6 +2370,84 @@ function parseMFCSV(text) {
       mfSubCategory:mfSubCat,
       mfMappingKey,
       categoryId:   null,
+      source: 'csv',
+    });
+  }
+  return entries;
+}
+
+// ── Zaim CSV パーサー ──────────────────────────────────────────
+function parseZaimCSV(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+
+  // ヘッダー行を探す（「日付」「方向」「カテゴリ」を含む行）
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(lines.length, 5); i++) {
+    if (lines[i].includes('日付') && lines[i].includes('方向') && lines[i].includes('カテゴリ')) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) {
+    throw new Error('Zaim形式を認識できませんでした。');
+  }
+
+  const headers = parseCSVLine(lines[headerIdx]);
+  const idx = {
+    date:     findCol(headers, ['日付']),
+    dir:      findCol(headers, ['方向']),
+    cat:      findCol(headers, ['カテゴリ']),
+    item:     findCol(headers, ['品目']),
+    amount:   findCol(headers, ['金額']),
+    currency: findCol(headers, ['通貨']),
+    transfer: findCol(headers, ['振替']),
+    id:       findCol(headers, ['ID']),
+  };
+
+  const entries = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i]);
+    if (cols.length < 3) continue;
+
+    // 振替スキップ
+    if (idx.transfer >= 0) {
+      const t = cols[idx.transfer]?.trim();
+      if (t === '1' || t?.toUpperCase() === 'TRUE') continue;
+    }
+
+    const cat = idx.cat >= 0 ? cols[idx.cat]?.trim() : '';
+    const item = idx.item >= 0 ? cols[idx.item]?.trim() : '';
+
+    // スキップカテゴリ
+    if (ZAIM_SKIP_CATS.has(cat)) continue;
+
+    const dir = idx.dir >= 0 ? cols[idx.dir]?.trim() : '';
+    const isIncome = dir === '収入';
+
+    const rawAmount = idx.amount >= 0 ? cols[idx.amount]?.replace(/,/g, '').trim() : '';
+    const amountNum = parseInt(rawAmount) || 0;
+    if (!amountNum) continue;
+
+    const dateStr = idx.date >= 0 ? cols[idx.date]?.trim() : '';
+    const date = parseDate(dateStr);
+    if (!date) continue;
+
+    const entryId = idx.id >= 0 ? cols[idx.id]?.trim() : '';
+
+    // マッピングキー: "カテゴリ::品目" または "カテゴリ"
+    const mfMappingKey = item ? `${cat}::${item}` : cat;
+
+    entries.push({
+      id: entryId || `csv_zaim_${Date.now()}_${i}`,
+      date,
+      amount: Math.abs(amountNum),
+      isIncome,
+      description: item || cat,
+      mfCategory: cat,
+      mfSubCategory: item,
+      mfMappingKey,
+      categoryId: null,
       source: 'csv',
     });
   }
