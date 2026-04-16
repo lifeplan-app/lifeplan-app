@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>法的情報 - ライフプランアプリ</title>
+  <title>法的情報 - ライフプランアプリ / 支出管理アプリ</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -232,12 +232,13 @@
 <body>
 
 <header>
-  <h1>ライフプランアプリ</h1>
-  <p>法的情報 &mdash; プライバシーポリシー / 免責事項 / 利用規約</p>
+  <h1>ライフプランアプリ / 支出管理アプリ</h1>
+  <p>法的情報 &mdash; プライバシーポリシー / 免責事項 / 利用規約 / 特定商取引法 / 広告開示</p>
 </header>
 
-<div class="back-bar">
-  <a href="index.html">トップページに戻る</a>
+<div class="back-bar" style="display:flex;gap:24px;flex-wrap:wrap">
+  <a href="index.html">ライフプランアプリへ</a>
+  <a href="spending/index.html">支出管理アプリへ</a>
 </div>
 
 <nav class="page-nav" aria-label="ページ内ナビゲーション">
@@ -245,6 +246,8 @@
     <li><a href="#privacy-policy">プライバシーポリシー</a></li>
     <li><a href="#disclaimer">免責事項</a></li>
     <li><a href="#terms-of-service">利用規約</a></li>
+    <li><a href="#tokusho">特定商取引法に基づく表示</a></li>
+    <li><a href="#affiliate-disclosure">広告・アフィリエイト開示</a></li>
   </ul>
 </nav>
 
@@ -261,7 +264,7 @@
     <div class="section-body">
 
       <div class="highlight-box">
-        本アプリ「ライフプランアプリ」（以下「本アプリ」）は、ユーザーが入力したすべての情報をお使いのブラウザ内にのみ保存します。入力データは運営者のサーバーを含む外部には一切送信されません。
+        本ページは「ライフプランアプリ」および「支出管理アプリ」（以下あわせて「本アプリ」）に適用されます。ユーザーが入力したすべての情報はお使いのブラウザ内にのみ保存されます。入力データは運営者のサーバーを含む外部には一切送信されません。
       </div>
 
       <h3>1. 事業者情報</h3>
@@ -298,7 +301,9 @@
       <p>ローカルストレージに保存されたデータは、以下の目的のみに使用されます。</p>
       <ul>
         <li>ライフプランシミュレーションの計算・表示</li>
+        <li>支出管理・家計データの集計・表示</li>
         <li>入力内容の保持（ページ再読み込み後も入力を継続できるようにするため）</li>
+        <li>両アプリ間のデータ連携（同一ドメイン内 localStorage の相互参照）</li>
       </ul>
 
       <h3>6. データの第三者提供</h3>
@@ -489,6 +494,110 @@
     </div>
   </section>
 
+
+  <!-- ============================================================
+       4. 特定商取引法に基づく表示
+       ============================================================ -->
+  <section class="legal-section" id="tokusho">
+    <div class="section-header">
+      <h2>特定商取引法に基づく表示</h2>
+      <p class="section-date">制定日：2026年4月1日</p>
+    </div>
+    <div class="section-body">
+
+      <div class="highlight-box">
+        本アプリは現在、利用料金を一切徴収しない無料サービスです。有料プランを導入する際は、改めて本ページを更新し、必要事項を記載します。
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px">
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;width:35%;color:#1a56a0;font-weight:700">販売業者</th>
+          <td style="padding:10px 12px">個人（詳細はお問い合わせください）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">サービス名</th>
+          <td style="padding:10px 12px">ライフプランアプリ / 支出管理アプリ</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">販売価格</th>
+          <td style="padding:10px 12px">無料（現時点）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">支払方法</th>
+          <td style="padding:10px 12px">なし（無料サービスのため）</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">提供時期</th>
+          <td style="padding:10px 12px">申込み不要。本アプリへのアクセス時から即時利用可能</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">返品・キャンセル</th>
+          <td style="padding:10px 12px">デジタルサービスの性質上、返品は適用されません。退会・利用停止はいつでも可能で、ローカルストレージのデータはブラウザ設定から削除できます</td>
+        </tr>
+        <tr style="border-bottom:1px solid #dde3ec">
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">動作環境</th>
+          <td style="padding:10px 12px">最新版のChrome / Firefox / Safari / Microsoft Edge（インストール不要）</td>
+        </tr>
+        <tr>
+          <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">お問い合わせ</th>
+          <td style="padding:10px 12px"><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>（返答までに数日かかる場合があります）</td>
+        </tr>
+      </table>
+
+      <p style="margin-top:16px;font-size:13px;color:#666">
+        ※ 本アプリは個人が運営するウェブサービスです。運営者の氏名・住所等の個人情報については、特定商取引法に基づき請求があった場合に遅滞なく開示します。開示請求は上記メールアドレスまでお問い合わせください。
+      </p>
+
+      <a class="page-top" href="#tokusho">このセクションの先頭へ ↑</a>
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       5. 広告・アフィリエイト開示
+       ============================================================ -->
+  <section class="legal-section" id="affiliate-disclosure">
+    <div class="section-header">
+      <h2>広告・アフィリエイト開示</h2>
+      <p class="section-date">制定日：2026年4月1日</p>
+    </div>
+    <div class="section-body">
+
+      <div class="warning-box">
+        <strong>PR・広告表示について：</strong>本アプリには、アフィリエイト広告（成果報酬型広告）が含まれます。「PR」または「広告」と表示されたリンク・ボタンは広告である旨をお知らせするものです（景品表示法 第5条第3号・消費者庁ステルスマーケティング告示への対応）。
+      </div>
+
+      <h3>1. アフィリエイト広告とは</h3>
+      <p>アフィリエイト広告とは、ユーザーが本アプリ内のリンクをクリックして外部サービスへ遷移し、一定の条件（商品購入・サービス申込み等）を満たした場合に、運営者が広告主または ASP（アフィリエイトサービスプロバイダ）から成果報酬を受け取る仕組みです。</p>
+
+      <h3>2. 掲載している広告の種類（予定）</h3>
+      <ul>
+        <li>格安SIM・スマートフォンプラン（通信費の見直し提案）</li>
+        <li>保険・保険見直しサービス（保険料の見直し提案）</li>
+        <li>NISA・投資口座開設（資産運用の提案）</li>
+        <li>家計改善・節約に関連するサービス全般</li>
+      </ul>
+      <p style="font-size:13px;color:#666;margin-top:4px">※ 掲載広告は順次追加・変更される場合があります。</p>
+
+      <h3>3. 提案内容の中立性</h3>
+      <p>本アプリが表示する改善提案（例：「通信費を見直す余地があります」）は、ユーザーが実際に入力したデータ・支出金額に基づいて自動的に算出されます。提案の表示基準（閾値）はアプリ開発時に設定されたものであり、特定の広告主から報酬を受けることによって提案内容が変わることはありません。</p>
+
+      <h3>4. 節約試算について</h3>
+      <p>本アプリが提示する「節約インパクト試算」（例：「月◯円節約した場合、◯年で＋◯万円」）は、一定の前提条件（年利・運用期間等）に基づいた参考試算です。将来の実際の成果を保証するものではありません。また、この試算はアフィリエイト報酬の有無によって変化することはありません。</p>
+
+      <h3>5. 外部サービスへの遷移</h3>
+      <p>「PR」リンクをクリックすると、本アプリの管理外の外部ウェブサイトへ遷移します。外部サービスの内容・品質・プライバシーポリシー等について、運営者は一切の責任を負いません。外部サービスの利用はユーザー自身の判断と責任において行ってください。</p>
+
+      <h3>6. お問い合わせ</h3>
+      <div class="contact-box">
+        広告・アフィリエイトに関するご質問は下記までお問い合わせください。<br><br>
+        <strong>メールアドレス：</strong><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>
+      </div>
+
+      <a class="page-top" href="#affiliate-disclosure">このセクションの先頭へ ↑</a>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -497,6 +606,8 @@
     <a href="#privacy-policy" style="color:rgba(255,255,255,0.7); text-decoration:none; margin:0 8px;">プライバシーポリシー</a>
     <a href="#disclaimer" style="color:rgba(255,255,255,0.7); text-decoration:none; margin:0 8px;">免責事項</a>
     <a href="#terms-of-service" style="color:rgba(255,255,255,0.7); text-decoration:none; margin:0 8px;">利用規約</a>
+    <a href="#tokusho" style="color:rgba(255,255,255,0.7); text-decoration:none; margin:0 8px;">特定商取引法</a>
+    <a href="#affiliate-disclosure" style="color:rgba(255,255,255,0.7); text-decoration:none; margin:0 8px;">広告開示</a>
   </p>
 </footer>
 
