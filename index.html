@@ -1852,6 +1852,36 @@
 .tpl-plan-free     { background: #D1FAE5; color: #065F46; }
 .tpl-plan-standard { background: #E0E7FF; color: #3730A3; }
 .tpl-plan-premium  { background: #FEF3C7; color: #92400E; }
+/* ===== F: Upgrade誘導UI ===== */
+.upgrade-badge { font-size:0.65rem; padding:2px 6px; border-radius:4px; font-weight:600; display:inline-block; }
+.upgrade-badge--standard { background:#E0E7FF; color:#3730A3; }
+.upgrade-badge--premium  { background:#FEF3C7; color:#92400E; }
+.upgrade-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:6000;
+  align-items:center; justify-content:center; padding:16px; }
+.upgrade-modal-overlay.open { display:flex; }
+.upgrade-modal-box { background:#fff; border-radius:20px; max-width:420px; width:100%;
+  padding:32px 28px 24px; text-align:center; box-shadow:0 24px 64px rgba(0,0,0,0.2);
+  position:relative; animation:upgradeModalIn .2s ease; }
+@keyframes upgradeModalIn { from { opacity:0; transform:scale(.92) translateY(8px); } to { opacity:1; transform:none; } }
+.upgrade-modal-icon { font-size:36px; margin-bottom:12px; }
+.upgrade-modal-title { font-size:17px; font-weight:800; color:#111; margin:0 0 10px; line-height:1.4; }
+.upgrade-modal-body  { font-size:13px; color:#555; line-height:1.7; white-space:pre-line; margin:0 0 20px; }
+.upgrade-modal-cta   { display:block; width:100%; padding:14px; border-radius:12px;
+  background:linear-gradient(135deg,#4F46E5,#7C3AED); color:#fff; font-size:15px; font-weight:700;
+  border:none; cursor:pointer; margin-bottom:8px; transition:opacity .15s; }
+.upgrade-modal-cta:hover { opacity:.9; }
+.upgrade-modal-sub   { display:block; font-size:12px; color:#4F46E5; cursor:pointer; background:none;
+  border:none; text-decoration:underline; margin:4px auto 0; }
+.upgrade-modal-dismiss { display:block; font-size:12px; color:#9CA3AF; cursor:pointer; background:none;
+  border:none; margin:8px auto 0; }
+.upgrade-banner { display:flex; align-items:center; gap:8px; background:#EFF6FF;
+  border:1px solid #BFDBFE; border-radius:10px; padding:10px 14px; font-size:13px; margin:8px 0; }
+.upgrade-banner__text { flex:1; color:#1D4ED8; }
+.upgrade-banner__link { color:#1D4ED8; font-weight:600; cursor:pointer; white-space:nowrap;
+  background:none; border:none; font-size:13px; text-decoration:underline; }
+.upgrade-banner--warn { background:#FEF2F2; border-color:#FECACA; }
+.upgrade-banner--warn .upgrade-banner__text,
+.upgrade-banner--warn .upgrade-banner__link { color:#DC2626; }
 /* ===== D: 保存済みシナリオ ===== */
 .ssn-card { display:flex; align-items:center; justify-content:space-between; gap:12px;
   background:#f8f9fa; border:1px solid #e5e7eb; border-radius:10px; padding:12px 14px; margin-bottom:8px; }
@@ -4954,6 +4984,18 @@
 </div>
 
 <!-- ===== テンプレートモーダル ===== -->
+<!-- ===== F: Upgrade誘導モーダル ===== -->
+<div class="upgrade-modal-overlay" id="upgradeModal" role="dialog" aria-modal="true">
+  <div class="upgrade-modal-box">
+    <div class="upgrade-modal-icon" id="upgModalIcon">✨</div>
+    <h3 class="upgrade-modal-title" id="upgModalTitle"></h3>
+    <p  class="upgrade-modal-body"  id="upgModalBody"></p>
+    <button class="upgrade-modal-cta" id="upgModalCta" onclick=""></button>
+    <button class="upgrade-modal-sub" id="upgModalSub" style="display:none"></button>
+    <button class="upgrade-modal-dismiss" id="upgModalDismiss" onclick="closeUpgradeModal()">あとで</button>
+  </div>
+</div>
+
 <!-- ===== D: シナリオ保存モーダル ===== -->
 <div class="modal-overlay" id="saveScenarioModal" role="dialog" aria-modal="true"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:16px;">
@@ -5050,6 +5092,69 @@ function getUserPlan() {
   return state._plan || 'free';  // 'free' | 'standard' | 'premium'
 }
 const PLAN_ORDER = { free: 0, standard: 1, premium: 2 };
+
+// ===== F: Upgrade誘導UI 定数 =====
+const UPGRADE_COPY = {
+  // T-01: テンプレートロック
+  template_locked: {
+    badge:       (planName) => `🔒 ${planName}以上`,
+    modal_title: (name, planName) => `「${name}」は${planName}以上のプランで利用できます`,
+    modal_body:  'テンプレートを使うと、アセット・支出設定をワンクリックで読み込んですぐにシミュレーションを開始できます。',
+    cta:         (planName) => `${planName}プランを見る`,
+    dismiss:     'あとで',
+    step3_banner:'🌟 DINKS・FIREなど計3種のテンプレートはStandard以上で使えます',
+  },
+  // T-02: シナリオ保存上限
+  scenario_limit: {
+    warning_inline: (remaining) => `保存残り${remaining}件 │ Premiumで無制限に`,
+    modal_title:   'シナリオの保存上限に達しました',
+    modal_body:    (planName, limit) =>
+      `${planName}プランでは最大${limit}件保存できます。\nPremiumなら無制限に保存でき、月次の自動スナップショット（最大24ヶ月分）も利用できます。`,
+    cta:           'Premiumプランを見る',
+    dismiss:       'キャンセル',
+    sub_action:    '既存のシナリオを削除して保存する →',
+  },
+  // T-03: 自動スナップショット（Standard/Free時プレースホルダー）
+  auto_snapshot: {
+    placeholder_title: '📅 自動スナップショット（Premium）',
+    placeholder_body:  '月に一度、プランの状態を自動記録。最大24ヶ月分の履歴を振り返れます。',
+    cta:               'Premiumを見る',
+  },
+  // T-04: PDF
+  pdf: {
+    free_watermark: 'Freeプランの簡易版PDFです。グラフ・詳細分析を含むフル版はStandard以上でご利用いただけます。',
+    btn_label_free: '📄 PDF簡易版を出力 | フル版はStandard以上',
+  },
+  // T-05: リバランス提案
+  rebalance: {
+    placeholder_title: '📊 リバランス提案（Standard以上）',
+    placeholder_body:  'ポートフォリオの配分を確認し、目標比率への調整案を表示します。',
+    cta:               'Standardプランを見る',
+  },
+  // T-06: ダウングレード時シナリオ警告
+  downgrade_scenario: {
+    banner: (n) => `⚠️ Freeプランでは新規シナリオを保存できません。保存済みの${n}件は引き続き読み込み・削除が可能です。`,
+  },
+  // T-07: ダッシュボード エンゲージメントリマインダー
+  engagement_reminder: {
+    title:   '💡 プランを保存して比較しましょう',
+    body:    '「最適化プラン」「送ったらどうなるか」…複数のシナリオを保存して資産推移を比較できます。',
+    cta:     'Standardプランを見る',
+    dismiss: 'あとで',
+  },
+};
+
+// プラン表示名マップ
+const PLAN_NAMES = { free: 'Free', standard: 'Standard', premium: 'Premium' };
+
+/** アップグレードページを新規タブで開く（CSP: connect-src 'none' 対応）*/
+function openUpgradePage(plan) {
+  // 将来: 決済LP URLに差し替え。現時点はプレースホルダー
+  const url = plan === 'premium'
+    ? 'https://example.com/upgrade?plan=premium'
+    : 'https://example.com/upgrade?plan=standard';
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
 
 // シナリオ保存件数制限
 const SCENARIO_LIMITS = {
@@ -7826,6 +7931,20 @@ function closeTemplateModal() {
   document.getElementById('templateModal').classList.remove('open');
 }
 
+function showTemplateLockedModal(templateId) {
+  const tpl = PORTFOLIO_TEMPLATES.find(t => t.id === templateId);
+  if (!tpl) return;
+  const reqPlanName = PLAN_NAMES[tpl.plan] || tpl.plan;
+  showUpgradeModal({
+    icon:     '📋',
+    title:    UPGRADE_COPY.template_locked.modal_title(tpl.name, reqPlanName),
+    body:     UPGRADE_COPY.template_locked.modal_body,
+    ctaLabel: UPGRADE_COPY.template_locked.cta(reqPlanName),
+    ctaPlan:  tpl.plan,
+    dismiss:  UPGRADE_COPY.template_locked.dismiss,
+  });
+}
+
 function renderTemplateCards() {
   const plan = getUserPlan();
   const grid = document.getElementById('templateCardGrid');
@@ -7841,8 +7960,8 @@ function renderTemplateCards() {
     }).join('<br>') + (tpl.assets.length > 4 ? `<br><span style="color:var(--text-muted)">他${tpl.assets.length - 4}件…</span>` : '');
     const tagsHtml = tpl.tags.map(t => `<span class="tpl-tag">${t}</span>`).join('');
     if (!accessible) {
-      return `<div class="tpl-card tpl-card--locked">
-        <span class="tpl-card__lock">🔒 ${planLabel}以上</span>
+      return `<div class="tpl-card tpl-card--locked" onclick="showTemplateLockedModal('${tpl.id}')">
+        <span class="tpl-card__lock"><span class="upgrade-badge upgrade-badge--${tpl.plan}">${UPGRADE_COPY.template_locked.badge(planLabel)}</span></span>
         <span class="tpl-card__emoji">${tpl.emoji}</span>
         <div class="tpl-card__name">${tpl.name}</div>
         <div class="tpl-card__sub">${tpl.subtitle}</div>
@@ -7865,7 +7984,7 @@ function applyTemplate(templateId) {
   if (!tpl) return;
   // プランチェック
   if (PLAN_ORDER[getUserPlan()] < PLAN_ORDER[tpl.plan]) {
-    showNotification('このテンプレートは ' + ({ standard: 'Standard', premium: 'Premium' }[tpl.plan]) + ' プラン以上でご利用いただけます');
+    showTemplateLockedModal(templateId);
     return;
   }
   // 既存資産がある場合は確認
@@ -11076,17 +11195,121 @@ function formatDate(d) {
   return `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日`;
 }
 
+// ===== F: Upgrade誘導モーダル =====
+
 /**
- * showUpgradeModal(trigger)
- * F: Upgrade誘導UI で本実装予定。それまではシンプルなアラートで代替。
- * trigger: 'scenario_save' | 'asset_limit' | etc.
+ * アップグレード誘導モーダルを表示する
+ * @param {string|object} trigger - トリガーキー文字列または {title,body,icon,ctaLabel,ctaPlan,subLabel,subFn,dismissLabel}
  */
 function showUpgradeModal(trigger) {
-  const messages = {
-    scenario_save: 'シナリオの保存はStandardプラン以上でご利用いただけます（最大3件）。\nPremiumプランでは無制限に保存できます。',
-  };
-  const msg = messages[trigger] || 'この機能はアップグレードが必要です。';
-  alert('🔒 プランのアップグレードが必要です\n\n' + msg);
+  const plan    = getUserPlan();
+  const planName = PLAN_NAMES[plan] || 'Free';
+
+  let config = {};
+
+  if (typeof trigger === 'string') {
+    switch (trigger) {
+      case 'scenario_save':
+      case 'scenario_limit': {
+        const limit = SCENARIO_LIMITS[plan].saved;
+        config = {
+          icon:     '💾',
+          title:    UPGRADE_COPY.scenario_limit.modal_title,
+          body:     UPGRADE_COPY.scenario_limit.modal_body(planName, limit),
+          ctaLabel: UPGRADE_COPY.scenario_limit.cta,
+          ctaPlan:  'premium',
+          subLabel: UPGRADE_COPY.scenario_limit.sub_action,
+          subFn:    () => { closeUpgradeModal(); showPage('scenarios'); },
+          dismiss:  UPGRADE_COPY.scenario_limit.dismiss,
+        };
+        break;
+      }
+      case 'template_locked': {
+        const reqPlan = 'standard';
+        config = {
+          icon:     '📋',
+          title:    UPGRADE_COPY.template_locked.modal_title('このテンプレート', PLAN_NAMES[reqPlan]),
+          body:     UPGRADE_COPY.template_locked.modal_body,
+          ctaLabel: UPGRADE_COPY.template_locked.cta(PLAN_NAMES[reqPlan]),
+          ctaPlan:  reqPlan,
+          dismiss:  UPGRADE_COPY.template_locked.dismiss,
+        };
+        break;
+      }
+      case 'auto_snapshot': {
+        config = {
+          icon:     '📅',
+          title:    UPGRADE_COPY.auto_snapshot.placeholder_title,
+          body:     UPGRADE_COPY.auto_snapshot.placeholder_body,
+          ctaLabel: UPGRADE_COPY.auto_snapshot.cta,
+          ctaPlan:  'premium',
+        };
+        break;
+      }
+      case 'rebalance': {
+        config = {
+          icon:     '📊',
+          title:    UPGRADE_COPY.rebalance.placeholder_title,
+          body:     UPGRADE_COPY.rebalance.placeholder_body,
+          ctaLabel: UPGRADE_COPY.rebalance.cta,
+          ctaPlan:  'standard',
+        };
+        break;
+      }
+      case 'engagement_reminder': {
+        config = {
+          icon:     '💡',
+          title:    UPGRADE_COPY.engagement_reminder.title,
+          body:     UPGRADE_COPY.engagement_reminder.body,
+          ctaLabel: UPGRADE_COPY.engagement_reminder.cta,
+          ctaPlan:  'standard',
+          dismiss:  UPGRADE_COPY.engagement_reminder.dismiss,
+        };
+        break;
+      }
+      default: {
+        config = {
+          icon:     '✨',
+          title:    'この機能はアップグレードが必要です',
+          body:     'Standardプランまたは Premiumプランにアップグレードするとご利用いただけます。',
+          ctaLabel: 'プランを見る',
+          ctaPlan:  'standard',
+        };
+      }
+    }
+  } else {
+    config = trigger;
+  }
+
+  const modal = document.getElementById('upgradeModal');
+  if (!modal) return;
+
+  document.getElementById('upgModalIcon').textContent  = config.icon    || '✨';
+  document.getElementById('upgModalTitle').textContent = config.title   || '';
+  document.getElementById('upgModalBody').textContent  = config.body    || '';
+
+  const ctaBtn = document.getElementById('upgModalCta');
+  ctaBtn.textContent = config.ctaLabel || 'アップグレード';
+  ctaBtn.onclick = () => { closeUpgradeModal(); openUpgradePage(config.ctaPlan || 'standard'); };
+
+  const subBtn = document.getElementById('upgModalSub');
+  if (config.subLabel && config.subFn) {
+    subBtn.textContent = config.subLabel;
+    subBtn.onclick = config.subFn;
+    subBtn.style.display = 'block';
+  } else {
+    subBtn.style.display = 'none';
+  }
+
+  const dismissBtn = document.getElementById('upgModalDismiss');
+  dismissBtn.textContent = config.dismiss || 'あとで';
+
+  modal.classList.add('open');
+}
+
+function closeUpgradeModal() {
+  const modal = document.getElementById('upgradeModal');
+  if (modal) modal.classList.remove('open');
 }
 
 function showNotification(msg) {
@@ -21403,14 +21626,16 @@ function openSaveScenarioModal() {
   const limitInfo = document.getElementById('ssnLimitInfo');
   if (limitInfo) {
     if (limit === Infinity) {
-      limitInfo.textContent = '保存済み: ' + count + '件';
+      limitInfo.innerHTML = '<span style="color:#6B7280">保存済み: ' + count + '件（無制限）</span>';
     } else {
-      limitInfo.textContent = '保存済み: ' + count + ' / ' + limit + '件';
-      if (count >= limit) {
-        limitInfo.style.color = '#DC2626';
-      } else {
-        limitInfo.style.color = '#6B7280';
+      const remaining = limit - count;
+      let html = '保存済み: ' + count + ' / ' + limit + '件';
+      if (remaining === 1) {
+        html += ' &nbsp;<span style="color:#D97706;font-weight:600">' + UPGRADE_COPY.scenario_limit.warning_inline(remaining) + '</span>';
+      } else if (remaining <= 0) {
+        html = '<span style="color:#DC2626;font-weight:600">' + UPGRADE_COPY.scenario_limit.warning_inline(0) + '</span>';
       }
+      limitInfo.innerHTML = '<span style="color:' + (remaining <= 0 ? '#DC2626' : '#6B7280') + '">' + html + '</span>';
     }
   }
   modal.style.display = 'flex';
@@ -21440,30 +21665,81 @@ function renderSavedScenarioList() {
   const list = state.savedScenarios || [];
   const plan  = getUserPlan();
   const limit = SCENARIO_LIMITS[plan].saved;
+  let html = '';
 
-  if (list.length === 0) {
-    const freeMsg = limit === 0
-      ? '<div class="ssn-upgrade-hint">💡 Standardプラン以上で最大3件のシナリオを保存できます。</div>'
-      : '';
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:14px;padding:20px 0;text-align:center;">保存済みシナリオはありません</div>' + freeMsg;
-    return;
+  // T-06: ダウングレード警告（Freeで保存済みシナリオがある場合）
+  if (limit === 0 && list.length > 0) {
+    html += `<div class="upgrade-banner upgrade-banner--warn">
+      <span class="upgrade-banner__text">${UPGRADE_COPY.downgrade_scenario.banner(list.length)}</span>
+    </div>`;
   }
 
-  el.innerHTML = list.map(sc => {
-    const date = sc.updatedAt ? sc.updatedAt.slice(0, 10) : sc.createdAt.slice(0, 10);
-    const readOnly = PLAN_ORDER[plan] < PLAN_ORDER['standard'];
-    return `<div class="ssn-card">
-      <div class="ssn-card__meta">
-        <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
-        ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
-        <div class="ssn-card__date">更新: ${date}</div>
-      </div>
-      <div class="ssn-card__actions">
-        ${readOnly ? '' : `<button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>`}
-        <button class="btn btn-sm btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="deleteScenario('${sc.id}')">削除</button>
-      </div>
+  // シナリオ一覧
+  if (list.length === 0) {
+    if (limit === 0) {
+      html += `<div class="upgrade-banner">
+        <span class="upgrade-banner__text">💡 Standardプラン以上で最大3件のシナリオを保存できます。</span>
+        <button class="upgrade-banner__link" onclick="showUpgradeModal('scenario_save')">詳しく見る →</button>
+      </div>`;
+    } else {
+      html += '<div style="color:var(--text-muted);font-size:14px;padding:16px 0;text-align:center;">保存済みシナリオはありません</div>';
+    }
+  } else {
+    html += list.map(sc => {
+      const date = sc.updatedAt ? sc.updatedAt.slice(0, 10) : sc.createdAt.slice(0, 10);
+      const canLoad = limit > 0;
+      return `<div class="ssn-card">
+        <div class="ssn-card__meta">
+          <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
+          ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
+          <div class="ssn-card__date">更新: ${date}</div>
+        </div>
+        <div class="ssn-card__actions">
+          ${canLoad ? `<button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>` : ''}
+          <button class="btn btn-sm btn-secondary" style="color:#DC2626;border-color:#DC2626;" onclick="deleteScenario('${sc.id}')">削除</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // T-03: 自動スナップショット プレースホルダー（Standard/Free）
+  if (plan !== 'premium') {
+    const copy = UPGRADE_COPY.auto_snapshot;
+    html += `<div style="margin-top:16px;background:#F9FAFB;border:1.5px dashed #D1D5DB;border-radius:10px;padding:14px 16px;">
+      <div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:4px">${copy.placeholder_title}</div>
+      <div style="font-size:13px;color:#6B7280;margin-bottom:10px">${copy.placeholder_body}</div>
+      <button class="btn btn-sm btn-secondary" onclick="showUpgradeModal('auto_snapshot')">${copy.cta}</button>
     </div>`;
-  }).join('');
+  } else {
+    // Premium: autoSnapshots一覧
+    const snaps = state.autoSnapshots || [];
+    if (snaps.length > 0) {
+      html += '<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">📅 自動スナップショット</div>';
+      html += snaps.map(s => `<div class="ssn-card">
+        <div class="ssn-card__meta">
+          <div class="ssn-card__name">${escapeHtml(s.label)}</div>
+          <div class="ssn-card__date">${s.createdAt.slice(0, 10)}</div>
+        </div>
+        <div class="ssn-card__actions">
+          <button class="btn btn-sm btn-primary" onclick="confirmLoadAutoSnapshot('${s.id}')">読み込む</button>
+        </div>
+      </div>`).join('');
+      html += '</div>';
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function confirmLoadAutoSnapshot(id) {
+  const s = (state.autoSnapshots || []).find(x => x.id === id);
+  if (!s) return;
+  if (!confirm('「' + s.label + '」を読み込みます。現在のプランを上書きします。')) return;
+  const { savedScenarios, autoSnapshots } = state;
+  Object.assign(state, s.snapshot, { savedScenarios, autoSnapshots });
+  save();
+  showPage('dashboard');
+  showNotification('「' + s.label + '」を読み込みました');
 }
 
 function confirmLoadScenario(id) {
