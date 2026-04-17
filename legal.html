@@ -221,6 +221,24 @@
       color: #1a56a0;
     }
 
+    /* ---- Review banner ---- */
+    .review-banner {
+      background-color: #fff3cd;
+      border: 2px solid #f9a825;
+      border-radius: 6px;
+      padding: 14px 20px;
+      margin: 20px 0 0;
+      font-size: 14px;
+      color: #5d4037;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .review-banner strong { display: block; margin-bottom: 4px; font-size: 15px; }
+    .review-banner ul { margin: 6px 0 0 18px; }
+    .review-banner li { margin-bottom: 3px; }
+    @media print { .review-banner { display: none; } }
+
     /* ---- Responsive ---- */
     @media (max-width: 600px) {
       header h1 { font-size: 18px; }
@@ -253,13 +271,29 @@
 
 <main>
 
+  <!-- 専門家レビュー用バナー（印刷時非表示） -->
+  <div class="review-banner">
+    <span style="font-size:24px;flex-shrink:0">📋</span>
+    <div>
+      <strong>【専門家レビュー依頼用】2026年4月30日 確認依頼</strong>
+      以下の点についてご確認・ご意見をいただけますと幸いです。
+      <ul>
+        <li>プライバシーポリシー：ローカルストレージのみ保存・外部送信なし という説明の適切性</li>
+        <li>免責事項：投資助言・財務アドバイスではない旨の記載の十分性</li>
+        <li>特定商取引法：個人運営・無料サービスとして現状の記載で要件を満たすか。有料プラン導入時に必要な追加項目</li>
+        <li>広告・アフィリエイト開示：景品表示法・ステルスマーケティング告示への対応状況</li>
+        <li>その他、法的リスクとして追記が必要な事項</li>
+      </ul>
+    </div>
+  </div>
+
   <!-- ============================================================
        1. プライバシーポリシー
        ============================================================ -->
   <section class="legal-section" id="privacy-policy">
     <div class="section-header">
       <h2>プライバシーポリシー</h2>
-      <p class="section-date">制定日：2026年4月1日</p>
+      <p class="section-date">制定日：2026年4月1日　最終更新日：2026年4月17日</p>
     </div>
     <div class="section-body">
 
@@ -329,7 +363,7 @@
       <h3>10. お問い合わせ</h3>
       <div class="contact-box">
         本プライバシーポリシーに関するご質問・ご意見は、以下の連絡先までお問い合わせください。<br><br>
-        <strong>メールアドレス：</strong><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>
+        <strong>メールアドレス：</strong><a href="mailto:support.lifeplan.app@gmail.com">support.lifeplan.app@gmail.com</a>
       </div>
 
       <a class="page-top" href="#privacy-policy">このセクションの先頭へ ↑</a>
@@ -343,7 +377,7 @@
   <section class="legal-section" id="disclaimer">
     <div class="section-header">
       <h2>免責事項</h2>
-      <p class="section-date">制定日：2026年4月1日</p>
+      <p class="section-date">制定日：2026年4月1日　最終更新日：2026年4月17日</p>
     </div>
     <div class="section-body">
 
@@ -401,7 +435,7 @@
   <section class="legal-section" id="terms-of-service">
     <div class="section-header">
       <h2>利用規約</h2>
-      <p class="section-date">制定日：2026年4月1日</p>
+      <p class="section-date">制定日：2026年4月1日　最終更新日：2026年4月17日</p>
     </div>
     <div class="section-body">
 
@@ -435,7 +469,7 @@
       <p>ユーザーは、本アプリの利用にあたり、以下の行為を行ってはなりません。</p>
       <ol>
         <li><strong>リバースエンジニアリング等：</strong>本アプリのソースコードの逆コンパイル、リバースエンジニアリング、逆アセンブル、またはソースコードの不正な取得を試みる行為。</li>
-        <li><strong>無断商用利用：</strong>運営者の書面による事前承認なく、本アプリを商業目的で利用、転売、または他者に提供する行為。<br><span style="font-size:13px;color:#555">※ 商用利用（FP業務での顧客向け利用、企業研修での利用、Webサービスへの組込み等）をご検討の場合は、事前に <a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a> までお問い合わせください。</span></li>
+        <li><strong>無断商用利用：</strong>運営者の書面による事前承認なく、本アプリを商業目的で利用、転売、または他者に提供する行為。<br><span style="font-size:13px;color:#555">※ 商用利用（FP業務での顧客向け利用、企業研修での利用、Webサービスへの組込み等）をご検討の場合は、事前に <a href="mailto:support.lifeplan.app@gmail.com">support.lifeplan.app@gmail.com</a> までお問い合わせください。</span></li>
         <li><strong>不正アクセス：</strong>本アプリのシステムに対する不正なアクセス、クラッキング、または脆弱性の悪用。</li>
         <li><strong>虚偽情報の拡散：</strong>本アプリの内容を改ざんまたは誤った文脈で提示し、第三者を誤解させる行為。</li>
         <li><strong>法令違反：</strong>本アプリの利用に際し、日本の法令または公序良俗に反する行為。</li>
@@ -487,7 +521,7 @@
       <div class="contact-box">
         <strong>お問い合わせ</strong><br>
         本規約に関するご質問・ご意見がある場合は、以下の連絡先までお問い合わせください。<br><br>
-        <strong>メールアドレス：</strong><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>
+        <strong>メールアドレス：</strong><a href="mailto:support.lifeplan.app@gmail.com">support.lifeplan.app@gmail.com</a>
       </div>
 
       <a class="page-top" href="#terms-of-service">このセクションの先頭へ ↑</a>
@@ -501,7 +535,7 @@
   <section class="legal-section" id="tokusho">
     <div class="section-header">
       <h2>特定商取引法に基づく表示</h2>
-      <p class="section-date">制定日：2026年4月1日</p>
+      <p class="section-date">制定日：2026年4月1日　最終更新日：2026年4月17日</p>
     </div>
     <div class="section-body">
 
@@ -540,13 +574,27 @@
         </tr>
         <tr>
           <th style="text-align:left;padding:10px 12px;background:#f5f7fa;color:#1a56a0;font-weight:700">お問い合わせ</th>
-          <td style="padding:10px 12px"><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>（返答までに数日かかる場合があります）</td>
+          <td style="padding:10px 12px"><a href="mailto:support.lifeplan.app@gmail.com">support.lifeplan.app@gmail.com</a>（返答までに数日かかる場合があります）</td>
         </tr>
       </table>
 
       <p style="margin-top:16px;font-size:13px;color:#666">
         ※ 本アプリは個人が運営するウェブサービスです。運営者の氏名・住所等の個人情報については、特定商取引法に基づき請求があった場合に遅滞なく開示します。開示請求は上記メールアドレスまでお問い合わせください。
       </p>
+
+      <div class="warning-box" style="margin-top:20px;font-size:13px">
+        <strong>【有料プラン導入時に追記が必要な項目（準備用メモ）】</strong><br>
+        有料プランを導入する際は、以下の項目を本テーブルに追記してください。
+        <ul style="margin-top:6px">
+          <li>販売業者の氏名・住所・電話番号（法人化する場合は法人名・代表者名・所在地）</li>
+          <li>販売価格（税込み表示）</li>
+          <li>支払方法（クレジットカード等）・支払時期</li>
+          <li>役務の提供時期（申込み後即時 / 審査後 等）</li>
+          <li>キャンセル・解約ポリシー（日割り返金の有無 等）</li>
+          <li>動作環境・推奨環境</li>
+        </ul>
+        ※ このメモ欄は有料プラン導入前に削除すること。
+      </div>
 
       <a class="page-top" href="#tokusho">このセクションの先頭へ ↑</a>
     </div>
@@ -559,7 +607,7 @@
   <section class="legal-section" id="affiliate-disclosure">
     <div class="section-header">
       <h2>広告・アフィリエイト開示</h2>
-      <p class="section-date">制定日：2026年4月1日</p>
+      <p class="section-date">制定日：2026年4月1日　最終更新日：2026年4月17日</p>
     </div>
     <div class="section-body">
 
@@ -591,7 +639,7 @@
       <h3>6. お問い合わせ</h3>
       <div class="contact-box">
         広告・アフィリエイトに関するご質問は下記までお問い合わせください。<br><br>
-        <strong>メールアドレス：</strong><a href="mailto:support.llifeplan.app@gmail.com">support.llifeplan.app@gmail.com</a>
+        <strong>メールアドレス：</strong><a href="mailto:support.lifeplan.app@gmail.com">support.lifeplan.app@gmail.com</a>
       </div>
 
       <a class="page-top" href="#affiliate-disclosure">このセクションの先頭へ ↑</a>
