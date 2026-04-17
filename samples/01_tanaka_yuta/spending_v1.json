@@ -1,0 +1,171 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 95000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": null,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 40000, "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 350000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11200,
+        "insurance":  8000,
+        "subscr":    18500,
+        "food":      55300,
+        "daily":     11800,
+        "transport": 14200,
+        "health":     2800,
+        "annual":        0,
+        "special":  138500
+      },
+      "domainTotals": {
+        "monthly_fixed":    132700,
+        "monthly_variable":  84100,
+        "irregular_fixed":       0,
+        "irregular_variable":138500
+      },
+      "totalExpense": 355300,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T09:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 600000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11200,
+        "insurance":  8000,
+        "subscr":    18500,
+        "food":      58200,
+        "daily":     14500,
+        "transport": 17800,
+        "health":     3200,
+        "annual":        0,
+        "special":  172000
+      },
+      "domainTotals": {
+        "monthly_fixed":    132700,
+        "monthly_variable":  93700,
+        "irregular_fixed":       0,
+        "irregular_variable":172000
+      },
+      "totalExpense": 398400,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-05T09:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 350000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11200,
+        "insurance":  8000,
+        "subscr":    18500,
+        "food":      49800,
+        "daily":      9200,
+        "transport": 12500,
+        "health":     4800,
+        "annual":    16000,
+        "special":   88000
+      },
+      "domainTotals": {
+        "monthly_fixed":    132700,
+        "monthly_variable":  76300,
+        "irregular_fixed":   16000,
+        "irregular_variable":88000
+      },
+      "totalExpense": 313000,
+      "entries": [
+        {"id":"e0101","date":"2026-01-01","amount":  95000,"categoryId":"housing",  "description":"家賃（1月分）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0102","date":"2026-01-02","amount":   1280,"categoryId":"food",     "description":"スターバックス（初スタバ・ラテ）",          "isIncome":false,"source":"manual"},
+        {"id":"e0103","date":"2026-01-03","amount":   6800,"categoryId":"special",  "description":"Amazon初売り（ワイヤレスイヤホン）「消耗品」","isIncome":false,"source":"manual"},
+        {"id":"e0104","date":"2026-01-04","amount":    680,"categoryId":"food",     "description":"スターバックス",                            "isIncome":false,"source":"manual"},
+        {"id":"e0105","date":"2026-01-06","amount":   4200,"categoryId":"food",     "description":"ライフ スーパー（週次買い出し）",            "isIncome":false,"source":"manual"},
+        {"id":"e0106","date":"2026-01-06","amount":    680,"categoryId":"food",     "description":"スターバックス",                            "isIncome":false,"source":"manual"},
+        {"id":"e0107","date":"2026-01-07","amount":  16000,"categoryId":"annual",   "description":"賃貸火災保険（年払い）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0108","date":"2026-01-08","amount":    730,"categoryId":"food",     "description":"スターバックス（抹茶ラテ、気分転換）",       "isIncome":false,"source":"manual"},
+        {"id":"e0109","date":"2026-01-09","amount":  28000,"categoryId":"special",  "description":"会社の新年会（幹事なので立替払い）",          "isIncome":false,"source":"manual"},
+        {"id":"e0110","date":"2026-01-10","amount":   1490,"categoryId":"subscr",   "description":"Netflix",                                    "isIncome":false,"source":"manual"},
+        {"id":"e0111","date":"2026-01-10","amount":    980,"categoryId":"subscr",   "description":"Spotify",                                    "isIncome":false,"source":"manual"},
+        {"id":"e0112","date":"2026-01-10","amount":    600,"categoryId":"subscr",   "description":"Amazon Prime",                               "isIncome":false,"source":"manual"},
+        {"id":"e0113","date":"2026-01-10","amount":   1280,"categoryId":"subscr",   "description":"YouTube Premium",                            "isIncome":false,"source":"manual"},
+        {"id":"e0114","date":"2026-01-10","amount":   6248,"categoryId":"subscr",   "description":"Adobe Creative Cloud（個人プラン）",          "isIncome":false,"source":"manual"},
+        {"id":"e0115","date":"2026-01-10","amount":   1100,"categoryId":"subscr",   "description":"GitHub Copilot",                             "isIncome":false,"source":"manual"},
+        {"id":"e0116","date":"2026-01-10","amount":   3000,"categoryId":"subscr",   "description":"ChatGPT Plus",                               "isIncome":false,"source":"manual"},
+        {"id":"e0117","date":"2026-01-10","amount":   1650,"categoryId":"subscr",   "description":"Notion（使用頻度：週1回）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0118","date":"2026-01-10","amount":   2152,"categoryId":"subscr",   "description":"Cursor Pro（AI補完、これは仕事で必須）",      "isIncome":false,"source":"manual"},
+        {"id":"e0119","date":"2026-01-11","amount":    680,"categoryId":"food",     "description":"スターバックス",                            "isIncome":false,"source":"manual"},
+        {"id":"e0120","date":"2026-01-13","amount":  11200,"categoryId":"telecom",  "description":"ドコモ（月額）新料金プランにしたのに高い",     "isIncome":false,"source":"manual"},
+        {"id":"e0121","date":"2026-01-13","amount":   4800,"categoryId":"food",     "description":"ライフ スーパー（週次買い出し）",            "isIncome":false,"source":"manual"},
+        {"id":"e0122","date":"2026-01-14","amount":  18000,"categoryId":"special",  "description":"大学の友人と新年会",                         "isIncome":false,"source":"manual"},
+        {"id":"e0123","date":"2026-01-15","amount":   8000,"categoryId":"insurance","description":"生命保険（月払い）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0124","date":"2026-01-17","amount":    680,"categoryId":"food",     "description":"スターバックス（今月7杯目）",                "isIncome":false,"source":"manual"},
+        {"id":"e0125","date":"2026-01-18","amount":  12500,"categoryId":"transport","description":"Suica チャージ（1月合計）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0126","date":"2026-01-20","amount":    680,"categoryId":"food",     "description":"スターバックス",                            "isIncome":false,"source":"manual"},
+        {"id":"e0127","date":"2026-01-21","amount":   4800,"categoryId":"health",   "description":"スポーツジム月会費（今月の利用：2回）",       "isIncome":false,"source":"manual"},
+        {"id":"e0128","date":"2026-01-22","amount":   5200,"categoryId":"food",     "description":"ライフ スーパー（週次買い出し）",            "isIncome":false,"source":"manual"},
+        {"id":"e0129","date":"2026-01-23","amount":   9200,"categoryId":"daily",    "description":"ドラッグストア+Amazon日用品まとめ買い",       "isIncome":false,"source":"manual"},
+        {"id":"e0130","date":"2026-01-24","amount":  16000,"categoryId":"special",  "description":"ユニクロ冬セール（ダウンジャケット・「必要」）","isIncome":false,"source":"manual"},
+        {"id":"e0131","date":"2026-01-25","amount":    680,"categoryId":"food",     "description":"スターバックス（これで今月13杯目）",          "isIncome":false,"source":"manual"},
+        {"id":"e0132","date":"2026-01-28","amount":  19200,"categoryId":"special",  "description":"飲み会（同期＋先輩、気づいたら終電）",         "isIncome":false,"source":"manual"},
+        {"id":"e0133","date":"2026-01-29","amount":   4900,"categoryId":"food",     "description":"ライフ スーパー（月末買い出し）",            "isIncome":false,"source":"manual"},
+        {"id":"e0134","date":"2026-01-30","amount":    680,"categoryId":"food",     "description":"スターバックス（今月23杯。新記録かも）",      "isIncome":false,"source":"manual"},
+        {"id":"e0135","date":"2026-01-31","amount":   5000,"categoryId":"food",     "description":"Uber Eats（月末、料理する気力ゼロ）",         "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-01T10:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "telecom",
+      "categoryId": "telecom",
+      "triggerMonth": "2026-01",
+      "triggerValue": 11200,
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    },
+    {
+      "id": "sug002",
+      "type": "subscription",
+      "categoryId": "subscr",
+      "triggerMonth": "2026-01",
+      "triggerValue": 18500,
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 21.7,
+    "irregularSuggestions": [],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

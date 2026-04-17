@@ -1,0 +1,156 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 72000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": 6000,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": 18000, "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 42000, "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": 15000, "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      42000,
+        "daily":     14500,
+        "transport":  9500,
+        "health":    12500,
+        "annual":        0,
+        "special":   88000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   78500,
+        "irregular_fixed":        0,
+        "irregular_variable": 88000
+      },
+      "totalExpense": 266800,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-02T20:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      48000,
+        "daily":     18500,
+        "transport": 11000,
+        "health":     8000,
+        "annual":    45000,
+        "special":   96000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   85500,
+        "irregular_fixed":    45000,
+        "irregular_variable": 96000
+      },
+      "totalExpense": 326800,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-04T20:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      42500,
+        "daily":     14000,
+        "transport":  9000,
+        "health":     9800,
+        "annual":        0,
+        "special":   92000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   75300,
+        "irregular_fixed":        0,
+        "irregular_variable": 92000
+      },
+      "totalExpense": 267600,
+      "entries": [
+        {"id":"e0501","date":"2026-01-01","amount":  72000,"categoryId":"housing",  "description":"家賃（1月分）",                                    "isIncome":false,"source":"manual"},
+        {"id":"e0502","date":"2026-01-03","amount":   3800,"categoryId":"food",     "description":"アピタ（スーパー）お正月の残り食材まとめ買い",     "isIncome":false,"source":"manual"},
+        {"id":"e0503","date":"2026-01-04","amount":  12000,"categoryId":"special",  "description":"花のバレエ月謝（1月分）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0504","date":"2026-01-04","amount":  18000,"categoryId":"special",  "description":"蓮のサッカー月謝＋スパイク（「絶対必要！」）",      "isIncome":false,"source":"manual"},
+        {"id":"e0505","date":"2026-01-05","amount":   2200,"categoryId":"health",   "description":"蓮 小児科（発熱・胃腸炎）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0506","date":"2026-01-07","amount":   4500,"categoryId":"subscr",   "description":"Netflix＋子供向け学習アプリ（月額合計）",            "isIncome":false,"source":"manual"},
+        {"id":"e0507","date":"2026-01-08","amount":   4200,"categoryId":"food",     "description":"アピタ（週次まとめ買い・3人分）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0508","date":"2026-01-10","amount":   5800,"categoryId":"telecom",  "description":"格安SIM（楽天モバイル）3回線分",                    "isIncome":false,"source":"manual"},
+        {"id":"e0509","date":"2026-01-12","amount":   7400,"categoryId":"health",   "description":"花 耳鼻科（中耳炎）＋薬代",                         "isIncome":false,"source":"manual"},
+        {"id":"e0510","date":"2026-01-13","amount":  25000,"categoryId":"special",  "description":"花の塾（冬期講習の残金・月謝含む）",                 "isIncome":false,"source":"manual"},
+        {"id":"e0511","date":"2026-01-14","amount":   4800,"categoryId":"food",     "description":"アピタ（週次まとめ買い）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0512","date":"2026-01-15","amount":  18000,"categoryId":"insurance","description":"保険料（医療保険＋学資保険×2）口座引き落とし",       "isIncome":false,"source":"manual"},
+        {"id":"e0513","date":"2026-01-16","amount":   9000,"categoryId":"transport","description":"ガソリン＋高速代（子供の習い事送迎）",               "isIncome":false,"source":"manual"},
+        {"id":"e0514","date":"2026-01-18","amount":   8500,"categoryId":"daily",    "description":"ドラッグストア（シャンプー・洗剤・子供用品等）",     "isIncome":false,"source":"manual"},
+        {"id":"e0515","date":"2026-01-20","amount":   4200,"categoryId":"food",     "description":"アピタ（週次まとめ買い）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0516","date":"2026-01-21","amount":  15000,"categoryId":"special",  "description":"子供の冬服（ユニクロ・しまむら）新学期準備",         "isIncome":false,"source":"manual"},
+        {"id":"e0517","date":"2026-01-22","amount":    200,"categoryId":"health",   "description":"花 歯科検診（学校の紹介）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0518","date":"2026-01-24","amount":   5000,"categoryId":"daily",    "description":"コストコ（両親と一緒に購入）日用品まとめ",            "isIncome":false,"source":"manual"},
+        {"id":"e0519","date":"2026-01-25","amount":   4500,"categoryId":"food",     "description":"アピタ（週次まとめ買い・月末大きめ）",               "isIncome":false,"source":"manual"},
+        {"id":"e0520","date":"2026-01-27","amount":  22000,"categoryId":"special",  "description":"花のバレエ発表会衣装クリーニング＋写真代",           "isIncome":false,"source":"manual"},
+        {"id":"e0521","date":"2026-01-28","amount":   4200,"categoryId":"food",     "description":"業務スーパー（まとめ買い・冷凍保存用）",             "isIncome":false,"source":"manual"},
+        {"id":"e0522","date":"2026-01-30","amount":    500,"categoryId":"special",  "description":"PTAの集金（蓮の小学校）",                           "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T21:30:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "insurance",
+      "categoryId": "insurance",
+      "triggerMonth": "2026-01",
+      "triggerValue": 18000,
+      "createdAt": "2026-02-02T21:30:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 17.6,
+    "irregularSuggestions": [
+      {
+        "categoryId": "special",
+        "name": "習い事・塾（年間換算）",
+        "amount": 54,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "profile": {
+    "name": "高橋 真由",
+    "birth": "1987-09-08",
+    "partnerBirth": "",
+    "marital": "single"
+  },
+  "finance": {
+    "income": 28,
+    "bonus": 20,
+    "expense": 17.6,
+    "inflationRate": 2,
+    "incomeGrowthRate": 1.0,
+    "incomeGrowthUntilAge": 55,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 40
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（緊急用）",
+      "amount": 120,
+      "monthlyContrib": 1,
+      "return": 0.1,
+      "startYear": 2021,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "insurance",
+      "name": "学資保険（花・18歳満期）",
+      "amount": 95,
+      "monthlyContrib": 1.5,
+      "return": 0.8,
+      "startYear": 2016,
+      "endYear": 2033
+    },
+    {
+      "id": "asset_03",
+      "type": "insurance",
+      "name": "学資保険（蓮・18歳満期）",
+      "amount": 62,
+      "monthlyContrib": 1.5,
+      "return": 0.8,
+      "startYear": 2019,
+      "endYear": 2036
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_01",
+      "name": "花の大学入学費用",
+      "amount": 80,
+      "year": 2033,
+      "note": "私立文系想定。学資保険満期200万で一部充当"
+    },
+    {
+      "id": "exp_02",
+      "name": "蓮の大学入学費用",
+      "amount": 80,
+      "year": 2036,
+      "note": "私立理系も視野"
+    }
+  ],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "💃",
+      "name": "バレエ発表会（花）",
+      "amount": 8,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2032,
+      "note": "衣装・写真・会場費込み。毎年震える"
+    },
+    {
+      "id": "rec_02",
+      "emoji": "⚽",
+      "name": "サッカー道具買い替え（蓮）",
+      "amount": 3,
+      "intervalYears": 2,
+      "startYear": 2026,
+      "endYear": 2032,
+      "note": "スパイク・ユニフォーム等"
+    }
+  ],
+  "lifeEvents": {
+    "children": [
+      {"id": "child_01", "birth": "2015-06-15", "name": "花（長女）"},
+      {"id": "child_02", "birth": "2018-11-20", "name": "蓮（長男）"}
+    ],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 7.2,
+      "startYear": 2021
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [
+    {
+      "id": "ev_01",
+      "title": "養育費収入（元夫）",
+      "type": "income",
+      "year": 2026,
+      "monthlyAmount": 2,
+      "note": "不定期のため最小値で計上"
+    },
+    {
+      "id": "ev_02",
+      "title": "花 大学卒業→教育費終了",
+      "type": "expense_end",
+      "year": 2037,
+      "monthlyAmount": -5,
+      "note": "教育費が大幅に減少"
+    }
+  ],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "医療保険（終身）",
+        "monthlyPremium": 0.5,
+        "coverage": 300,
+        "endAge": 99
+      },
+      {
+        "id": "ins_02",
+        "name": "学資保険（花）",
+        "monthlyPremium": 1.5,
+        "coverage": 200,
+        "endAge": 46
+      },
+      {
+        "id": "ins_03",
+        "name": "学資保険（蓮）",
+        "monthlyPremium": 1.5,
+        "coverage": 200,
+        "endAge": 49
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "老後資金の積立開始",
+      "targetAmount": 500,
+      "targetYear": 2042,
+      "note": "蓮が大学卒業後からNISA積立スタートしたい"
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

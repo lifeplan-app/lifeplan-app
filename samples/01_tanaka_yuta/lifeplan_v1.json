@@ -1,0 +1,91 @@
+{
+  "profile": {
+    "name": "田中 悠太",
+    "birth": "2000-05-14",
+    "partnerBirth": "",
+    "marital": "single"
+  },
+  "finance": {
+    "income": 35,
+    "bonus": 60,
+    "expense": 21.7,
+    "inflationRate": 2,
+    "incomeGrowthRate": 2.5,
+    "incomeGrowthUntilAge": 45,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 65
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（ゆうちょ）",
+      "amount": 80,
+      "monthlyContrib": 0,
+      "return": 0.1,
+      "startYear": 2023,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "nisa",
+      "name": "NISA積立（全世界株式）",
+      "amount": 3,
+      "monthlyContrib": 0.5,
+      "return": 5,
+      "startYear": 2025,
+      "endYear": null
+    }
+  ],
+  "expenses": [],
+  "recurringExpenses": [],
+  "lifeEvents": {
+    "children": [],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 9.5,
+      "startYear": 2023
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "定期生命保険",
+        "monthlyPremium": 0.8,
+        "coverage": 500,
+        "endAge": 60
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "結婚・新生活資金",
+      "targetAmount": 200,
+      "targetYear": 2030
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}
