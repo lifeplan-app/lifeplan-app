@@ -18,6 +18,84 @@
     "customColumns": {"date": null, "amount": null, "description": null, "category": null}
   },
   "months": {
+    "2025-08": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      54000,
+        "daily":     20000,
+        "transport": 18000,
+        "health":     4200,
+        "annual":        0,
+        "special":  128000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   96200,
+        "irregular_fixed":        0,
+        "irregular_variable": 128000
+      },
+      "totalExpense": 324500,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-09-02T20:00:00.000Z",
+      "isManual": true
+    },
+    "2025-09": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      44000,
+        "daily":     16500,
+        "transport": 10500,
+        "health":     9800,
+        "annual":        0,
+        "special":   72000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   80800,
+        "irregular_fixed":        0,
+        "irregular_variable":  72000
+      },
+      "totalExpense": 253100,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-10-02T20:00:00.000Z",
+      "isManual": true
+    },
+    "2025-10": {
+      "income": 280000,
+      "categoryTotals": {
+        "housing":   72000,
+        "telecom":    5800,
+        "insurance": 18000,
+        "subscr":     4500,
+        "food":      46000,
+        "daily":     14000,
+        "transport":  9500,
+        "health":     6500,
+        "annual":        0,
+        "special":   62000
+      },
+      "domainTotals": {
+        "monthly_fixed":     100300,
+        "monthly_variable":   76000,
+        "irregular_fixed":        0,
+        "irregular_variable":  62000
+      },
+      "totalExpense": 238300,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-11-02T20:00:00.000Z",
+      "isManual": true
+    },
     "2025-11": {
       "income": 280000,
       "categoryTotals": {
