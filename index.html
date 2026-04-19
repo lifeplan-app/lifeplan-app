@@ -22709,17 +22709,46 @@ function _renderSpendingSyncBanner() {
   if (!banner) return;
   const syncedAt = state._spendingSyncedAt;
   if (!syncedAt) {
-    // 未連携 → 支出管理アプリへの誘導バナー
+    // spending_v1 にデータがあるか確認
+    let spendingData = null;
+    try { spendingData = JSON.parse(localStorage.getItem('spending_v1') || 'null'); } catch(e) {}
+    const spExp     = spendingData?.lifeplanSync?.monthlyExpense;
+    const spMonths  = spendingData?.lifeplanSync?.basedOnMonths;
+    const hasData   = spExp != null && spExp > 0;
+
     banner.style.display = '';
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px">
-        <span style="font-size:22px;flex-shrink:0">💰</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:700;color:#166534">支出管理アプリと連携すると月間生活費が自動更新されます</div>
-          <div style="font-size:11px;color:#4ADE80;margin-top:2px">実際の支出データをもとにシミュレーション精度が上がります</div>
-        </div>
-        <a href="./spending/" style="flex-shrink:0;padding:7px 14px;background:#16A34A;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">開く →</a>
-      </div>`;
+    if (hasData) {
+      // データあり・未連携 → 具体的な数値を表示して連携を促す
+      const basedStr = spMonths?.length
+        ? `（${spMonths[0].replace('-','年')}月〜${spMonths[spMonths.length-1].replace('-','年')}月 / ${spMonths.length}ヶ月平均）`
+        : '';
+      const currentExp = state.finance?.expense;
+      const diffNote = currentExp != null && currentExp !== spExp
+        ? `<span style="color:#92400E"> ※現在の設定値 ${currentExp}万円 と異なります</span>`
+        : '';
+      banner.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:12px;padding:12px 16px">
+          <span style="font-size:22px;flex-shrink:0">📊</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#92400E">支出管理アプリに実績データがあります</div>
+            <div style="font-size:11px;color:#B45309;margin-top:2px">
+              月間生活費: <strong>${spExp}万円</strong>${basedStr}${diffNote}
+            </div>
+          </div>
+          <a href="./spending/#sync" style="flex-shrink:0;padding:7px 14px;background:#D97706;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">今すぐ連携 →</a>
+        </div>`;
+    } else {
+      // データなし → 通常の誘導バナー
+      banner.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px">
+          <span style="font-size:22px;flex-shrink:0">💰</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700;color:#166534">支出管理アプリと連携すると月間生活費が自動更新されます</div>
+            <div style="font-size:11px;color:#16A34A;margin-top:2px">実際の支出データをもとにシミュレーション精度が上がります</div>
+          </div>
+          <a href="./spending/" style="flex-shrink:0;padding:7px 14px;background:#16A34A;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">開く →</a>
+        </div>`;
+    }
     return;
   }
   // 連携済み → ステータスバナー
@@ -22728,12 +22757,21 @@ function _renderSpendingSyncBanner() {
   const exp = state._spendingExpense;
   const basedOn = state._spendingBasedOn;
   const basedStr = basedOn?.length ? `（${basedOn[0].replace('-','年')}月〜${basedOn[basedOn.length-1].replace('-','年')}月の平均）` : '';
+  // 新しいデータが連携後に追加されていないかチェック
+  let newDataNote = '';
+  try {
+    const sp = JSON.parse(localStorage.getItem('spending_v1') || 'null');
+    const spExp = sp?.lifeplanSync?.monthlyExpense;
+    if (spExp != null && spExp !== exp) {
+      newDataNote = `<span style="background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;margin-left:4px">更新あり ${spExp}万円</span>`;
+    }
+  } catch(e) {}
   banner.style.display = '';
   banner.innerHTML = `
     <div style="display:flex;align-items:center;gap:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px">
       <span style="font-size:22px;flex-shrink:0">🔗</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;color:#065F46">支出管理アプリと連携中</div>
+        <div style="font-size:13px;font-weight:700;color:#065F46">支出管理アプリと連携中${newDataNote}</div>
         <div style="font-size:11px;color:#059669;margin-top:2px">
           月間生活費: <strong>${exp ?? '—'}万円</strong>${basedStr} ／ 最終連携: ${dateStr}
         </div>
