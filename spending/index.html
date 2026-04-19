@@ -1307,6 +1307,21 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: Sync Confirm ===================== -->
+<div class="modal-overlay" id="syncConfirmModal">
+  <div class="modal">
+    <div class="modal-title">
+      <button class="modal-close" onclick="closeSyncConfirmModal()">✕</button>
+      🔗 ライフプランへの連携確認
+    </div>
+    <div id="syncConfirmBody" style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeSyncConfirmModal()">キャンセル</button>
+      <button class="btn btn-primary" style="flex:2" onclick="doSyncToLifeplan()">✅ 連携する</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -3904,20 +3919,20 @@ function toggleIrregularApproval(catId, checked) {
   saveState();
 }
 
+// 連携確認モーダルを開く（confirm() の代替）
+let _pendingSyncParams = null;
+
 function syncToLifeplan() {
   const excludeHousing = document.getElementById('excludeHousingChk')?.checked ?? true;
   const excludeFamily  = document.getElementById('excludeFamilyChk')?.checked || false;
   const vals = calcSyncValues(syncAvgMonths, { excludeHousing, excludeFamily });
   if (!vals) { showNotification('連携するデータがありません'); return; }
 
-  // Write to lifeplan_v1
   let lp;
   try {
     const saved = localStorage.getItem('lifeplan_v1');
     lp = saved ? JSON.parse(saved) : null;
-  } catch(e) {
-    lp = null;
-  }
+  } catch(e) { lp = null; }
 
   if (!lp) {
     showNotification('ライフプランアプリのデータが見つかりません。先にライフプランアプリを開いてください。');
@@ -3927,23 +3942,52 @@ function syncToLifeplan() {
 
   const manYen = toManYen(vals.monthlyTotal);
   const currentExpense = lp.finance?.expense ?? null;
+
+  // 確認モーダルのメッセージを組み立て
+  const lines = [];
+  lines.push(`<strong>月間生活費</strong> を更新します`);
+  if (currentExpense != null) {
+    lines.push(`<span style="color:var(--text-muted)">現在: ${currentExpense}万円</span> → <span style="color:var(--primary);font-weight:700">${manYen}万円</span>`);
+  } else {
+    lines.push(`<span style="color:var(--primary);font-weight:700">${manYen}万円</span> に設定します`);
+  }
+  if (vals.basedOnMonths.length > 0) {
+    const first = vals.basedOnMonths[0].replace('-','年') + '月';
+    const last  = vals.basedOnMonths[vals.basedOnMonths.length-1].replace('-','年') + '月';
+    lines.push(`<span style="color:var(--text-muted);font-size:12px">（${first}〜${last} / ${vals.basedOnMonths.length}ヶ月平均）</span>`);
+  }
   const notes = [];
   if (excludeHousing && vals.housingAvg > 0) notes.push(`住宅費 ${fmt(vals.housingAvg)}/月 を除外`);
   if (excludeFamily  && vals.familyAvg  > 0) notes.push(`家族生活費 ${fmt(vals.familyAvg)}/月 を除外`);
-  const excludeNote = notes.length > 0 ? `\n（${notes.join('、')}）` : '';
-  const currentNote = currentExpense != null
-    ? `\n現在: ${currentExpense}万円 → 連携後: ${manYen}万円`
-    : `\n月間生活費を ${manYen}万円 に設定します`;
-  const basedStr = vals.basedOnMonths.length > 0
-    ? `\n（${vals.basedOnMonths[0].replace('-','年')}月〜${vals.basedOnMonths[vals.basedOnMonths.length-1].replace('-','年')}月の${vals.basedOnMonths.length}ヶ月平均）`
-    : '';
-  const msg = `ライフプランの月間生活費を更新します。${currentNote}${basedStr}${excludeNote}\n\nよろしいですか？`;
-  if (!confirm(msg)) return;
+  if (notes.length > 0) lines.push(`<span style="color:var(--text-muted);font-size:12px">${notes.join('、')}</span>`);
+
+  const approved = (state.lifeplanSync.irregularSuggestions || []).filter(s => s.approved);
+  if (approved.length > 0) {
+    lines.push(`<span style="color:var(--text-muted);font-size:12px">不定期費用 ${approved.length}件 も一緒に連携します</span>`);
+  }
+
+  document.getElementById('syncConfirmBody').innerHTML = lines.join('<br>');
+  document.getElementById('syncConfirmModal').classList.add('open');
+
+  // doSyncToLifeplan() に必要なパラメータを保存
+  _pendingSyncParams = { vals, lp, manYen, excludeHousing, excludeFamily };
+}
+
+function closeSyncConfirmModal() {
+  document.getElementById('syncConfirmModal').classList.remove('open');
+  _pendingSyncParams = null;
+}
+
+function doSyncToLifeplan() {
+  const params = _pendingSyncParams;  // 先に退避
+  closeSyncConfirmModal();            // ← ここで _pendingSyncParams = null になる
+  if (!params) return;
+  const { vals, lp, manYen, excludeHousing, excludeFamily } = params;
 
   if (!lp.finance) lp.finance = {};
   lp.finance.expense = manYen;
 
-  // Add approved irregular expenses using year-filtered data
+  // 承認済み不定期費用を recurringExpenses に追加
   const approved = (state.lifeplanSync.irregularSuggestions || []).filter(s => s.approved);
   if (approved.length > 0) {
     if (!lp.recurringExpenses) lp.recurringExpenses = [];
@@ -3954,7 +3998,6 @@ function syncToLifeplan() {
       c.domain === 'irregular_fixed' || c.domain === 'irregular_variable'
     );
 
-    // ユーザーが金額を調整している場合はスケール比を計算
     const inputVal = parseFloat(document.getElementById('irregularAmountInput')?.value);
     const { catAmounts } = calcIrregularAmounts(irrKeys, irCats);
     const calcTotal = toManYen(irCats.reduce((s, c) => s + (catAmounts[c.id] || 0) / nYears, 0));
@@ -3967,7 +4010,6 @@ function syncToLifeplan() {
       }
       const annualManYen = Math.round(toManYen(catTotal / nYears) * scale * 10) / 10;
       const cat = state.categories.find(c => c.id === sug.categoryId);
-
       const existingIdx = lp.recurringExpenses.findIndex(r => r._spendingCatId === sug.categoryId);
       const entry = {
         id: existingIdx >= 0 ? lp.recurringExpenses[existingIdx].id : 're_spending_' + sug.categoryId,
@@ -3985,28 +4027,25 @@ function syncToLifeplan() {
     }
   }
 
-  // ライフプランアプリ側の自動検知用フラグを埋め込む
   const syncTs = new Date().toISOString();
-  lp._spendingSyncedAt   = syncTs;         // 最終連携タイムスタンプ
-  lp._spendingExpense    = manYen;          // 連携した月間生活費（万円）
-  lp._spendingBasedOn    = vals.basedOnMonths; // 集計根拠の月キー配列
+  lp._spendingSyncedAt = syncTs;
+  lp._spendingExpense  = manYen;
+  lp._spendingBasedOn  = vals.basedOnMonths;
 
   localStorage.setItem('lifeplan_v1', JSON.stringify(lp));
 
-  // Update sync state
-  state.lifeplanSync.syncedAt = syncTs;
+  state.lifeplanSync.syncedAt       = syncTs;
   state.lifeplanSync.monthlyExpense = manYen;
-  state.lifeplanSync.basedOnMonths = vals.basedOnMonths;
+  state.lifeplanSync.basedOnMonths  = vals.basedOnMonths;
   state.lifeplanSync.basedOnAvgMonths = syncAvgMonths;
   state.lifeplanSync.excludeHousing = excludeHousing;
-  state.lifeplanSync.excludeFamily = excludeFamily;
+  state.lifeplanSync.excludeFamily  = excludeFamily;
   state.lifeplanSync.irregularAvgYears = irregularAvgYears;
-  state.settings.linkedToLifeplan = true;
+  state.settings.linkedToLifeplan   = true;
   saveState();
 
   renderSync();
 
-  // 連携後アクション: ライフプランへのリンクを強調表示
   const afterLink = document.getElementById('syncAfterLink');
   if (afterLink) {
     afterLink.style.display = '';
