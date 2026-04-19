@@ -1,0 +1,142 @@
+{
+  "profile": {
+    "name": "松本 美香",
+    "birth": "1994-08-30",
+    "partnerBirth": "1991-03-17",
+    "marital": "married"
+  },
+  "finance": {
+    "income": 18,
+    "bonus": 0,
+    "expense": 10.8,
+    "inflationRate": 2,
+    "incomeGrowthRate": 3.0,
+    "incomeGrowthUntilAge": 55,
+    "partnerIncome": 45,
+    "partnerBonus": 130,
+    "_inputMode": "net",
+    "simYears": 40
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "夫婦合算 普通預金（緊急用）",
+      "amount": 620,
+      "monthlyContrib": 2,
+      "return": 0.1,
+      "startYear": 2020,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "nisa",
+      "name": "つみたてNISA（美香）",
+      "amount": 85,
+      "monthlyContrib": 3,
+      "return": 5,
+      "startYear": 2022,
+      "endYear": null
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_01",
+      "name": "保育費（保育園入園後）",
+      "amount": 84,
+      "year": 2026,
+      "note": "月7万円×12ヶ月。2026年10月入園予定で年額84万円（1年分概算）"
+    },
+    {
+      "id": "exp_02",
+      "name": "子供大学入学費用",
+      "amount": 100,
+      "year": 2043,
+      "note": "第1子18歳時。入学金・初年度授業料相当。学資保険等で準備予定"
+    }
+  ],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "🍼",
+      "name": "ベビー・幼児用品（おむつ・ミルク等）",
+      "amount": 4.6,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2028,
+      "note": "離乳食完了・トイレトレーニング完了まで"
+    }
+  ],
+  "lifeEvents": {
+    "children": [
+      {"id": "child_01", "birth": "2025-09-15", "name": "第1子"}
+    ],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 12.5,
+      "startYear": 2023
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [
+    {
+      "id": "ev_01",
+      "title": "育休明け・収入回復",
+      "type": "income",
+      "year": 2027,
+      "monthlyAmount": 20,
+      "note": "育休明け復帰（時短勤務想定）。月収18万→38万の差額20万円増加"
+    },
+    {
+      "id": "ev_02",
+      "title": "保育費終了（小学校入学）",
+      "type": "expense_end",
+      "year": 2031,
+      "monthlyAmount": -7,
+      "note": "第1子6歳・小学校入学で保育費消滅"
+    }
+  ],
+  "retirement": {},
+  "insurance": {
+    "items": [],
+    "needs": {
+      "gakushi": {
+        "memo": "学資保険検討中。ソニー生命・フコク生命を比較予定。0歳加入で保険料が最安になる。",
+        "targetAmount": 200,
+        "deadline": "2026-09-15"
+      }
+    }
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "子供大学費用300万円",
+      "targetAmount": 300,
+      "targetYear": 2043,
+      "note": "第1子18歳。学資保険+NISA増額で準備。3歳以降にNISA月2万→5万に増額予定"
+    },
+    {
+      "id": "goal_02",
+      "name": "老後資金の積み立て開始",
+      "targetAmount": 2000,
+      "targetYear": 2055,
+      "note": "美香60歳時点の目標。iDeCo（育休明け後）とNISAの併用で形成"
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

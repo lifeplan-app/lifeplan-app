@@ -1,0 +1,164 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 108000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": 12000,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": 75000,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": 18000,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 60000,  "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": 18000,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,   "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,   "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,   "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,   "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 350000,
+      "categoryTotals": {
+        "housing":   108000,
+        "telecom":    12000,
+        "insurance":  75000,
+        "subscr":     18000,
+        "food":       52000,
+        "daily":      14000,
+        "transport":   8000,
+        "health":      4000,
+        "annual":          0,
+        "special":     57000
+      },
+      "domainTotals": {
+        "monthly_fixed":     213000,
+        "monthly_variable":   78000,
+        "irregular_fixed":        0,
+        "irregular_variable": 57000
+      },
+      "totalExpense": 348000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T21:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 680000,
+      "categoryTotals": {
+        "housing":   108000,
+        "telecom":    12000,
+        "insurance":  75000,
+        "subscr":     18000,
+        "food":       78000,
+        "daily":      22000,
+        "transport":  16000,
+        "health":      6000,
+        "annual":          0,
+        "special":    163000
+      },
+      "domainTotals": {
+        "monthly_fixed":     213000,
+        "monthly_variable":  122000,
+        "irregular_fixed":        0,
+        "irregular_variable": 163000
+      },
+      "totalExpense": 498000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-04T21:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 500000,
+      "categoryTotals": {
+        "housing":   108000,
+        "telecom":    12000,
+        "insurance":  75000,
+        "subscr":     18000,
+        "food":       58000,
+        "daily":      15000,
+        "transport":   8500,
+        "health":      4500,
+        "annual":          0,
+        "special":    116000
+      },
+      "domainTotals": {
+        "monthly_fixed":     213000,
+        "monthly_variable":   86000,
+        "irregular_fixed":        0,
+        "irregular_variable": 116000
+      },
+      "totalExpense": 415000,
+      "entries": [
+        {"id":"e0901","date":"2026-01-01","amount":108000,"categoryId":"housing",  "description":"家賃（1月分・3LDK）",                                       "isIncome":false,"source":"manual"},
+        {"id":"e0902","date":"2026-01-05","amount": 42000,"categoryId":"insurance","description":"国民健康保険（世帯分・口座引き落とし）",                      "isIncome":false,"source":"manual"},
+        {"id":"e0903","date":"2026-01-05","amount": 33000,"categoryId":"insurance","description":"国民年金（夫婦2人分・16,520円×2）",                          "isIncome":false,"source":"manual"},
+        {"id":"e0904","date":"2026-01-07","amount":  9000,"categoryId":"subscr",   "description":"Adobe Creative Cloud（仕事用）",                            "isIncome":false,"source":"manual"},
+        {"id":"e0905","date":"2026-01-07","amount":  2400,"categoryId":"subscr",   "description":"Figma（プロフェッショナルプラン）",                          "isIncome":false,"source":"manual"},
+        {"id":"e0906","date":"2026-01-07","amount":  6600,"categoryId":"subscr",   "description":"その他仕事用SaaSツール（Notion・Slack等）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0907","date":"2026-01-08","amount":  6000,"categoryId":"telecom",  "description":"仕事用スマホ（ahamo・大容量プラン）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0908","date":"2026-01-08","amount":  3500,"categoryId":"telecom",  "description":"自宅光回線（仕事兼用・按分50%計上）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0909","date":"2026-01-08","amount":  2500,"categoryId":"telecom",  "description":"妻のスマホ（格安SIM）",                                      "isIncome":false,"source":"manual"},
+        {"id":"e0910","date":"2026-01-10","amount": 18000,"categoryId":"food",     "description":"スーパー（週次まとめ買い×2回分・家族3人）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0911","date":"2026-01-12","amount": 12000,"categoryId":"special",  "description":"子供サッカー月謝（1月分）",                                  "isIncome":false,"source":"manual"},
+        {"id":"e0912","date":"2026-01-12","amount":  8000,"categoryId":"special",  "description":"子供学校関連費（給食費・教材費等）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0913","date":"2026-01-13","amount":  7500,"categoryId":"food",     "description":"業務スーパー（まとめ買い・冷凍保存用）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0914","date":"2026-01-14","amount":  3500,"categoryId":"transport","description":"交通費（仕事打合せ・電車往復）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0915","date":"2026-01-15","amount":  5000,"categoryId":"transport","description":"ガソリン（子供の送迎・仕事移動混在）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0916","date":"2026-01-15","amount":  9000,"categoryId":"food",     "description":"外食（家族の食事・打合せ先の昼食）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0917","date":"2026-01-18","amount": 15000,"categoryId":"daily",    "description":"日用品まとめ買い（ドラッグストア・コストコ）",               "isIncome":false,"source":"manual"},
+        {"id":"e0918","date":"2026-01-20","amount":  4500,"categoryId":"health",   "description":"子供 小児科（季節性インフルエンザ予防接種）",               "isIncome":false,"source":"manual"},
+        {"id":"e0919","date":"2026-01-20","amount": 14000,"categoryId":"food",     "description":"スーパー（月後半まとめ買い×2回分）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0920","date":"2026-01-22","amount": 92000,"categoryId":"special",  "description":"予定納税第1期（前年所得税の3分の1）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0921","date":"2026-01-25","amount":  7500,"categoryId":"food",     "description":"外食・食材（仕事関連の接待・クライアント打合せ）",           "isIncome":false,"source":"manual"},
+        {"id":"e0922","date":"2026-01-28","amount":  2000,"categoryId":"food",     "description":"スーパー（月末食材補充）",                                   "isIncome":false,"source":"manual"},
+        {"id":"e0923","date":"2026-01-30","amount":  4000,"categoryId":"special",  "description":"子供の習い事グッズ（サッカーシューズ消耗品）",               "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T21:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "insurance",
+      "categoryId": "insurance",
+      "triggerMonth": "2026-01",
+      "triggerValue": 75000,
+      "createdAt": "2026-02-02T21:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 24.8,
+    "irregularSuggestions": [
+      {
+        "categoryId": "special",
+        "name": "子供習い事・学校費（年間換算）",
+        "amount": 14.4,
+        "intervalYears": 1,
+        "approved": false
+      },
+      {
+        "categoryId": "special",
+        "name": "予定納税（年2回）",
+        "amount": 19.2,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "profile": {
+    "name": "佐藤 健一",
+    "birth": "1993-07-22",
+    "partnerBirth": "1993-11-05",
+    "marital": "married"
+  },
+  "finance": {
+    "income": 40,
+    "bonus": 100,
+    "expense": 17.8,
+    "inflationRate": 2,
+    "incomeGrowthRate": 2.0,
+    "incomeGrowthUntilAge": 50,
+    "partnerIncome": 18,
+    "partnerBonus": 20,
+    "_inputMode": "net",
+    "simYears": 50
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（地方銀行）",
+      "amount": 280,
+      "monthlyContrib": 3,
+      "return": 0.1,
+      "startYear": 2020,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "nisa",
+      "name": "妻NISA積立（全世界株式）",
+      "amount": 45,
+      "monthlyContrib": 3,
+      "return": 5,
+      "startYear": 2023,
+      "endYear": null
+    }
+  ],
+  "expenses": [],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "🚗",
+      "name": "自動車保険（年払い）",
+      "amount": 9.6,
+      "intervalYears": 1,
+      "startYear": 2025,
+      "endYear": null,
+      "note": "支出管理アプリから取込"
+    }
+  ],
+  "lifeEvents": {
+    "children": [],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 9.5,
+      "startYear": 2020
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "生命保険（月払い）",
+        "monthlyPremium": 0.8,
+        "coverage": 1000,
+        "endAge": 65
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "住宅購入頭金",
+      "targetAmount": 500,
+      "targetYear": 2027
+    },
+    {
+      "id": "goal_02",
+      "name": "老後資金",
+      "targetAmount": 2000,
+      "targetYear": 2053
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

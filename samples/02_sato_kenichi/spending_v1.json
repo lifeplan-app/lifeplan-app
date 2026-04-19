@@ -1,0 +1,151 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 95000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": null,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 50000, "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 400000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11000,
+        "insurance":  8000,
+        "subscr":     5500,
+        "food":      33500,
+        "daily":      8000,
+        "transport":  9000,
+        "health":     7000,
+        "annual":        0,
+        "special":  211000
+      },
+      "domainTotals": {
+        "monthly_fixed":    119500,
+        "monthly_variable":  57500,
+        "irregular_fixed":       0,
+        "irregular_variable":211000
+      },
+      "totalExpense": 388000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T09:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 1400000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11000,
+        "insurance":  8000,
+        "subscr":     5500,
+        "food":      36000,
+        "daily":      8500,
+        "transport":  8500,
+        "health":     6000,
+        "annual":        0,
+        "special":  331500
+      },
+      "domainTotals": {
+        "monthly_fixed":    119500,
+        "monthly_variable":  59000,
+        "irregular_fixed":       0,
+        "irregular_variable":331500
+      },
+      "totalExpense": 510000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-05T09:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 400000,
+      "categoryTotals": {
+        "housing":   95000,
+        "telecom":   11000,
+        "insurance":  8000,
+        "subscr":     5500,
+        "food":      35500,
+        "daily":      9000,
+        "transport":  9000,
+        "health":     6000,
+        "annual":    96000,
+        "special":   97000
+      },
+      "domainTotals": {
+        "monthly_fixed":    119500,
+        "monthly_variable":  59500,
+        "irregular_fixed":   96000,
+        "irregular_variable": 97000
+      },
+      "totalExpense": 372000,
+      "entries": [
+        {"id":"e0201","date":"2026-01-01","amount":  95000,"categoryId":"housing",  "description":"家賃（1月分・博多区1LDK）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0202","date":"2026-01-05","amount":  35000,"categoryId":"special",  "description":"カーローン返済（月々）",                      "isIncome":false,"source":"manual"},
+        {"id":"e0203","date":"2026-01-05","amount":  17000,"categoryId":"special",  "description":"駐車場代（月契約）",                          "isIncome":false,"source":"manual"},
+        {"id":"e0204","date":"2026-01-06","amount":  96000,"categoryId":"annual",   "description":"自動車保険（年払い・一括）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0205","date":"2026-01-07","amount":   5500,"categoryId":"food",     "description":"スーパー（週次買い出し）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0206","date":"2026-01-08","amount":   9000,"categoryId":"transport","description":"ガソリン（月合計）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0207","date":"2026-01-09","amount":  12000,"categoryId":"special",  "description":"ゴルフ練習場（月会費）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0208","date":"2026-01-10","amount":   2980,"categoryId":"subscr",   "description":"Amazon Prime（年会費換算）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0209","date":"2026-01-10","amount":   1490,"categoryId":"subscr",   "description":"Netflix（月額）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0210","date":"2026-01-10","amount":   1030,"categoryId":"subscr",   "description":"Spotify（月額）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0211","date":"2026-01-10","amount":  11000,"categoryId":"telecom",  "description":"au（月額・スマートフォン）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0212","date":"2026-01-10","amount":   8000,"categoryId":"insurance","description":"生命保険（月払い）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0213","date":"2026-01-12","amount":   3500,"categoryId":"food",     "description":"スーパー（週次買い出し）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0214","date":"2026-01-14","amount":  15000,"categoryId":"special",  "description":"接待（お客様との焼肉・自腹）",                 "isIncome":false,"source":"manual"},
+        {"id":"e0215","date":"2026-01-15","amount":   6000,"categoryId":"health",   "description":"スポーツジム月会費",                          "isIncome":false,"source":"manual"},
+        {"id":"e0216","date":"2026-01-16","amount":   3200,"categoryId":"food",     "description":"ランチ外食（週合計）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0217","date":"2026-01-18","amount":   3800,"categoryId":"food",     "description":"スーパー（週次買い出し）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0218","date":"2026-01-19","amount":   6500,"categoryId":"special",  "description":"同期との飲み会（新年会）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0219","date":"2026-01-21","amount":   9000,"categoryId":"daily",    "description":"ドラッグストア＋日用品まとめ買い",             "isIncome":false,"source":"manual"},
+        {"id":"e0220","date":"2026-01-22","amount":   6500,"categoryId":"food",     "description":"夫婦外食（イタリアン）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0221","date":"2026-01-24","amount":   4000,"categoryId":"food",     "description":"スーパー（週次買い出し）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0222","date":"2026-01-25","amount":   8500,"categoryId":"special",  "description":"接待ゴルフ（コース料金・自腹）",               "isIncome":false,"source":"manual"},
+        {"id":"e0223","date":"2026-01-26","amount":   6000,"categoryId":"food",     "description":"ランチ外食＋コンビニ（週合計）",               "isIncome":false,"source":"manual"},
+        {"id":"e0224","date":"2026-01-28","amount":   3000,"categoryId":"food",     "description":"スーパー（月末買い出し）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0225","date":"2026-01-31","amount":   3000,"categoryId":"special",  "description":"ゴルフウェア小物（セール品）",                 "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-01T10:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug002_01",
+      "type": "insurance",
+      "categoryId": "annual",
+      "triggerMonth": "2026-01",
+      "triggerValue": 96000,
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 17.8,
+    "irregularSuggestions": [],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

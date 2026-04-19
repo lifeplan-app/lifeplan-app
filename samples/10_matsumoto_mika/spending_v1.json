@@ -1,0 +1,154 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 125000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": 3500,   "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,   "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": 5000,   "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 55000,  "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": 15000,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,   "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,   "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,   "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,   "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 180000,
+      "categoryTotals": {
+        "housing":   62500,
+        "telecom":    3200,
+        "insurance":     0,
+        "subscr":     4200,
+        "food":      50000,
+        "daily":     12000,
+        "transport":     0,
+        "health":     6000,
+        "annual":        0,
+        "special":   30100
+      },
+      "domainTotals": {
+        "monthly_fixed":     69900,
+        "monthly_variable":   68000,
+        "irregular_fixed":        0,
+        "irregular_variable": 30100
+      },
+      "totalExpense": 168000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-02T20:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 180000,
+      "categoryTotals": {
+        "housing":   62500,
+        "telecom":    3200,
+        "insurance":     0,
+        "subscr":     4200,
+        "food":      65000,
+        "daily":     18000,
+        "transport":     0,
+        "health":     8500,
+        "annual":        0,
+        "special":   73600
+      },
+      "domainTotals": {
+        "monthly_fixed":     69900,
+        "monthly_variable":   91500,
+        "irregular_fixed":        0,
+        "irregular_variable": 73600
+      },
+      "totalExpense": 235000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-04T20:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 180000,
+      "categoryTotals": {
+        "housing":   62500,
+        "telecom":    3200,
+        "insurance":     0,
+        "subscr":     4200,
+        "food":      55000,
+        "daily":     12000,
+        "transport":     0,
+        "health":     8500,
+        "annual":        0,
+        "special":   36600
+      },
+      "domainTotals": {
+        "monthly_fixed":     69900,
+        "monthly_variable":   75500,
+        "irregular_fixed":        0,
+        "irregular_variable": 36600
+      },
+      "totalExpense": 182000,
+      "entries": [
+        {"id":"e1001","date":"2026-01-01","amount": 62500,"categoryId":"housing",  "description":"家賃（夫婦折半・2LDK月12.5万の半額）",                      "isIncome":false,"source":"manual"},
+        {"id":"e1002","date":"2026-01-05","amount": 18000,"categoryId":"food",     "description":"スーパー（離乳食食材・家族分まとめ買い）",                   "isIncome":false,"source":"manual"},
+        {"id":"e1003","date":"2026-01-06","amount":  1800,"categoryId":"subscr",   "description":"Netflix（ベビー・育児コンテンツ用途含む）",                  "isIncome":false,"source":"manual"},
+        {"id":"e1004","date":"2026-01-06","amount":  1200,"categoryId":"subscr",   "description":"育児記録アプリ（ぴよログプレミアム等）",                     "isIncome":false,"source":"manual"},
+        {"id":"e1005","date":"2026-01-06","amount":  1200,"categoryId":"subscr",   "description":"Amazonプライム（育休中は頻繁に活用）",                       "isIncome":false,"source":"manual"},
+        {"id":"e1006","date":"2026-01-08","amount":  3200,"categoryId":"telecom",  "description":"格安SIM（IIJmio・データ3GBプラン）",                        "isIncome":false,"source":"manual"},
+        {"id":"e1007","date":"2026-01-10","amount": 14000,"categoryId":"special",  "description":"おむつ（まとめ買い2箱・ムーニー）",                          "isIncome":false,"source":"manual"},
+        {"id":"e1008","date":"2026-01-10","amount":  5000,"categoryId":"special",  "description":"ベビーミルク（缶×2・フォローアップ移行準備）",               "isIncome":false,"source":"manual"},
+        {"id":"e1009","date":"2026-01-12","amount":  8000,"categoryId":"food",     "description":"スーパー（週次買い物・離乳食用野菜中心）",                   "isIncome":false,"source":"manual"},
+        {"id":"e1010","date":"2026-01-14","amount":  3500,"categoryId":"health",   "description":"4ヶ月健診（自治体）＋交通費",                               "isIncome":false,"source":"manual"},
+        {"id":"e1011","date":"2026-01-15","amount":  3500,"categoryId":"health",   "description":"産後検診（産院での1ヶ月後フォロー）",                        "isIncome":false,"source":"manual"},
+        {"id":"e1012","date":"2026-01-16","amount":  5500,"categoryId":"food",     "description":"宅配弁当（育休中の昼食・1週間分）",                         "isIncome":false,"source":"manual"},
+        {"id":"e1013","date":"2026-01-18","amount":  6000,"categoryId":"special",  "description":"ベビー服（成長で着られなくなったサイズアップ×3点）",         "isIncome":false,"source":"manual"},
+        {"id":"e1014","date":"2026-01-18","amount":  5000,"categoryId":"daily",    "description":"ドラッグストア（哺乳瓶洗浄剤・ガーゼ・ベビーソープ等）",     "isIncome":false,"source":"manual"},
+        {"id":"e1015","date":"2026-01-20","amount": 16000,"categoryId":"food",     "description":"スーパー（週次買い物＋離乳食用ストック）",                   "isIncome":false,"source":"manual"},
+        {"id":"e1016","date":"2026-01-22","amount":  3600,"categoryId":"special",  "description":"ベビー用品（おしりふき大量パック）",                         "isIncome":false,"source":"manual"},
+        {"id":"e1017","date":"2026-01-24","amount":  7000,"categoryId":"daily",    "description":"日用品まとめ（シャンプー・洗剤・キッチン用品）",             "isIncome":false,"source":"manual"},
+        {"id":"e1018","date":"2026-01-25","amount":  7500,"categoryId":"food",     "description":"スーパー（月末食材補充・夫のリクエスト分）",                 "isIncome":false,"source":"manual"},
+        {"id":"e1019","date":"2026-01-26","amount":  8000,"categoryId":"special",  "description":"美容院（育休中は2ヶ月に1回のリセット）",                     "isIncome":false,"source":"manual"},
+        {"id":"e1020","date":"2026-01-28","amount":  1500,"categoryId":"health",   "description":"薬局（ビタミン剤・育休中の体力維持用）",                     "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T21:30:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "insurance",
+      "categoryId": "insurance",
+      "triggerMonth": "2026-01",
+      "triggerValue": 180000,
+      "createdAt": "2026-02-02T21:30:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 10.8,
+    "irregularSuggestions": [
+      {
+        "categoryId": "special",
+        "name": "ベビー・育児用品（月換算）",
+        "amount": 4.6,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "profile": {
+    "name": "中村 えりか",
+    "birth": "1991-12-03",
+    "partnerBirth": "",
+    "marital": "single"
+  },
+  "finance": {
+    "income": 45,
+    "bonus": 0,
+    "expense": 21.1,
+    "inflationRate": 2,
+    "incomeGrowthRate": 3.0,
+    "incomeGrowthUntilAge": 55,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 55,
+    "taxSim": {
+      "income": 45,
+      "ideco": 6.8,
+      "nisa": 0,
+      "years": 25,
+      "rate": 33,
+      "employ": false
+    }
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（緊急用・生活費6ヶ月分）",
+      "amount": 180,
+      "monthlyContrib": 2,
+      "return": 0.1,
+      "startYear": 2022,
+      "endYear": null
+    }
+  ],
+  "expenses": [],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "✈️",
+      "name": "大阪帰省費用",
+      "amount": 3,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": null,
+      "note": "年2〜3回帰省。往復新幹線+諸費用"
+    },
+    {
+      "id": "rec_02",
+      "emoji": "💻",
+      "name": "PC・機材買い替え（仕事用）",
+      "amount": 20,
+      "intervalYears": 3,
+      "startYear": 2027,
+      "endYear": null,
+      "note": "MacBook・モニター等の更新。3年ごとに想定"
+    }
+  ],
+  "lifeEvents": {
+    "children": [],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 11.5,
+      "startYear": 2022
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.0,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [
+    {
+      "id": "ev_01",
+      "title": "iDeCo開始（月68,000円満額拠出）",
+      "type": "expense_start",
+      "year": 2026,
+      "monthlyAmount": -6.8,
+      "note": "フリーランスの国民年金基金連合会経由・月最大68,000円"
+    },
+    {
+      "id": "ev_02",
+      "title": "小規模企業共済加入（月7万）",
+      "type": "expense_start",
+      "year": 2027,
+      "monthlyAmount": -7,
+      "note": "掛金全額所得控除。退職金代わり"
+    }
+  ],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "国民健康保険",
+        "monthlyPremium": 3.2,
+        "coverage": 0,
+        "endAge": 74
+      },
+      {
+        "id": "ins_02",
+        "name": "国民年金",
+        "monthlyPremium": 1.659,
+        "coverage": 0,
+        "endAge": 59
+      }
+    ],
+    "needs": {
+      "ideco": "未加入。月68,000円満額拠出で年約20万円の節税効果あり",
+      "kyosai": "小規模企業共済未加入。退職金代わりになる"
+    }
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "iDeCo開始・老後資金2500万円",
+      "targetAmount": 2500,
+      "targetYear": 2056,
+      "note": "65歳時点での老後資金目標。iDeCo満額拠出+NISA併用で達成を目指す"
+    },
+    {
+      "id": "goal_02",
+      "name": "緊急予備資金300万円（収入変動バッファ）",
+      "targetAmount": 300,
+      "targetYear": 2028,
+      "note": "フリーランスの収入変動リスクに備えた生活費6ヶ月以上の確保"
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

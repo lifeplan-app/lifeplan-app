@@ -1,0 +1,154 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 55000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": null,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 30000, "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 200000,
+      "categoryTotals": {
+        "housing":  55000,
+        "telecom":   8500,
+        "insurance":    0,
+        "subscr":    6800,
+        "food":     35000,
+        "daily":     9000,
+        "transport": 5200,
+        "health":    3000,
+        "annual":       0,
+        "special":  69500
+      },
+      "domainTotals": {
+        "monthly_fixed":     70300,
+        "monthly_variable":  52200,
+        "irregular_fixed":       0,
+        "irregular_variable":69500
+      },
+      "totalExpense": 192000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T09:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 425000,
+      "categoryTotals": {
+        "housing":  55000,
+        "telecom":   8500,
+        "insurance":    0,
+        "subscr":    6800,
+        "food":     42000,
+        "daily":    12000,
+        "transport":28000,
+        "health":       0,
+        "annual":       0,
+        "special":  165700
+      },
+      "domainTotals": {
+        "monthly_fixed":     70300,
+        "monthly_variable":  82000,
+        "irregular_fixed":       0,
+        "irregular_variable":165700
+      },
+      "totalExpense": 318000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-05T09:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 200000,
+      "categoryTotals": {
+        "housing":  55000,
+        "telecom":   8500,
+        "insurance":    0,
+        "subscr":    6800,
+        "food":     32000,
+        "daily":     8500,
+        "transport": 4200,
+        "health":    2800,
+        "annual":       0,
+        "special":  77200
+      },
+      "domainTotals": {
+        "monthly_fixed":     70300,
+        "monthly_variable":  47500,
+        "irregular_fixed":       0,
+        "irregular_variable":77200
+      },
+      "totalExpense": 195000,
+      "entries": [
+        {"id":"e0801","date":"2026-01-01","amount": 55000,"categoryId":"housing",  "description":"家賃（1月分）",                                            "isIncome":false,"source":"manual"},
+        {"id":"e0802","date":"2026-01-05","amount":  8500,"categoryId":"telecom",  "description":"ドコモ（月額・高いとは思ってるけど…）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0803","date":"2026-01-05","amount":  6800,"categoryId":"subscr",   "description":"Netflix+Spotify+Amazon Prime+その他アプリ課金",             "isIncome":false,"source":"manual"},
+        {"id":"e0804","date":"2026-01-06","amount":  8000,"categoryId":"food",     "description":"ヨークベニマル（週次買い出し）",                            "isIncome":false,"source":"manual"},
+        {"id":"e0805","date":"2026-01-11","amount":  4500,"categoryId":"food",     "description":"ヨークベニマル（週次買い出し）+セブンイレブン",              "isIncome":false,"source":"manual"},
+        {"id":"e0806","date":"2026-01-12","amount": 22000,"categoryId":"special",  "description":"友人と新年飲み会（居酒屋3軒・終電逃した）",                 "isIncome":false,"source":"manual"},
+        {"id":"e0807","date":"2026-01-14","amount":  4200,"categoryId":"transport","description":"Suicaチャージ（1月分・通勤+お出かけ）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0808","date":"2026-01-15","amount":  8500,"categoryId":"daily",    "description":"マツモトキヨシ+無印良品（日用品まとめ）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0809","date":"2026-01-17","amount":  7500,"categoryId":"food",     "description":"ヨークベニマル（週次買い出し）+コンビニ数回",               "isIncome":false,"source":"manual"},
+        {"id":"e0810","date":"2026-01-18","amount": 12000,"categoryId":"special",  "description":"美容院（カット+カラー・2ヶ月ぶり）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0811","date":"2026-01-20","amount":  2800,"categoryId":"health",   "description":"内科受診+薬代（風邪ぎみ）",                                "isIncome":false,"source":"manual"},
+        {"id":"e0812","date":"2026-01-23","amount": 15000,"categoryId":"special",  "description":"GU冬セール（ニット・パンツ・靴下）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0813","date":"2026-01-25","amount":  8000,"categoryId":"food",     "description":"ヨークベニマル（月末買い出し）",                            "isIncome":false,"source":"manual"},
+        {"id":"e0814","date":"2026-01-26","amount":  5200,"categoryId":"special",  "description":"職場の同期とランチ+カフェ（週2ペース）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0815","date":"2026-01-28","amount": 11000,"categoryId":"special",  "description":"Zara（セール・ジャケット「来年度も使える」）",               "isIncome":false,"source":"manual"},
+        {"id":"e0816","date":"2026-01-29","amount":  4000,"categoryId":"food",     "description":"コンビニ（週末まとめ・つい買いすぎ）",                      "isIncome":false,"source":"manual"},
+        {"id":"e0817","date":"2026-01-30","amount": 10000,"categoryId":"special",  "description":"友人と仙台駅周辺ショッピング+夕食",                         "isIncome":false,"source":"manual"},
+        {"id":"e0818","date":"2026-01-31","amount":  2000,"categoryId":"special",  "description":"月末コンビニスイーツ+雑誌（毎月の小さな贅沢）",             "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T10:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "telecom",
+      "categoryId": "telecom",
+      "triggerMonth": "2026-01",
+      "triggerValue": 8500,
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    },
+    {
+      "id": "sug002",
+      "type": "subscription",
+      "categoryId": "subscr",
+      "triggerMonth": "2026-01",
+      "triggerValue": 6800,
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 10.2,
+    "irregularSuggestions": [],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

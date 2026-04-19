@@ -1,0 +1,162 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 132000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": 22000,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": 28000,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,   "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 80000,  "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,   "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,   "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,   "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,   "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,   "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 550000,
+      "categoryTotals": {
+        "housing":   132000,
+        "telecom":    22000,
+        "insurance":  28000,
+        "subscr":      4500,
+        "food":       83000,
+        "daily":      17500,
+        "transport":   8500,
+        "health":      6500,
+        "annual":         0,
+        "special":   185000
+      },
+      "domainTotals": {
+        "monthly_fixed":     186500,
+        "monthly_variable":  115500,
+        "irregular_fixed":        0,
+        "irregular_variable": 185000
+      },
+      "totalExpense": 487000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-02T20:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 1450000,
+      "categoryTotals": {
+        "housing":   132000,
+        "telecom":    22000,
+        "insurance":  28000,
+        "subscr":      4500,
+        "food":       92000,
+        "daily":      22000,
+        "transport":  12000,
+        "health":      8000,
+        "annual":      60000,
+        "special":    317500
+      },
+      "domainTotals": {
+        "monthly_fixed":     186500,
+        "monthly_variable":  134000,
+        "irregular_fixed":    60000,
+        "irregular_variable": 317500
+      },
+      "totalExpense": 698000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-04T20:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 550000,
+      "categoryTotals": {
+        "housing":   132000,
+        "telecom":    22000,
+        "insurance":  28000,
+        "subscr":      4500,
+        "food":       82000,
+        "daily":      18000,
+        "transport":   8000,
+        "health":      7000,
+        "annual":         0,
+        "special":    211500
+      },
+      "domainTotals": {
+        "monthly_fixed":     186500,
+        "monthly_variable":  115000,
+        "irregular_fixed":        0,
+        "irregular_variable": 211500
+      },
+      "totalExpense": 513000,
+      "entries": [
+        {"id":"e0401","date":"2026-01-01","amount": 132000,"categoryId":"housing",  "description":"住宅ローン（1月分引き落とし）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0402","date":"2026-01-05","amount":  22000,"categoryId":"telecom",  "description":"携帯電話（家族4回線・格安SIM含む）",               "isIncome":false,"source":"manual"},
+        {"id":"e0403","date":"2026-01-05","amount":  28000,"categoryId":"insurance","description":"保険3本（生命保険×2＋医療保険）口座引き落とし",     "isIncome":false,"source":"manual"},
+        {"id":"e0404","date":"2026-01-06","amount":   4500,"categoryId":"subscr",   "description":"Netflix・Amazon Prime・子供向け学習アプリ",         "isIncome":false,"source":"manual"},
+        {"id":"e0405","date":"2026-01-06","amount":  20000,"categoryId":"food",     "description":"イオン（週次まとめ買い・4人分）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0406","date":"2026-01-10","amount":  18000,"categoryId":"daily",    "description":"電気代（1月分・エアコン多用）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0407","date":"2026-01-10","amount":  70000,"categoryId":"special",  "description":"長男塾月謝（翔太・理系受験コース）",                "isIncome":false,"source":"manual"},
+        {"id":"e0408","date":"2026-01-10","amount":  55000,"categoryId":"special",  "description":"長女塾月謝（さくら・中学受験準備）",                "isIncome":false,"source":"manual"},
+        {"id":"e0409","date":"2026-01-12","amount":  12000,"categoryId":"special",  "description":"長女英会話スクール月謝（さくら）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0410","date":"2026-01-13","amount":  22000,"categoryId":"food",     "description":"イオン（週次まとめ買い・週末外食含む）",            "isIncome":false,"source":"manual"},
+        {"id":"e0411","date":"2026-01-14","amount":   3000,"categoryId":"health",   "description":"妻 婦人科検診（定期）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0412","date":"2026-01-15","amount":   8000,"categoryId":"transport","description":"ガソリン代（子供の送迎・通勤）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0413","date":"2026-01-17","amount":  15000,"categoryId":"special",  "description":"長男部活用品（バレーボールシューズ・ユニフォーム）","isIncome":false,"source":"manual"},
+        {"id":"e0414","date":"2026-01-18","amount":  20000,"categoryId":"food",     "description":"イオン（週次まとめ買い）",                          "isIncome":false,"source":"manual"},
+        {"id":"e0415","date":"2026-01-20","amount":   4000,"categoryId":"health",   "description":"長女 耳鼻科＋薬代",                                 "isIncome":false,"source":"manual"},
+        {"id":"e0416","date":"2026-01-22","amount":  35000,"categoryId":"special",  "description":"家族外食（焼き肉・長男の模試結果を祝って）",        "isIncome":false,"source":"manual"},
+        {"id":"e0417","date":"2026-01-22","amount":  24500,"categoryId":"special",  "description":"その他雑費（文具・クリーニング・雑誌等）",           "isIncome":false,"source":"manual"},
+        {"id":"e0418","date":"2026-01-25","amount":  20000,"categoryId":"food",     "description":"イオン（週次まとめ買い・月末）",                    "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T20:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "housing",
+      "categoryId": "housing",
+      "triggerMonth": "2026-01",
+      "triggerValue": 132000,
+      "createdAt": "2026-02-02T20:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    },
+    {
+      "id": "sug002",
+      "type": "insurance",
+      "categoryId": "insurance",
+      "triggerMonth": "2026-01",
+      "triggerValue": 28000,
+      "createdAt": "2026-02-02T20:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 30.6,
+    "irregularSuggestions": [
+      {
+        "categoryId": "special",
+        "name": "子供の塾代（年間換算）",
+        "amount": 150,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

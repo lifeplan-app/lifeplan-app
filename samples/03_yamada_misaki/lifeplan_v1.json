@@ -1,0 +1,87 @@
+{
+  "profile": {
+    "name": "山田 美咲",
+    "birth": "1996-03-18",
+    "partnerBirth": "",
+    "marital": "single"
+  },
+  "finance": {
+    "income": 36,
+    "bonus": 80,
+    "expense": 16.2,
+    "inflationRate": 2,
+    "incomeGrowthRate": 2.0,
+    "incomeGrowthUntilAge": 45,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 61
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（ゆうちょ）",
+      "amount": 45,
+      "monthlyContrib": 0,
+      "return": 0.1,
+      "startYear": 2020,
+      "endYear": null
+    }
+  ],
+  "expenses": [],
+  "recurringExpenses": [],
+  "lifeEvents": {
+    "children": [],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 8.7,
+      "startYear": 2021
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "医療保険（月払い）",
+        "monthlyPremium": 0.45,
+        "coverage": 300,
+        "endAge": 70
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "NISA積立開始・老後2000万目標",
+      "targetAmount": 2000,
+      "targetYear": 2061
+    },
+    {
+      "id": "goal_02",
+      "name": "結婚資金",
+      "targetAmount": 300,
+      "targetYear": 2028
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

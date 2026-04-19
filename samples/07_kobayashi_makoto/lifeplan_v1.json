@@ -1,0 +1,175 @@
+{
+  "profile": {
+    "name": "小林 誠",
+    "birth": "1972-06-10",
+    "partnerBirth": "1975-03-22",
+    "marital": "married"
+  },
+  "finance": {
+    "income": 60,
+    "bonus": 200,
+    "expense": 20.4,
+    "inflationRate": 2,
+    "incomeGrowthRate": 1.0,
+    "incomeGrowthUntilAge": 60,
+    "partnerIncome": 12,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 37
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（メガバンク）",
+      "amount": 480,
+      "monthlyContrib": 5,
+      "return": 0.1,
+      "startYear": 2000,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "dc",
+      "name": "企業型DC（確定拠出年金）",
+      "amount": 280,
+      "monthlyContrib": 0,
+      "return": 3,
+      "startYear": 2005,
+      "endYear": 2032
+    },
+    {
+      "id": "asset_03",
+      "type": "savings",
+      "name": "退職金（2032年受取予定）",
+      "amount": 0,
+      "monthlyContrib": 0,
+      "return": 1,
+      "startYear": 2032,
+      "endYear": null
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_01",
+      "name": "退職金受取（運用開始）",
+      "amount": -2000,
+      "year": 2032,
+      "note": "退職金2000万円をasset_03へ移動想定。負値は収入として扱う。"
+    }
+  ],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "🏠",
+      "name": "住宅修繕費",
+      "amount": 30,
+      "intervalYears": 10,
+      "startYear": 2026,
+      "endYear": 2060,
+      "note": "外壁・屋根・設備等の大規模修繕"
+    },
+    {
+      "id": "rec_02",
+      "emoji": "🚗",
+      "name": "車買い替え",
+      "amount": 200,
+      "intervalYears": 8,
+      "startYear": 2028,
+      "endYear": 2050,
+      "note": "退職後も1台維持想定"
+    }
+  ],
+  "lifeEvents": {
+    "children": [
+      {
+        "id": "child_01",
+        "birthYear": 1998,
+        "note": "第1子・独立済み"
+      },
+      {
+        "id": "child_02",
+        "birthYear": 2001,
+        "note": "第2子・独立済み"
+      }
+    ],
+    "housingType": "mortgage",
+    "mortgage": {
+      "purchaseYear": 2000,
+      "price": 3200,
+      "downPayment": 800,
+      "loanYears": 25,
+      "loanRate": 2.5,
+      "events": []
+    },
+    "rent": {
+      "monthlyRent": 0,
+      "startYear": 2000
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [
+    {
+      "id": "cf_01",
+      "title": "定年退職（収入終了）",
+      "type": "income_end",
+      "year": 2032,
+      "monthlyAmount": 0
+    },
+    {
+      "id": "cf_02",
+      "title": "年金受給開始（65歳）",
+      "type": "income",
+      "year": 2037,
+      "monthlyAmount": 18
+    },
+    {
+      "id": "cf_03",
+      "title": "妻・年金受給開始（65歳）",
+      "type": "income",
+      "year": 2040,
+      "monthlyAmount": 8
+    }
+  ],
+  "retirement": {
+    "retirementAge": 60,
+    "publicPension": 18,
+    "partnerPension": 8,
+    "pensionStartAge": 65
+  },
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "生命保険（定期）",
+        "monthlyPremium": 1.0,
+        "coverage": 2000,
+        "endAge": 60
+      },
+      {
+        "id": "ins_02",
+        "name": "医療保険",
+        "monthlyPremium": 0.5,
+        "coverage": 100,
+        "endAge": 80
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "退職後生活費確保",
+      "targetAmount": 3000,
+      "targetYear": 2032
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

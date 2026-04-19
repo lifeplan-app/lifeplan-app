@@ -1,0 +1,165 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 115000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": 6000,   "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": 50000,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": 30000,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 45000,  "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,   "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,   "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,   "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,   "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,   "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 350000,
+      "categoryTotals": {
+        "housing":   115000,
+        "telecom":     5800,
+        "insurance":  48590,
+        "subscr":     30500,
+        "food":       35000,
+        "daily":       7000,
+        "transport":   3000,
+        "health":      3000,
+        "annual":         0,
+        "special":    50110
+      },
+      "domainTotals": {
+        "monthly_fixed":     199890,
+        "monthly_variable":   48000,
+        "irregular_fixed":        0,
+        "irregular_variable": 50110
+      },
+      "totalExpense": 298000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-02T21:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 620000,
+      "categoryTotals": {
+        "housing":   115000,
+        "telecom":     5800,
+        "insurance":  48590,
+        "subscr":     30500,
+        "food":       52000,
+        "daily":      12000,
+        "transport":   5000,
+        "health":      5000,
+        "annual":         0,
+        "special":   138110
+      },
+      "domainTotals": {
+        "monthly_fixed":     199890,
+        "monthly_variable":   74000,
+        "irregular_fixed":        0,
+        "irregular_variable": 138110
+      },
+      "totalExpense": 412000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-04T21:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 450000,
+      "categoryTotals": {
+        "housing":   115000,
+        "telecom":     5800,
+        "insurance":  48590,
+        "subscr":     30500,
+        "food":       45000,
+        "daily":       8000,
+        "transport":   3500,
+        "health":      5000,
+        "annual":         0,
+        "special":    80610
+      },
+      "domainTotals": {
+        "monthly_fixed":     199890,
+        "monthly_variable":   61500,
+        "irregular_fixed":        0,
+        "irregular_variable": 80610
+      },
+      "totalExpense": 342000,
+      "entries": [
+        {"id":"e0601","date":"2026-01-01","amount": 115000,"categoryId":"housing",  "description":"家賃（1月分・渋谷区1DK）",                              "isIncome":false,"source":"manual"},
+        {"id":"e0602","date":"2026-01-05","amount":  22000,"categoryId":"subscr",   "description":"Adobe CC・Figma・仕事用ソフト月額合計",                 "isIncome":false,"source":"manual"},
+        {"id":"e0603","date":"2026-01-06","amount":  32000,"categoryId":"insurance","description":"国民健康保険（1月分）",                                  "isIncome":false,"source":"manual"},
+        {"id":"e0604","date":"2026-01-06","amount":  16590,"categoryId":"insurance","description":"国民年金（1月分）",                                       "isIncome":false,"source":"manual"},
+        {"id":"e0605","date":"2026-01-07","amount":  10000,"categoryId":"food",     "description":"スーパー（週次まとめ買い・自炊用）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0606","date":"2026-01-08","amount":   8500,"categoryId":"subscr",   "description":"Notion・Slack・Dropbox等（月額合計）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0607","date":"2026-01-09","amount":   5800,"categoryId":"telecom",  "description":"格安SIM（IIJmio・1回線）",                              "isIncome":false,"source":"manual"},
+        {"id":"e0608","date":"2026-01-10","amount":  15000,"categoryId":"special",  "description":"カフェワーク費（スターバックス・ブルーボトル等）",       "isIncome":false,"source":"manual"},
+        {"id":"e0609","date":"2026-01-12","amount":   5000,"categoryId":"health",   "description":"婦人科定期検診（自由診療）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0610","date":"2026-01-13","amount":   9000,"categoryId":"food",     "description":"スーパー（週次まとめ買い）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0611","date":"2026-01-14","amount":   8000,"categoryId":"special",  "description":"コワーキングスペース（デイパス5回分）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0612","date":"2026-01-15","amount":   8000,"categoryId":"daily",    "description":"ドラッグストア・日用品（シャンプー・洗剤等）",           "isIncome":false,"source":"manual"},
+        {"id":"e0613","date":"2026-01-16","amount":   5000,"categoryId":"special",  "description":"仕事用書籍・デザイン参考書",                             "isIncome":false,"source":"manual"},
+        {"id":"e0614","date":"2026-01-18","amount":  10000,"categoryId":"food",     "description":"スーパー（週次まとめ買い）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0615","date":"2026-01-20","amount":   3500,"categoryId":"transport","description":"交通費（打ち合わせ往復・ICカード）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0616","date":"2026-01-22","amount":  12000,"categoryId":"special",  "description":"美容院（カット＋カラー・2ヶ月に1回）",                   "isIncome":false,"source":"manual"},
+        {"id":"e0617","date":"2026-01-23","amount":   3000,"categoryId":"special",  "description":"確定申告準備（印刷・ファイリング用品）",                 "isIncome":false,"source":"manual"},
+        {"id":"e0618","date":"2026-01-24","amount":  16000,"categoryId":"food",     "description":"カフェ飲食・外食（打ち合わせ含む）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0619","date":"2026-01-25","amount":  18000,"categoryId":"special",  "description":"仕事用衣服（打ち合わせ・クライアント訪問用）",           "isIncome":false,"source":"manual"},
+        {"id":"e0620","date":"2026-01-28","amount":   4610,"categoryId":"special",  "description":"その他雑費（コンビニ・消耗品等）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0621","date":"2026-01-29","amount":  15000,"categoryId":"special",  "description":"カフェワーク費（1月後半分・合算）",                     "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T21:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "insurance",
+      "categoryId": "insurance",
+      "triggerMonth": "2026-01",
+      "triggerValue": 48590,
+      "createdAt": "2026-02-02T21:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    },
+    {
+      "id": "sug002",
+      "type": "subscription",
+      "categoryId": "subscr",
+      "triggerMonth": "2026-01",
+      "triggerValue": 30500,
+      "createdAt": "2026-02-02T21:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 21.1,
+    "irregularSuggestions": [
+      {
+        "categoryId": "special",
+        "name": "カフェワーク・コワーキング費（年間換算）",
+        "amount": 27.6,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

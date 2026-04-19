@@ -1,0 +1,155 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",      "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 0,     "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",     "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": null,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",       "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",   "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",       "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 70000, "sortOrder": 4},
+    {"id": "daily",    "name": "日用品",     "emoji": "🧴", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",     "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康", "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費", "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",     "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 600000,
+      "categoryTotals": {
+        "housing":     0,
+        "telecom":  18000,
+        "insurance":15000,
+        "subscr":       0,
+        "food":     95000,
+        "daily":    60000,
+        "transport":10000,
+        "health":    5000,
+        "annual":       0,
+        "special":  185000
+      },
+      "domainTotals": {
+        "monthly_fixed":     33000,
+        "monthly_variable":  170000,
+        "irregular_fixed":       0,
+        "irregular_variable":185000
+      },
+      "totalExpense": 388000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T09:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 1600000,
+      "categoryTotals": {
+        "housing":     0,
+        "telecom":  18000,
+        "insurance":15000,
+        "subscr":       0,
+        "food":     120000,
+        "daily":    68000,
+        "transport":42000,
+        "health":    8000,
+        "annual":       0,
+        "special":  354000
+      },
+      "domainTotals": {
+        "monthly_fixed":     33000,
+        "monthly_variable":  238000,
+        "irregular_fixed":       0,
+        "irregular_variable":354000
+      },
+      "totalExpense": 625000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-05T09:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 600000,
+      "categoryTotals": {
+        "housing":     0,
+        "telecom":  18000,
+        "insurance":15000,
+        "subscr":       0,
+        "food":     100000,
+        "daily":    65000,
+        "transport":12000,
+        "health":    8000,
+        "annual":   42000,
+        "special":  142000
+      },
+      "domainTotals": {
+        "monthly_fixed":     33000,
+        "monthly_variable":  185000,
+        "irregular_fixed":   42000,
+        "irregular_variable":142000
+      },
+      "totalExpense": 402000,
+      "entries": [
+        {"id":"e0701","date":"2026-01-05","amount": 22000,"categoryId":"food",     "description":"スーパーバリュー+ドン・キホーテ（週次買い出し・夫婦分）", "isIncome":false,"source":"manual"},
+        {"id":"e0702","date":"2026-01-06","amount": 18000,"categoryId":"telecom",  "description":"ドコモ（夫・旧プラン）",                                    "isIncome":false,"source":"manual"},
+        {"id":"e0703","date":"2026-01-07","amount": 45000,"categoryId":"special",  "description":"ゴルフ（新年ラウンド・コース代+用品補充）",                  "isIncome":false,"source":"manual"},
+        {"id":"e0704","date":"2026-01-08","amount": 15000,"categoryId":"insurance","description":"生命保険（月払い）",                                         "isIncome":false,"source":"manual"},
+        {"id":"e0705","date":"2026-01-10","amount": 18000,"categoryId":"daily",    "description":"電気代（12月分・冬は高い）",                                 "isIncome":false,"source":"manual"},
+        {"id":"e0706","date":"2026-01-10","amount": 10000,"categoryId":"daily",    "description":"ガス代（12月分）",                                           "isIncome":false,"source":"manual"},
+        {"id":"e0707","date":"2026-01-11","amount": 21000,"categoryId":"food",     "description":"イオン（週次買い出し・妻の外出ついでに）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0708","date":"2026-01-12","amount": 35000,"categoryId":"annual",   "description":"固定資産税（第4期）",                                        "isIncome":false,"source":"manual"},
+        {"id":"e0709","date":"2026-01-13","amount": 12000,"categoryId":"transport","description":"ETC（1月高速代合計・ゴルフ場往復含む）",                     "isIncome":false,"source":"manual"},
+        {"id":"e0710","date":"2026-01-14","amount": 30000,"categoryId":"special",  "description":"同僚・OBとの新年会（幹事払い）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0711","date":"2026-01-15","amount":  7000,"categoryId":"annual",   "description":"修繕積立（雨樋修理費積立・月次）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0712","date":"2026-01-17","amount": 20000,"categoryId":"food",     "description":"スーパーバリュー（週次買い出し）+外食（夫婦ランチ）",         "isIncome":false,"source":"manual"},
+        {"id":"e0713","date":"2026-01-18","amount": 20000,"categoryId":"special",  "description":"ゴルフ練習場月会費+ゴルフウェア補充",                        "isIncome":false,"source":"manual"},
+        {"id":"e0714","date":"2026-01-20","amount":  8000,"categoryId":"health",   "description":"整形外科診察+薬代（腰痛・月次）",                            "isIncome":false,"source":"manual"},
+        {"id":"e0715","date":"2026-01-22","amount": 22000,"categoryId":"food",     "description":"イオン（週次買い出し）+百貨店地下食料品",                     "isIncome":false,"source":"manual"},
+        {"id":"e0716","date":"2026-01-23","amount": 17000,"categoryId":"daily",    "description":"ドラッグストア+ホームセンター（日用品まとめ）",               "isIncome":false,"source":"manual"},
+        {"id":"e0717","date":"2026-01-25","amount": 15000,"categoryId":"special",  "description":"趣味・娯楽（DVDレンタル+書籍+外食）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0718","date":"2026-01-26","amount": 12000,"categoryId":"special",  "description":"工場OB会の飲食（毎月恒例・幹事払い）",                       "isIncome":false,"source":"manual"},
+        {"id":"e0719","date":"2026-01-28","amount": 15000,"categoryId":"food",     "description":"イオン（週次買い出し・月末）",                               "isIncome":false,"source":"manual"},
+        {"id":"e0720","date":"2026-01-29","amount": 20000,"categoryId":"daily",    "description":"光熱費（水道代2ヶ月分）+生活消耗品",                         "isIncome":false,"source":"manual"},
+        {"id":"e0721","date":"2026-01-31","amount": 20000,"categoryId":"special",  "description":"ゴルフ用品（ボール・グローブ定期購入）",                      "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-02T10:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug001",
+      "type": "telecom",
+      "categoryId": "telecom",
+      "triggerMonth": "2026-01",
+      "triggerValue": 18000,
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 20.4,
+    "irregularSuggestions": [
+      {
+        "categoryId": "annual",
+        "name": "固定資産税・修繕費",
+        "amount": 5.04,
+        "intervalYears": 1,
+        "approved": false
+      }
+    ],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

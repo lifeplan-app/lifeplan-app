@@ -65,7 +65,7 @@
 
     /* ── Header ── */
     .header {
-      position: sticky; top: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 310;
       background: rgba(255,255,255,.85);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -75,10 +75,13 @@
     }
     .header-title { font-size: 17px; font-weight: 700; flex: 1; }
     .header-link {
-      font-size: 12px; color: var(--primary); text-decoration: none;
-      padding: 5px 10px; border: 1px solid var(--primary);
+      font-size: 12px; color: #fff; text-decoration: none;
+      padding: 6px 13px; background: var(--primary);
       border-radius: 20px; white-space: nowrap;
+      font-weight: 600; letter-spacing: .01em;
+      box-shadow: 0 1px 4px rgba(0,122,255,.25);
     }
+    .header-link:hover { background: var(--primary-light); }
     .header-settings-btn {
       background: none; border: none; cursor: pointer;
       font-size: 20px; padding: 0; line-height: 1;
@@ -203,6 +206,34 @@
     .domain-card .d-ratio { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
     .domain-bar { height: 4px; border-radius: 2px; background: var(--surface3); overflow: hidden; }
     .domain-bar-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
+
+    /* ── Sync connection card states ── */
+    #lifeplanConnCard {
+      transition: border-left 0.2s, background 0.2s;
+    }
+    #lifeplanConnCard.conn-disconnected {
+      border-left: 4px solid var(--warning);
+      background: #FFF8F0;
+    }
+    #lifeplanConnCard.conn-ready {
+      border-left: 4px solid var(--secondary);
+      background: #F0FFF4;
+    }
+    #lifeplanConnCard.conn-synced {
+      border-left: 4px solid var(--primary);
+    }
+    #lifeplanConnOpenLink {
+      padding: 8px 16px !important;
+      font-size: 13px !important;
+    }
+    @keyframes syncPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(0,122,255,.45); }
+      70%  { box-shadow: 0 0 0 10px rgba(0,122,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,122,255,0); }
+    }
+    #syncBtn.pulse {
+      animation: syncPulse 1.8s ease-in-out infinite;
+    }
 
     /* ── Section ── */
     .section-card {
@@ -649,9 +680,12 @@
   <div class="empty-state" id="dashEmpty" style="display:none">
     <div class="empty-icon">📭</div>
     <div class="empty-title">まだデータがありません</div>
-    <div class="empty-desc">「データ入力」タブからCSVを読み込むか、<br>手動で支出を入力してください。</div>
+    <div class="empty-desc">サンプルデータや以前のエクスポートデータを<br>JSONファイルで読み込めます。</div>
     <br>
-    <button class="btn btn-primary" onclick="showTab('ledger')">データを入力する</button>
+    <button class="btn btn-primary" onclick="document.getElementById('dashEmptyJsonInput').click()" style="margin-bottom:10px">📂 JSONファイルで読み込む</button>
+    <input type="file" id="dashEmptyJsonInput" accept=".json" style="display:none" onchange="importSpendingDataOnboarding(event)">
+    <br>
+    <button class="btn btn-secondary" onclick="showTab('ledger')" style="font-size:13px">✏️ 手動で入力する</button>
   </div>
 
   <!-- Legal Footer -->
@@ -909,6 +943,17 @@
       </div>
       <span style="font-size:18px;color:var(--text-muted)">›</span>
     </button>
+
+    <button onclick="document.getElementById('onboardingJsonInput').click()"
+      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:10px">
+      <span style="font-size:28px;flex-shrink:0">📂</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">JSONファイルで読み込む</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">サンプルデータや以前のエクスポートデータを読み込む</div>
+      </div>
+      <span style="font-size:18px;color:var(--text-muted)">›</span>
+    </button>
+    <input type="file" id="onboardingJsonInput" accept=".json" style="display:none" onchange="importSpendingDataOnboarding(event)">
 
     <button onclick="skipOnboarding()"
       style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;width:100%;padding:8px;text-align:center">
@@ -3447,15 +3492,23 @@ function updateLifeplanConnCard(monthlyTotal) {
   const syncBtn   = document.getElementById('syncBtn');
   if (!iconEl) return;
 
+  const card = document.getElementById('lifeplanConnCard');
+  const setCardState = (state) => {
+    if (!card) return;
+    card.classList.remove('conn-disconnected', 'conn-ready', 'conn-synced');
+    if (state) card.classList.add(state);
+  };
+
   if (!lp) {
     // ライフプランデータが存在しない
+    setCardState('conn-disconnected');
     iconEl.textContent = '⚠️';
     titleEl.textContent = 'ライフプランのデータが見つかりません';
     titleEl.style.color = 'var(--warning, #FF9500)';
     descEl.textContent  = 'ライフプランアプリを一度開いてデータを作成してください';
     openLink.style.display = '';
     if (previewEl) previewEl.style.display = 'none';
-    if (syncBtn) syncBtn.disabled = true;
+    if (syncBtn) { syncBtn.disabled = true; syncBtn.classList.remove('pulse'); }
     return;
   }
 
@@ -3502,6 +3555,23 @@ function updateLifeplanConnCard(monthlyTotal) {
     }
   } else if (previewEl) {
     previewEl.style.display = 'none';
+  }
+
+  // カードの色帯 + syncBtn のパルスを連携状態に合わせて設定
+  const syncedAt2 = state.lifeplanSync?.syncedAt;
+  const hasData   = monthlyTotal != null;
+  if (hasData && !syncedAt2) {
+    // データあり・未連携 → 緑カード + パルス
+    setCardState('conn-ready');
+    if (syncBtn) syncBtn.classList.add('pulse');
+  } else if (hasData && syncedAt2) {
+    // データあり・連携済み → 青カード・パルスなし
+    setCardState('conn-synced');
+    if (syncBtn) syncBtn.classList.remove('pulse');
+  } else {
+    // データなし
+    setCardState(null);
+    if (syncBtn) syncBtn.classList.remove('pulse');
   }
 }
 
@@ -3626,7 +3696,7 @@ function renderIrregularList() {
     { label: '全期間',  years: 0 },
   ];
 
-  const compareRows = periods.map(({ label, years }) => {
+  const allRows = periods.map(({ label, years }) => {
     const keys = getIrregularKeys(years);
     if (!keys.length) return null;
     const { catAmounts, nYears } = calcIrregularAmounts(keys, irCats);
@@ -3636,9 +3706,26 @@ function renderIrregularList() {
     return { label, years, keys, totalAnnual, manYen, isSelected };
   }).filter(Boolean);
 
+  // データ期間が同じ行は重複除去（先に現れたものを保持）
+  const seenKeyStr = new Set();
+  const compareRows = allRows.filter(row => {
+    const k = row.keys.join(',');
+    if (seenKeyStr.has(k)) return false;
+    seenKeyStr.add(k);
+    return true;
+  });
+  const hasLimitedData = compareRows.length < allRows.length;
+
   if (compareEl) {
+    const limitedNote = hasLimitedData
+      ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#FFF7ED;border-radius:var(--radius-sm);margin-bottom:8px;font-size:11px;color:#92400E;line-height:1.5">
+           <span style="font-size:14px;flex-shrink:0">📅</span>
+           <span>データが${allRows[0].keys.length}ヶ月分のため、すべての期間で同じ集計結果になっています。月数が増えると精度が上がります。</span>
+         </div>`
+      : '';
     compareEl.innerHTML = `
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:6px;font-weight:600">集計期間を選んでください</div>
+      ${limitedNote}
       <div style="border:.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
         ${compareRows.map(row => `
           <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;
@@ -3657,7 +3744,7 @@ function renderIrregularList() {
           </label>`).join('')}
       </div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.5">
-        ライフプランに追加する年額を選択してください。直近1年はデータが少なく参考程度にご覧ください。
+        ライフプランに追加する年額を選択してください。データが少ない場合は実績値を参考に手動調整してください。
       </div>`;
   }
 
@@ -4517,6 +4604,13 @@ function resetMappings() {
 }
 
 function openCatSettings(tab = 'cat') {
+  // オンボーディング表示中でも設定を開けるよう閉じる
+  const overlay = document.getElementById('onboardingOverlay');
+  if (overlay && overlay.style.display !== 'none') {
+    state._onboardingDone = true;
+    saveState();
+    overlay.style.display = 'none';
+  }
   currentSettingsTab = tab;
   document.getElementById('settingsTabCat').classList.toggle('active',    tab === 'cat');
   document.getElementById('settingsTabMap').classList.toggle('active',    tab === 'map');
@@ -4694,6 +4788,31 @@ function importSpendingData(event) {
       renderDashboard();
       closeCatSettings();
       showNotification('インポートしました ✓');
+    } catch (err) {
+      showNotification('インポートに失敗しました: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function importSpendingDataOnboarding(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported || typeof imported !== 'object') throw new Error('不正なデータ形式');
+      Object.assign(state, imported);
+      state._onboardingDone = true;
+      saveState();
+      document.getElementById('onboardingOverlay').style.display = 'none';
+      // 最新月に移動
+      const keys = Object.keys(state.months || {}).sort();
+      if (keys.length) currentMonth = keys[keys.length - 1];
+      renderDashboard();
+      showNotification('データを読み込みました ✓');
     } catch (err) {
       showNotification('インポートに失敗しました: ' + err.message);
     }

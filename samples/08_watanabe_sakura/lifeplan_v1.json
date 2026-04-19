@@ -1,0 +1,86 @@
+{
+  "profile": {
+    "name": "渡辺 さくら",
+    "birth": "2001-07-15",
+    "partnerBirth": "",
+    "marital": "single"
+  },
+  "finance": {
+    "income": 20,
+    "bonus": 45,
+    "expense": 10.2,
+    "inflationRate": 2,
+    "incomeGrowthRate": 2.0,
+    "incomeGrowthUntilAge": 55,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 66
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（地方銀行）",
+      "amount": 12,
+      "monthlyContrib": 0.5,
+      "return": 0.1,
+      "startYear": 2024,
+      "endYear": null
+    }
+  ],
+  "expenses": [],
+  "recurringExpenses": [],
+  "lifeEvents": {
+    "children": [],
+    "housingType": "rent",
+    "rent": {
+      "monthlyRent": 5.5,
+      "startYear": 2025
+    },
+    "mortgage": {
+      "purchaseYear": null,
+      "price": 0,
+      "downPayment": 0,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [],
+  "retirement": {},
+  "insurance": {
+    "items": [],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "NISA積立開始",
+      "targetAmount": 0,
+      "targetYear": 2026,
+      "note": "まず口座開設と月1万円積立スタートが目標"
+    },
+    {
+      "id": "goal_02",
+      "name": "結婚資金",
+      "targetAmount": 300,
+      "targetYear": 2029
+    },
+    {
+      "id": "goal_03",
+      "name": "老後資金",
+      "targetAmount": 3000,
+      "targetYear": 2066
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

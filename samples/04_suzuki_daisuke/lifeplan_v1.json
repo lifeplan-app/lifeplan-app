@@ -1,0 +1,188 @@
+{
+  "profile": {
+    "name": "鈴木 大輔",
+    "birth": "1981-04-15",
+    "partnerBirth": "1983-08-20",
+    "marital": "married"
+  },
+  "finance": {
+    "income": 55,
+    "bonus": 180,
+    "expense": 30.6,
+    "inflationRate": 2,
+    "incomeGrowthRate": 1.5,
+    "incomeGrowthUntilAge": 60,
+    "partnerIncome": 0,
+    "partnerBonus": 0,
+    "_inputMode": "net",
+    "simYears": 40,
+    "taxSim": {
+      "income": 55,
+      "ideco": 0,
+      "nisa": 3,
+      "years": 20,
+      "rate": 20,
+      "employ": true
+    }
+  },
+  "assets": [
+    {
+      "id": "asset_01",
+      "type": "savings",
+      "name": "普通預金（生活防衛資金）",
+      "amount": 350,
+      "monthlyContrib": 1,
+      "return": 0.1,
+      "startYear": 2010,
+      "endYear": null
+    },
+    {
+      "id": "asset_02",
+      "type": "nisa",
+      "name": "NISA（つみたて投資枠）",
+      "amount": 65,
+      "monthlyContrib": 3,
+      "return": 5,
+      "startYear": 2024,
+      "endYear": null
+    }
+  ],
+  "expenses": [
+    {
+      "id": "exp_01",
+      "name": "長男 大学入学費用（翔太）",
+      "amount": 80,
+      "year": 2027,
+      "note": "国立大学志望だが私立理系も想定して計上"
+    },
+    {
+      "id": "exp_02",
+      "name": "長女 大学入学費用（さくら）",
+      "amount": 80,
+      "year": 2030,
+      "note": "私立文系想定"
+    }
+  ],
+  "recurringExpenses": [
+    {
+      "id": "rec_01",
+      "emoji": "📚",
+      "name": "長男 塾・受験費用（翔太）",
+      "amount": 84,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2027,
+      "note": "受験終了まで継続。月7万円×12ヶ月"
+    },
+    {
+      "id": "rec_02",
+      "emoji": "📚",
+      "name": "長女 塾・英会話費用（さくら）",
+      "amount": 80.4,
+      "intervalYears": 1,
+      "startYear": 2026,
+      "endYear": 2030,
+      "note": "塾月5.5万＋英会話月1.2万の年額換算"
+    },
+    {
+      "id": "rec_03",
+      "emoji": "🚗",
+      "name": "車検・自動車保険年払い",
+      "amount": 15,
+      "intervalYears": 2,
+      "startYear": 2026,
+      "endYear": null,
+      "note": "車検費用（隔年）"
+    }
+  ],
+  "lifeEvents": {
+    "children": [
+      {"id": "child_01", "birth": "2009-04-10", "name": "翔太（長男）"},
+      {"id": "child_02", "birth": "2012-09-05", "name": "さくら（長女）"}
+    ],
+    "housingType": "mortgage",
+    "mortgage": {
+      "purchaseYear": 2015,
+      "price": 4500,
+      "downPayment": 500,
+      "loanYears": 35,
+      "loanRate": 1.5,
+      "events": []
+    },
+    "rent": {
+      "monthlyRent": 0,
+      "startYear": null
+    },
+    "care": {},
+    "scholarships": []
+  },
+  "cashFlowEvents": [
+    {
+      "id": "ev_01",
+      "title": "妻 パート就労開始（さくら中学卒業後）",
+      "type": "income",
+      "year": 2028,
+      "monthlyAmount": 8,
+      "note": "子供が高校入学後にパート開始想定"
+    },
+    {
+      "id": "ev_02",
+      "title": "長男 大学卒業→教育費終了",
+      "type": "expense_end",
+      "year": 2031,
+      "monthlyAmount": -7,
+      "note": "長男の学費・仕送り終了"
+    },
+    {
+      "id": "ev_03",
+      "title": "長女 大学卒業→教育費終了",
+      "type": "expense_end",
+      "year": 2034,
+      "monthlyAmount": -7,
+      "note": "長女の学費・仕送り終了"
+    }
+  ],
+  "retirement": {},
+  "insurance": {
+    "items": [
+      {
+        "id": "ins_01",
+        "name": "終身生命保険（死亡保障3000万）",
+        "monthlyPremium": 1.2,
+        "coverage": 3000,
+        "endAge": 99
+      },
+      {
+        "id": "ins_02",
+        "name": "定期生命保険（死亡保障2000万）",
+        "monthlyPremium": 0.8,
+        "coverage": 2000,
+        "endAge": 60
+      },
+      {
+        "id": "ins_03",
+        "name": "医療保険（終身・入院日額5000円）",
+        "monthlyPremium": 0.8,
+        "coverage": 500,
+        "endAge": 99
+      }
+    ],
+    "needs": {}
+  },
+  "inheritance": {"giftPlans": []},
+  "goals": [
+    {
+      "id": "goal_01",
+      "name": "老後資金3000万円",
+      "targetAmount": 3000,
+      "targetYear": 2041,
+      "note": "60歳時点での老後資金目標。子供2人の教育費ピーク後に積立加速"
+    }
+  ],
+  "actuals": [],
+  "simpleMode": {},
+  "scenarioComp": [],
+  "lifeScenario": {},
+  "ratePresets": {},
+  "disclaimerAck": {}
+}

@@ -1,0 +1,153 @@
+{
+  "_version": "spending_v1",
+  "categories": [
+    {"id": "housing",  "name": "住宅",            "emoji": "🏠", "domain": "monthly_fixed",     "color": "#4A90D9", "budget": 87000, "sortOrder": 0},
+    {"id": "telecom",  "name": "通信費",           "emoji": "📱", "domain": "monthly_fixed",     "color": "#7B68EE", "budget": null,  "sortOrder": 1},
+    {"id": "insurance","name": "保険",             "emoji": "🛡️", "domain": "monthly_fixed",     "color": "#5BA85B", "budget": null,  "sortOrder": 2},
+    {"id": "subscr",   "name": "サブスク",         "emoji": "🔄", "domain": "monthly_fixed",     "color": "#E67E22", "budget": null,  "sortOrder": 3},
+    {"id": "food",     "name": "食費",             "emoji": "🍜", "domain": "monthly_variable",  "color": "#E74C3C", "budget": 45000, "sortOrder": 4},
+    {"id": "daily",    "name": "コスメ・日用品",   "emoji": "💄", "domain": "monthly_variable",  "color": "#1ABC9C", "budget": null,  "sortOrder": 5},
+    {"id": "transport","name": "交通費",           "emoji": "🚃", "domain": "monthly_variable",  "color": "#3498DB", "budget": null,  "sortOrder": 6},
+    {"id": "health",   "name": "医療・健康",       "emoji": "💊", "domain": "monthly_variable",  "color": "#27AE60", "budget": null,  "sortOrder": 7},
+    {"id": "annual",   "name": "年間固定費",       "emoji": "📅", "domain": "irregular_fixed",   "color": "#9B59B6", "budget": null,  "sortOrder": 8},
+    {"id": "special",  "name": "特別費",           "emoji": "🎉", "domain": "irregular_variable","color": "#F39C12", "budget": null,  "sortOrder": 9}
+  ],
+  "csvConfig": {
+    "source": "moneyforward",
+    "categoryMap": {},
+    "customColumns": {"date": null, "amount": null, "description": null, "category": null}
+  },
+  "months": {
+    "2025-11": {
+      "income": 360000,
+      "categoryTotals": {
+        "housing":   87000,
+        "telecom":    2800,
+        "insurance":  4500,
+        "subscr":     7500,
+        "food":      25000,
+        "daily":     12000,
+        "transport":  2600,
+        "health":     8600,
+        "annual":        0,
+        "special":  185000
+      },
+      "domainTotals": {
+        "monthly_fixed":    101800,
+        "monthly_variable":  48200,
+        "irregular_fixed":       0,
+        "irregular_variable":185000
+      },
+      "totalExpense": 335000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2025-12-03T09:00:00.000Z",
+      "isManual": true
+    },
+    "2025-12": {
+      "income": 760000,
+      "categoryTotals": {
+        "housing":   87000,
+        "telecom":    2800,
+        "insurance":  4500,
+        "subscr":     7500,
+        "food":      25000,
+        "daily":     12000,
+        "transport":  2600,
+        "health":     8600,
+        "annual":        0,
+        "special":  278000
+      },
+      "domainTotals": {
+        "monthly_fixed":    101800,
+        "monthly_variable":  48200,
+        "irregular_fixed":       0,
+        "irregular_variable":278000
+      },
+      "totalExpense": 428000,
+      "entries": null,
+      "importedEntryIds": [],
+      "importedAt": "2026-01-05T09:00:00.000Z",
+      "isManual": true
+    },
+    "2026-01": {
+      "income": 360000,
+      "categoryTotals": {
+        "housing":   87000,
+        "telecom":    2800,
+        "insurance":  4500,
+        "subscr":     7500,
+        "food":      34000,
+        "daily":     38000,
+        "transport":  3400,
+        "health":     8800,
+        "annual":        0,
+        "special":  132000
+      },
+      "domainTotals": {
+        "monthly_fixed":    101800,
+        "monthly_variable":  84200,
+        "irregular_fixed":       0,
+        "irregular_variable":132000
+      },
+      "totalExpense": 318000,
+      "entries": [
+        {"id":"e0301","date":"2026-01-01","amount":  87000,"categoryId":"housing",  "description":"家賃（1月分・北区1LDK）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0302","date":"2026-01-03","amount":  18000,"categoryId":"special",  "description":"夜勤明け・iHerb（サプリ・コスメまとめ買い）",        "isIncome":false,"source":"manual"},
+        {"id":"e0303","date":"2026-01-04","amount":   3900,"categoryId":"food",     "description":"スーパー（週次買い出し）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0304","date":"2026-01-05","amount":   2500,"categoryId":"food",     "description":"Uber Eats（夜勤明けのランチ）",                      "isIncome":false,"source":"manual"},
+        {"id":"e0305","date":"2026-01-06","amount":  12500,"categoryId":"daily",    "description":"ドラッグストア（スキンケア・シャンプー等）",           "isIncome":false,"source":"manual"},
+        {"id":"e0306","date":"2026-01-08","amount":   2800,"categoryId":"telecom",  "description":"IIJmio（月額・格安SIM）",                            "isIncome":false,"source":"manual"},
+        {"id":"e0307","date":"2026-01-08","amount":   4500,"categoryId":"insurance","description":"医療保険（月払い）",                                 "isIncome":false,"source":"manual"},
+        {"id":"e0308","date":"2026-01-09","amount":   3200,"categoryId":"food",     "description":"スーパー（週次買い出し）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0309","date":"2026-01-10","amount":   2800,"categoryId":"food",     "description":"Uber Eats（夜勤明け・餃子定食）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0310","date":"2026-01-10","amount":   1490,"categoryId":"subscr",   "description":"Netflix（月額）",                                    "isIncome":false,"source":"manual"},
+        {"id":"e0311","date":"2026-01-10","amount":    600,"categoryId":"subscr",   "description":"Amazon Prime（月額換算）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0312","date":"2026-01-10","amount":   3280,"categoryId":"subscr",   "description":"Spotify+Disney+（月額合計）",                        "isIncome":false,"source":"manual"},
+        {"id":"e0313","date":"2026-01-10","amount":   2130,"categoryId":"subscr",   "description":"ファッション系サブスク（月額）",                      "isIncome":false,"source":"manual"},
+        {"id":"e0314","date":"2026-01-11","amount":   7000,"categoryId":"special",  "description":"夜勤明け・ZOZOTOWN（カーディガン・「寒いから必要」）","isIncome":false,"source":"manual"},
+        {"id":"e0315","date":"2026-01-12","amount":   8800,"categoryId":"health",   "description":"スポーツジム（月会費）",                             "isIncome":false,"source":"manual"},
+        {"id":"e0316","date":"2026-01-13","amount":  18500,"categoryId":"daily",    "description":"コスメ通販（COSME.com・基礎化粧品セット）",           "isIncome":false,"source":"manual"},
+        {"id":"e0317","date":"2026-01-14","amount":   3500,"categoryId":"food",     "description":"スーパー（週次買い出し）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0318","date":"2026-01-15","amount":   3200,"categoryId":"food",     "description":"Uber Eats（夜勤明け・中華弁当）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0319","date":"2026-01-17","amount":  56500,"categoryId":"special",  "description":"友人の結婚式（ご祝儀+ドレスレンタル+交通費）",        "isIncome":false,"source":"manual"},
+        {"id":"e0320","date":"2026-01-18","amount":   7000,"categoryId":"daily",    "description":"ドラッグストア（コスメ補充・日用品）",               "isIncome":false,"source":"manual"},
+        {"id":"e0321","date":"2026-01-20","amount":   4200,"categoryId":"food",     "description":"スーパー（週次買い出し）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0322","date":"2026-01-21","amount":   3000,"categoryId":"food",     "description":"Uber Eats（夜勤明け・ラーメン）",                    "isIncome":false,"source":"manual"},
+        {"id":"e0323","date":"2026-01-23","amount":  50000,"categoryId":"special",  "description":"同期の誘い・新年会+二次会（梅田・気づいたら5万）",   "isIncome":false,"source":"manual"},
+        {"id":"e0324","date":"2026-01-26","amount":   3800,"categoryId":"food",     "description":"スーパー（月末買い出し）",                           "isIncome":false,"source":"manual"},
+        {"id":"e0325","date":"2026-01-27","amount":   3900,"categoryId":"food",     "description":"スーパー（週末まとめ買い）",                         "isIncome":false,"source":"manual"},
+        {"id":"e0326","date":"2026-01-28","amount":    500,"categoryId":"special",  "description":"コンビニ（夜勤明けスイーツ衝動買い）",               "isIncome":false,"source":"manual"},
+        {"id":"e0327","date":"2026-01-29","amount":   3400,"categoryId":"transport","description":"Suica・交通ICカードチャージ（1月合計）",             "isIncome":false,"source":"manual"}
+      ],
+      "importedEntryIds": [],
+      "importedAt": "2026-02-01T10:00:00.000Z",
+      "isManual": true
+    }
+  },
+  "suggestions": [
+    {
+      "id": "sug003_01",
+      "type": "subscription",
+      "categoryId": "subscr",
+      "triggerMonth": "2026-01",
+      "triggerValue": 7500,
+      "createdAt": "2026-02-01T10:00:00.000Z",
+      "dismissed": false,
+      "actionedAt": null
+    }
+  ],
+  "lifeplanSync": {
+    "syncedAt": null,
+    "monthlyExpense": 16.2,
+    "irregularSuggestions": [],
+    "basedOnMonths": ["2025-11", "2025-12", "2026-01"],
+    "basedOnAvgMonths": 3
+  },
+  "settings": {
+    "defaultViewMonths": 3,
+    "keepRawMonths": 3,
+    "budgetMode": false,
+    "linkedToLifeplan": false
+  }
+}

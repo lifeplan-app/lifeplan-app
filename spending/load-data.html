@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>データ読み込み | 支出管理</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #f5f5f7; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #fff; border-radius: 16px; padding: 28px 24px; max-width: 480px; width: 100%; box-shadow: 0 2px 16px rgba(0,0,0,.1); }
+  h1 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  p { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+  .method { border: 1.5px solid #e0e0e0; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .method-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  textarea { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-size: 12px; font-family: monospace; resize: vertical; }
+  .btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; text-align: center; margin-top: 10px; }
+  .btn-primary { background: #007AFF; color: #fff; }
+  .btn-file { background: #34C759; color: #fff; }
+  .error { color: #FF3B30; font-size: 12px; margin-top: 8px; display: none; }
+  .success { color: #34C759; font-size: 13px; font-weight: 600; margin-top: 8px; display: none; }
+  input[type=file] { display: none; }
+  label.file-label { display: block; width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; text-align: center; margin-top: 10px; background: #34C759; color: #fff; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📂 データ読み込み</h1>
+  <p>サンプルデータや以前のエクスポートデータを<br>支出管理アプリに読み込みます。</p>
+
+  <!-- 方法1: ファイル選択 -->
+  <div class="method">
+    <div class="method-title">方法①　JSONファイルを選択する（推奨）</div>
+    <input type="file" id="fileInput" accept=".json" onchange="loadFromFile(event)">
+    <label class="file-label" for="fileInput">📁 JSONファイルを選択</label>
+    <div class="error" id="fileError"></div>
+    <div class="success" id="fileSuccess">読み込み成功！アプリに移動します…</div>
+  </div>
+
+  <!-- 方法2: 貼り付け -->
+  <div class="method">
+    <div class="method-title">方法②　JSONテキストを貼り付ける</div>
+    <textarea id="jsonText" placeholder='{"_version":"spending_v1","categories":[...],"months":{...},...}'></textarea>
+    <button class="btn btn-primary" onclick="loadFromText()">📋 貼り付けたデータを読み込む</button>
+    <div class="error" id="textError"></div>
+    <div class="success" id="textSuccess">読み込み成功！アプリに移動します…</div>
+  </div>
+</div>
+
+<script>
+function applyData(data) {
+  if (!data || typeof data !== 'object') throw new Error('不正なデータ形式です');
+  if (!data.categories) throw new Error('"categories" がありません');
+  if (!data.months) throw new Error('"months" がありません');
+  data._onboardingDone = true;
+  localStorage.setItem('spending_v1', JSON.stringify(data));
+}
+
+function loadFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const errEl = document.getElementById('fileError');
+  const okEl  = document.getElementById('fileSuccess');
+  errEl.style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      applyData(data);
+      okEl.style.display = 'block';
+      setTimeout(() => { location.href = 'index.html'; }, 800);
+    } catch(err) {
+      errEl.textContent = 'エラー: ' + err.message;
+      errEl.style.display = 'block';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function loadFromText() {
+  const text = document.getElementById('jsonText').value.trim();
+  const errEl = document.getElementById('textError');
+  const okEl  = document.getElementById('textSuccess');
+  errEl.style.display = 'none';
+  if (!text) {
+    errEl.textContent = 'JSONを貼り付けてください';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const data = JSON.parse(text);
+    applyData(data);
+    okEl.style.display = 'block';
+    setTimeout(() => { location.href = 'index.html'; }, 800);
+  } catch(err) {
+    errEl.textContent = 'JSON形式が正しくありません: ' + err.message;
+    errEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
