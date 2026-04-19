@@ -647,6 +647,12 @@
   <!-- Premium Status Banner (trial expiry / upsell) -->
   <div id="premiumStatusBanner" style="display:none"></div>
 
+  <!-- Budget Alert Banner (予算超過アラート) -->
+  <div id="budgetAlertBanner" style="display:none"></div>
+
+  <!-- Notification Permission Banner (OS通知許可リクエスト) -->
+  <div id="notifPermBanner" style="display:none"></div>
+
   <!-- Summary -->
   <div class="summary-row" id="summaryRow">
     <div class="summary-card income" id="incomeCard"
@@ -1818,6 +1824,7 @@ function createInitialState() {
       isPremium: false,
       premiumPlan: null,       // 'trial' | 'paid' | null
       premiumTrialStart: null, // ISO date string when trial started
+      notifPermDismissed: false, // 「通知を有効にしますか？」バナーを閉じた場合
     },
     income: {
       // 手取り月収（円）
@@ -1847,6 +1854,7 @@ function loadState() {
       if (state.settings.bonusInCalc === undefined) state.settings.bonusInCalc = true;
       if (state.settings.premiumPlan === undefined) state.settings.premiumPlan = null;
       if (state.settings.premiumTrialStart === undefined) state.settings.premiumTrialStart = null;
+      if (state.settings.notifPermDismissed === undefined) state.settings.notifPermDismissed = false;
       if (state.income.overtime === undefined) state.income.overtime = null;
       // 「家族生活費」カテゴリが未追加なら追加（マイグレーション）
       if (!state.categories.find(c => c.id === 'family')) {
@@ -2229,6 +2237,8 @@ function renderDashboard() {
     if (catChartInstance) { catChartInstance.destroy(); catChartInstance = null; }
     if (miniTrendChartInstance) { miniTrendChartInstance.destroy(); miniTrendChartInstance = null; }
     document.getElementById('miniTrendSection').style.display = 'none';
+    document.getElementById('budgetAlertBanner').style.display = 'none';
+    document.getElementById('notifPermBanner').style.display = 'none';
     renderSuggestions(null);
     return;
   }
@@ -2311,6 +2321,11 @@ function renderDashboard() {
 
   // Premium Status Banner (trial expiry / upsell)
   renderPremiumStatusBanner();
+
+  // Budget Alert & OS Notification
+  renderBudgetAlertBanner(categoryTotals);
+  renderNotifPermBanner(categoryTotals);
+  checkBudgetNotification(categoryTotals);
 }
 
 let miniTrendChartInstance = null;
@@ -4222,6 +4237,118 @@ function openPremiumWaitlist() {
   closePremiumModal();
   window.open(PREMIUM_WAITLIST_URL, '_blank');
   showNotification('📧 メールアプリが開きました。送信してください。');
+}
+
+// ── 予算超過アラートバナー ─────────────────────────────────────
+function renderBudgetAlertBanner(categoryTotals) {
+  const el = document.getElementById('budgetAlertBanner');
+  if (!el) return;
+
+  const overCats = state.categories.filter(c =>
+    c.budget && (categoryTotals[c.id] || 0) > c.budget
+  );
+
+  if (!overCats.length) { el.style.display = 'none'; return; }
+
+  // 超過カテゴリ一覧（超過額付き）
+  const items = overCats.map(c => {
+    const actual  = categoryTotals[c.id] || 0;
+    const overAmt = actual - c.budget;
+    return `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;color:#991B1B">${c.emoji} ${c.name} <span style="color:#DC2626">+${fmt(overAmt)}</span></span>`;
+  }).join(' ');
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-start;gap:10px;background:#FFF1F2;border:1.5px solid #FECDD3;border-radius:10px;padding:11px 14px;margin-bottom:12px">
+      <span style="font-size:20px;flex-shrink:0;line-height:1.2">🚨</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:#9F1239;margin-bottom:5px">${overCats.length}カテゴリが予算を超過しています</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">${items}</div>
+      </div>
+      <button onclick="openBudgetModal()"
+        style="flex-shrink:0;font-size:11px;padding:5px 10px;border:1px solid #F43F5E;background:#FFF;color:#E11D48;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap">
+        確認 →
+      </button>
+    </div>`;
+}
+
+// ── OS通知許可リクエストバナー ────────────────────────────────
+function renderNotifPermBanner(categoryTotals) {
+  const el = document.getElementById('notifPermBanner');
+  if (!el) return;
+
+  // 通知 API 非対応 / すでに許可済み or 拒否済み / バナー閉じ済み
+  if (!('Notification' in window)) { el.style.display = 'none'; return; }
+  if (Notification.permission !== 'default') { el.style.display = 'none'; return; }
+  if (state.settings.notifPermDismissed) { el.style.display = 'none'; return; }
+
+  // 予算が1件も設定されていない → 通知しても意味がないので非表示
+  const hasBudget = state.categories.some(c => c.budget);
+  if (!hasBudget) { el.style.display = 'none'; return; }
+
+  el.style.display = '';
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+      <span style="font-size:18px;flex-shrink:0">🔔</span>
+      <div style="flex:1;font-size:12px;color:#1E40AF">
+        <strong>予算超過をOS通知でお知らせしますか？</strong><br>
+        <span style="color:#3B82F6">アプリを開いたとき、超過しているカテゴリを通知します</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button onclick="requestBudgetNotif()"
+          style="font-size:11px;padding:5px 10px;background:#3B82F6;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap">
+          許可する
+        </button>
+        <button onclick="dismissNotifPermBanner()"
+          style="font-size:11px;padding:5px 10px;background:none;color:#6B7280;border:1px solid #D1D5DB;border-radius:8px;cursor:pointer;white-space:nowrap">
+          後で
+        </button>
+      </div>
+    </div>`;
+}
+
+// 通知を許可するボタン
+function requestBudgetNotif() {
+  Notification.requestPermission().then(permission => {
+    document.getElementById('notifPermBanner').style.display = 'none';
+    if (permission === 'granted') {
+      showNotification('🔔 予算超過通知が有効になりました');
+      // 許可直後に今月の超過をチェック
+      const md = getMonthData(currentMonth);
+      if (md) checkBudgetNotification(md.categoryTotals);
+    }
+  });
+}
+
+// 「後で」で閉じる
+function dismissNotifPermBanner() {
+  state.settings.notifPermDismissed = true;
+  saveState();
+  document.getElementById('notifPermBanner').style.display = 'none';
+}
+
+// OS通知を実際に送る（セッション内で月ごとに1回のみ）
+function checkBudgetNotification(categoryTotals) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+
+  // セッション内で同じ月はすでに通知済みならスキップ
+  const sessionKey = `budgetNotif_${currentMonth}`;
+  if (sessionStorage.getItem(sessionKey)) return;
+
+  const overCats = state.categories.filter(c =>
+    c.budget && (categoryTotals[c.id] || 0) > c.budget
+  );
+  if (!overCats.length) return;
+
+  sessionStorage.setItem(sessionKey, '1');
+
+  const names = overCats.map(c => c.name).join('・');
+  new Notification('💸 支出管理 — 予算超過', {
+    body: `${names} が予算を超過しています`,
+    icon: '/spending/icon-spending.svg',
+    tag:  `budget-over-${currentMonth}`,  // 同月で重複しない
+  });
 }
 
 // トライアル期限切れバナーをダッシュボードに表示
