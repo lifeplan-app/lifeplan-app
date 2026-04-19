@@ -3070,7 +3070,15 @@ function parseMFCSV(text) {
     if (!date) continue;
 
     const rawType = idx.type >= 0 ? cols[idx.type]?.trim() : '';
-    const isIncome = rawType === '入金' || rawType === '収入' || amountNum > 0;
+    // 収入/支出を明示的に判定。型不明時は金額の符号で判断（負=支出）
+    let isIncome;
+    if (rawType === '収入' || rawType === '入金') {
+      isIncome = true;
+    } else if (rawType === '支出' || rawType === '出金') {
+      isIncome = false;
+    } else {
+      isIncome = amountNum > 0; // 型不明時: 正=収入、負=支出
+    }
     const amount = Math.abs(amountNum);
     const mfCat    = idx.mainCat >= 0 ? cols[idx.mainCat]?.trim() : '';
     const mfSubCat = idx.subCat  >= 0 ? cols[idx.subCat]?.trim()  : '';
