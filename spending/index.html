@@ -888,77 +888,101 @@
 
 <!-- ===================== ONBOARDING OVERLAY ===================== -->
 <div id="onboardingOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto">
-  <div style="max-width:480px;margin:0 auto;padding:32px 20px 40px;min-height:100%;display:flex;flex-direction:column;justify-content:center">
+  <div style="max-width:480px;margin:0 auto;padding:32px 20px 48px;min-height:100%;display:flex;flex-direction:column;justify-content:center">
 
     <!-- App icon + title -->
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="width:72px;height:72px;background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px">💸</div>
-      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 10px">支出管理アプリへようこそ</h1>
-      <p style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin:0">
-        毎月の支出を4つの領域に分けて管理します。<br>実際の支出データをライフプランに連携すると<br>シミュレーションの精度がぐっと上がります。
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(16,185,129,.3)">💸</div>
+      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 8px">支出管理アプリへようこそ</h1>
+      <p style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin:0">
+        毎月の支出を <strong style="color:var(--text)">4つの領域</strong> に整理して、<br>
+        「お金はどこに消えているか」を見える化します。<br>
+        <span style="font-size:12px;color:var(--text-muted)">データはライフプランにそのまま連携できます</span>
       </p>
     </div>
 
-    <!-- 4 domains grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px">
-      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
-        <div style="font-size:20px;margin-bottom:4px">🏠</div>
-        <div style="font-size:12px;font-weight:700;color:#2563EB">毎月固定費</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">家賃・保険<br>スマホ・サブスク</div>
+    <!-- 4 domains grid (compact) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:24px">
+      <div style="background:var(--surface);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;border:1px solid var(--border)">
+        <span style="font-size:18px;flex-shrink:0">🏠</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#2563EB">毎月固定費</div>
+          <div style="font-size:10px;color:var(--text-muted);line-height:1.4">家賃・保険・スマホ</div>
+        </div>
       </div>
-      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
-        <div style="font-size:20px;margin-bottom:4px">🛒</div>
-        <div style="font-size:12px;font-weight:700;color:#16A34A">毎月変動費</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">食費・日用品<br>交通・医療</div>
+      <div style="background:var(--surface);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;border:1px solid var(--border)">
+        <span style="font-size:18px;flex-shrink:0">🛒</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#16A34A">毎月変動費</div>
+          <div style="font-size:10px;color:var(--text-muted);line-height:1.4">食費・日用品・交通</div>
+        </div>
       </div>
-      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
-        <div style="font-size:20px;margin-bottom:4px">📅</div>
-        <div style="font-size:12px;font-weight:700;color:#D97706">不定期固定費</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">車検・年払い保険<br>固定資産税</div>
+      <div style="background:var(--surface);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;border:1px solid var(--border)">
+        <span style="font-size:18px;flex-shrink:0">📅</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#D97706">不定期固定費</div>
+          <div style="font-size:10px;color:var(--text-muted);line-height:1.4">車検・年払い保険</div>
+        </div>
       </div>
-      <div style="background:var(--surface);border-radius:10px;padding:12px 10px;text-align:center;border:1px solid var(--border)">
-        <div style="font-size:20px;margin-bottom:4px">🎉</div>
-        <div style="font-size:12px;font-weight:700;color:#DC2626">不定期変動費</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">旅行・外食<br>冠婚葬祭・趣味</div>
+      <div style="background:var(--surface);border-radius:10px;padding:10px 8px;display:flex;align-items:center;gap:8px;border:1px solid var(--border)">
+        <span style="font-size:18px;flex-shrink:0">🎉</span>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#DC2626">不定期変動費</div>
+          <div style="font-size:10px;color:var(--text-muted);line-height:1.4">旅行・冠婚葬祭</div>
+        </div>
       </div>
     </div>
 
-    <!-- CTA -->
-    <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-align:center;margin-bottom:12px">まずどこから始めますか？</div>
+    <!-- CTA: 始め方を選ぶ -->
+    <div style="font-size:13px;font-weight:700;color:var(--text-secondary);text-align:center;margin-bottom:10px">どこから始めますか？</div>
 
-    <button onclick="startOnboardingCSV()"
-      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:10px">
-      <span style="font-size:28px;flex-shrink:0">📥</span>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">CSVで取り込む</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">MoneyForward・Zaim 対応。過去データも一括取込</div>
-      </div>
-      <span style="font-size:18px;color:var(--text-muted)">›</span>
-    </button>
-
+    <!-- ① 手動入力（おすすめ） -->
     <button onclick="startOnboardingManual()"
-      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:24px">
-      <span style="font-size:28px;flex-shrink:0">✏️</span>
+      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:#EFF6FF;border:2px solid var(--primary);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:8px;position:relative">
+      <span style="font-size:26px;flex-shrink:0">✏️</span>
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">手動で入力する</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">今月の支出を直接入力。すぐに始められる</div>
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+          <span style="font-size:14px;font-weight:700;color:var(--primary)">手動で入力する</span>
+          <span style="font-size:10px;font-weight:700;background:var(--primary);color:#fff;padding:2px 7px;border-radius:10px">おすすめ</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)">今月の支出をその場で入力。アプリを使いながら覚えられる</div>
+      </div>
+      <span style="font-size:18px;color:var(--primary)">›</span>
+    </button>
+
+    <!-- ② CSV取り込み -->
+    <button onclick="startOnboardingCSV()"
+      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:16px">
+      <span style="font-size:26px;flex-shrink:0">📥</span>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">CSVで取り込む</div>
+        <div style="font-size:12px;color:var(--text-muted)">MoneyForward・Zaim 対応。過去データをまとめて取込</div>
       </div>
       <span style="font-size:18px;color:var(--text-muted)">›</span>
     </button>
 
-    <button onclick="document.getElementById('onboardingJsonInput').click()"
-      style="display:flex;align-items:center;gap:14px;width:100%;padding:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:left;margin-bottom:10px">
-      <span style="font-size:28px;flex-shrink:0">📂</span>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700;color:var(--text)">JSONファイルで読み込む</div>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">サンプルデータや以前のエクスポートデータを読み込む</div>
-      </div>
-      <span style="font-size:18px;color:var(--text-muted)">›</span>
-    </button>
+    <!-- 区切り -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <span style="font-size:11px;color:var(--text-muted);white-space:nowrap">または</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- ③ サンプルデータ & バックアップ 復元（コンパクト） -->
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button onclick="document.getElementById('onboardingJsonInput').click()"
+        style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:600;color:var(--text-secondary)">
+        <span style="font-size:18px">📂</span>バックアップを復元
+      </button>
+      <a href="load-data.html"
+        style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:var(--radius);text-decoration:none;font-size:13px;font-weight:600;color:#166534">
+        <span style="font-size:18px">👀</span>サンプルを試す
+      </a>
+    </div>
     <input type="file" id="onboardingJsonInput" accept=".json" style="display:none" onchange="importSpendingDataOnboarding(event)">
 
     <button onclick="skipOnboarding()"
-      style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;width:100%;padding:8px;text-align:center">
+      style="background:none;border:none;color:var(--text-muted);font-size:12px;cursor:pointer;width:100%;padding:6px;text-align:center">
       あとでやる（スキップ）
     </button>
   </div>
