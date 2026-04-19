@@ -672,7 +672,13 @@
   <div class="section-card" id="catListSection">
     <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
       <span>📋 カテゴリ一覧</span>
-      <button onclick="openBudgetModal()" style="font-size:12px;font-weight:600;color:var(--primary);background:none;border:1px solid var(--primary);border-radius:20px;padding:3px 10px;cursor:pointer">💰 予算設定</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="budgetModeToggleBtn" onclick="toggleBudgetMode()"
+          style="font-size:12px;font-weight:600;color:var(--primary);background:none;border:1px solid var(--primary);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all .2s">
+          📊 予算モード
+        </button>
+        <button onclick="openBudgetModal()" style="font-size:12px;font-weight:600;color:var(--primary);background:none;border:1px solid var(--primary);border-radius:20px;padding:3px 10px;cursor:pointer">💰 予算設定</button>
+      </div>
     </div>
     <div id="budgetSummary"></div>
     <div id="catList"></div>
@@ -1330,7 +1336,8 @@ const DEFAULT_CATEGORIES = [
 const MF_CATEGORY_MAP = {
   // ── 住宅 ──────────────────────────────────────────────────────
   '住宅': 'housing', '住宅・家賃': 'housing', '家賃・住宅ローン': 'housing',
-  '住宅::家賃・住宅ローン': 'housing', '住宅::地代・管理費': 'housing',
+  '住宅::家賃・住宅ローン': 'housing', '住宅::家賃・地代': 'housing',
+  '住宅::地代・管理費': 'housing', '住宅::管理費・修繕積立金': 'housing',
   '住宅::引越し': 'special', '住宅::リフォーム・内装': 'special', '住宅::家具・家電': 'special',
   '住宅::その他住宅': 'housing',
 
@@ -2177,6 +2184,7 @@ function renderDashboard() {
   // Budget Summary & Category List
   renderBudgetSummary(categoryTotals);
   renderCatList(categoryTotals, totalExpense);
+  updateBudgetModeBtn();
 
   // Income Health
   renderIncomeSetupBanner();
@@ -2311,16 +2319,33 @@ function renderCatChart(categoryTotals, totalExpense) {
 
 function renderCatList(categoryTotals, totalExpense) {
   const el = document.getElementById('catList');
-  const cats = state.categories
-    .filter(c => (categoryTotals[c.id] || 0) > 0)
-    .sort((a, b) => (categoryTotals[b.id] || 0) - (categoryTotals[a.id] || 0));
+  const budgetMode = state.settings.budgetMode;
+
+  let cats;
+  if (budgetMode) {
+    // 予算モード: 予算設定済み or 支出ありのカテゴリをすべて表示
+    cats = state.categories
+      .filter(c => (categoryTotals[c.id] || 0) > 0 || c.budget)
+      .sort((a, b) => {
+        const aAmt = categoryTotals[a.id] || 0;
+        const bAmt = categoryTotals[b.id] || 0;
+        // 予算ありは使用率で降順ソート（超過 → 警告 → 正常）
+        const aRate = a.budget ? aAmt / a.budget : -1;
+        const bRate = b.budget ? bAmt / b.budget : -1;
+        return bRate - aRate;
+      });
+  } else {
+    cats = state.categories
+      .filter(c => (categoryTotals[c.id] || 0) > 0)
+      .sort((a, b) => (categoryTotals[b.id] || 0) - (categoryTotals[a.id] || 0));
+  }
 
   if (!cats.length) {
     el.innerHTML = '<div style="font-size:13px;color:var(--text-muted)">支出データがありません</div>';
     return;
   }
 
-  const maxAmount = Math.max(...cats.map(c => categoryTotals[c.id] || 0));
+  const maxAmount = Math.max(...cats.map(c => categoryTotals[c.id] || 0), 1);
   const domainMap = DOMAINS;
 
   el.innerHTML = cats.map(c => {
@@ -2332,12 +2357,20 @@ function renderCatList(categoryTotals, totalExpense) {
       const pct = Math.round(amount / c.budget * 100);
       const barColor = pct >= 100 ? 'var(--danger)' : pct >= 80 ? '#FF9500' : 'var(--secondary)';
       const icon = pct >= 100 ? '🚨' : pct >= 80 ? '⚠️' : '✓';
-      const labelColor = pct >= 100 ? 'var(--danger)' : pct >= 80 ? '#FF9500' : 'var(--text-muted)';
+      const remaining = c.budget - amount;
+      const remainLabel = remaining >= 0
+        ? `残り ${fmt(remaining)}`
+        : `${fmt(-remaining)} 超過`;
+      const remainColor = remaining < 0
+        ? 'var(--danger)'
+        : remaining < c.budget * 0.2
+          ? '#FF9500'
+          : 'var(--text-muted)';
       return `
         <div style="margin-top:5px">
           <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:3px">
             <span style="color:var(--text-muted)">予算 ${fmt(c.budget)}</span>
-            <span style="color:${labelColor};font-weight:600">${icon} ${pct}%</span>
+            <span style="color:${remainColor};font-weight:600">${icon} ${remainLabel}</span>
           </div>
           <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
             <div style="height:100%;width:${Math.min(pct, 100)}%;background:${barColor};border-radius:3px;transition:width .4s"></div>
@@ -2358,8 +2391,8 @@ function renderCatList(categoryTotals, totalExpense) {
           ${budgetBar}
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div class="cat-amount">${fmt(amount)}</div>
-          <div class="cat-ratio">${ratio}%</div>
+          <div class="cat-amount">${amount > 0 ? fmt(amount) : '<span style="color:var(--text-muted);font-size:12px">¥0</span>'}</div>
+          <div class="cat-ratio">${amount > 0 ? ratio + '%' : ''}</div>
         </div>
       </div>`;
   }).join('');
@@ -2369,6 +2402,9 @@ function renderCatList(categoryTotals, totalExpense) {
 function renderBudgetSummary(categoryTotals) {
   const el = document.getElementById('budgetSummary');
   if (!el) return;
+
+  // 予算モードがOFFのときはサマリーを非表示
+  if (!state.settings.budgetMode) { el.innerHTML = ''; return; }
 
   const catsWithBudget = state.categories.filter(c => c.budget);
   if (!catsWithBudget.length) { el.innerHTML = ''; return; }
@@ -2440,6 +2476,27 @@ function saveBudgetModal() {
   closeBudgetModal();
   if (currentTab === 'dashboard') renderDashboard();
   showNotification('予算を保存しました ✓');
+}
+
+// ── 予算モード トグル ─────────────────────────────────────────
+function toggleBudgetMode() {
+  state.settings.budgetMode = !state.settings.budgetMode;
+  saveState();
+  // 予算が1件も設定されていない場合、予算設定モーダルを自動オープン
+  if (state.settings.budgetMode && state.categories.every(c => !c.budget)) {
+    openBudgetModal();
+  }
+  if (currentTab === 'dashboard') renderDashboard();
+}
+
+function updateBudgetModeBtn() {
+  const btn = document.getElementById('budgetModeToggleBtn');
+  if (!btn) return;
+  const on = state.settings.budgetMode;
+  btn.style.background = on ? 'var(--primary)' : 'none';
+  btn.style.color = on ? '#fff' : 'var(--primary)';
+  btn.style.borderColor = 'var(--primary)';
+  btn.textContent = on ? '📊 予算モード ON' : '📊 予算モード';
 }
 
 // 直近 nMonths のカテゴリ別・ドメイン別平均を計算
@@ -2852,7 +2909,15 @@ function detectCSVFormat(text) {
 // マッピングキー（大項目::中項目 または 大項目）で検索
 function mapCategoryByKey(key) {
   if (!key) return null;
-  return state.csvConfig.categoryMap[key] || MF_CATEGORY_MAP[key] || ZAIM_CATEGORY_MAP[key] || null;
+  // 完全一致
+  const exact = state.csvConfig.categoryMap[key] || MF_CATEGORY_MAP[key] || ZAIM_CATEGORY_MAP[key];
+  if (exact) return exact;
+  // 「大項目::中項目」の場合、大項目のみでフォールバック
+  if (key.includes('::')) {
+    const mainCat = key.split('::')[0];
+    return state.csvConfig.categoryMap[mainCat] || MF_CATEGORY_MAP[mainCat] || ZAIM_CATEGORY_MAP[mainCat] || null;
+  }
+  return null;
 }
 
 // 大項目のみで検索（後方互換）
