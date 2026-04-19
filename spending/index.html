@@ -567,6 +567,21 @@
       line-height: 1;
     }
     .entry-edit-btn:hover { opacity: 1; }
+
+/* ── Premium ── */
+.premium-badge {
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 8px;
+  background:linear-gradient(135deg,#F59E0B,#D97706);
+  color:#fff;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.5px;
+}
+.premium-lock {
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.82);
+  border-radius:10px;gap:6px;padding:16px;text-align:center;
+  backdrop-filter:blur(2px);
+}
   </style>
 </head>
 <body>
@@ -694,6 +709,24 @@
     <input type="file" id="dashEmptyJsonInput" accept=".json" style="display:none" onchange="importSpendingDataOnboarding(event)">
     <br>
     <button class="btn btn-secondary" onclick="showTab('ledger')" style="font-size:13px">✏️ 手動で入力する</button>
+  </div>
+
+  <!-- ===================== PREMIUM: Trend Analysis ===================== -->
+  <div class="section-card" id="premiumTrendCard" style="display:none">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>📊 カテゴリ別トレンド分析</span>
+      <span class="premium-badge">✨ PRO</span>
+    </div>
+    <div id="premiumTrendContent"></div>
+  </div>
+
+  <!-- ===================== PREMIUM: Improvement Simulator ===================== -->
+  <div class="section-card" id="premiumSimCard" style="display:none">
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>💡 改善シミュレーター</span>
+      <span class="premium-badge">✨ PRO</span>
+    </div>
+    <div id="premiumSimContent"></div>
   </div>
 
   <!-- Legal Footer -->
@@ -1322,6 +1355,43 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: Premium Upgrade ===================== -->
+<div class="modal-overlay" id="premiumModal">
+  <div class="modal">
+    <div class="modal-title">
+      <button class="modal-close" onclick="closePremiumModal()">✕</button>
+      ✨ プレミアム機能
+    </div>
+    <div style="text-align:center;padding:4px 0 16px">
+      <div style="font-size:36px;margin-bottom:8px">🚀</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">家計改善をもっと深く分析</div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
+        蓄積したデータを最大限に活用して、<br>節約の効果を数字で可視化できます。
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
+      <div style="display:flex;align-items:flex-start;gap:12px;background:var(--surface2);padding:10px 12px;border-radius:10px">
+        <span style="font-size:20px">📊</span>
+        <div>
+          <div style="font-size:13px;font-weight:700">カテゴリ別トレンド分析</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">6ヶ月以上の推移グラフ・月次増減テーブル</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;background:var(--surface2);padding:10px 12px;border-radius:10px">
+        <span style="font-size:20px">💡</span>
+        <div>
+          <div style="font-size:13px;font-weight:700">改善シミュレーター</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">「月¥3,000削減 → 36年で+¥637万」を自分の数字で試算</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="activatePremiumTrial()" style="font-size:14px;padding:14px">
+      🎉 無料トライアルで始める
+    </button>
+    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px">現在トライアル提供中 · クレジットカード不要</p>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -1723,6 +1793,7 @@ function createInitialState() {
       budgetMode: false,
       linkedToLifeplan: false,
       bonusInCalc: true,  // true=月収+ボーナス月換算, false=月収のみ
+      isPremium: false,
     },
     income: {
       // 手取り月収（円）
@@ -2207,6 +2278,10 @@ function renderDashboard() {
 
   // Suggestions
   renderSuggestions(monthData);
+
+  // Premium Features
+  renderPremiumTrend();
+  renderPremiumSim();
 }
 
 let miniTrendChartInstance = null;
@@ -4060,6 +4135,267 @@ function doSyncToLifeplan() {
   }
 
   showNotification('ライフプランに連携しました ✓');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PREMIUM
+// ═══════════════════════════════════════════════════════════════
+function isPremium() {
+  return state.settings?.isPremium === true;
+}
+
+function openPremiumModal() {
+  document.getElementById('premiumModal').classList.add('open');
+}
+
+function closePremiumModal() {
+  document.getElementById('premiumModal').classList.remove('open');
+}
+
+function activatePremiumTrial() {
+  state.settings.isPremium = true;
+  saveState();
+  closePremiumModal();
+  renderDashboard();
+  showNotification('✨ プレミアム機能が解放されました！');
+}
+
+// ── プレミアム：カテゴリ別トレンド分析 ─────────────────────────
+let premiumTrendChartInstance = null;
+
+function renderPremiumTrend() {
+  const card = document.getElementById('premiumTrendCard');
+  const el   = document.getElementById('premiumTrendContent');
+  if (!card || !el) return;
+
+  const allKeys = Object.keys(state.months || {}).sort();
+  if (allKeys.length < 2) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  if (!isPremium()) {
+    // ロック表示（ぼかしプレビュー付き）
+    el.innerHTML = `
+      <div style="position:relative;min-height:160px">
+        <div style="filter:blur(5px);pointer-events:none;opacity:.5;height:140px;background:linear-gradient(135deg,#EEF2FF 0%,#E0E7FF 50%,#C7D2FE 100%);border-radius:8px;overflow:hidden;display:flex;align-items:flex-end;gap:4px;padding:16px 8px 8px">
+          ${['30%','55%','40%','70%','45%','80%','60%'].map((h,i)=>`<div style="flex:1;height:${h};background:#6366F1;border-radius:4px 4px 0 0;opacity:${0.5+i*0.07}"></div>`).join('')}
+        </div>
+        <div class="premium-lock">
+          <div style="font-size:14px;font-weight:700">🔒 カテゴリ別トレンド分析</div>
+          <div style="font-size:12px;color:var(--text-muted)">6ヶ月以上の推移とカテゴリ増減を表示</div>
+          <button class="btn btn-primary" onclick="openPremiumModal()" style="margin-top:4px;font-size:13px">✨ プレミアムで解放</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // ── プレミアム：フル表示 ──
+  const cats = state.categories.filter(c =>
+    c.domain === 'monthly_fixed' || c.domain === 'monthly_variable'
+  );
+  const labels = allKeys.map(k => {
+    const [y, m] = k.split('-');
+    return `${y.slice(2)}年${parseInt(m)}月`;
+  });
+
+  // 月次増減テーブル（最新2ヶ月比較）
+  const lastKey = allKeys[allKeys.length - 1];
+  const prevKey = allKeys[allKeys.length - 2];
+  const lastData = state.months[lastKey];
+  const prevData = state.months[prevKey];
+
+  const changeRows = cats.map(c => {
+    const curr = lastData?.categoryTotals?.[c.id] || 0;
+    const prev = prevData?.categoryTotals?.[c.id] || 0;
+    const diff = curr - prev;
+    const pct  = prev > 0 ? ((curr - prev) / prev * 100).toFixed(1) : '—';
+    const color = diff > 0 ? 'var(--danger)' : diff < 0 ? '#10B981' : 'var(--text-muted)';
+    const sign  = diff > 0 ? '+' : '';
+    return `
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:16px;width:22px;text-align:center">${c.emoji}</span>
+        <span style="flex:1;font-size:12px;font-weight:600">${c.name}</span>
+        <span style="font-size:12px;color:var(--text-secondary)">${fmt(curr)}</span>
+        <span style="font-size:12px;color:${color};font-weight:700;min-width:58px;text-align:right">${sign}${fmt(diff)}</span>
+        <span style="font-size:11px;color:${color};min-width:38px;text-align:right">${typeof pct==='string'?pct:sign+pct+'%'}</span>
+      </div>`;
+  }).join('');
+
+  // Chart
+  const canvasId = 'premiumTrendChart';
+  el.innerHTML = `
+    <div style="margin-bottom:10px">
+      <div style="height:160px"><canvas id="${canvasId}"></canvas></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin:12px 0 6px">
+      前月比（${prevKey.replace('-','年')}月 → ${lastKey.replace('-','年')}月）
+    </div>
+    ${changeRows}`;
+
+  if (premiumTrendChartInstance) { premiumTrendChartInstance.destroy(); premiumTrendChartInstance = null; }
+
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx) return;
+
+  const datasets = cats.map(c => ({
+    label: c.name,
+    data: allKeys.map(k => state.months[k]?.categoryTotals?.[c.id] || 0),
+    backgroundColor: c.color + 'CC',
+    borderColor: c.color,
+    borderWidth: 1,
+  }));
+
+  premiumTrendChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (item) => ` ${item.dataset.label}: ${fmt(item.raw)}`,
+          },
+        },
+      },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+        y: { stacked: true, grid: { color: '#f0f0f0' }, ticks: { font: { size: 9 },
+          callback: v => v >= 10000 ? `${Math.round(v/10000)}万` : `${Math.round(v/1000)}k`,
+        }},
+      },
+    },
+  });
+}
+
+// ── プレミアム：改善シミュレーター ──────────────────────────────
+function renderPremiumSim() {
+  const card = document.getElementById('premiumSimCard');
+  const el   = document.getElementById('premiumSimContent');
+  if (!card || !el) return;
+
+  const allKeys = Object.keys(state.months || {}).sort();
+  if (!allKeys.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  if (!isPremium()) {
+    el.innerHTML = `
+      <div style="position:relative;min-height:130px">
+        <div style="filter:blur(4px);pointer-events:none;opacity:.5;padding:14px;background:var(--surface2);border-radius:8px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">通信費 ¥11,200/月 → ¥3,000/月 に削減した場合</div>
+          <div style="font-size:22px;font-weight:800;color:#10B981">36年で +¥637万</div>
+          <div style="font-size:11px;color:var(--text-muted)">年利3%複利・月¥8,200を積立運用した試算</div>
+        </div>
+        <div class="premium-lock">
+          <div style="font-size:14px;font-weight:700">🔒 改善シミュレーター</div>
+          <div style="font-size:12px;color:var(--text-muted)">任意のカテゴリで節約効果を試算</div>
+          <button class="btn btn-primary" onclick="openPremiumModal()" style="margin-top:4px;font-size:13px">✨ プレミアムで解放</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // ── プレミアム：インタラクティブシミュレーター ──
+  const latestKey = allKeys[allKeys.length - 1];
+  const latestMonth = state.months[latestKey];
+  const simCats = state.categories.filter(c =>
+    c.domain === 'monthly_fixed' || c.domain === 'monthly_variable'
+  );
+
+  const catOptions = simCats.map(c => {
+    const amt = latestMonth?.categoryTotals?.[c.id] || 0;
+    return `<option value="${c.id}" data-amount="${amt}">${c.emoji} ${c.name}（${fmt(amt)}/月）</option>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">カテゴリを選択</label>
+        <select id="simCatSelect" onchange="updatePremiumSim()" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text)">
+          ${catOptions}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">月間削減額</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="range" id="simSavingRange" min="0" max="50000" step="500" value="3000"
+            oninput="document.getElementById('simSavingInput').value=this.value;updatePremiumSim()"
+            style="flex:1">
+          <div style="position:relative;width:90px">
+            <input type="number" id="simSavingInput" value="3000" min="0" max="500000" step="500"
+              oninput="document.getElementById('simSavingRange').value=Math.min(this.value,50000);updatePremiumSim()"
+              style="width:100%;padding:6px 24px 6px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:right;background:var(--surface);color:var(--text)">
+            <span style="position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none">円</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">運用年数</label>
+          <select id="simYears" onchange="updatePremiumSim()" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="10">10年</option>
+            <option value="20">20年</option>
+            <option value="30" selected>30年</option>
+            <option value="36">36年</option>
+            <option value="40">40年</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:4px">年利（%）</label>
+          <select id="simRate" onchange="updatePremiumSim()" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text)">
+            <option value="0">0%（タンス預金）</option>
+            <option value="1">1%</option>
+            <option value="3" selected>3%（NISA想定）</option>
+            <option value="5">5%</option>
+            <option value="7">7%（米国株想定）</option>
+          </select>
+        </div>
+      </div>
+      <div id="simResult" style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border:1px solid #A7F3D0;border-radius:12px;padding:16px;text-align:center">
+        <div id="simResultLabel" style="font-size:12px;color:#059669;margin-bottom:4px"></div>
+        <div id="simResultValue" style="font-size:28px;font-weight:800;color:#059669"></div>
+        <div id="simResultNote" style="font-size:11px;color:#6EE7B7;margin-top:4px"></div>
+      </div>
+    </div>`;
+
+  updatePremiumSim();
+}
+
+function updatePremiumSim() {
+  const saving = parseInt(document.getElementById('simSavingInput')?.value) || 0;
+  const years  = parseInt(document.getElementById('simYears')?.value) || 30;
+  const rate   = parseFloat(document.getElementById('simRate')?.value) || 0;
+  const catId  = document.getElementById('simCatSelect')?.value;
+  const cat    = state.categories.find(c => c.id === catId);
+
+  const labelEl = document.getElementById('simResultLabel');
+  const valueEl = document.getElementById('simResultValue');
+  const noteEl  = document.getElementById('simResultNote');
+  if (!labelEl || !valueEl) return;
+
+  if (saving <= 0) {
+    labelEl.textContent = '削減額を入力してください';
+    valueEl.textContent = '—';
+    noteEl.textContent = '';
+    return;
+  }
+
+  let totalManYen;
+  if (rate === 0) {
+    totalManYen = Math.round(saving * 12 * years / 10000 * 10) / 10;
+  } else {
+    const r = rate / 100;
+    const fv = saving * 12 * ((Math.pow(1 + r, years) - 1) / r);
+    totalManYen = Math.round(fv / 10000 * 10) / 10;
+  }
+
+  const catName = cat?.name || 'この項目';
+  labelEl.textContent = `${catName}を月¥${saving.toLocaleString()}削減すると`;
+  valueEl.textContent = `${years}年で +${totalManYen}万円`;
+  noteEl.textContent  = rate > 0
+    ? `年利${rate}%複利で積立運用した場合の試算`
+    : `${years}年間の単純積立額（運用なし）`;
 }
 
 // ═══════════════════════════════════════════════════════════════
