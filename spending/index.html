@@ -27,6 +27,8 @@
   <meta name="twitter:description" content="毎月固定・変動・不定期費を4領域で管理。MF・Zaim対応CSVインポート。データはブラウザ内に保存。完全無料。">
   <meta name="twitter:image" content="https://YOUR-DOMAIN.com/ogp/spending-ogp.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- アフィリエイトリンク設定（URLのみ affiliate-config.js で管理） -->
+  <script src="affiliate-config.js"></script>
   <style>
     :root {
       --primary:       #007AFF;
@@ -1469,14 +1471,8 @@ const ZAIM_SKIP_CATS = new Set([
   '税・社会保険', '金融', '振替',
 ]);
 
-// ── アフィリエイトリンク（URLはリリース後に差し替え）──────────
-const AFFILIATE_LINKS = {
-  telecom:   { label: '格安SIMを比較する',    url: '#affiliate-telecom' },
-  insurance: { label: '保険を無料相談する',    url: '#affiliate-insurance' },
-  subscr:    { label: 'サブスク診断ツール',    url: '#affiliate-subscr' },
-  food:      { label: '食費節約のヒントを見る', url: '#affiliate-food' },
-  nisa:      { label: 'NISAで資産を増やす',   url: '#affiliate-nisa' },
-};
+// AFFILIATE_LINKS は affiliate-config.js で定義（同ディレクトリ）
+// ASP審査通過後は affiliate-config.js のみ編集すればOK
 
 const SUGGESTION_TRIGGERS = [
   // ── 通信費 ──
@@ -2516,10 +2512,12 @@ function renderSuggestions(monthData) {
         }
       }
 
-      // CTAリンク
-      const link = t.affiliateKey ? AFFILIATE_LINKS[t.affiliateKey] : null;
+      // CTAリンク（affiliate-config.js の status が 'active' のときのみ表示）
+      const _linkEntry = t.affiliateKey ? (typeof AFFILIATE_LINKS !== 'undefined' ? AFFILIATE_LINKS[t.affiliateKey] : null) : null;
+      const link = _linkEntry?.status === 'active' ? _linkEntry : null;
       const ctaHtml = link
         ? `<a class="sug-cta" style="background:${t.color}" href="${link.url}" target="_blank"
+            rel="sponsored noopener noreferrer"
             onclick="trackSuggestionAction('${sugId}')">${link.label} <span style="font-size:9px;opacity:.8">PR</span></a>`
         : '';
 
