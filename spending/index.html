@@ -644,6 +644,9 @@
   <!-- Income Health Banner -->
   <div id="incomeHealthArea"></div>
 
+  <!-- Premium Status Banner (trial expiry / upsell) -->
+  <div id="premiumStatusBanner" style="display:none"></div>
+
   <!-- Summary -->
   <div class="summary-row" id="summaryRow">
     <div class="summary-card income" id="incomeCard"
@@ -1360,35 +1363,46 @@
   <div class="modal">
     <div class="modal-title">
       <button class="modal-close" onclick="closePremiumModal()">✕</button>
-      ✨ プレミアム機能
+      ✨ プレミアムにアップグレード
     </div>
-    <div style="text-align:center;padding:4px 0 16px">
-      <div style="font-size:36px;margin-bottom:8px">🚀</div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:6px">家計改善をもっと深く分析</div>
-      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px">
-        蓄積したデータを最大限に活用して、<br>節約の効果を数字で可視化できます。
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">
-      <div style="display:flex;align-items:flex-start;gap:12px;background:var(--surface2);padding:10px 12px;border-radius:10px">
-        <span style="font-size:20px">📊</span>
+
+    <!-- 機能リスト -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);padding:10px 12px;border-radius:10px">
+        <span style="font-size:18px">📊</span>
         <div>
           <div style="font-size:13px;font-weight:700">カテゴリ別トレンド分析</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">6ヶ月以上の推移グラフ・月次増減テーブル</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px">6ヶ月の推移グラフ・月次増減テーブル</div>
         </div>
       </div>
-      <div style="display:flex;align-items:flex-start;gap:12px;background:var(--surface2);padding:10px 12px;border-radius:10px">
-        <span style="font-size:20px">💡</span>
+      <div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);padding:10px 12px;border-radius:10px">
+        <span style="font-size:18px">💡</span>
         <div>
           <div style="font-size:13px;font-weight:700">改善シミュレーター</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">「月¥3,000削減 → 36年で+¥637万」を自分の数字で試算</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:1px">「月¥3,000削減 → 36年で+¥637万」を自分の数字で</div>
         </div>
       </div>
     </div>
-    <button class="btn btn-primary btn-full" onclick="activatePremiumTrial()" style="font-size:14px;padding:14px">
-      🎉 無料トライアルで始める
-    </button>
-    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px">現在トライアル提供中 · クレジットカード不要</p>
+
+    <!-- 価格カード -->
+    <div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:1.5px solid #C7D2FE;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center">
+      <div style="font-size:11px;font-weight:700;color:#4338CA;letter-spacing:.5px;margin-bottom:4px">月額プラン</div>
+      <div style="font-size:28px;font-weight:900;color:#312E81">¥980<span style="font-size:14px;font-weight:400;color:#6366F1">/月</span></div>
+      <div style="font-size:11px;color:#6366F1;margin-top:2px">いつでもキャンセル可能</div>
+    </div>
+
+    <!-- CTAボタン群 -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="activatePremiumTrial()" style="font-size:14px;padding:13px">
+        🎉 7日間 無料で試す
+      </button>
+      <button class="btn btn-secondary btn-full" onclick="openPremiumWaitlist()" style="font-size:13px;padding:11px">
+        💳 有料版の購入を申し込む
+      </button>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px">
+      無料トライアルはクレジットカード不要 · 7日後に自動終了
+    </p>
   </div>
 </div>
 
@@ -1802,6 +1816,8 @@ function createInitialState() {
       linkedToLifeplan: false,
       bonusInCalc: true,  // true=月収+ボーナス月換算, false=月収のみ
       isPremium: false,
+      premiumPlan: null,       // 'trial' | 'paid' | null
+      premiumTrialStart: null, // ISO date string when trial started
     },
     income: {
       // 手取り月収（円）
@@ -1829,6 +1845,8 @@ function loadState() {
       if (!state.income)         state.income = createInitialState().income;
       if (state._onboardingDone === undefined) state._onboardingDone = Object.keys(state.months || {}).length > 0;
       if (state.settings.bonusInCalc === undefined) state.settings.bonusInCalc = true;
+      if (state.settings.premiumPlan === undefined) state.settings.premiumPlan = null;
+      if (state.settings.premiumTrialStart === undefined) state.settings.premiumTrialStart = null;
       if (state.income.overtime === undefined) state.income.overtime = null;
       // 「家族生活費」カテゴリが未追加なら追加（マイグレーション）
       if (!state.categories.find(c => c.id === 'family')) {
@@ -2290,6 +2308,9 @@ function renderDashboard() {
   // Premium Features
   renderPremiumTrend();
   renderPremiumSim();
+
+  // Premium Status Banner (trial expiry / upsell)
+  renderPremiumStatusBanner();
 }
 
 let miniTrendChartInstance = null;
@@ -4156,8 +4177,27 @@ function doSyncToLifeplan() {
 // ═══════════════════════════════════════════════════════════════
 // PREMIUM
 // ═══════════════════════════════════════════════════════════════
+// ── プレミアム設定 ───────────────────────────────────────────────
+// 有料購入URL（審査・Stripe設定後にここを更新する）
+const PREMIUM_WAITLIST_URL = 'mailto:higawarilunch912@gmail.com?subject=%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%E8%B3%BC%E5%85%A5%E7%94%B3%E3%81%97%E8%BE%BC%E3%81%BF&body=%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%E3%83%97%E3%83%A9%E3%83%B3%EF%BC%88%C2%A5980%2F%E6%9C%88%EF%BC%89%E3%81%AE%E8%B3%BC%E5%85%A5%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82';
+const PREMIUM_TRIAL_DAYS = 7;
+
 function isPremium() {
-  return state.settings?.isPremium === true;
+  const s = state.settings;
+  if (!s) return false;
+  if (s.premiumPlan === 'paid') return true;          // 有料会員
+  if (s.premiumPlan === 'trial' && s.premiumTrialStart) {
+    const elapsed = (Date.now() - new Date(s.premiumTrialStart).getTime()) / 86400000;
+    return elapsed < PREMIUM_TRIAL_DAYS;              // トライアル期間内
+  }
+  return false;
+}
+
+function getPremiumTrialDaysLeft() {
+  const s = state.settings;
+  if (s?.premiumPlan !== 'trial' || !s.premiumTrialStart) return 0;
+  const elapsed = (Date.now() - new Date(s.premiumTrialStart).getTime()) / 86400000;
+  return Math.max(0, Math.ceil(PREMIUM_TRIAL_DAYS - elapsed));
 }
 
 function openPremiumModal() {
@@ -4169,11 +4209,67 @@ function closePremiumModal() {
 }
 
 function activatePremiumTrial() {
-  state.settings.isPremium = true;
+  state.settings.premiumPlan        = 'trial';
+  state.settings.premiumTrialStart  = new Date().toISOString();
+  state.settings.isPremium          = true; // 後方互換
   saveState();
   closePremiumModal();
   renderDashboard();
-  showNotification('✨ プレミアム機能が解放されました！');
+  showNotification('🎉 7日間の無料トライアルが始まりました！');
+}
+
+function openPremiumWaitlist() {
+  closePremiumModal();
+  window.open(PREMIUM_WAITLIST_URL, '_blank');
+  showNotification('📧 メールアプリが開きました。送信してください。');
+}
+
+// トライアル期限切れバナーをダッシュボードに表示
+function renderPremiumStatusBanner() {
+  const el = document.getElementById('premiumStatusBanner');
+  if (!el) return;
+  const s = state.settings;
+
+  // 有料会員
+  if (s?.premiumPlan === 'paid') {
+    el.style.display = 'none';
+    return;
+  }
+
+  // トライアル中
+  if (s?.premiumPlan === 'trial') {
+    const daysLeft = getPremiumTrialDaysLeft();
+    if (daysLeft > 0) {
+      // 残り3日以下で警告
+      if (daysLeft <= 3) {
+        el.style.display = '';
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+            <span style="font-size:18px">⏰</span>
+            <div style="flex:1;font-size:12px;color:#92400E">
+              <strong>トライアル残り${daysLeft}日</strong> — 継続するには有料版にアップグレードしてください
+            </div>
+            <button class="btn btn-primary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">アップグレード</button>
+          </div>`;
+      } else {
+        el.style.display = 'none';
+      }
+      return;
+    }
+    // 期限切れ
+    el.style.display = '';
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;background:#FEE2E2;border:1px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+        <span style="font-size:18px">🔒</span>
+        <div style="flex:1;font-size:12px;color:#991B1B">
+          <strong>無料トライアルが終了しました</strong> — プレミアム機能を使い続けるには有料版が必要です
+        </div>
+        <button class="btn btn-primary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">プランを見る</button>
+      </div>`;
+    return;
+  }
+
+  el.style.display = 'none';
 }
 
 // ── プレミアム：カテゴリ別トレンド分析 ─────────────────────────
