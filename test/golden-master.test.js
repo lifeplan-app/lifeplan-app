@@ -15,11 +15,18 @@
  * ⚠️ 誤差許容: 小数1桁丸め（Math.round(v * 10) / 10）のため toBeCloseTo(v, 0) を使用
  */
 
-import { describe, it, expect } from 'vitest';
-import { calcAssetGrowth, projectEmergencyBalance } from './helpers/core.js';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { projectEmergencyBalance } from './helpers/core.js';
+import { loadCalc, getSandbox } from './helpers/load-calc.js';
 
 const CY = 2025; // 計算基準年を固定
-const calc = (a, years, extra = []) => calcAssetGrowth(a, years, extra, CY);
+let sb, calc;
+beforeAll(() => {
+  loadCalc('utils.js');
+  loadCalc('asset-growth.js');
+  sb = getSandbox();
+  calc = (a, years, extra = []) => sb.calcAssetGrowth(a, years, extra, CY);
+});
 
 // Excel で導出した期待値（simulation-verification.xlsx 参照）
 // 単位: 万円、小数1桁

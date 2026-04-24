@@ -8,14 +8,22 @@
  * 各テストに「修正前の誤った動作」と「修正後の正しい動作」をコメントで記載する。
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
-  calcAssetGrowth,
-  calcAllAssetGrowth,
   projectEmergencyBalance,
   calcEndYearFromAge,
   calcEndAgeFromYear,
 } from './helpers/core.js';
+import { loadCalc, getSandbox } from './helpers/load-calc.js';
+
+let sb, calcAssetGrowth, calcAllAssetGrowth;
+beforeAll(() => {
+  loadCalc('utils.js');
+  loadCalc('asset-growth.js');
+  sb = getSandbox();
+  calcAssetGrowth    = sb.calcAssetGrowth;
+  calcAllAssetGrowth = sb.calcAllAssetGrowth;
+});
 
 // ─── BUG#1: 生活防衛資金プールが targetVal を無視してスケールされていた ──────────
 // コミット: このセッションで修正

@@ -13,9 +13,18 @@
  *   Group 5: calcAllAssetGrowth の整合性
  */
 
-import { describe, it } from 'vitest';
+import { describe, it, beforeAll } from 'vitest';
 import * as fc from 'fast-check';
-import { calcAssetGrowth, calcAllAssetGrowth } from './helpers/core.js';
+import { loadCalc, getSandbox } from './helpers/load-calc.js';
+
+let sb, calcAssetGrowth, calcAllAssetGrowth;
+beforeAll(() => {
+  loadCalc('utils.js');
+  loadCalc('asset-growth.js');
+  sb = getSandbox();
+  calcAssetGrowth    = sb.calcAssetGrowth;
+  calcAllAssetGrowth = sb.calcAllAssetGrowth;
+});
 
 // ─── Arbitrary（ランダム入力生成器）定義 ──────────────────────────────────────
 

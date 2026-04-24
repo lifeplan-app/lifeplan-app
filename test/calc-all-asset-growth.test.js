@@ -12,8 +12,16 @@
  *   7. 名義（owner）別NISA プール分離
  */
 
-import { describe, it, expect } from 'vitest';
-import { calcAllAssetGrowth } from './helpers/core.js';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { loadCalc, getSandbox } from './helpers/load-calc.js';
+
+let sb, calcAllAssetGrowth;
+beforeAll(() => {
+  loadCalc('utils.js');
+  loadCalc('asset-growth.js');
+  sb = getSandbox();
+  calcAllAssetGrowth = sb.calcAllAssetGrowth;
+});
 
 let _idSeq = 0;
 const mkId = () => `asset-${++_idSeq}`;

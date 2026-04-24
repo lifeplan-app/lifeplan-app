@@ -16,6 +16,10 @@ const sandbox = {
   Math, Number, Object, Array, Set, Map, JSON, Date, Error,
   parseFloat, parseInt, isFinite, isNaN, NaN, Infinity,
   window: {},
+  // index.html のグローバル変数のうち、抽出された計算関数が参照する最小限のもの。
+  // utils.js の calcAge 系は state.profile.birth を使い、asset-growth.js の
+  // calcAllAssetGrowth は state.finance?.simYears を使う（引数 fallback）。
+  state: { profile: {}, finance: {} },
 };
 vm.createContext(sandbox);
 

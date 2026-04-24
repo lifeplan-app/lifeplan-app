@@ -24,7 +24,15 @@
 - **commit SHA**: `a66a9a6`
 
 ## Step 2: calc/asset-growth.js（資産成長・税率）
-（Task 3 実施時に記入）
+
+- **抽出関数・定数**: `ASSET_TYPES`, `TAX_TYPE_DEFAULT`, `TAX_RATE`, `effectiveReturn`, `calcAssetGrowth`, `calcAllAssetGrowth`
+- **calc/asset-growth.js 行数**: 363 行
+- **index.html 削減行数**: 346 行（23,456 → 23,110）
+- **helpers/core.js 削減行数**: 305 行（352 → 47。残存: `projectEmergencyBalance`, `calcEndYearFromAge`, `calcEndAgeFromYear`）
+- **切替したテストファイル**: 5（calc-asset-growth, calc-all-asset-growth, golden-master, regression, property-based）
+- **補足**: `vm.runInContext` では `const` がサンドボックスに露出しないため、`ASSET_TYPES` / `TAX_TYPE_DEFAULT` / `TAX_RATE` は `var` で宣言。`calcAllAssetGrowth` は `state.finance?.simYears` を参照するため、`test/helpers/load-calc.js` のサンドボックスに `state = { profile: {}, finance: {} }` を追加。
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
+- **commit SHA**: （Step 12 で追記）
 
 ## Step 3: calc/income-expense.js（年次収入・支出）
 （Task 4 実施時に記入）

@@ -15,13 +15,20 @@
  *  10. 境界値・エッジケース
  */
 
-import { describe, it, expect } from 'vitest';
-import { calcAssetGrowth, TAX_RATE } from './helpers/core.js';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { loadCalc, getSandbox } from './helpers/load-calc.js';
 
 // テスト用に「現在年」を固定するヘルパー
 // calcAssetGrowth の第4引数 _currentYear でオーバーライドできる
 const CY = 2025; // 固定基準年
-const calc = (a, years, extra = []) => calcAssetGrowth(a, years, extra, CY);
+let sb, calc, TAX_RATE;
+beforeAll(() => {
+  loadCalc('utils.js');
+  loadCalc('asset-growth.js');
+  sb = getSandbox();
+  TAX_RATE = sb.TAX_RATE;
+  calc = (a, years, extra = []) => sb.calcAssetGrowth(a, years, extra, CY);
+});
 
 // ─── 1. ベースライン：利回り0%、積立のみ ─────────────────────────────────────
 
@@ -221,7 +228,7 @@ describe('NISA 上限制御', () => {
 
 describe('旧NISA（endYear 後の課税移管）', () => {
   it('endYear 以前は非課税（NISA）として計算される', () => {
-    const r = calcAssetGrowth(
+    const r = sb.calcAssetGrowth(
       { type: 'nisa_old_tsumitate', currentVal: 100, monthly: 0, annualReturn: 10,
         taxType: 'nisa', endYear: CY + 2 },
       1, [], CY,
@@ -231,7 +238,7 @@ describe('旧NISA（endYear 後の課税移管）', () => {
   });
 
   it('endYear 超過後は特定口座として課税される', () => {
-    const r = calcAssetGrowth(
+    const r = sb.calcAssetGrowth(
       { type: 'nisa_old_tsumitate', currentVal: 100, monthly: 0, annualReturn: 10,
         taxType: 'nisa', endYear: CY },
       1, [], CY,
