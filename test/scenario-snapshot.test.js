@@ -88,6 +88,20 @@ describe('scenario snapshots', () => {
         );
         expect(roundDeep(result)).toMatchSnapshot();
       }, 30_000);
+
+      it('calcScenarioFullTimeline (getAdaptiveScenarios 各パターン)', async () => {
+        const result = await page.evaluate(() => {
+          const scenarios = getAdaptiveScenarios();
+          return scenarios.map(sc => ({
+            name: sc.name || null,
+            retireAge: sc.retireAge ?? null,
+            monthlyExpense: sc.monthlyExpense ?? null,
+            returnMod: sc.returnMod ?? null,
+            timeline: calcScenarioFullTimeline(sc),
+          }));
+        });
+        expect(roundDeep(result)).toMatchSnapshot();
+      }, 30_000);
     });
   }
 });

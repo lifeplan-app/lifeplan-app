@@ -3933,6 +3933,827 @@ exports[`scenario snapshots > シナリオA 田中葵 26歳独身 > calcRetireme
 ]
 `;
 
+exports[`scenario snapshots > シナリオA 田中葵 26歳独身 > calcScenarioFullTimeline (getAdaptiveScenarios 各パターン) 1`] = `
+[
+  {
+    "monthlyExpense": 18,
+    "name": "もっと早く辞められる？",
+    "retireAge": 62,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 25,
+        "endAssets": 115,
+      },
+      {
+        "age": 26,
+        "endAssets": 118,
+      },
+      {
+        "age": 27,
+        "endAssets": 150,
+      },
+      {
+        "age": 28,
+        "endAssets": 165,
+      },
+      {
+        "age": 29,
+        "endAssets": 270,
+      },
+      {
+        "age": 30,
+        "endAssets": 391,
+      },
+      {
+        "age": 31,
+        "endAssets": 497,
+      },
+      {
+        "age": 32,
+        "endAssets": 618,
+      },
+      {
+        "age": 33,
+        "endAssets": 725,
+      },
+      {
+        "age": 34,
+        "endAssets": 847,
+      },
+      {
+        "age": 35,
+        "endAssets": 955,
+      },
+      {
+        "age": 36,
+        "endAssets": 1078,
+      },
+      {
+        "age": 37,
+        "endAssets": 1187,
+      },
+      {
+        "age": 38,
+        "endAssets": 1312,
+      },
+      {
+        "age": 39,
+        "endAssets": 1422,
+      },
+      {
+        "age": 40,
+        "endAssets": 1564,
+      },
+      {
+        "age": 41,
+        "endAssets": 1874,
+      },
+      {
+        "age": 42,
+        "endAssets": 2202,
+      },
+      {
+        "age": 43,
+        "endAssets": 2515,
+      },
+      {
+        "age": 44,
+        "endAssets": 2845,
+      },
+      {
+        "age": 45,
+        "endAssets": 3160,
+      },
+      {
+        "age": 46,
+        "endAssets": 3493,
+      },
+      {
+        "age": 47,
+        "endAssets": 3811,
+      },
+      {
+        "age": 48,
+        "endAssets": 4146,
+      },
+      {
+        "age": 49,
+        "endAssets": 4467,
+      },
+      {
+        "age": 50,
+        "endAssets": 4805,
+      },
+      {
+        "age": 51,
+        "endAssets": 5129,
+      },
+      {
+        "age": 52,
+        "endAssets": 5471,
+      },
+      {
+        "age": 53,
+        "endAssets": 5799,
+      },
+      {
+        "age": 54,
+        "endAssets": 6144,
+      },
+      {
+        "age": 55,
+        "endAssets": 6476,
+      },
+      {
+        "age": 56,
+        "endAssets": 6826,
+      },
+      {
+        "age": 57,
+        "endAssets": 7163,
+      },
+      {
+        "age": 58,
+        "endAssets": 7518,
+      },
+      {
+        "age": 59,
+        "endAssets": 7860,
+      },
+      {
+        "age": 60,
+        "endAssets": 8220,
+      },
+      {
+        "age": 61,
+        "endAssets": 8568,
+      },
+      {
+        "age": 62,
+        "endAssets": 8935,
+      },
+      {
+        "age": 63,
+        "endAssets": 9025,
+      },
+      {
+        "age": 64,
+        "endAssets": 9102,
+      },
+      {
+        "age": 65,
+        "endAssets": 9366,
+      },
+      {
+        "age": 66,
+        "endAssets": 9626,
+      },
+      {
+        "age": 67,
+        "endAssets": 9912,
+      },
+      {
+        "age": 68,
+        "endAssets": 10196,
+      },
+      {
+        "age": 69,
+        "endAssets": 10509,
+      },
+      {
+        "age": 70,
+        "endAssets": 10820,
+      },
+      {
+        "age": 71,
+        "endAssets": 11161,
+      },
+      {
+        "age": 72,
+        "endAssets": 11501,
+      },
+      {
+        "age": 73,
+        "endAssets": 11873,
+      },
+      {
+        "age": 74,
+        "endAssets": 12245,
+      },
+      {
+        "age": 75,
+        "endAssets": 12652,
+      },
+      {
+        "age": 76,
+        "endAssets": 13061,
+      },
+      {
+        "age": 77,
+        "endAssets": 13504,
+      },
+      {
+        "age": 78,
+        "endAssets": 13953,
+      },
+      {
+        "age": 79,
+        "endAssets": 14438,
+      },
+      {
+        "age": 80,
+        "endAssets": 14929,
+      },
+      {
+        "age": 81,
+        "endAssets": 15460,
+      },
+      {
+        "age": 82,
+        "endAssets": 16000,
+      },
+      {
+        "age": 83,
+        "endAssets": 16582,
+      },
+      {
+        "age": 84,
+        "endAssets": 17175,
+      },
+      {
+        "age": 85,
+        "endAssets": 17811,
+      },
+      {
+        "age": 86,
+        "endAssets": 18463,
+      },
+      {
+        "age": 87,
+        "endAssets": 19161,
+      },
+      {
+        "age": 88,
+        "endAssets": 19876,
+      },
+      {
+        "age": 89,
+        "endAssets": 20642,
+      },
+      {
+        "age": 90,
+        "endAssets": 21428,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 23,
+    "name": "もっと使っても大丈夫？",
+    "retireAge": 65,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 25,
+        "endAssets": 115,
+      },
+      {
+        "age": 26,
+        "endAssets": 118,
+      },
+      {
+        "age": 27,
+        "endAssets": 150,
+      },
+      {
+        "age": 28,
+        "endAssets": 165,
+      },
+      {
+        "age": 29,
+        "endAssets": 270,
+      },
+      {
+        "age": 30,
+        "endAssets": 391,
+      },
+      {
+        "age": 31,
+        "endAssets": 497,
+      },
+      {
+        "age": 32,
+        "endAssets": 618,
+      },
+      {
+        "age": 33,
+        "endAssets": 725,
+      },
+      {
+        "age": 34,
+        "endAssets": 847,
+      },
+      {
+        "age": 35,
+        "endAssets": 955,
+      },
+      {
+        "age": 36,
+        "endAssets": 1078,
+      },
+      {
+        "age": 37,
+        "endAssets": 1187,
+      },
+      {
+        "age": 38,
+        "endAssets": 1312,
+      },
+      {
+        "age": 39,
+        "endAssets": 1422,
+      },
+      {
+        "age": 40,
+        "endAssets": 1564,
+      },
+      {
+        "age": 41,
+        "endAssets": 1874,
+      },
+      {
+        "age": 42,
+        "endAssets": 2202,
+      },
+      {
+        "age": 43,
+        "endAssets": 2515,
+      },
+      {
+        "age": 44,
+        "endAssets": 2845,
+      },
+      {
+        "age": 45,
+        "endAssets": 3160,
+      },
+      {
+        "age": 46,
+        "endAssets": 3493,
+      },
+      {
+        "age": 47,
+        "endAssets": 3811,
+      },
+      {
+        "age": 48,
+        "endAssets": 4146,
+      },
+      {
+        "age": 49,
+        "endAssets": 4467,
+      },
+      {
+        "age": 50,
+        "endAssets": 4805,
+      },
+      {
+        "age": 51,
+        "endAssets": 5129,
+      },
+      {
+        "age": 52,
+        "endAssets": 5471,
+      },
+      {
+        "age": 53,
+        "endAssets": 5799,
+      },
+      {
+        "age": 54,
+        "endAssets": 6144,
+      },
+      {
+        "age": 55,
+        "endAssets": 6476,
+      },
+      {
+        "age": 56,
+        "endAssets": 6826,
+      },
+      {
+        "age": 57,
+        "endAssets": 7163,
+      },
+      {
+        "age": 58,
+        "endAssets": 7518,
+      },
+      {
+        "age": 59,
+        "endAssets": 7860,
+      },
+      {
+        "age": 60,
+        "endAssets": 8220,
+      },
+      {
+        "age": 61,
+        "endAssets": 8568,
+      },
+      {
+        "age": 62,
+        "endAssets": 8935,
+      },
+      {
+        "age": 63,
+        "endAssets": 9289,
+      },
+      {
+        "age": 64,
+        "endAssets": 9663,
+      },
+      {
+        "age": 65,
+        "endAssets": 10024,
+      },
+      {
+        "age": 66,
+        "endAssets": 10329,
+      },
+      {
+        "age": 67,
+        "endAssets": 10664,
+      },
+      {
+        "age": 68,
+        "endAssets": 10998,
+      },
+      {
+        "age": 69,
+        "endAssets": 11363,
+      },
+      {
+        "age": 70,
+        "endAssets": 11730,
+      },
+      {
+        "age": 71,
+        "endAssets": 12129,
+      },
+      {
+        "age": 72,
+        "endAssets": 12531,
+      },
+      {
+        "age": 73,
+        "endAssets": 12967,
+      },
+      {
+        "age": 74,
+        "endAssets": 13407,
+      },
+      {
+        "age": 75,
+        "endAssets": 13885,
+      },
+      {
+        "age": 76,
+        "endAssets": 14368,
+      },
+      {
+        "age": 77,
+        "endAssets": 14890,
+      },
+      {
+        "age": 78,
+        "endAssets": 15421,
+      },
+      {
+        "age": 79,
+        "endAssets": 15993,
+      },
+      {
+        "age": 80,
+        "endAssets": 16575,
+      },
+      {
+        "age": 81,
+        "endAssets": 17201,
+      },
+      {
+        "age": 82,
+        "endAssets": 17841,
+      },
+      {
+        "age": 83,
+        "endAssets": 18528,
+      },
+      {
+        "age": 84,
+        "endAssets": 19231,
+      },
+      {
+        "age": 85,
+        "endAssets": 19983,
+      },
+      {
+        "age": 86,
+        "endAssets": 20757,
+      },
+      {
+        "age": 87,
+        "endAssets": 21582,
+      },
+      {
+        "age": 88,
+        "endAssets": 22432,
+      },
+      {
+        "age": 89,
+        "endAssets": 23338,
+      },
+      {
+        "age": 90,
+        "endAssets": 24272,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 18,
+    "name": "運用を積極化したら？",
+    "retireAge": 65,
+    "returnMod": 2,
+    "timeline": [
+      {
+        "age": 25,
+        "endAssets": 115,
+      },
+      {
+        "age": 26,
+        "endAssets": 118,
+      },
+      {
+        "age": 27,
+        "endAssets": 150,
+      },
+      {
+        "age": 28,
+        "endAssets": 165,
+      },
+      {
+        "age": 29,
+        "endAssets": 270,
+      },
+      {
+        "age": 30,
+        "endAssets": 391,
+      },
+      {
+        "age": 31,
+        "endAssets": 497,
+      },
+      {
+        "age": 32,
+        "endAssets": 618,
+      },
+      {
+        "age": 33,
+        "endAssets": 725,
+      },
+      {
+        "age": 34,
+        "endAssets": 847,
+      },
+      {
+        "age": 35,
+        "endAssets": 955,
+      },
+      {
+        "age": 36,
+        "endAssets": 1078,
+      },
+      {
+        "age": 37,
+        "endAssets": 1187,
+      },
+      {
+        "age": 38,
+        "endAssets": 1312,
+      },
+      {
+        "age": 39,
+        "endAssets": 1422,
+      },
+      {
+        "age": 40,
+        "endAssets": 1564,
+      },
+      {
+        "age": 41,
+        "endAssets": 1874,
+      },
+      {
+        "age": 42,
+        "endAssets": 2202,
+      },
+      {
+        "age": 43,
+        "endAssets": 2515,
+      },
+      {
+        "age": 44,
+        "endAssets": 2845,
+      },
+      {
+        "age": 45,
+        "endAssets": 3160,
+      },
+      {
+        "age": 46,
+        "endAssets": 3493,
+      },
+      {
+        "age": 47,
+        "endAssets": 3811,
+      },
+      {
+        "age": 48,
+        "endAssets": 4146,
+      },
+      {
+        "age": 49,
+        "endAssets": 4467,
+      },
+      {
+        "age": 50,
+        "endAssets": 4805,
+      },
+      {
+        "age": 51,
+        "endAssets": 5129,
+      },
+      {
+        "age": 52,
+        "endAssets": 5471,
+      },
+      {
+        "age": 53,
+        "endAssets": 5799,
+      },
+      {
+        "age": 54,
+        "endAssets": 6144,
+      },
+      {
+        "age": 55,
+        "endAssets": 6476,
+      },
+      {
+        "age": 56,
+        "endAssets": 6826,
+      },
+      {
+        "age": 57,
+        "endAssets": 7163,
+      },
+      {
+        "age": 58,
+        "endAssets": 7518,
+      },
+      {
+        "age": 59,
+        "endAssets": 7860,
+      },
+      {
+        "age": 60,
+        "endAssets": 8220,
+      },
+      {
+        "age": 61,
+        "endAssets": 8568,
+      },
+      {
+        "age": 62,
+        "endAssets": 8935,
+      },
+      {
+        "age": 63,
+        "endAssets": 9289,
+      },
+      {
+        "age": 64,
+        "endAssets": 9663,
+      },
+      {
+        "age": 65,
+        "endAssets": 10024,
+      },
+      {
+        "age": 66,
+        "endAssets": 10530,
+      },
+      {
+        "age": 67,
+        "endAssets": 11086,
+      },
+      {
+        "age": 68,
+        "endAssets": 11663,
+      },
+      {
+        "age": 69,
+        "endAssets": 12296,
+      },
+      {
+        "age": 70,
+        "endAssets": 12955,
+      },
+      {
+        "age": 71,
+        "endAssets": 13675,
+      },
+      {
+        "age": 72,
+        "endAssets": 14428,
+      },
+      {
+        "age": 73,
+        "endAssets": 15248,
+      },
+      {
+        "age": 74,
+        "endAssets": 16108,
+      },
+      {
+        "age": 75,
+        "endAssets": 17043,
+      },
+      {
+        "age": 76,
+        "endAssets": 18025,
+      },
+      {
+        "age": 77,
+        "endAssets": 19091,
+      },
+      {
+        "age": 78,
+        "endAssets": 20214,
+      },
+      {
+        "age": 79,
+        "endAssets": 21430,
+      },
+      {
+        "age": 80,
+        "endAssets": 22713,
+      },
+      {
+        "age": 81,
+        "endAssets": 24101,
+      },
+      {
+        "age": 82,
+        "endAssets": 25568,
+      },
+      {
+        "age": 83,
+        "endAssets": 27152,
+      },
+      {
+        "age": 84,
+        "endAssets": 28830,
+      },
+      {
+        "age": 85,
+        "endAssets": 30639,
+      },
+      {
+        "age": 86,
+        "endAssets": 32558,
+      },
+      {
+        "age": 87,
+        "endAssets": 34626,
+      },
+      {
+        "age": 88,
+        "endAssets": 36820,
+      },
+      {
+        "age": 89,
+        "endAssets": 39183,
+      },
+      {
+        "age": 90,
+        "endAssets": 41693,
+      },
+    ],
+  },
+]
+`;
+
 exports[`scenario snapshots > シナリオB 鈴木健太 35歳共働き > calcIntegratedSim 1`] = `
 [
   {
@@ -7709,6 +8530,707 @@ exports[`scenario snapshots > シナリオB 鈴木健太 35歳共働き > calcRe
     "totalNonAssetIncome": 466,
     "withdrawalShortfall": 0,
     "year": 2081,
+  },
+]
+`;
+
+exports[`scenario snapshots > シナリオB 鈴木健太 35歳共働き > calcScenarioFullTimeline (getAdaptiveScenarios 各パターン) 1`] = `
+[
+  {
+    "monthlyExpense": 24,
+    "name": "もっと早く辞められる？",
+    "retireAge": 62,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 35,
+        "endAssets": 530,
+      },
+      {
+        "age": 36,
+        "endAssets": 724,
+      },
+      {
+        "age": 37,
+        "endAssets": 1075,
+      },
+      {
+        "age": 38,
+        "endAssets": 1345,
+      },
+      {
+        "age": 39,
+        "endAssets": 1419,
+      },
+      {
+        "age": 40,
+        "endAssets": 1743,
+      },
+      {
+        "age": 41,
+        "endAssets": 2023,
+      },
+      {
+        "age": 42,
+        "endAssets": 2340,
+      },
+      {
+        "age": 43,
+        "endAssets": 2663,
+      },
+      {
+        "age": 44,
+        "endAssets": 2925,
+      },
+      {
+        "age": 45,
+        "endAssets": 3246,
+      },
+      {
+        "age": 46,
+        "endAssets": 3574,
+      },
+      {
+        "age": 47,
+        "endAssets": 3860,
+      },
+      {
+        "age": 48,
+        "endAssets": 4074,
+      },
+      {
+        "age": 49,
+        "endAssets": 4396,
+      },
+      {
+        "age": 50,
+        "endAssets": 4713,
+      },
+      {
+        "age": 51,
+        "endAssets": 4790,
+      },
+      {
+        "age": 52,
+        "endAssets": 5258,
+      },
+      {
+        "age": 53,
+        "endAssets": 5688,
+      },
+      {
+        "age": 54,
+        "endAssets": 6178,
+      },
+      {
+        "age": 55,
+        "endAssets": 6679,
+      },
+      {
+        "age": 56,
+        "endAssets": 7143,
+      },
+      {
+        "age": 57,
+        "endAssets": 7670,
+      },
+      {
+        "age": 58,
+        "endAssets": 8210,
+      },
+      {
+        "age": 59,
+        "endAssets": 8715,
+      },
+      {
+        "age": 60,
+        "endAssets": 9284,
+      },
+      {
+        "age": 61,
+        "endAssets": 9869,
+      },
+      {
+        "age": 62,
+        "endAssets": 10420,
+      },
+      {
+        "age": 63,
+        "endAssets": 10361,
+      },
+      {
+        "age": 64,
+        "endAssets": 10321,
+      },
+      {
+        "age": 65,
+        "endAssets": 11563,
+      },
+      {
+        "age": 66,
+        "endAssets": 11578,
+      },
+      {
+        "age": 67,
+        "endAssets": 11616,
+      },
+      {
+        "age": 68,
+        "endAssets": 11678,
+      },
+      {
+        "age": 69,
+        "endAssets": 11763,
+      },
+      {
+        "age": 70,
+        "endAssets": 11873,
+      },
+      {
+        "age": 71,
+        "endAssets": 11997,
+      },
+      {
+        "age": 72,
+        "endAssets": 12122,
+      },
+      {
+        "age": 73,
+        "endAssets": 12249,
+      },
+      {
+        "age": 74,
+        "endAssets": 12377,
+      },
+      {
+        "age": 75,
+        "endAssets": 12999,
+      },
+      {
+        "age": 76,
+        "endAssets": 13652,
+      },
+      {
+        "age": 77,
+        "endAssets": 14339,
+      },
+      {
+        "age": 78,
+        "endAssets": 15062,
+      },
+      {
+        "age": 79,
+        "endAssets": 15821,
+      },
+      {
+        "age": 80,
+        "endAssets": 16619,
+      },
+      {
+        "age": 81,
+        "endAssets": 17459,
+      },
+      {
+        "age": 82,
+        "endAssets": 18341,
+      },
+      {
+        "age": 83,
+        "endAssets": 19269,
+      },
+      {
+        "age": 84,
+        "endAssets": 20244,
+      },
+      {
+        "age": 85,
+        "endAssets": 21270,
+      },
+      {
+        "age": 86,
+        "endAssets": 22348,
+      },
+      {
+        "age": 87,
+        "endAssets": 23482,
+      },
+      {
+        "age": 88,
+        "endAssets": 24674,
+      },
+      {
+        "age": 89,
+        "endAssets": 25927,
+      },
+      {
+        "age": 90,
+        "endAssets": 27244,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 29,
+    "name": "もっと使っても大丈夫？",
+    "retireAge": 65,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 35,
+        "endAssets": 530,
+      },
+      {
+        "age": 36,
+        "endAssets": 724,
+      },
+      {
+        "age": 37,
+        "endAssets": 1075,
+      },
+      {
+        "age": 38,
+        "endAssets": 1345,
+      },
+      {
+        "age": 39,
+        "endAssets": 1419,
+      },
+      {
+        "age": 40,
+        "endAssets": 1743,
+      },
+      {
+        "age": 41,
+        "endAssets": 2023,
+      },
+      {
+        "age": 42,
+        "endAssets": 2340,
+      },
+      {
+        "age": 43,
+        "endAssets": 2663,
+      },
+      {
+        "age": 44,
+        "endAssets": 2925,
+      },
+      {
+        "age": 45,
+        "endAssets": 3246,
+      },
+      {
+        "age": 46,
+        "endAssets": 3574,
+      },
+      {
+        "age": 47,
+        "endAssets": 3860,
+      },
+      {
+        "age": 48,
+        "endAssets": 4074,
+      },
+      {
+        "age": 49,
+        "endAssets": 4396,
+      },
+      {
+        "age": 50,
+        "endAssets": 4713,
+      },
+      {
+        "age": 51,
+        "endAssets": 4790,
+      },
+      {
+        "age": 52,
+        "endAssets": 5258,
+      },
+      {
+        "age": 53,
+        "endAssets": 5688,
+      },
+      {
+        "age": 54,
+        "endAssets": 6178,
+      },
+      {
+        "age": 55,
+        "endAssets": 6679,
+      },
+      {
+        "age": 56,
+        "endAssets": 7143,
+      },
+      {
+        "age": 57,
+        "endAssets": 7670,
+      },
+      {
+        "age": 58,
+        "endAssets": 8210,
+      },
+      {
+        "age": 59,
+        "endAssets": 8715,
+      },
+      {
+        "age": 60,
+        "endAssets": 9284,
+      },
+      {
+        "age": 61,
+        "endAssets": 9869,
+      },
+      {
+        "age": 62,
+        "endAssets": 10420,
+      },
+      {
+        "age": 63,
+        "endAssets": 11039,
+      },
+      {
+        "age": 64,
+        "endAssets": 11676,
+      },
+      {
+        "age": 65,
+        "endAssets": 12282,
+      },
+      {
+        "age": 66,
+        "endAssets": 12205,
+      },
+      {
+        "age": 67,
+        "endAssets": 12153,
+      },
+      {
+        "age": 68,
+        "endAssets": 12128,
+      },
+      {
+        "age": 69,
+        "endAssets": 12129,
+      },
+      {
+        "age": 70,
+        "endAssets": 12156,
+      },
+      {
+        "age": 71,
+        "endAssets": 12210,
+      },
+      {
+        "age": 72,
+        "endAssets": 12291,
+      },
+      {
+        "age": 73,
+        "endAssets": 12400,
+      },
+      {
+        "age": 74,
+        "endAssets": 12538,
+      },
+      {
+        "age": 75,
+        "endAssets": 13228,
+      },
+      {
+        "age": 76,
+        "endAssets": 13953,
+      },
+      {
+        "age": 77,
+        "endAssets": 14716,
+      },
+      {
+        "age": 78,
+        "endAssets": 15519,
+      },
+      {
+        "age": 79,
+        "endAssets": 16362,
+      },
+      {
+        "age": 80,
+        "endAssets": 17249,
+      },
+      {
+        "age": 81,
+        "endAssets": 18181,
+      },
+      {
+        "age": 82,
+        "endAssets": 19161,
+      },
+      {
+        "age": 83,
+        "endAssets": 20191,
+      },
+      {
+        "age": 84,
+        "endAssets": 21274,
+      },
+      {
+        "age": 85,
+        "endAssets": 22413,
+      },
+      {
+        "age": 86,
+        "endAssets": 23611,
+      },
+      {
+        "age": 87,
+        "endAssets": 24869,
+      },
+      {
+        "age": 88,
+        "endAssets": 26193,
+      },
+      {
+        "age": 89,
+        "endAssets": 27585,
+      },
+      {
+        "age": 90,
+        "endAssets": 29047,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 24,
+    "name": "運用を積極化したら？",
+    "retireAge": 65,
+    "returnMod": 2,
+    "timeline": [
+      {
+        "age": 35,
+        "endAssets": 530,
+      },
+      {
+        "age": 36,
+        "endAssets": 724,
+      },
+      {
+        "age": 37,
+        "endAssets": 1075,
+      },
+      {
+        "age": 38,
+        "endAssets": 1345,
+      },
+      {
+        "age": 39,
+        "endAssets": 1419,
+      },
+      {
+        "age": 40,
+        "endAssets": 1743,
+      },
+      {
+        "age": 41,
+        "endAssets": 2023,
+      },
+      {
+        "age": 42,
+        "endAssets": 2340,
+      },
+      {
+        "age": 43,
+        "endAssets": 2663,
+      },
+      {
+        "age": 44,
+        "endAssets": 2925,
+      },
+      {
+        "age": 45,
+        "endAssets": 3246,
+      },
+      {
+        "age": 46,
+        "endAssets": 3574,
+      },
+      {
+        "age": 47,
+        "endAssets": 3860,
+      },
+      {
+        "age": 48,
+        "endAssets": 4074,
+      },
+      {
+        "age": 49,
+        "endAssets": 4396,
+      },
+      {
+        "age": 50,
+        "endAssets": 4713,
+      },
+      {
+        "age": 51,
+        "endAssets": 4790,
+      },
+      {
+        "age": 52,
+        "endAssets": 5258,
+      },
+      {
+        "age": 53,
+        "endAssets": 5688,
+      },
+      {
+        "age": 54,
+        "endAssets": 6178,
+      },
+      {
+        "age": 55,
+        "endAssets": 6679,
+      },
+      {
+        "age": 56,
+        "endAssets": 7143,
+      },
+      {
+        "age": 57,
+        "endAssets": 7670,
+      },
+      {
+        "age": 58,
+        "endAssets": 8210,
+      },
+      {
+        "age": 59,
+        "endAssets": 8715,
+      },
+      {
+        "age": 60,
+        "endAssets": 9284,
+      },
+      {
+        "age": 61,
+        "endAssets": 9869,
+      },
+      {
+        "age": 62,
+        "endAssets": 10420,
+      },
+      {
+        "age": 63,
+        "endAssets": 11039,
+      },
+      {
+        "age": 64,
+        "endAssets": 11676,
+      },
+      {
+        "age": 65,
+        "endAssets": 12282,
+      },
+      {
+        "age": 66,
+        "endAssets": 12386,
+      },
+      {
+        "age": 67,
+        "endAssets": 12532,
+      },
+      {
+        "age": 68,
+        "endAssets": 12720,
+      },
+      {
+        "age": 69,
+        "endAssets": 12953,
+      },
+      {
+        "age": 70,
+        "endAssets": 13232,
+      },
+      {
+        "age": 71,
+        "endAssets": 13560,
+      },
+      {
+        "age": 72,
+        "endAssets": 13939,
+      },
+      {
+        "age": 73,
+        "endAssets": 14371,
+      },
+      {
+        "age": 74,
+        "endAssets": 14847,
+      },
+      {
+        "age": 75,
+        "endAssets": 15983,
+      },
+      {
+        "age": 76,
+        "endAssets": 17200,
+      },
+      {
+        "age": 77,
+        "endAssets": 18504,
+      },
+      {
+        "age": 78,
+        "endAssets": 19900,
+      },
+      {
+        "age": 79,
+        "endAssets": 21397,
+      },
+      {
+        "age": 80,
+        "endAssets": 23000,
+      },
+      {
+        "age": 81,
+        "endAssets": 24717,
+      },
+      {
+        "age": 82,
+        "endAssets": 26557,
+      },
+      {
+        "age": 83,
+        "endAssets": 28529,
+      },
+      {
+        "age": 84,
+        "endAssets": 30640,
+      },
+      {
+        "age": 85,
+        "endAssets": 32903,
+      },
+      {
+        "age": 86,
+        "endAssets": 35327,
+      },
+      {
+        "age": 87,
+        "endAssets": 37924,
+      },
+      {
+        "age": 88,
+        "endAssets": 40707,
+      },
+      {
+        "age": 89,
+        "endAssets": 43688,
+      },
+      {
+        "age": 90,
+        "endAssets": 46882,
+      },
+    ],
   },
 ]
 `;
@@ -12943,6 +14465,659 @@ exports[`scenario snapshots > シナリオC 山本誠 45歳FIRE目標 > calcReti
 ]
 `;
 
+exports[`scenario snapshots > シナリオC 山本誠 45歳FIRE目標 > calcScenarioFullTimeline (getAdaptiveScenarios 各パターン) 1`] = `
+[
+  {
+    "monthlyExpense": 28,
+    "name": "もっと早く辞められる？",
+    "retireAge": 52,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 44,
+        "endAssets": 3920,
+      },
+      {
+        "age": 45,
+        "endAssets": 4221,
+      },
+      {
+        "age": 46,
+        "endAssets": 4295,
+      },
+      {
+        "age": 47,
+        "endAssets": 4697,
+      },
+      {
+        "age": 48,
+        "endAssets": 4637,
+      },
+      {
+        "age": 49,
+        "endAssets": 4993,
+      },
+      {
+        "age": 50,
+        "endAssets": 5537,
+      },
+      {
+        "age": 51,
+        "endAssets": 6113,
+      },
+      {
+        "age": 52,
+        "endAssets": 6678,
+      },
+      {
+        "age": 53,
+        "endAssets": 6410,
+      },
+      {
+        "age": 54,
+        "endAssets": 6284,
+      },
+      {
+        "age": 55,
+        "endAssets": 8814,
+      },
+      {
+        "age": 56,
+        "endAssets": 8757,
+      },
+      {
+        "age": 57,
+        "endAssets": 8698,
+      },
+      {
+        "age": 58,
+        "endAssets": 8638,
+      },
+      {
+        "age": 59,
+        "endAssets": 8076,
+      },
+      {
+        "age": 60,
+        "endAssets": 7998,
+      },
+      {
+        "age": 61,
+        "endAssets": 7917,
+      },
+      {
+        "age": 62,
+        "endAssets": 7834,
+      },
+      {
+        "age": 63,
+        "endAssets": 7749,
+      },
+      {
+        "age": 64,
+        "endAssets": 7661,
+      },
+      {
+        "age": 65,
+        "endAssets": 7707,
+      },
+      {
+        "age": 66,
+        "endAssets": 7754,
+      },
+      {
+        "age": 67,
+        "endAssets": 7799,
+      },
+      {
+        "age": 68,
+        "endAssets": 7988,
+      },
+      {
+        "age": 69,
+        "endAssets": 7685,
+      },
+      {
+        "age": 70,
+        "endAssets": 7860,
+      },
+      {
+        "age": 71,
+        "endAssets": 8042,
+      },
+      {
+        "age": 72,
+        "endAssets": 8233,
+      },
+      {
+        "age": 73,
+        "endAssets": 8431,
+      },
+      {
+        "age": 74,
+        "endAssets": 8639,
+      },
+      {
+        "age": 75,
+        "endAssets": 8936,
+      },
+      {
+        "age": 76,
+        "endAssets": 9248,
+      },
+      {
+        "age": 77,
+        "endAssets": 9576,
+      },
+      {
+        "age": 78,
+        "endAssets": 9921,
+      },
+      {
+        "age": 79,
+        "endAssets": 9784,
+      },
+      {
+        "age": 80,
+        "endAssets": 10134,
+      },
+      {
+        "age": 81,
+        "endAssets": 10503,
+      },
+      {
+        "age": 82,
+        "endAssets": 10891,
+      },
+      {
+        "age": 83,
+        "endAssets": 11300,
+      },
+      {
+        "age": 84,
+        "endAssets": 11730,
+      },
+      {
+        "age": 85,
+        "endAssets": 12184,
+      },
+      {
+        "age": 86,
+        "endAssets": 12662,
+      },
+      {
+        "age": 87,
+        "endAssets": 13166,
+      },
+      {
+        "age": 88,
+        "endAssets": 13698,
+      },
+      {
+        "age": 89,
+        "endAssets": 13759,
+      },
+      {
+        "age": 90,
+        "endAssets": 14320,
+      },
+      {
+        "age": 91,
+        "endAssets": 14912,
+      },
+      {
+        "age": 92,
+        "endAssets": 15537,
+      },
+      {
+        "age": 93,
+        "endAssets": 16197,
+      },
+      {
+        "age": 94,
+        "endAssets": 16894,
+      },
+      {
+        "age": 95,
+        "endAssets": 17631,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 33,
+    "name": "もっと使っても大丈夫？",
+    "retireAge": 55,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 44,
+        "endAssets": 3920,
+      },
+      {
+        "age": 45,
+        "endAssets": 4221,
+      },
+      {
+        "age": 46,
+        "endAssets": 4295,
+      },
+      {
+        "age": 47,
+        "endAssets": 4697,
+      },
+      {
+        "age": 48,
+        "endAssets": 4637,
+      },
+      {
+        "age": 49,
+        "endAssets": 4993,
+      },
+      {
+        "age": 50,
+        "endAssets": 5537,
+      },
+      {
+        "age": 51,
+        "endAssets": 6113,
+      },
+      {
+        "age": 52,
+        "endAssets": 6678,
+      },
+      {
+        "age": 53,
+        "endAssets": 7499,
+      },
+      {
+        "age": 54,
+        "endAssets": 7283,
+      },
+      {
+        "age": 55,
+        "endAssets": 9566,
+      },
+      {
+        "age": 56,
+        "endAssets": 9515,
+      },
+      {
+        "age": 57,
+        "endAssets": 9463,
+      },
+      {
+        "age": 58,
+        "endAssets": 9408,
+      },
+      {
+        "age": 59,
+        "endAssets": 8853,
+      },
+      {
+        "age": 60,
+        "endAssets": 8781,
+      },
+      {
+        "age": 61,
+        "endAssets": 8707,
+      },
+      {
+        "age": 62,
+        "endAssets": 8631,
+      },
+      {
+        "age": 63,
+        "endAssets": 8553,
+      },
+      {
+        "age": 64,
+        "endAssets": 8473,
+      },
+      {
+        "age": 65,
+        "endAssets": 8677,
+      },
+      {
+        "age": 66,
+        "endAssets": 8891,
+      },
+      {
+        "age": 67,
+        "endAssets": 9116,
+      },
+      {
+        "age": 68,
+        "endAssets": 9495,
+      },
+      {
+        "age": 69,
+        "endAssets": 9395,
+      },
+      {
+        "age": 70,
+        "endAssets": 9786,
+      },
+      {
+        "age": 71,
+        "endAssets": 10198,
+      },
+      {
+        "age": 72,
+        "endAssets": 10632,
+      },
+      {
+        "age": 73,
+        "endAssets": 11091,
+      },
+      {
+        "age": 74,
+        "endAssets": 11575,
+      },
+      {
+        "age": 75,
+        "endAssets": 12152,
+      },
+      {
+        "age": 76,
+        "endAssets": 12765,
+      },
+      {
+        "age": 77,
+        "endAssets": 13417,
+      },
+      {
+        "age": 78,
+        "endAssets": 14111,
+      },
+      {
+        "age": 79,
+        "endAssets": 14349,
+      },
+      {
+        "age": 80,
+        "endAssets": 15098,
+      },
+      {
+        "age": 81,
+        "endAssets": 15891,
+      },
+      {
+        "age": 82,
+        "endAssets": 16730,
+      },
+      {
+        "age": 83,
+        "endAssets": 17619,
+      },
+      {
+        "age": 84,
+        "endAssets": 18560,
+      },
+      {
+        "age": 85,
+        "endAssets": 19557,
+      },
+      {
+        "age": 86,
+        "endAssets": 20614,
+      },
+      {
+        "age": 87,
+        "endAssets": 21733,
+      },
+      {
+        "age": 88,
+        "endAssets": 22919,
+      },
+      {
+        "age": 89,
+        "endAssets": 23677,
+      },
+      {
+        "age": 90,
+        "endAssets": 24979,
+      },
+      {
+        "age": 91,
+        "endAssets": 26358,
+      },
+      {
+        "age": 92,
+        "endAssets": 27822,
+      },
+      {
+        "age": 93,
+        "endAssets": 29374,
+      },
+      {
+        "age": 94,
+        "endAssets": 31020,
+      },
+      {
+        "age": 95,
+        "endAssets": 32766,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 28,
+    "name": "運用を積極化したら？",
+    "retireAge": 55,
+    "returnMod": 2,
+    "timeline": [
+      {
+        "age": 44,
+        "endAssets": 3920,
+      },
+      {
+        "age": 45,
+        "endAssets": 4221,
+      },
+      {
+        "age": 46,
+        "endAssets": 4295,
+      },
+      {
+        "age": 47,
+        "endAssets": 4697,
+      },
+      {
+        "age": 48,
+        "endAssets": 4637,
+      },
+      {
+        "age": 49,
+        "endAssets": 4993,
+      },
+      {
+        "age": 50,
+        "endAssets": 5537,
+      },
+      {
+        "age": 51,
+        "endAssets": 6113,
+      },
+      {
+        "age": 52,
+        "endAssets": 6678,
+      },
+      {
+        "age": 53,
+        "endAssets": 7499,
+      },
+      {
+        "age": 54,
+        "endAssets": 7283,
+      },
+      {
+        "age": 55,
+        "endAssets": 9566,
+      },
+      {
+        "age": 56,
+        "endAssets": 9706,
+      },
+      {
+        "age": 57,
+        "endAssets": 9849,
+      },
+      {
+        "age": 58,
+        "endAssets": 9997,
+      },
+      {
+        "age": 59,
+        "endAssets": 9649,
+      },
+      {
+        "age": 60,
+        "endAssets": 9781,
+      },
+      {
+        "age": 61,
+        "endAssets": 9916,
+      },
+      {
+        "age": 62,
+        "endAssets": 10057,
+      },
+      {
+        "age": 63,
+        "endAssets": 10205,
+      },
+      {
+        "age": 64,
+        "endAssets": 10360,
+      },
+      {
+        "age": 65,
+        "endAssets": 10890,
+      },
+      {
+        "age": 66,
+        "endAssets": 11458,
+      },
+      {
+        "age": 67,
+        "endAssets": 12070,
+      },
+      {
+        "age": 68,
+        "endAssets": 12872,
+      },
+      {
+        "age": 69,
+        "endAssets": 13237,
+      },
+      {
+        "age": 70,
+        "endAssets": 14127,
+      },
+      {
+        "age": 71,
+        "endAssets": 15087,
+      },
+      {
+        "age": 72,
+        "endAssets": 16123,
+      },
+      {
+        "age": 73,
+        "endAssets": 17240,
+      },
+      {
+        "age": 74,
+        "endAssets": 18444,
+      },
+      {
+        "age": 75,
+        "endAssets": 19768,
+      },
+      {
+        "age": 76,
+        "endAssets": 21199,
+      },
+      {
+        "age": 77,
+        "endAssets": 22745,
+      },
+      {
+        "age": 78,
+        "endAssets": 24417,
+      },
+      {
+        "age": 79,
+        "endAssets": 25776,
+      },
+      {
+        "age": 80,
+        "endAssets": 27692,
+      },
+      {
+        "age": 81,
+        "endAssets": 29763,
+      },
+      {
+        "age": 82,
+        "endAssets": 32003,
+      },
+      {
+        "age": 83,
+        "endAssets": 34425,
+      },
+      {
+        "age": 84,
+        "endAssets": 37045,
+      },
+      {
+        "age": 85,
+        "endAssets": 39880,
+      },
+      {
+        "age": 86,
+        "endAssets": 42946,
+      },
+      {
+        "age": 87,
+        "endAssets": 46264,
+      },
+      {
+        "age": 88,
+        "endAssets": 49854,
+      },
+      {
+        "age": 89,
+        "endAssets": 53281,
+      },
+      {
+        "age": 90,
+        "endAssets": 57447,
+      },
+      {
+        "age": 91,
+        "endAssets": 61955,
+      },
+      {
+        "age": 92,
+        "endAssets": 66835,
+      },
+      {
+        "age": 93,
+        "endAssets": 72117,
+      },
+      {
+        "age": 94,
+        "endAssets": 77836,
+      },
+      {
+        "age": 95,
+        "endAssets": 84026,
+      },
+    ],
+  },
+]
+`;
+
 exports[`scenario snapshots > シナリオD 中村博 55歳老後準備 > calcIntegratedSim 1`] = `
 [
   {
@@ -16379,6 +18554,479 @@ exports[`scenario snapshots > シナリオD 中村博 55歳老後準備 > calcRe
     "totalNonAssetIncome": 456,
     "withdrawalShortfall": 0,
     "year": 2061,
+  },
+]
+`;
+
+exports[`scenario snapshots > シナリオD 中村博 55歳老後準備 > calcScenarioFullTimeline (getAdaptiveScenarios 各パターン) 1`] = `
+[
+  {
+    "monthlyExpense": 22,
+    "name": "もっと早く辞められる？",
+    "retireAge": 62,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 54,
+        "endAssets": 2970,
+      },
+      {
+        "age": 55,
+        "endAssets": 3365,
+      },
+      {
+        "age": 56,
+        "endAssets": 3690,
+      },
+      {
+        "age": 57,
+        "endAssets": 4106,
+      },
+      {
+        "age": 58,
+        "endAssets": 4481,
+      },
+      {
+        "age": 59,
+        "endAssets": 4642,
+      },
+      {
+        "age": 60,
+        "endAssets": 5213,
+      },
+      {
+        "age": 61,
+        "endAssets": 5726,
+      },
+      {
+        "age": 62,
+        "endAssets": 6342,
+      },
+      {
+        "age": 63,
+        "endAssets": 6298,
+      },
+      {
+        "age": 64,
+        "endAssets": 6196,
+      },
+      {
+        "age": 65,
+        "endAssets": 8460,
+      },
+      {
+        "age": 66,
+        "endAssets": 8445,
+      },
+      {
+        "age": 67,
+        "endAssets": 8440,
+      },
+      {
+        "age": 68,
+        "endAssets": 8437,
+      },
+      {
+        "age": 69,
+        "endAssets": 8435,
+      },
+      {
+        "age": 70,
+        "endAssets": 8432,
+      },
+      {
+        "age": 71,
+        "endAssets": 8430,
+      },
+      {
+        "age": 72,
+        "endAssets": 8427,
+      },
+      {
+        "age": 73,
+        "endAssets": 8425,
+      },
+      {
+        "age": 74,
+        "endAssets": 8423,
+      },
+      {
+        "age": 75,
+        "endAssets": 8701,
+      },
+      {
+        "age": 76,
+        "endAssets": 8990,
+      },
+      {
+        "age": 77,
+        "endAssets": 9292,
+      },
+      {
+        "age": 78,
+        "endAssets": 9605,
+      },
+      {
+        "age": 79,
+        "endAssets": 9932,
+      },
+      {
+        "age": 80,
+        "endAssets": 10273,
+      },
+      {
+        "age": 81,
+        "endAssets": 10627,
+      },
+      {
+        "age": 82,
+        "endAssets": 10996,
+      },
+      {
+        "age": 83,
+        "endAssets": 11380,
+      },
+      {
+        "age": 84,
+        "endAssets": 11780,
+      },
+      {
+        "age": 85,
+        "endAssets": 12197,
+      },
+      {
+        "age": 86,
+        "endAssets": 12631,
+      },
+      {
+        "age": 87,
+        "endAssets": 13082,
+      },
+      {
+        "age": 88,
+        "endAssets": 13553,
+      },
+      {
+        "age": 89,
+        "endAssets": 14043,
+      },
+      {
+        "age": 90,
+        "endAssets": 14553,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 27,
+    "name": "もっと使っても大丈夫？",
+    "retireAge": 65,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 54,
+        "endAssets": 2970,
+      },
+      {
+        "age": 55,
+        "endAssets": 3365,
+      },
+      {
+        "age": 56,
+        "endAssets": 3690,
+      },
+      {
+        "age": 57,
+        "endAssets": 4106,
+      },
+      {
+        "age": 58,
+        "endAssets": 4481,
+      },
+      {
+        "age": 59,
+        "endAssets": 4642,
+      },
+      {
+        "age": 60,
+        "endAssets": 5213,
+      },
+      {
+        "age": 61,
+        "endAssets": 5726,
+      },
+      {
+        "age": 62,
+        "endAssets": 6342,
+      },
+      {
+        "age": 63,
+        "endAssets": 6876,
+      },
+      {
+        "age": 64,
+        "endAssets": 6727,
+      },
+      {
+        "age": 65,
+        "endAssets": 8793,
+      },
+      {
+        "age": 66,
+        "endAssets": 8713,
+      },
+      {
+        "age": 67,
+        "endAssets": 8645,
+      },
+      {
+        "age": 68,
+        "endAssets": 8592,
+      },
+      {
+        "age": 69,
+        "endAssets": 8551,
+      },
+      {
+        "age": 70,
+        "endAssets": 8525,
+      },
+      {
+        "age": 71,
+        "endAssets": 8511,
+      },
+      {
+        "age": 72,
+        "endAssets": 8511,
+      },
+      {
+        "age": 73,
+        "endAssets": 8510,
+      },
+      {
+        "age": 74,
+        "endAssets": 8510,
+      },
+      {
+        "age": 75,
+        "endAssets": 8851,
+      },
+      {
+        "age": 76,
+        "endAssets": 9207,
+      },
+      {
+        "age": 77,
+        "endAssets": 9577,
+      },
+      {
+        "age": 78,
+        "endAssets": 9963,
+      },
+      {
+        "age": 79,
+        "endAssets": 10364,
+      },
+      {
+        "age": 80,
+        "endAssets": 10782,
+      },
+      {
+        "age": 81,
+        "endAssets": 11218,
+      },
+      {
+        "age": 82,
+        "endAssets": 11671,
+      },
+      {
+        "age": 83,
+        "endAssets": 12143,
+      },
+      {
+        "age": 84,
+        "endAssets": 12634,
+      },
+      {
+        "age": 85,
+        "endAssets": 13146,
+      },
+      {
+        "age": 86,
+        "endAssets": 13679,
+      },
+      {
+        "age": 87,
+        "endAssets": 14234,
+      },
+      {
+        "age": 88,
+        "endAssets": 14812,
+      },
+      {
+        "age": 89,
+        "endAssets": 15413,
+      },
+      {
+        "age": 90,
+        "endAssets": 16040,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 22,
+    "name": "運用を積極化したら？",
+    "retireAge": 65,
+    "returnMod": 2,
+    "timeline": [
+      {
+        "age": 54,
+        "endAssets": 2970,
+      },
+      {
+        "age": 55,
+        "endAssets": 3365,
+      },
+      {
+        "age": 56,
+        "endAssets": 3690,
+      },
+      {
+        "age": 57,
+        "endAssets": 4106,
+      },
+      {
+        "age": 58,
+        "endAssets": 4481,
+      },
+      {
+        "age": 59,
+        "endAssets": 4642,
+      },
+      {
+        "age": 60,
+        "endAssets": 5213,
+      },
+      {
+        "age": 61,
+        "endAssets": 5726,
+      },
+      {
+        "age": 62,
+        "endAssets": 6342,
+      },
+      {
+        "age": 63,
+        "endAssets": 6876,
+      },
+      {
+        "age": 64,
+        "endAssets": 6727,
+      },
+      {
+        "age": 65,
+        "endAssets": 8793,
+      },
+      {
+        "age": 66,
+        "endAssets": 8844,
+      },
+      {
+        "age": 67,
+        "endAssets": 8918,
+      },
+      {
+        "age": 68,
+        "endAssets": 9014,
+      },
+      {
+        "age": 69,
+        "endAssets": 9134,
+      },
+      {
+        "age": 70,
+        "endAssets": 9277,
+      },
+      {
+        "age": 71,
+        "endAssets": 9446,
+      },
+      {
+        "age": 72,
+        "endAssets": 9633,
+      },
+      {
+        "age": 73,
+        "endAssets": 9825,
+      },
+      {
+        "age": 74,
+        "endAssets": 10020,
+      },
+      {
+        "age": 75,
+        "endAssets": 10626,
+      },
+      {
+        "age": 76,
+        "endAssets": 11270,
+      },
+      {
+        "age": 77,
+        "endAssets": 11954,
+      },
+      {
+        "age": 78,
+        "endAssets": 12679,
+      },
+      {
+        "age": 79,
+        "endAssets": 13449,
+      },
+      {
+        "age": 80,
+        "endAssets": 14266,
+      },
+      {
+        "age": 81,
+        "endAssets": 15133,
+      },
+      {
+        "age": 82,
+        "endAssets": 16053,
+      },
+      {
+        "age": 83,
+        "endAssets": 17029,
+      },
+      {
+        "age": 84,
+        "endAssets": 18065,
+      },
+      {
+        "age": 85,
+        "endAssets": 19165,
+      },
+      {
+        "age": 86,
+        "endAssets": 20332,
+      },
+      {
+        "age": 87,
+        "endAssets": 21571,
+      },
+      {
+        "age": 88,
+        "endAssets": 22886,
+      },
+      {
+        "age": 89,
+        "endAssets": 24281,
+      },
+      {
+        "age": 90,
+        "endAssets": 25762,
+      },
+    ],
   },
 ]
 `;
@@ -20324,6 +22972,695 @@ exports[`scenario snapshots > シナリオE 林菜緒 38歳シングル > calcRe
     "totalNonAssetIncome": 132,
     "withdrawalShortfall": 0,
     "year": 2080,
+  },
+]
+`;
+
+exports[`scenario snapshots > シナリオE 林菜緒 38歳シングル > calcScenarioFullTimeline (getAdaptiveScenarios 各パターン) 1`] = `
+[
+  {
+    "monthlyExpense": 16,
+    "name": "もっと早く辞められる？",
+    "retireAge": 62,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 38,
+        "endAssets": 205,
+      },
+      {
+        "age": 39,
+        "endAssets": 71,
+      },
+      {
+        "age": 40,
+        "endAssets": 0,
+      },
+      {
+        "age": 41,
+        "endAssets": 0,
+      },
+      {
+        "age": 42,
+        "endAssets": 0,
+      },
+      {
+        "age": 43,
+        "endAssets": 0,
+      },
+      {
+        "age": 44,
+        "endAssets": 0,
+      },
+      {
+        "age": 45,
+        "endAssets": 0,
+      },
+      {
+        "age": 46,
+        "endAssets": 85,
+      },
+      {
+        "age": 47,
+        "endAssets": 84,
+      },
+      {
+        "age": 48,
+        "endAssets": 153,
+      },
+      {
+        "age": 49,
+        "endAssets": 247,
+      },
+      {
+        "age": 50,
+        "endAssets": 205,
+      },
+      {
+        "age": 51,
+        "endAssets": 358,
+      },
+      {
+        "age": 52,
+        "endAssets": 501,
+      },
+      {
+        "age": 53,
+        "endAssets": 688,
+      },
+      {
+        "age": 54,
+        "endAssets": 932,
+      },
+      {
+        "age": 55,
+        "endAssets": 1185,
+      },
+      {
+        "age": 56,
+        "endAssets": 1428,
+      },
+      {
+        "age": 57,
+        "endAssets": 1695,
+      },
+      {
+        "age": 58,
+        "endAssets": 1937,
+      },
+      {
+        "age": 59,
+        "endAssets": 2188,
+      },
+      {
+        "age": 60,
+        "endAssets": 2085,
+      },
+      {
+        "age": 61,
+        "endAssets": 2037,
+      },
+      {
+        "age": 62,
+        "endAssets": 1963,
+      },
+      {
+        "age": 63,
+        "endAssets": 1915,
+      },
+      {
+        "age": 64,
+        "endAssets": 1886,
+      },
+      {
+        "age": 65,
+        "endAssets": 2279,
+      },
+      {
+        "age": 66,
+        "endAssets": 2260,
+      },
+      {
+        "age": 67,
+        "endAssets": 2229,
+      },
+      {
+        "age": 68,
+        "endAssets": 2218,
+      },
+      {
+        "age": 69,
+        "endAssets": 2210,
+      },
+      {
+        "age": 70,
+        "endAssets": 2206,
+      },
+      {
+        "age": 71,
+        "endAssets": 2187,
+      },
+      {
+        "age": 72,
+        "endAssets": 2183,
+      },
+      {
+        "age": 73,
+        "endAssets": 2179,
+      },
+      {
+        "age": 74,
+        "endAssets": 2175,
+      },
+      {
+        "age": 75,
+        "endAssets": 2156,
+      },
+      {
+        "age": 76,
+        "endAssets": 2151,
+      },
+      {
+        "age": 77,
+        "endAssets": 2147,
+      },
+      {
+        "age": 78,
+        "endAssets": 2142,
+      },
+      {
+        "age": 79,
+        "endAssets": 2123,
+      },
+      {
+        "age": 80,
+        "endAssets": 2118,
+      },
+      {
+        "age": 81,
+        "endAssets": 2114,
+      },
+      {
+        "age": 82,
+        "endAssets": 2109,
+      },
+      {
+        "age": 83,
+        "endAssets": 2089,
+      },
+      {
+        "age": 84,
+        "endAssets": 2084,
+      },
+      {
+        "age": 85,
+        "endAssets": 2079,
+      },
+      {
+        "age": 86,
+        "endAssets": 2074,
+      },
+      {
+        "age": 87,
+        "endAssets": 2053,
+      },
+      {
+        "age": 88,
+        "endAssets": 2048,
+      },
+      {
+        "age": 89,
+        "endAssets": 2043,
+      },
+      {
+        "age": 90,
+        "endAssets": 2037,
+      },
+      {
+        "age": 91,
+        "endAssets": 2017,
+      },
+      {
+        "age": 92,
+        "endAssets": 2011,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 21,
+    "name": "もっと使っても大丈夫？",
+    "retireAge": 65,
+    "returnMod": 0,
+    "timeline": [
+      {
+        "age": 38,
+        "endAssets": 205,
+      },
+      {
+        "age": 39,
+        "endAssets": 71,
+      },
+      {
+        "age": 40,
+        "endAssets": 0,
+      },
+      {
+        "age": 41,
+        "endAssets": 0,
+      },
+      {
+        "age": 42,
+        "endAssets": 0,
+      },
+      {
+        "age": 43,
+        "endAssets": 0,
+      },
+      {
+        "age": 44,
+        "endAssets": 0,
+      },
+      {
+        "age": 45,
+        "endAssets": 0,
+      },
+      {
+        "age": 46,
+        "endAssets": 85,
+      },
+      {
+        "age": 47,
+        "endAssets": 84,
+      },
+      {
+        "age": 48,
+        "endAssets": 153,
+      },
+      {
+        "age": 49,
+        "endAssets": 247,
+      },
+      {
+        "age": 50,
+        "endAssets": 205,
+      },
+      {
+        "age": 51,
+        "endAssets": 358,
+      },
+      {
+        "age": 52,
+        "endAssets": 501,
+      },
+      {
+        "age": 53,
+        "endAssets": 688,
+      },
+      {
+        "age": 54,
+        "endAssets": 932,
+      },
+      {
+        "age": 55,
+        "endAssets": 1185,
+      },
+      {
+        "age": 56,
+        "endAssets": 1428,
+      },
+      {
+        "age": 57,
+        "endAssets": 1695,
+      },
+      {
+        "age": 58,
+        "endAssets": 1937,
+      },
+      {
+        "age": 59,
+        "endAssets": 2188,
+      },
+      {
+        "age": 60,
+        "endAssets": 2085,
+      },
+      {
+        "age": 61,
+        "endAssets": 2037,
+      },
+      {
+        "age": 62,
+        "endAssets": 1963,
+      },
+      {
+        "age": 63,
+        "endAssets": 1898,
+      },
+      {
+        "age": 64,
+        "endAssets": 1823,
+      },
+      {
+        "age": 65,
+        "endAssets": 1772,
+      },
+      {
+        "age": 66,
+        "endAssets": 1736,
+      },
+      {
+        "age": 67,
+        "endAssets": 1688,
+      },
+      {
+        "age": 68,
+        "endAssets": 1660,
+      },
+      {
+        "age": 69,
+        "endAssets": 1634,
+      },
+      {
+        "age": 70,
+        "endAssets": 1612,
+      },
+      {
+        "age": 71,
+        "endAssets": 1578,
+      },
+      {
+        "age": 72,
+        "endAssets": 1563,
+      },
+      {
+        "age": 73,
+        "endAssets": 1552,
+      },
+      {
+        "age": 74,
+        "endAssets": 1543,
+      },
+      {
+        "age": 75,
+        "endAssets": 1521,
+      },
+      {
+        "age": 76,
+        "endAssets": 1513,
+      },
+      {
+        "age": 77,
+        "endAssets": 1505,
+      },
+      {
+        "age": 78,
+        "endAssets": 1496,
+      },
+      {
+        "age": 79,
+        "endAssets": 1473,
+      },
+      {
+        "age": 80,
+        "endAssets": 1465,
+      },
+      {
+        "age": 81,
+        "endAssets": 1456,
+      },
+      {
+        "age": 82,
+        "endAssets": 1448,
+      },
+      {
+        "age": 83,
+        "endAssets": 1424,
+      },
+      {
+        "age": 84,
+        "endAssets": 1415,
+      },
+      {
+        "age": 85,
+        "endAssets": 1406,
+      },
+      {
+        "age": 86,
+        "endAssets": 1397,
+      },
+      {
+        "age": 87,
+        "endAssets": 1373,
+      },
+      {
+        "age": 88,
+        "endAssets": 1363,
+      },
+      {
+        "age": 89,
+        "endAssets": 1354,
+      },
+      {
+        "age": 90,
+        "endAssets": 1344,
+      },
+      {
+        "age": 91,
+        "endAssets": 1320,
+      },
+      {
+        "age": 92,
+        "endAssets": 1310,
+      },
+    ],
+  },
+  {
+    "monthlyExpense": 16,
+    "name": "運用を積極化したら？",
+    "retireAge": 65,
+    "returnMod": 2,
+    "timeline": [
+      {
+        "age": 38,
+        "endAssets": 205,
+      },
+      {
+        "age": 39,
+        "endAssets": 71,
+      },
+      {
+        "age": 40,
+        "endAssets": 0,
+      },
+      {
+        "age": 41,
+        "endAssets": 0,
+      },
+      {
+        "age": 42,
+        "endAssets": 0,
+      },
+      {
+        "age": 43,
+        "endAssets": 0,
+      },
+      {
+        "age": 44,
+        "endAssets": 0,
+      },
+      {
+        "age": 45,
+        "endAssets": 0,
+      },
+      {
+        "age": 46,
+        "endAssets": 85,
+      },
+      {
+        "age": 47,
+        "endAssets": 84,
+      },
+      {
+        "age": 48,
+        "endAssets": 153,
+      },
+      {
+        "age": 49,
+        "endAssets": 247,
+      },
+      {
+        "age": 50,
+        "endAssets": 205,
+      },
+      {
+        "age": 51,
+        "endAssets": 358,
+      },
+      {
+        "age": 52,
+        "endAssets": 501,
+      },
+      {
+        "age": 53,
+        "endAssets": 688,
+      },
+      {
+        "age": 54,
+        "endAssets": 932,
+      },
+      {
+        "age": 55,
+        "endAssets": 1185,
+      },
+      {
+        "age": 56,
+        "endAssets": 1428,
+      },
+      {
+        "age": 57,
+        "endAssets": 1695,
+      },
+      {
+        "age": 58,
+        "endAssets": 1937,
+      },
+      {
+        "age": 59,
+        "endAssets": 2188,
+      },
+      {
+        "age": 60,
+        "endAssets": 2085,
+      },
+      {
+        "age": 61,
+        "endAssets": 2037,
+      },
+      {
+        "age": 62,
+        "endAssets": 1963,
+      },
+      {
+        "age": 63,
+        "endAssets": 1898,
+      },
+      {
+        "age": 64,
+        "endAssets": 1823,
+      },
+      {
+        "age": 65,
+        "endAssets": 1772,
+      },
+      {
+        "age": 66,
+        "endAssets": 1755,
+      },
+      {
+        "age": 67,
+        "endAssets": 1729,
+      },
+      {
+        "age": 68,
+        "endAssets": 1723,
+      },
+      {
+        "age": 69,
+        "endAssets": 1723,
+      },
+      {
+        "age": 70,
+        "endAssets": 1727,
+      },
+      {
+        "age": 71,
+        "endAssets": 1722,
+      },
+      {
+        "age": 72,
+        "endAssets": 1739,
+      },
+      {
+        "age": 73,
+        "endAssets": 1761,
+      },
+      {
+        "age": 74,
+        "endAssets": 1788,
+      },
+      {
+        "age": 75,
+        "endAssets": 1801,
+      },
+      {
+        "age": 76,
+        "endAssets": 1829,
+      },
+      {
+        "age": 77,
+        "endAssets": 1858,
+      },
+      {
+        "age": 78,
+        "endAssets": 1888,
+      },
+      {
+        "age": 79,
+        "endAssets": 1903,
+      },
+      {
+        "age": 80,
+        "endAssets": 1934,
+      },
+      {
+        "age": 81,
+        "endAssets": 1966,
+      },
+      {
+        "age": 82,
+        "endAssets": 1998,
+      },
+      {
+        "age": 83,
+        "endAssets": 2017,
+      },
+      {
+        "age": 84,
+        "endAssets": 2051,
+      },
+      {
+        "age": 85,
+        "endAssets": 2086,
+      },
+      {
+        "age": 86,
+        "endAssets": 2122,
+      },
+      {
+        "age": 87,
+        "endAssets": 2143,
+      },
+      {
+        "age": 88,
+        "endAssets": 2181,
+      },
+      {
+        "age": 89,
+        "endAssets": 2219,
+      },
+      {
+        "age": 90,
+        "endAssets": 2259,
+      },
+      {
+        "age": 91,
+        "endAssets": 2284,
+      },
+      {
+        "age": 92,
+        "endAssets": 2325,
+      },
+    ],
   },
 ]
 `;
