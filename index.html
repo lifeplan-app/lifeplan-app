@@ -3318,7 +3318,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>雇用形態</label>
-            <select id="penEmployType" onchange="calcPensionEstimate()">
+            <select id="penEmployType" onchange="calcSimplePensionEstimate()">
               <option value="employee">会社員・公務員（厚生年金あり）</option>
               <option value="self">自営業・フリーランス（国民年金のみ）</option>
               <option value="part">パート・アルバイト（厚生年金加入なし）</option>
@@ -3326,13 +3326,13 @@
           </div>
           <div class="form-group">
             <label>厚生年金加入年数（見込み）</label>
-            <input type="number" id="penKosei" placeholder="35" min="0" max="45" step="1" oninput="calcPensionEstimate()">
+            <input type="number" id="penKosei" placeholder="35" min="0" max="45" step="1" oninput="calcSimplePensionEstimate()">
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>平均年収（税込み）万円</label>
-            <input type="number" id="penAvgIncome" placeholder="600" min="0" step="10" oninput="calcPensionEstimate();document.getElementById('penAvgIncomeWarn').style.display='none'">
+            <input type="number" id="penAvgIncome" placeholder="600" min="0" step="10" oninput="calcSimplePensionEstimate();document.getElementById('penAvgIncomeWarn').style.display='none'">
             <div id="penAvgIncomeWarn" style="display:none;font-size:11px;color:#92400E;background:#FEF3C7;border:1px solid #F59E0B;border-radius:6px;padding:6px 8px;margin-top:4px;line-height:1.5">
               📊 手取り年収 ÷ 0.78 で<b>税込み年収を自動推計</b>しました。<br>
               より正確な値は源泉徴収票の「支払金額」で確認できます。<br>
@@ -3341,7 +3341,7 @@
           </div>
           <div class="form-group">
             <label>国民年金加入年数（見込み）</label>
-            <input type="number" id="penKokumin" placeholder="40" min="0" max="40" step="1" oninput="calcPensionEstimate()">
+            <input type="number" id="penKokumin" placeholder="40" min="0" max="40" step="1" oninput="calcSimplePensionEstimate()">
           </div>
         </div>
         <div id="pensionEstimateResult" style="display:none;background:var(--surface2);border-radius:10px;padding:14px;margin-top:4px">
@@ -5941,7 +5941,7 @@ window.addEventListener('storage', (e) => {
 
 // ===== かんたん試算モード ユーティリティ =====
 // 手取り年収（万円）から年金月額（万円/月）を推計
-function calcPensionEstimate() {
+function calcSimplePensionEstimate() {
   const income = (parseFloat(state.finance?.income) || 0) * 12; // 月収→手取り年収（万円）
   if (income <= 0) return 0;
   const grossAnnual = income / 0.75; // 額面年収推計
@@ -5976,7 +5976,7 @@ function calcSimpleSim() {
   const monthlyInvest = parseFloat(sm.monthlyInvest) || 0;
   const monthlyExpense = parseFloat(sm.monthlyExpense) || 20;
   const retireExpense = parseFloat(sm.retireExpense) || monthlyExpense * 0.8;
-  const pension = calcPensionEstimate(); // 万円/月
+  const pension = calcSimplePensionEstimate(); // 万円/月
 
   const simEndAge = 100;
   const results = [];
@@ -20373,7 +20373,7 @@ function renderSimpleResult() {
   // KPIカード
   const kpiEl = document.getElementById('simpleKpiCards');
   if (kpiEl) {
-    const pension = calcPensionEstimate();
+    const pension = calcSimplePensionEstimate();
     kpiEl.innerHTML = [
       {
         icon: '🏁',
@@ -20490,7 +20490,7 @@ function renderSimpleResult() {
   const assumptionsEl = document.getElementById('simpleAssumptions');
   if (assumptionsEl) {
     const styleLabel = { conservative: '安定重視（年2%）', balanced: 'バランス型（年4%）', aggressive: '成長重視（年6.5%）' };
-    const pension = calcPensionEstimate();
+    const pension = calcSimplePensionEstimate();
     assumptionsEl.innerHTML = `
       <div style="font-weight:700;font-size:13px;color:#555;margin-bottom:10px;">📋 シミュレーションの前提（仮定値）</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:#666;">
