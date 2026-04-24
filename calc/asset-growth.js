@@ -46,6 +46,14 @@ function effectiveReturn(annualReturn, taxType) {
   return annualReturn * (1 - TAX_RATE);
 }
 
+// [Phase 4a 07-I01] 譲渡益・配当に対する実効税率
+// taxType: 'nisa' | 'ideco' | 'tokutei' | 'cash'
+// 戻り値: 税額（万円）。非課税区分は 0
+function calcCapitalGainsTax(amount, taxType) {
+  if (taxType === 'nisa' || taxType === 'ideco' || taxType === 'cash') return 0;
+  return amount * TAX_RATE; // TAX_RATE = 0.20315
+}
+
 // calcAssetGrowth: returns { values: [], overflows: [] }
 // overflows[y] = 目標達成・NISA上限等で積立できなかった余剰額（年間・万円）
 // extraContribs: 他アセットから振替された追加積立（[y]=万円）

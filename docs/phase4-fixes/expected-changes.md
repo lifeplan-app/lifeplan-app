@@ -105,10 +105,44 @@ Important 14 件を 5 グループに分けて修正した記録。
 ## Group 2: 清算時の税引き（07-I01, 08-I01, 09-I02）
 
 ### 期待方向
-（Task 5 実施時に記入）
+- **対象**: 07-I01 / 08-I01 / 09-I02（清算・配当・取崩の税引き 3 件同根）
+- **期待される snapshot 差分**:
+  - 清算発生シナリオ（Phase 2.5 の経緯から E 林菜緒が該当、C 山本誠も FIRE 早期で発生の可能性）で `liquidation` が **額面 +25% 増**（税引後 → 額面換算）
+  - `investPool` の減少速度が速くなる
+  - 長期資産（`endAssets`）は **-5〜-10%** 減方向
+  - NISA 比率が高いサンプルほど税引き影響は小さい
+  - 08-I01 の配当税引きは `dividendPool > 0` かつ cashout モードのアセットを持つシナリオで影響
+- **確認ポイント**: 
+  - Phase 2.5 Group 5 で導入した `investPoolHealthy` ガードとの整合性
+  - `TAX_RATE = 0.20315`、1 / (1 - 0.20315) ≈ 1.2548 倍 → 額面換算時の係数
 
 ### 実測サマリー
-（Task 5 修正後に記入）
+- **commit SHA**: （Step 9 で追記）
+- **新設関数**: 
+  - `calcCapitalGainsTax(amount, taxType)` in calc/asset-growth.js
+  - `calcResidentTax(taxableIncomeMan)` in calc/mortgage.js
+- **変更箇所**: 
+  - `calc/integrated.js`: 清算額 `liquidationThisYear` を投資プール加重税率で gross up
+  - `calc/retirement.js`: `dividendIncome` に配当税率 `_divTaxRate` 適用、4 プール取崩に `_grossUpIndex/_grossUpDiv` 導入、`withdrawalShortfall` を `_remaining` ベースに変更
+- **snapshot 差分行数**: 約 4242 行（insertions 2121 + deletions 2121）
+- **シナリオ別変化**: 
+  - A 田中葵: 投資がすべて nisa/ideco → 差分なし ✅
+  - B 鈴木健太: 投資がすべて nisa/ideco → 差分なし ✅
+  - C 山本誠: tokutei 投資（high_dividend 800, trust_sp500 500）保有 → 重み付き税率 ≈ 7.7%、`liquidation` +8%（592→640）、`investPool` -1〜-8%、`dividendIncome` 74→56（-24.3%、dividendPool 全額 tokutei）、`endAssets` -5〜-6%
+  - D 中村博: tokutei 投資（japan_stock 800）保有 → 重み付き税率適用、`liquidation` 896→965（+7.7%）等、`endAssets` -5〜-6%
+  - E 林菜緒: 投資が nisa_tsumitate + ideco のみ → 差分なし ✅（清算額は gross-up ゼロ）
+- **手検算（シナリオ C、weighted tax 計算）**: 
+  - 初期値: nisa_tsumitate 800+300=1100, nisa_growth 600, ideco 420 (全非課税), high_dividend 800, trust_sp500 500 (全 tokutei)
+  - 投資プール総額 = 1100+600+420+800+500 = 3420 万
+  - 税額加重 = (800+500) × 0.20315 = 264.1
+  - weighted rate ≈ 264.1 / 3420 = 7.72%
+  - Gross-up 係数 = 1 / (1-0.0772) = 1.0838 → +8.4%
+  - 実測 liquidation: 592→640 = +8.1% ✅
+- **方向の評価**: 期待通り
+  - 清算 +25% 想定は「全額 tokutei」のケース。実サンプルは NISA 比率が高いため +8% 程度に収まる
+  - `investPool` の減少速度・`endAssets` -5〜-10% 減は期待通り
+  - NISA 比率高いサンプル（A/B/E）の影響ゼロは期待通り
+  - `investPoolHealthy` ガードとの整合性: 既存ロジックは変更せず `liquidationThisYear` の値のみ gross 版で積み上げ
 
 ---
 

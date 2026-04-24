@@ -345,6 +345,21 @@ function calcRetirementSimWithOpts(opts = {}) {
     : 0;
   const _divCapitalReturn = Math.max(0, _divTotalReturn - _divYield); // キャピタルゲインのみ
 
+  // [Phase 4a 08-I01] 各プールの加重実効税率（taxType 別）
+  // cash/emergency プールは cash 相当（非課税）
+  // index/dividend プールは taxType = nisa/ideco を除き TAX_RATE 適用
+  const _poolTaxRate = (filterFn, baseVal) => {
+    if (baseVal <= 0) return TAX_RATE; // デフォルト（課税）
+    const taxed = _allAssets.filter(filterFn).reduce((s, a) => {
+      const tt = a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
+      const rate = (tt === 'nisa' || tt === 'ideco' || tt === 'cash') ? 0 : TAX_RATE;
+      return s + (a.currentVal || 0) * rate;
+    }, 0);
+    return taxed / baseVal;
+  };
+  const _indexTaxRate = _poolTaxRate(a => !_CASH_TYPES_RET.has(a.type) && !_isDivPool(a), _indexCurr);
+  const _divTaxRate   = _poolTaxRate(_isDivPool, _divCurr);
+
   // ===== 生活防衛資金プールの初期値: targetVal（上限額）を尊重した実額計算 =====
   // 比率スケールではなく「現在残高を上限キャップ付きで yearsToRetire 年分複利成長」させた額を使用
   const _emergAtRetire = _allAssets
@@ -461,7 +476,9 @@ function calcRetirementSimWithOpts(opts = {}) {
       ? (parseFloat(r.partnerExpenseChange) || 0) * 12 : 0;
     // 配当収入（高配当プール × 配当利回り）
     // dividendPoolのキャピタルゲインは _divCapitalReturn で成長し、配当分は別収入として計上
-    const dividendIncome = Math.round(dividendPool * _divYield);
+    // [Phase 4a 08-I01] 配当に実効税率を適用（NISA/iDeCo 等は非課税扱い）
+    const dividendGross = dividendPool * _divYield;
+    const dividendIncome = Math.round(dividendGross * (1 - _divTaxRate));
     const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct + dividendIncome;
     const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange) - totalNonAssetIncome);
 
@@ -558,37 +575,78 @@ function calcRetirementSimWithOpts(opts = {}) {
     // ===== 4プール取り崩し =====
     // 優先度: cashPool → indexPool → dividendPool → emergencyPool（生活防衛資金は絶対最後）
     // drawdownOrder は cash/index 間にのみ適用
+    // [Phase 4a 07-I01/09-I02] 課税プール（index/dividend）は税引後ネット → 額面へ grossUp
+    //   cash/emergency は非課税（cash 相当）。取崩 X を net として受け取るには X/(1 - taxRate) 必要
+    const _grossUpIndex = (net) => net / Math.max(0.01, 1 - _indexTaxRate);
+    const _grossUpDiv   = (net) => net / Math.max(0.01, 1 - _divTaxRate);
     const _poolTotal = emergencyPool + cashPool + indexPool + dividendPool;
-    const _deductable = Math.min(_poolTotal, actualDeduction);
+    const _deductable = Math.min(_poolTotal, actualDeduction); // actualDeduction は net 必要額
     const _cashAboveFloor = Math.max(0, cashPool - cashFloor);
     let _fromEmerg = 0, _fromCash = 0, _fromIndex = 0, _fromDiv = 0;
 
+    // 取崩ヘルパ: remaining(net) 必要額に対し、指定プール・残高から gross 取崩額を決定し残り net を返す
+    const _takeFromIndex = (remainingNet) => {
+      if (remainingNet <= 0 || indexPool <= 0) return remainingNet;
+      const grossWant = _grossUpIndex(remainingNet);
+      const grossTake = Math.min(indexPool, grossWant);
+      _fromIndex += grossTake;
+      const netGot = grossTake * (1 - _indexTaxRate);
+      return Math.max(0, remainingNet - netGot);
+    };
+    const _takeFromDiv = (remainingNet) => {
+      if (remainingNet <= 0 || dividendPool <= 0) return remainingNet;
+      const grossWant = _grossUpDiv(remainingNet);
+      const grossTake = Math.min(dividendPool, grossWant);
+      _fromDiv += grossTake;
+      const netGot = grossTake * (1 - _divTaxRate);
+      return Math.max(0, remainingNet - netGot);
+    };
+    const _takeFromCash = (remainingNet, capFloor = true) => {
+      if (remainingNet <= 0) return remainingNet;
+      const limit = capFloor ? _cashAboveFloor - _fromCash : cashPool - _fromCash;
+      if (limit <= 0) return remainingNet;
+      const take = Math.min(limit, remainingNet); // 非課税
+      _fromCash += take;
+      return Math.max(0, remainingNet - take);
+    };
+    const _takeFromEmerg = (remainingNet) => {
+      if (remainingNet <= 0 || emergencyPool <= 0) return remainingNet;
+      const take = Math.min(emergencyPool, remainingNet); // 非課税
+      _fromEmerg += take;
+      return Math.max(0, remainingNet - take);
+    };
+
+    let _remaining = _deductable;
     if (drawdownOrder === 'invest_first') {
       // インデックス優先 → 通常現金 → 高配当 → 生活防衛（最後）
-      _fromIndex = Math.min(indexPool, _deductable);
-      _fromCash  = Math.min(_cashAboveFloor, Math.max(0, _deductable - _fromIndex));
-      _fromCash  = Math.min(cashPool, _fromCash + Math.max(0, _deductable - _fromIndex - _fromCash));
-      _fromDiv   = Math.min(dividendPool, Math.max(0, _deductable - _fromIndex - _fromCash));
-      _fromEmerg = Math.min(emergencyPool, Math.max(0, _deductable - _fromIndex - _fromCash - _fromDiv));
+      _remaining = _takeFromIndex(_remaining);
+      _remaining = _takeFromCash(_remaining, true);
+      _remaining = _takeFromCash(_remaining, false); // フロア以下にも踏み込む
+      _remaining = _takeFromDiv(_remaining);
+      _remaining = _takeFromEmerg(_remaining);
     } else if (drawdownOrder === 'proportional') {
       // 按分: cash(フロア超過) + index を比率配分 → 高配当 → 生活防衛（最後）
       const _softTotal = _cashAboveFloor + indexPool;
       if (_softTotal > 0) {
         const _cf = _cashAboveFloor / _softTotal;
-        _fromCash  = Math.min(_cashAboveFloor, _deductable * _cf);
-        _fromIndex = Math.min(indexPool, _deductable - _fromCash);
-        _fromCash  = Math.min(_cashAboveFloor, _fromCash + Math.max(0, _deductable - _fromCash - _fromIndex));
+        const cashPart = _remaining * _cf;
+        const indexPart = _remaining - cashPart;
+        const afterCash = _takeFromCash(cashPart, true);
+        const afterIndex = _takeFromIndex(indexPart + afterCash);
+        _remaining = afterIndex;
+        // cash 残があればもう一度
+        _remaining = _takeFromCash(_remaining, true);
       }
-      _fromCash  = Math.min(cashPool, _fromCash + Math.max(0, _deductable - _fromCash - _fromIndex));
-      _fromDiv   = Math.min(dividendPool, Math.max(0, _deductable - _fromCash - _fromIndex));
-      _fromEmerg = Math.min(emergencyPool, Math.max(0, _deductable - _fromCash - _fromIndex - _fromDiv));
+      _remaining = _takeFromCash(_remaining, false);
+      _remaining = _takeFromDiv(_remaining);
+      _remaining = _takeFromEmerg(_remaining);
     } else {
       // cash_first（デフォルト）: 通常現金 → インデックス → 高配当 → 生活防衛（最後）
-      _fromCash  = Math.min(_cashAboveFloor, _deductable);
-      _fromIndex = Math.min(indexPool, Math.max(0, _deductable - _fromCash));
-      _fromCash  = Math.min(cashPool, _fromCash + Math.max(0, _deductable - _fromCash - _fromIndex));
-      _fromDiv   = Math.min(dividendPool, Math.max(0, _deductable - _fromCash - _fromIndex));
-      _fromEmerg = Math.min(emergencyPool, Math.max(0, _deductable - _fromCash - _fromIndex - _fromDiv));
+      _remaining = _takeFromCash(_remaining, true);
+      _remaining = _takeFromIndex(_remaining);
+      _remaining = _takeFromCash(_remaining, false);
+      _remaining = _takeFromDiv(_remaining);
+      _remaining = _takeFromEmerg(_remaining);
     }
 
     const _emergBeforeDeduct  = emergencyPool;
@@ -601,9 +659,11 @@ function calcRetirementSimWithOpts(opts = {}) {
     dividendPool  = Math.max(0, dividendPool  - _fromDiv);
     const endAssets = emergencyPool + cashPool + indexPool + dividendPool;
 
-    // プールの実変化量で「実際に引き出せた額」を計算
+    // プールの実変化量で「実際に引き出せた額（額面）」を計算
+    // [Phase 4a 07-I01/09-I02] 額面（gross）ベース。税引き後 net は actualDeduction 相当を受け取る
     const actualWithdrawn = (_emergBeforeDeduct - emergencyPool) + (_cashBeforeDeduct - cashPool) + (_indexBeforeDeduct - indexPool) + (_divBeforeDeduct - dividendPool);
-    const withdrawalShortfall = Math.max(0, Math.round(actualDeduction - actualWithdrawn));
+    // 不足額は「未充足の net 必要額」（プール枯渇時に _remaining が残る）
+    const withdrawalShortfall = Math.max(0, Math.round(_remaining));
     // 資金不足: 実引き出し < 必要額（cashFloorで引き出せない場合を含む）
     const isFundingShortfall = withdrawalShortfall > 0;
 

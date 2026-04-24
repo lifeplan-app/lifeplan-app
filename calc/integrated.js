@@ -123,9 +123,22 @@ function calcIntegratedSim(years, opts = {}) {
 
     if (y > 0 && virtualCash < 0 && investPoolHealthy) {
       // 現金プールが不足 → 投資資産を清算して補填
-      liquidationThisYear = -virtualCash;
+      // [Phase 4a 07-I01/09-I02] 清算額を税引後ネット必要額から額面に換算
+      // 投資プール構成から加重実効税率を計算し、net 必要額 → gross 清算額へ
+      const netNeeded = -virtualCash;
+      const poolVal = _investGD.reduce((s, g) => s + (g.data[y] || 0), 0);
+      const weightedTax = poolVal > 0
+        ? _investGD.reduce((s, g) => {
+            const tt = g.asset.taxType || TAX_TYPE_DEFAULT[g.asset.type] || 'tokutei';
+            const rate = (tt === 'nisa' || tt === 'ideco' || tt === 'cash') ? 0 : TAX_RATE;
+            return s + (g.data[y] || 0) * rate;
+          }, 0) / poolVal
+        : TAX_RATE;
+      // 額面必要額 = ネット / (1 - weightedTax)
+      liquidationThisYear = netNeeded / Math.max(0.01, 1 - weightedTax);
       _investDeficit += liquidationThisYear;
-      adjustedCashFlow = cashFlow + liquidationThisYear; // 清算後: cashPool ≒ 0
+      // 手取り（netNeeded）分のみ現金プールに補填（税金は消費される）
+      adjustedCashFlow = cashFlow + netNeeded; // 清算後: cashPool ≒ 0
       _liquidationEvents.push({ y, yr, amount: Math.round(liquidationThisYear) });
     }
     // else: 投資プール枯渇中は清算不能 → adjustedCashFlow はマイナスのまま残す

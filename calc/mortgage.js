@@ -89,6 +89,13 @@ function calcIncomeTaxAmount(taxableIncomeMan) {
   return 0;
 }
 
+// [Phase 4a 08-I01] 住民税概算（課税所得 × 10%、調整控除省略）
+// 出典: 地方税法（均等割 5000 円は省略）
+function calcResidentTax(taxableIncomeMan) {
+  if (taxableIncomeMan <= 0) return 0;
+  return Math.max(0, taxableIncomeMan * 0.10);
+}
+
 // ⑧ [Phase 2.5 05-C01/05-C02 fix] 住宅ローン控除: 住宅種別の借入限度・税額 cap を考慮（万円/年）
 function calcMortgageDeduction(year, balance) {
   const p = getRetirementParams();
