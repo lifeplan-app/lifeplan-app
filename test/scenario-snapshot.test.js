@@ -69,6 +69,25 @@ describe('scenario snapshots', () => {
         });
         expect(roundDeep(result)).toMatchSnapshot();
       }, 30_000);
+
+      it('calcRetirementSimWithOpts 標準', async () => {
+        const result = await page.evaluate(() => calcRetirementSimWithOpts({}));
+        expect(roundDeep(result)).toMatchSnapshot();
+      }, 30_000);
+
+      it('calcRetirementSimWithOpts 楽観', async () => {
+        const result = await page.evaluate(() =>
+          calcRetirementSimWithOpts({ returnMod: +0.01, expenseMod: -0.10, pensionMod: 0 })
+        );
+        expect(roundDeep(result)).toMatchSnapshot();
+      }, 30_000);
+
+      it('calcRetirementSimWithOpts 悲観', async () => {
+        const result = await page.evaluate(() =>
+          calcRetirementSimWithOpts({ returnMod: -0.01, expenseMod: +0.10, pensionMod: -0.15 })
+        );
+        expect(roundDeep(result)).toMatchSnapshot();
+      }, 30_000);
     });
   }
 });
