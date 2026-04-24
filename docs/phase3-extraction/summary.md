@@ -60,7 +60,7 @@
 - **index.html 削減行数**: 110 行（22,813 → 22,703）
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
 - **補足**: 4 関数はいずれも `function` 宣言のため `vm.runInContext` sandbox へ自動露出。`calcMortgageSchedule` は同一 sandbox にロードされた `calcMortgage`（index.html 側）ではなく、ブラウザ実行時のみ `calcMortgage` と共存する。Node テストでは `calcMortgage` を呼ばないため影響なし。`calcMortgageDeduction` 内の `getRetirementParams` は Step 6 以降で `calc/retirement.js` に抽出予定だが、現状 sandbox へは index.html 経由で露出している。
-- **commit SHA**: （次のコミットで補完）
+- **commit SHA**: `30e0219`
 
 ## Step 6: calc/retirement.js（退職シミュ）
 （Task 7 実施時に記入）
