@@ -14278,12 +14278,28 @@ function calcIntegratedSim(years, opts = {}) {
     ? _pBirthYearIS + parseInt(_rIS.partnerTargetAge) : null;
   const _pExpChangeMonthlyIS = parseFloat(_rIS.partnerExpenseChange) || 0;
 
+  // [Phase 2.5 09-C01 fix] 現役期もインフレ係数を適用（退職シミュとの非対称性解消）
+  const _infRateIS = (parseFloat(state.finance?.inflationRate) || 2) / 100;
+
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
-    const leCost = calcLECostByYear(yr, opts);
+    // [Phase 2.5 09-C01 fix] 今年からの経過年でインフレ係数を算出
+    const _infFactorIS = Math.pow(1 + _infRateIS, y);
+
+    const leCostRaw = calcLECostByYear(yr, opts);
+    // [Phase 2.5 09-C01 fix] 各カテゴリに対して個別にインフレ適用
+    // mortgage（ローン返済/賃料）と scholarship（奨学金返済）は契約額/rent.riseRate で別途処理済みのため名目固定
+    const leCost = {
+      childcare:   leCostRaw.childcare   * _infFactorIS,
+      education:   leCostRaw.education   * _infFactorIS,
+      mortgage:    leCostRaw.mortgage,    // ローン返済は契約額で名目固定（賃貸は riseRate で別途上昇）
+      care:        leCostRaw.care        * _infFactorIS,
+      scholarship: leCostRaw.scholarship, // 奨学金返済も契約額で名目固定
+    };
     const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
     const annualIncome  = getIncomeForYearWithGrowth(yr);
-    let annualExpense   = getExpenseForYear(yr);
+    // [Phase 2.5 09-C01 fix] 現役期の年間支出にもインフレを適用
+    let annualExpense   = getExpenseForYear(yr) * _infFactorIS;
     // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化を加算（calcRetirementSimWithOpts:17666 と同等ロジック）
     if (_pRetireYearIS !== null && yr >= _pRetireYearIS) {
       annualExpense += _pExpChangeMonthlyIS * 12;
