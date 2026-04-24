@@ -180,11 +180,12 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
   - **Task 3 `02-C01` との整合**: Task 3 は現役期の数値影響を指摘した。本タスクは同じ問題がパートナーリタイア文脈から見ても成立することを確認し、**修正箇所は `index.html:17152` の 1 行のみ**（`calcPartnerAgeAtYear` は既存、`index.html:6691` で定義済み）で両タスクの影響を一括解消できることを追認する。
   - 修正方針: `partnerCurrentAge` を `calcPartnerAgeAtYear(new Date().getFullYear())` 等で算出し、`partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - partnerCurrentAge))` に差し替える。
 
-- **`06-C02` `partnerExpenseChange`（退職後の月額支出変化）が現役期シミュレーション（`calcMainSim`）で反映されない**
-  - 場所: `index.html:17604-17605`（`calcRetirementSimWithOpts` のみ反映）、`calcMainSim` 側（`index.html:14275` 付近）には該当処理なし
-  - 影響: 本人がまだ現役で、パートナーのみが先に退職した場合、`partnerExpenseChange`（通勤費削減 -2 万円/月など）が月額支出に加算・減算されず、**退職後 5〜10 年分の支出シフトが全て消失**する。
+- **`06-C02` `partnerExpenseChange`（退職後の月額支出変化）が複数経路で反映されない（経路間不整合）**
+  - 反映される経路: `calcRetirementSimWithOpts` (`index.html:17604-17605`), `calcMultiScenario` (`index.html:18400`)
+  - **反映されない経路**: `calcIntegratedSim`（現役期メインシミュ、`index.html:14225-14295`）と `calcMonteCarlo` (`index.html:18580-18646`) のいずれも該当処理なし
+  - 影響: 本人がまだ現役で、パートナーのみが先に退職した場合、`partnerExpenseChange`（通勤費削減 -2 万円/月など）が月額支出に加算・減算されず、**退職後 5〜10 年分の支出シフトが全て消失**する。さらにモンテカルロシミュレーションでも同じ欠落が発生する。
   - 定量評価: 月 2 万円 × 12 × 5 年 = **120 万円の支出差分が抜ける**。これは取り崩し額の誤差として直接資産残高に反映。
-  - **Important との違い**: 単なる未実装機能ではなく、`calcRetirementSimWithOpts` では反映、`calcMainSim` では反映されないという**経路間の不整合**のため Critical 相当。UI 側ではユーザーに「反映される」と誤解される可能性が高い。
+  - **Important との違い**: 単なる未実装機能ではなく、経路によって適用/未適用が分かれる**経路間の不整合**のため Critical 相当。UI 側ではユーザーに「反映される」と誤解される可能性が高い。`06-M03`（4 経路のロジック重複）が根本原因。
 
 ### 🟡 Important
 
