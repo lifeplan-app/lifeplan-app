@@ -37,7 +37,10 @@ function calcRetirementSim() {
   const preRetireSim = calcIntegratedSim(Math.max(yearsToRetireAccurate, 1));
   const severance = parseFloat(r.severance) || 0;
   const severanceAge = parseFloat(r.severanceAge) || null;
-  const severanceAtRetire = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
+  // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
+  const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
+  const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
+  const severanceAtRetire = calcSeveranceDeduction(severanceGross, 0, serviceYears);
   const assetsAtRetire = postData?.[0]?.startAssets
     || ((preRetireSim[yearsToRetireAccurate]?.totalWealth ||
          state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire);
@@ -239,9 +242,40 @@ function getRetirementParams() {
   };
 }
 
+// [Phase 4a 08-I03] 退職金・iDeCo 一時金の退職所得控除適用
+// 引数: severance 退職金（万円）, idecoLumpsum iDeCo 一時金（万円、G3 で渡される・本 Task では 0 でOK）, serviceYears 勤続年数
+// 戻り値: 税引後額（万円）
+// 出典: 国税庁 No.1420 退職所得控除
+function calcSeveranceDeduction(severance, idecoLumpsum, serviceYears) {
+  const total = severance + (idecoLumpsum || 0);
+  if (total <= 0) return 0;
+  // 退職所得控除枠
+  // 勤続 20 年以下: 40 万円 × 勤続年数（最低 80 万円）
+  // 勤続 20 年超: 800 万円 + 70 万円 × (勤続年数 − 20)
+  const deduction = serviceYears <= 20
+    ? Math.max(80, 40 * serviceYears)
+    : 800 + 70 * (serviceYears - 20);
+  const taxableRaw = Math.max(0, total - deduction);
+  // 退職所得は 1/2 に圧縮
+  const taxable = taxableRaw / 2;
+  // 万円単位の速算表（所得税）
+  let incomeTax = 0;
+  if (taxable <= 195) incomeTax = taxable * 0.05;
+  else if (taxable <= 330) incomeTax = taxable * 0.10 - 9.75;
+  else if (taxable <= 695) incomeTax = taxable * 0.20 - 42.75;
+  else if (taxable <= 900) incomeTax = taxable * 0.23 - 63.6;
+  else if (taxable <= 1800) incomeTax = taxable * 0.33 - 153.6;
+  else if (taxable <= 4000) incomeTax = taxable * 0.40 - 279.6;
+  else incomeTax = taxable * 0.45 - 479.6;
+  incomeTax = Math.max(0, incomeTax);
+  // 住民税 10% （退職所得は一律 10%・均等割略）
+  const residentTax = Math.max(0, taxable * 0.10);
+  return total - incomeTax - residentTax;
+}
+
 // ===== シナリオ別 calcRetirementSim =====
 function calcRetirementSimWithOpts(opts = {}) {
-  const { returnMod = 0, expenseMod = 0, pensionMod = 0 } = opts;
+  const { returnMod = 0, returnModStock = returnMod, returnModCash = 0, expenseMod = 0, pensionMod = 0 } = opts;
   const r = state.retirement || {};
   const currentAge = calcAge();
   if (!currentAge || !r.targetAge) return null;
@@ -258,7 +292,10 @@ function calcRetirementSimWithOpts(opts = {}) {
   const preRetireSim = calcIntegratedSim(Math.max(yearsToRetire, 1));
   const severance = parseFloat(r.severance) || 0;
   const severanceAge = parseFloat(r.severanceAge) || null;
-  const severanceAtRetire = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
+  // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
+  const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
+  const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
+  const severanceAtRetire = calcSeveranceDeduction(severanceGross, 0, serviceYears);
   let assetsAtRetire = (preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire;
 
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -384,7 +421,9 @@ function calcRetirementSimWithOpts(opts = {}) {
     }, 0);
     const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd + recurringCost + plannedOneTimeExpense;
 
-    const severanceThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
+    // [Phase 4a 08-I03] 退職金が targetAge 以降に支給されるケースでも退職所得控除適用
+    const severanceGrossThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
+    const severanceThisYear = calcSeveranceDeduction(severanceGrossThisYear, 0, serviceYears);
     if (severanceThisYear > 0) { indexPool += severanceThisYear; } // 退職金はインデックスプールへ
 
     const pension = age >= pensionAge ? basePensionAnnual : 0;
@@ -499,16 +538,18 @@ function calcRetirementSimWithOpts(opts = {}) {
     // cashPool: 通常現金（低利）
     // indexPool: インデックス系（成長優先）
     // dividendPool: 高配当ETF（キャピタルゲインのみ成長、配当は別収入計上済み）
+    // [Phase 4a 08-I05] returnMod 対称化: 既存の returnMod は株式系（index/div）に適用
+    //   現金系プール（emergency/cash）は returnModCash 分離（デフォルト 0 = 既存互換）
     const _emergPre = emergencyPool, _cashPre = cashPool, _indexPre = indexPool, _divPre = dividendPool;
-    emergencyPool *= (1 + _emergBaseReturn);
-    cashPool      *= (1 + _cashBaseReturn);
-    indexPool     *= (1 + Math.max(-1, _indexBaseReturn + returnMod));
-    dividendPool  *= (1 + Math.max(-1, _divCapitalReturn + returnMod));
+    emergencyPool *= (1 + Math.max(-1, _emergBaseReturn + returnModCash));
+    cashPool      *= (1 + Math.max(-1, _cashBaseReturn + returnModCash));
+    indexPool     *= (1 + Math.max(-1, _indexBaseReturn + returnModStock));
+    dividendPool  *= (1 + Math.max(-1, _divCapitalReturn + returnModStock));
     const _annualReturn = Math.round(
-      _emergPre * _emergBaseReturn +
-      _cashPre  * _cashBaseReturn +
-      _indexPre * Math.max(-1, _indexBaseReturn + returnMod) +
-      _divPre   * Math.max(-1, _divCapitalReturn + returnMod)
+      _emergPre * Math.max(-1, _emergBaseReturn + returnModCash) +
+      _cashPre  * Math.max(-1, _cashBaseReturn + returnModCash) +
+      _indexPre * Math.max(-1, _indexBaseReturn + returnModStock) +
+      _divPre   * Math.max(-1, _divCapitalReturn + returnModStock)
     );
 
     // ===== 4プール取り崩し =====
