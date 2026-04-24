@@ -12,11 +12,17 @@ function calcIntegratedSim(years, opts = {}) {
   const growthData = calcAllAssetGrowth(state.assets, years);
 
   // ── 二プールモデル: 現金プール / 投資プール ──
-  const _CASH_T = new Set(['cash','cash_emergency','cash_special','cash_reserved','cash_surplus','savings','deposit']);
-  const _cashGD   = growthData.filter(g => _CASH_T.has(g.asset.type));
-  const _investGD = growthData.filter(g => !_CASH_T.has(g.asset.type));
+  // [Phase 4b 07-I02] cash_reserved は用途決定済み資金のため生活費赤字補填対象外
+  // cashPool 表示には含めるが、virtualCash（赤字補填判定）からは除外して隔離する
+  const _CASH_T = new Set(['cash','cash_emergency','cash_special','cash_surplus','savings','deposit']);
+  const _CASH_RESERVED_T = new Set(['cash_reserved']);
+  const _cashGD     = growthData.filter(g => _CASH_T.has(g.asset.type));
+  const _reservedGD = growthData.filter(g => _CASH_RESERVED_T.has(g.asset.type));
+  const _investGD   = growthData.filter(g => !_CASH_T.has(g.asset.type) && !_CASH_RESERVED_T.has(g.asset.type));
 
   // 投資資産の加重平均リターン（不足時の機会損失複利計算用）
+  // [Phase 4b 07-I03] 年次再計算用ヘルパも併置。初年度は currentVal ベース（既存互換）、
+  // y>=1 では積立後の data[y] を用いた時価加重で再計算する。
   const _totalInvestVal = _investGD.reduce((s, g) => s + (g.asset.currentVal || 0), 0);
   const _wInvestReturn = _totalInvestVal > 0
     ? _investGD.reduce((s, g) => {
@@ -25,6 +31,17 @@ function calcIntegratedSim(years, opts = {}) {
         return s + (g.asset.currentVal || 0) * rate;
       }, 0) / _totalInvestVal
     : 0.05;
+
+  // [Phase 4b 07-I03] 年次再計算：投資プール構成（data[y]）の時価加重でリターンを毎年再算出
+  function _calcWInvestReturnAt(y) {
+    const totalNow = _investGD.reduce((s, g) => s + (g.data[y] || 0), 0);
+    if (totalNow <= 0) return _wInvestReturn;
+    return _investGD.reduce((s, g) => {
+      const rate = (g.asset.return != null ? g.asset.return
+        : (g.asset.annualReturn != null ? g.asset.annualReturn : 3)) / 100;
+      return s + (g.data[y] || 0) * rate;
+    }, 0) / totalNow;
+  }
 
   let _investDeficit = 0;       // 累積清算額（機会損失複利で増加）
   const _liquidationEvents = []; // 清算発生年の記録
@@ -114,9 +131,14 @@ function calcIntegratedSim(years, opts = {}) {
 
     // 既存の不足累積に複利をかける（前年に清算した分の機会損失）
     // 枯渇中は複利成長させない（架空残高の防止）
-    if (y > 0 && investPoolHealthy) _investDeficit *= (1 + _wInvestReturn);
+    // [Phase 4b 07-I03] 年次再計算：初年度時価固定ではなく、積立後の現在時価で加重したリターンを使う
+    if (y > 0 && investPoolHealthy) _investDeficit *= (1 + _calcWInvestReturnAt(y));
 
-    // 仮想現金プール = 現金資産 + 累積収支
+    // [Phase 4b 07-I02] reservedPool（cash_reserved 合計）は virtualCash には入れず、
+    // cashPool 表示にだけ加算して用途決定済み資金を赤字補填から隔離する
+    const reservedAssetBase = _reservedGD.reduce((s, g) => s + (g.data[y] || 0), 0);
+
+    // 仮想現金プール = 現金資産 + 累積収支（cash_reserved は除外）
     const virtualCash = cashAssetBase + cashFlow;
     let liquidationThisYear = 0;
     let adjustedCashFlow = cashFlow;
@@ -143,7 +165,8 @@ function calcIntegratedSim(years, opts = {}) {
     }
     // else: 投資プール枯渇中は清算不能 → adjustedCashFlow はマイナスのまま残す
 
-    const cashPool   = Math.max(0, cashAssetBase + adjustedCashFlow);
+    // [Phase 4b 07-I02] cashPool 合計には reservedPool を加算（互換維持・snapshot 差分最小）
+    const cashPool   = Math.max(0, cashAssetBase + adjustedCashFlow) + reservedAssetBase;
     const investPool = Math.max(0, investAssetBase - _investDeficit);
 
     result.push({
