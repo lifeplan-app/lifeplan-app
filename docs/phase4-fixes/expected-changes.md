@@ -45,7 +45,7 @@ Important 14 件を 5 グループに分けて修正した記録。
   - `opts.returnMod` → `opts.returnModStock` 互換が崩れていないか（楽観/悲観 snap は変わらないはず）
 
 ### 実測サマリー
-- **commit SHA**: （Step 12 で追記）
+- **commit SHA**: 0f45742
 - **snapshot 差分行数**: 約 6290 行（scenario C のみ、C 全 snapshot×4 パターン）
 - **新設関数**: `calcSeveranceDeduction(severance, idecoLumpsum, serviceYears)`
 - **変更箇所**: severanceAtRetire 2 箇所（`calcRetirementSim` と `calcRetirementSimWithOpts`）、severanceThisYear 1 箇所、returnMod 対称化（returnModStock/Cash 分離、プール成長計算 4 箇所）
