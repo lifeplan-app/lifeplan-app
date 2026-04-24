@@ -13,7 +13,7 @@ import {
   projectEmergencyBalance,
   calcEndYearFromAge,
   calcEndAgeFromYear,
-} from './helpers/core.js';
+} from './helpers/test-helpers.js';
 import { loadCalc, getSandbox } from './helpers/load-calc.js';
 
 let sb, calcAssetGrowth, calcAllAssetGrowth;

@@ -102,7 +102,46 @@
 - **commit SHA**: `5240cb5`
 
 ## Step 9: helpers/core.js 削除
-（Task 10 実施時に記入）
+
+- **削除ファイル**: `test/helpers/core.js`（352 → 0、実測: Task 3 時点で 47 行に圧縮 → Task 10 で完全削除）
+- **移動先**: `test/helpers/test-helpers.js`（`projectEmergencyBalance`, `calcEndYearFromAge`, `calcEndAgeFromYear`）
+- **import 先変更**: `test/golden-master.test.js`, `test/regression.test.js`
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
+- **commit SHA**: （Step 9 で追記）
 
 ## 完了時点（Phase 3 完了後）
-（Task 10 で記入：最終行数・コミット数・全体総括）
+
+### 成果物
+- `calc/` 下に 8 ファイル（utils.js, asset-growth.js, income-expense.js, life-events.js, mortgage.js, retirement.js, scenarios.js, integrated.js）
+- `test/helpers/load-calc.js`（Node sandbox ローダー）
+- `test/helpers/test-helpers.js`（テスト専用ヘルパー 3 関数）
+- `docs/phase3-extraction/summary.md`（本ドキュメント）
+
+### 削減
+- `index.html`: 23,489 → 21,837 行（-1,652 行、約 7% 削減）
+- `test/helpers/core.js`: 352 → 削除（-352）
+
+### テスト
+- npm test: 155/155 グリーン維持
+- snapshot 差分: 0 行（挙動不変を全 Step で確認）
+
+### コミット数
+- Phase 3 全体で約 20 コミット（Setup + 各 Step の fix + SHA record、計 9 Step × 2）
+
+### 成功基準の確認
+1. ✅ calc/ に 8 ファイル作成
+2. ✅ index.html から抽出済み関数定義が消えている
+3. ✅ test/helpers/core.js が削除されている
+4. ✅ test/helpers/load-calc.js が追加されて全ユニットテストが利用
+5. ✅ npm test 155/155 グリーン
+6. ✅ snapshot 差分ゼロ（挙動不変）
+7. ✅ index.html 約 2,000 行減（実績: 1,652 行減）
+8. ✅ コミット履歴が 18〜20 コミット
+9. ✅ summary.md に各 Step 記録
+
+### Phase 4 への橋渡し
+- 領域別に分離された calc/ ファイルは、Important 43 件の修正時に触る範囲が局所化
+- Phase 1 スナップショット（25 件）は引き続き安全網として機能
+- 例: 02-I01（インフレ統一）→ calc/income-expense.js + calc/life-events.js
+- 例: 03-I05-I10（教育費）→ calc/life-events.js
+- DOM 依存の Important（例: 04-I02 年金繰下げ）は Phase 3.5（B スコープ）で抽出してから修正

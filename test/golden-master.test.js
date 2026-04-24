@@ -16,7 +16,7 @@
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { projectEmergencyBalance } from './helpers/core.js';
+import { projectEmergencyBalance } from './helpers/test-helpers.js';
 import { loadCalc, getSandbox } from './helpers/load-calc.js';
 
 const CY = 2025; // 計算基準年を固定
