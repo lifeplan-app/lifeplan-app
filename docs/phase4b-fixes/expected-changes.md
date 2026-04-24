@@ -91,7 +91,7 @@ Important 18 件を 6 グループに分けて修正した記録。
   - → 01-I02 / 01-I03 は本サンプルセットでは差分ゼロ見込み。ガード・補完は非 UI 経路（JSON import / 将来の振替設定追加）への二重防御として実装。
 
 ### 実測サマリー
-- **commit SHA**: （Step 8 で追記）
+- **commit SHA**: `60c230d`
 - **snapshot 差分行数**: 0 行（差分なし）
 - **サンプルの旧 NISA 有無**: なし（5 サンプルいずれも `nisa_old_tsumitate` / `nisa_old_general` 未使用）
 - **サンプルの振替サイクル有無**: なし（5 サンプルいずれも `overflowTargetId` / `overflowTargetId2` / `nisaOverflowTargetId` 未設定）
