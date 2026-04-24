@@ -169,6 +169,9 @@ const cashFlow = y === 0
 ### 🔴 Critical
 
 - **`07-C01` 投資プール枯渇後に機会損失が実在しない金額まで拡大し、`cashPool` 側は清算で底上げされ続ける**
+
+  > **[Resolved in Phase 2.5 commit `edba0a0`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 5。08-C01 と同コミットで修正）
+
   - `investPool = Math.max(0, investAssetBase − _investDeficit)` により、`_investDeficit` が `investAssetBase` を超えると表示投資プールは 0 にクランプされる。ところが `_investDeficit` 自体はクランプされず、次年度以降も `_investDeficit *= (1 + _wInvestReturn)` で**存在しない機会損失が複利増**する。
   - 一方、`virtualCash < 0` の判定は毎年走るので、**現金プールが負になり続ける限り liquidation は発動**し、`adjustedCashFlow = cashFlow + liquidationThisYear` で現金不足を埋め続ける。**投資が既に底を突いている実態との乖離**が発生し、結果として「実質破綻しているのに `cashPool ≥ 0` のまま」表示される。
   - 数値例: 初年 `investAssetBase = 500 万円`、`_wInvestReturn = 0.05`。3 年目に年 400 万円の赤字を 4 年連続で出すケース:

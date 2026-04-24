@@ -221,6 +221,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
 ### 🔴 Critical
 
 - **`09-C01` 現役期シミュレーション全体に「生活費・LE 費用のインフレ非適用」が伝播し、長期プロジェクションで購買力が過大評価される**
+
+  > **[Resolved in Phase 2.5 commit `c39d54b`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 6）
+
   - 統合シミュの `annualExpense = getExpenseForYear(yr)` は `state.finance.expense * 12 + アセット積立額`（`index.html:6755-6778`）で、**インフレ率を一切掛けない**。Task 3 `02-I01` の確認通り、現役期は名目固定。
   - 同様に `calcLECostByYear` の教育費・介護費も名目固定（Task 4 `03-I08`）。
   - **しかし `calcRetirementSimWithOpts`（退職後）は `(1 + inflationRate)` を毎年適用する**（`index.html:17597` 付近）。→ **退職接続時点で「年間支出」が段差的に跳ね上がる**ように見える UX バグ。

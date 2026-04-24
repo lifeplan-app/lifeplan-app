@@ -165,6 +165,9 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
 ### 🔴 Critical
 
 - **`06-C01` パートナー昇給年数計算に本人 `currentAge` を使用（Task 3 `02-C01` を再確認・再検証）**
+
+  > **[Resolved in Phase 2.5 commit `63f82dc`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 1。02-C01 と同コミットで修正）
+
   - 場所: `index.html:17152`
   - 現行コード:
     ```javascript
@@ -181,6 +184,9 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
   - 修正方針: `partnerCurrentAge` を `calcPartnerAgeAtYear(new Date().getFullYear())` 等で算出し、`partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - partnerCurrentAge))` に差し替える。
 
 - **`06-C02` `partnerExpenseChange`（退職後の月額支出変化）が複数経路で反映されない（経路間不整合）**
+
+  > **[Resolved in Phase 2.5 commit `932a8a4`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 4）
+
   - 反映される経路: `calcRetirementSimWithOpts` (`index.html:17604-17605`), `calcMultiScenario` (`index.html:18400`)
   - **反映されない経路**: `calcIntegratedSim`（現役期メインシミュ、`index.html:14225-14295`）と `calcMonteCarlo` (`index.html:18580-18646`) のいずれも該当処理なし
   - 影響: 本人がまだ現役で、パートナーのみが先に退職した場合、`partnerExpenseChange`（通勤費削減 -2 万円/月など）が月額支出に加算・減算されず、**退職後 5〜10 年分の支出シフトが全て消失**する。さらにモンテカルロシミュレーションでも同じ欠落が発生する。

@@ -259,6 +259,9 @@ function adjustRate(startAge) {
 ### 🔴 Critical
 
 - **`04-C01` 旧 `calcPensionEstimate()` 定義が新定義に上書きされ副作用が漏洩**
+
+  > **[Resolved in Phase 2.5 commit `47632d4`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 2）
+
   - `index.html:5944-5960` に旧実装（`income`-ベースの簡易試算）があり、`index.html:15129` の新実装が JavaScript のホイストで上書きする。同一関数名の再定義は **後者が勝つ**（JS の関数宣言は巻き上げで最後に評価された定義が有効）。
   - 問題点:
     1. **旧実装のコードが完全にデッドコードだが存在に気付きにくい**。保守時に旧実装を直しても挙動が変わらない。

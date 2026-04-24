@@ -229,6 +229,9 @@ if ((year - sy) % iv === 0) {
 ### 🔴 Critical
 
 - **`02-C01` パートナーの昇給年数計算に本人年齢を使っている**
+
+  > **[Resolved in Phase 2.5 commit `63f82dc`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 1）
+
   - `getIncomeForYearWithGrowth` (`index.html:17152`):
     ```js
     const partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - currentAge));

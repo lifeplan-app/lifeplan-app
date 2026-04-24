@@ -229,6 +229,9 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
 ### 🔴 Critical
 
 - **`08-C01` 取り崩しシミュは「機会損失複利」機構を持たず Task 8 `07-C01` と同系の破綻がプール別に発生する — `withdrawalShortfall` が発生してもプール側残高で判定するため、現金系プールが枯渇しても emergency が残っていれば `depleted` にならず資産枯渇が隠蔽される**
+
+  > **[Resolved in Phase 2.5 commit `edba0a0`]** （詳細: `docs/phase2-5-fixes/expected-changes.md` の Group 5。07-C01 と同コミットで修正）
+
   - 取り崩し優先度は `cash → index → div → emergency`（invest_first でも最後は emergency）。**emergency を先に使わないのは意図通り**だが、`cashFloor > 0` を設定しつつ emergency に多額を置くと、`cash + index + div` が全て底を突いた時点で:
     - `_fromEmerg = min(emergencyPool, ...)` が発動し emergency が取り崩される。
     - `withdrawalShortfall = 0`（emergency で埋まるため）。
