@@ -195,12 +195,18 @@ const cashFlow = y === 0
   - FP 実務: 出口戦略で税引後手取りを見ない計画は「取り崩し計画として甘い」と扱われる（Pfau 2019, Chapter 7 "Tax-Efficient Withdrawals"）。
 
 - **`07-I02` 現金プールが 7 種 × 用途別を 1 塊で扱うため、`cash_reserved`（用途決定済み中長期）まで生活防衛資金として清算対象に含められない代わりに**"全部緊急時に使える"** と仮定される**
+
+  > **[Resolved in Phase 4b commit `cef2643`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G12 投資プール残）
+
   - `cash_reserved` は「住宅頭金・リフォーム・教育費などの**用途決定済み**」(`index.html:5348`) と note で明示されているが、二プールモデル上は `cash_emergency` と区別されず、月々の赤字補填に利用可能な扱い。
   - 実務: 頭金として確保済みの 500 万円を生活費に食いつぶせば、住宅購入予定が崩れる。FP 実務では「**目的別口座は生活防衛資金と分けて計算**」(日本FP協会啓発資料) のが標準。
   - 現状: `virtualCash = cashAssetBase + cashFlow` は `cash_reserved` の残高も含めた合計で判定しているため、**本来他用途にコミット済みの資金で赤字を埋めた**後に、`expenses[]`（大口支出）発生年に同じ資金を再度支払おうとして**二重使用**に近い状態になり得る。`expenses` の控除は `getOneTimeForYear` で `cashFlow` から直接引かれるので数値上の破綻は起きないが、ユーザーの意図としては`cash_reserved` を隔離したい場合が多い。
   - 改善案: `cash_reserved`・`cash_special` を別サブプールとし、`liquidation` 発動時のみ `cash_emergency` + `cash_surplus` + `cash` の範囲で現金残をテストする。
 
 - **`07-I03` `_wInvestReturn` が初年現在時価の加重平均で固定、積立後の構成シフトを反映しない**
+
+  > **[Resolved in Phase 4b commit `cef2643`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G12 投資プール残）
+
   - 若年層（現在投資残 200 万、積立月 5 万、30 年後 3,000 万円規模）では、初年時価構成で算出した `_wInvestReturn` が 30 年後の実質構成と大幅に乖離する。
   - 具体例: 初年「ideco 100 万 (4%) + nisa 100 万 (5%)」→ `_wInvestReturn = 4.5%`。30 年後は NISA がほぼフル積立（年120万 × 15年で 1,800 万 + 運用益）で 5% 比重が高まり、実質加重平均は 4.8% 前後に上昇する。
   - 影響: 機会損失が **過少計上** → FIRE シミュで退職後破綻年が楽観側にズレる。

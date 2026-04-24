@@ -292,3 +292,43 @@ Phase 4a で Important 14 件が修正された結果、シナリオ B の挙動
 - **Phase 4a 完了後**: ✅ 妥当（Important 14 件も解消、より現実的な数値）
 - **残存懸念**: Important 25 件（G5-G10）は Phase 4b 以降
 
+## Phase 4b 完了後の再評価（2026-04-25）
+
+Phase 4b で UI 変更不要の Important 18 件が修正された結果、シナリオ B の挙動が以下のように変わった：
+
+### 修正された主要な問題
+
+- **07-I02/07-I03** (`cef2643`, G12): 投資プール残タスク
+  - `_CASH_RESERVED_T` による目的別現金プールの隔離（liquidation 対象から除外）
+  - `_calcWInvestReturnAt(y)` で年次ごとに投資構成加重利回りを再計算
+  - シナリオ B は `cash_reserved` 資産が皆無なため snapshot 差分は微小
+- **02-I02** (`bee694a`, G6): インフレ変数統一
+  - `_getInflationRate(state)` で `finance.inflationRate` をマスター、`retirement.inflationRate` を optional override 化
+  - シナリオ B は `retirement.inflationRate` 未設定で `finance.inflationRate = 2%` 相当が退職期にも適用されるようになった
+- **01-I01/I02/I03** (`60c230d`, G8): 旧 NISA / 振替
+  - 旧 NISA `noNewContrib` ガードで UI 外経路からの誤新規積立を計算側で防御
+  - 振替サイクル時のフォールバックが `extraMap` 情報を可能な限り反映
+  - シナリオ B は旧 NISA 非保有のため実効差は最小
+- **06-I01/I02/I03/I04** (`33f50dd`, G9): パートナー関連
+  - パートナー就労収入に `partnerGrowthRate` 適用（退職期まで昇給が効く）
+  - 配偶者特別控除の近似（世帯支出ベースで逓減控除）
+  - パートナー退職 60 歳〜65 歳の国民年金保険料 21 万円/年 を世帯支出に加算
+  - 加給年金 +40 万/年 を本人 65 歳時点で自動加算
+  - シナリオ B はパートナー非労働設定ならではの影響が局所的、労働設定なら昇給差で `retirePool` が増える方向
+- **03-I01/I02/I03/I05/I06/I07/I09/I10** (`0203be4`, G5): ライフイベント費用
+  - 公立幼稚園 6→18.46 万円（シナリオ B の 1 hunk に相当）
+  - 介護一時費用 47.2 万円、双子集約、3-tier 保育料、育休 67%/50% 分岐、JASSO type2 +1 年、育休中 nursery 排他、賞与を育休減収から除外
+  - シナリオ B は介護・奨学金・双子いずれも非該当、保育料・育休は条件トリガー不成立のため実効差は幼稚園補正 1 件のみ
+
+### 判定の更新
+
+- **Phase 2.5 完了時**: ✅ 妥当（Critical 10 件解消）
+- **Phase 4a 完了後**: ✅ 妥当（Important 14 件も解消、より現実的な数値）
+- **Phase 4b 完了後**: ✅ 妥当（Important 18 件追加解消、計 32 件）
+- **残存 Important**（Phase 4c 対象、7 件）:
+  - **G7 `02-I03`**: `cashFlowEvents.income_change` 適用時の昇給モデル完全停止
+  - **G10 `05-I01`〜`I06`**: 住宅ローン UI/計算（子育て特例、頭金、シナリオ連動、借換諸費用、NaN 伝播、同年複数イベント順序）
+  - **`06-I02`**: 配偶者控除を `calcTakeHome` 本体へ本実装（Phase 4b では近似）
+- **UI 拡張検討**（Phase 4c 以降）:
+  - iDeCo 受給方法 UI（一時金 / 年金 / 併用 × 受給年齢 60-75 歳）
+

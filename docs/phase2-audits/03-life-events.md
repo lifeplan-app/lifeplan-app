@@ -355,6 +355,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
 ### 🟡 Important
 
 - **`03-I01` 介護一時費用（平均 47.2 万円）を計上する場所がない**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `care` には `monthlyFee` しかなく、生保文化センター 2024 年度調査の「一時費用 平均 47.2 万円」を入れる field が存在しない。ユーザーは `state.expenses[]` で手動登録する必要があるが、UI 誘導もヘルパーもない。
   - 数値インパクト（介護総額 542.2 万円想定のうち、47.2 万円が欠落 → 8.71% 過少）:
     - 正しい: `47.2 + 9.0 × 55.0 = 47.2 + 495.0 = 542.2 万円`
@@ -363,6 +366,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
   - **修正方針**: `care.oneTimeFee` を追加し、`startYear` 年度のみ `oneTimeFee` を `costs.care` に加算。または UI で「一時費用 47.2 万円を `state.expenses[]` に自動登録するボタン」を用意。
 
 - **`03-I02` 旧データ互換経路（`maternityMonths`）は賞与込みで過大推計**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `index.html:13053-13060` の fallback パスは `annualIncome = income×12 + bonus` に `(1 − rate)` を掛ける。一方 `calcLeaveReduction` 経路は月収のみベース（賞与除外）。
   - 数値インパクト（月収 30 万、ボーナス年 80 万、育休 12 ヶ月、rate 67%）:
     - 新パス: `30 × 12 × 0.33 = 118.8 万円`
@@ -371,6 +377,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
   - **修正方針**: 旧パスも `state.finance.income × 12 × (1 − rate)` に揃える（賞与を除外）。
 
 - **`03-I03` 奨学金の返済終了年自動計算が利息を無視**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `ey = sy + ⌈borrowedAmount / monthlyPayment / 12⌉ − 1` は利率 0% 前提。第二種奨学金（JASSO 2025 年 3 月貸与終了利率 1.641%）では返済期間が伸びる。
   - 数値インパクト（貸与総額 240 万、月返済 1.5157 万 = JASSO 実例、利率 1.641%）:
     - JASSO 実際: 15 年（180 ヶ月）
@@ -382,6 +391,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
 （`03-I04` は検算の結果、総額インパクト 0%（年がずれるだけ）と判明したため Minor `03-M09` に降格。下記 Minor セクション参照。）
 
 - **`03-I05` 公立幼稚園の 6 万円/年は学校外活動費を除外し過少**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - 文科省令和 5 年度調査「公立幼稚園 18.46 万円/年（学校教育費 6.19 + 給食費 1.98 + 学校外活動費 10.29）」に対し、本コードは `public: 6` 万円/年。
   - 数値インパクト（幼稚園 3 年間、公立）:
     - 本コード: `6 × 3 = 18 万円`
@@ -391,6 +403,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
   - **修正方針**: `kindergarten: { public: 18, private: 35 }` に更新。コード注記の「（無償化後）」が誤誘導なので削除し「学校外活動費込み」と明記。
 
 - **`03-I06` 保育料の所得連動・自治体差・きょうだい割引が未実装**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `EDU_COST.nursery: { public: 20, private: 45 }` 万円/年のフラット額のみ。実態は住民税所得割額に応じた階層制で、共働き世帯年収 800〜1000 万では公立でも月 4〜5 万円（年 48〜60 万円）になるケースが多い。
   - 数値インパクト（東京 23 区・世帯年収 800 万・0 歳児公立保育園）:
     - 本コード: 20 万円/年
@@ -399,6 +414,9 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
   - **修正方針**: `state.finance.income` を引数にして所得階層を判定する関数 `calcNurseryFee(yr, age)` を追加。最小実装でも「高所得想定 / 中所得想定 / 低所得想定」3 段階選択を UI に追加。
 
 - **`03-I07` 育休給付の期間分岐（67% / 50%）が未実装**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `calcLeaveReduction` は `rate` 一律。開始 181 日目以降は **減少率が 50%（1 − 0.5）になる**べき（雇用保険法の定め）。
   - 数値インパクト（月収 30 万、育休 12 ヶ月、出産月から取得）:
     - 正しい: `30 × 6 × (1 − 0.67) + 30 × 6 × (1 − 0.50) = 30 × 6 × 0.33 + 30 × 6 × 0.50 = 59.4 + 90.0 = 149.4 万円`
@@ -416,12 +434,18 @@ if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= pa
   - **修正方針**: `02-I01` と一体で、`getExpenseForYear` 系の修正と同じ方針でスライドを適用（またはユーザーに教育費インフレ率を別途入力させる）。タスク 10（ⓐ 統合シミュレーション）で一括対応を検討。
 
 - **`03-I09` 出産年（`age = 0`）に育休収入減と保育料の両方が計上される可能性**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - 出産年は `age = 0` で `nursery` フェーズに入り、`public: 20` 万円が毎年計上される（出産年含む 3 年間）。同時に同年に育休収入減も計上される。
   - 実態では出産年は育休中で保育園には通わないので、`nursery` 費用は**発生しない**はず。
   - 数値インパクト（公立保育園、出産年の重複）: 20 万円の過大計上。
   - **修正方針**: 育休期間と保育園通園期間の**排他ロジック**を入れる。例: `pl.mom.leaveMonths` と `pl.dad.leaveMonths` の最大が 12 ヶ月なら出産年の保育費を 0 にするなど。
 
 - **`03-I10` 双子（同一 birthYear）の育休重複時に同年 24 ヶ月分の減収が計上される**
+
+  > **[Resolved in Phase 4b commit `0203be4`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G5 ライフイベント費用）
+
   - `children` は `forEach` で各子を独立処理（`index.html:13017`）。`birthYear` による集約がないため、**同じ `birthYear` を持つ 2 人の子（双子）** が登録されていると、両方で 12 ヶ月分ずつ = 24 ヶ月分の育休減収が計上される。雇用保険は同時に 1 つの育休しか取得できないため過大計上。
   - 参考: **年子** の場合（例: 子 A=2026 生、子 B=2027 生）は年ごとに age オフセットが異なるため重なりが発生せず、正しく処理される。本問題は **双子（`birthYear` 完全一致）のみ**。
   - 数値インパクト（双子、月収 30 万、rate 67%、双方で 12 ヶ月育休）:

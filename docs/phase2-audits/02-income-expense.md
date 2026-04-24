@@ -267,6 +267,9 @@ if ((year - sy) % iv === 0) {
   - **修正方針**: `getExpenseForYear(yr)` の `base` に `Math.pow(1 + (state.finance.inflationRate ?? 2)/100, yr − currentYear)` を掛ける。ただし呼び出し側（`calcIntegratedSim` の `pureExp` 分離など）にも波及するため影響範囲大。または少なくとも `calcIntegratedSim` の年次ループ側で `annualExpense × infFactor` とするのが最小侵襲。
 
 - **`02-I02` 2 つのインフレ率が既定値も用途も別になっている**
+
+  > **[Resolved in Phase 4b commit `bee694a`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G6 インフレ変数統一）
+
   - `state.finance.inflationRate`（既定 2%、`index.html:2660`）: 表示の実質変換のみ。
   - `state.retirement.inflationRate`（既定 1.5%、`index.html:14650, 17192`）: リタイア後シミュレーションの支出複利に使用。
   - **問題点**: ユーザーが UI で片方だけ変えた場合、現役期表示と退職期計算で不整合。また `02-I01` の修正が行われると、3 つの用途で 2 種類の既定値が使われる状態になりさらに混乱する。

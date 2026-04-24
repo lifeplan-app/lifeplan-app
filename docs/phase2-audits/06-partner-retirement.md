@@ -196,6 +196,9 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
 ### 🟡 Important
 
 - **`06-I01` リタイア期のパートナー就労収入は「基準額で凍結」されており昇給が全く効かない**
+
+  > **[Resolved in Phase 4b commit `33f50dd`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G9 パートナー関連）
+
   - 場所: `index.html:17586-17594, 18370-18376, 18627-18634`
   - `_partnerBaseAnnual = partnerIncome * 12 + partnerBonus` をそのまま使用。`partnerGrowthRate` を適用していない。
   - 意図?: 本人リタイア後しかこのコード経路は走らないので「本人リタイア時点のパートナー収入」がすでに昇給反映済みの想定で渡されていれば妥当 … だが実際は `partnerIncome`（UI 入力値）を**現時点の数字のまま**使っているため、本人リタイアがまだ 20 年先ならパートナーは 20 年分の昇給を失う。
@@ -203,18 +206,27 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
   - 修正方針: `calcRetirementSimWithOpts` でも `partnerWorkIncome` を算出する際に同年の `getIncomeForYearWithGrowth` を参照 or 昇給を同じように適用する。
 
 - **`06-I02` 配偶者控除・配偶者特別控除が税計算に反映されていない**
+
+  > **[Resolved in Phase 4b commit `33f50dd`]**（近似対応：リタイア期の世帯支出側で逓減控除を減じる方式。`calcTakeHome` 本体への本実装は Phase 4c 予定。詳細: `docs/phase4b-fixes/expected-changes.md` の G9 パートナー関連）
+
   - 場所: `calcTakeHome()` (`index.html:17027-17078`)
   - §3.1 参照。gross 入力モードでパートナーが無収入ならば本来は本人の手取りが **38 万円（所得税）＋ 33 万円（住民税）分**の節税効果を受ける。国税庁 No.1191 / No.1195 参照。
   - 定量評価: 本人課税所得 500 万円（税率 20%）の場合、配偶者控除により所得税 約 7.6 万円・住民税 約 3.3 万円 = **約 10.9 万円/年の税軽減が反映されない**（ネット入力モードを使うユーザーは自己算出で回避可能だが、gross モードの手取り試算ボタン「この手取り額を収入欄に反映する」に直結する誤差）。
   - 修正方針: `partnerIncome` が 48 万円以下（合計所得）の場合に 38 / 33 万円控除、48 〜 133 万円で段階逓減（配偶者特別控除表）を加える。`partnerTargetAge` 到達後は 控除が「復活」するケースも扱う。
 
 - **`06-I03` パートナー退職後の国民年金保険料・国民健康保険料が世帯支出に計上されない**
+
+  > **[Resolved in Phase 4b commit `33f50dd`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G9 パートナー関連）
+
   - 場所: `calcRetirementSimWithOpts` 他 ― 対応コードなし
   - §3.2 参照。パートナーが 60 歳未満で退職した場合、第 3 号被保険者に該当しないケース（本人が自営業・フリーランス = 第 1 号、またはパートナー自身が第 1 号になる）で**国民年金保険料約 21 万円/年**（令和 6 年度 月額 16,980 円 × 12）＋ 国民健康保険料（地域差大、年額 10〜40 万円）が発生する。
   - 定量評価: 60 歳で退職、65 歳まで 5 年間 = `21 × 5 = 105 万円`（国民年金保険料のみ）の支出過少。国保含めれば 150〜300 万円規模。
   - 修正方針: `partnerTargetAge` 以降、`pensionAge_p` 未満の期間に国民年金保険料定額を世帯支出へ加算するトグル。または注記で「税社保は概算」と明示。
 
 - **`06-I04` パートナー年金はユーザー手入力値の固定額で、受給開始年（`pensionAge_p`）も本人と独立**
+
+  > **[Resolved in Phase 4b commit `33f50dd`]**（加給年金 +40万/年 の自動加算を実装。繰上/繰下調整は Task 5 の adjustRate 側で対応済み。詳細: `docs/phase4b-fixes/expected-changes.md` の G9 パートナー関連）
+
   - 場所: `index.html:17577`
   - 加給年金・振替加算・遺族年金の自動発生なし。年金の繰上・繰下減額/増額（Task 5 `04-C02` で既報）はパートナー側にも同じく未適用。
   - **Task 5 との整合**: 年金式自体の問題は Task 5 で扱われ、本レポートはパートナー側にも同じ問題が波及することを確認するのみ。

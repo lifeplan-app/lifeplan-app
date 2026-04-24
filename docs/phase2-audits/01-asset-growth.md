@@ -211,6 +211,9 @@ const activeTaxType = (isOldNisa && yr > a.endYear) ? 'tokutei' : taxType;
 ### 🟡 Important
 
 - **`01-I01` 課税口座の「毎年課税」近似が長期で実態と乖離**
+
+  > **[Resolved in Phase 4b commit `60c230d`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G8 旧NISA/振替）
+
   - `effectiveReturn` は課税口座で毎年 `r × (1 − 0.20315)` を適用する。実際の特定口座は売却・配当の実現時にのみ課税されるため、**長期保有では課税繰延の複利効果が働き、実残高はもっと大きくなる**。
   - 例: 年利 5% / 30年 / 一括 1,000万円 で比較（積立・配当なし、手数料ゼロ前提）:
     - **毎年課税近似（本コード）**: 実効年利 `0.05 × (1 − 0.20315) ≈ 0.0398425`
@@ -227,6 +230,9 @@ const activeTaxType = (isOldNisa && yr > a.endYear) ? 'tokutei' : taxType;
   - 影響：出口戦略・FIRE 達成年の判定が保守的（安全側）に出る。11.5% の体系的な過少評価は致命的ではないが、用途（到達時期判定・取崩し開始年の早期化評価）によっては無視できない。
 
 - **`01-I02` `noNewContrib`（旧NISA）の積立停止判定が `calcAssetGrowth` 内に存在しない（UI外の入力経路に抜け穴）**
+
+  > **[Resolved in Phase 4b commit `60c230d`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G8 旧NISA/振替）
+
   - UI の資産保存フローには既にガードが入っており（`index.html:8553-8554`）、`noNewContrib: true` の資産種別では `monthly = 0` / `annualBonus = 0` に強制される。また保存前のバリデーションでも警告を出す（`index.html:8193-8195`）。
     ```js
     // index.html:8553-8554
@@ -241,6 +247,9 @@ const activeTaxType = (isOldNisa && yr > a.endYear) ? 'tokutei' : taxType;
   - 対応案：**防御は計算側にも置くのが多層防御として妥当**。`calcAssetGrowth` の `annualContrib` 計算の手前（あるいは `effectiveReturn` と同階層の共通ヘルパ）で `ASSET_TYPES[a.type]?.noNewContrib && yr >= <移管年>` なら `annualContrib = 0` に強制する。こうすれば UI・JSON import・サンプル・旧データのどれから入っても計算側で一律に安全側に倒せる。
 
 - **`01-I03` トポロジカル順で取りこぼしたアセットが `extraMap` の全情報を受け取れない可能性**
+
+  > **[Resolved in Phase 4b commit `60c230d`]** （詳細: `docs/phase4b-fixes/expected-changes.md` の G8 旧NISA/振替）
+
   - `calcAllAssetGrowth` で振替にサイクルがある場合、`resultMap[a.id]` が未設定のまま最後のフォールバック（`index.html:8962-8968`）で計算される。このときすでに `extraMap[a.id]` の一部は集まっているが、**自分がまだ計算されていない他アセットからの振替分は反映されない**。
   - UI 側でサイクルを防ぐガードがあるか別途確認が必要。
 
