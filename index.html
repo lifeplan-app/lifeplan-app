@@ -2879,6 +2879,16 @@
                 </select>
               </div>
             </div>
+            <div class="form-group" style="margin:8px 0 0">
+              <label>住宅種別（住宅ローン控除）</label>
+              <select id="leMortgageHousingType" onchange="calcMortgage()">
+                <option value="general">一般住宅（控除 10 年・上限 2,000 万）</option>
+                <option value="long_term">認定長期優良住宅（13 年・5,000 万）</option>
+                <option value="low_carbon">認定低炭素住宅（13 年・5,000 万）</option>
+                <option value="zeh">ZEH 水準省エネ住宅（13 年・4,500 万）</option>
+                <option value="energy_saving">省エネ基準適合住宅（13 年・4,000 万）</option>
+              </select>
+            </div>
             <div id="mortgageDeductResult" style="font-size:11px;color:var(--secondary);margin-top:6px"></div>
           </div>
           <!-- 繰り上げ返済・借り換えアコーディオン -->
@@ -12618,6 +12628,7 @@ function calcMortgage() {
   // 残高テーブル描画のため state に最新値を先に同期
   const deductStartVal = parseInt(document.getElementById('leMortgageDeductStart').value) || null;
   const deductYearsVal = parseInt(document.getElementById('leMortgageDeductYears').value) || 13;
+  const housingTypeVal = document.getElementById('leMortgageHousingType')?.value || 'general';
   Object.assign(state.lifeEvents.mortgage, {
     amount,
     rate: annualRate,
@@ -12626,6 +12637,7 @@ function calcMortgage() {
     monthlyPayment: Math.round(monthly * 100) / 100,
     deductStart: deductStartVal,
     deductYears: deductYearsVal,
+    housingType: housingTypeVal,
   });
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
@@ -13657,6 +13669,8 @@ function renderLifeEventsPage() {
   const r = state.retirement || {};
   document.getElementById('leMortgageDeductStart').value = le.mortgage.deductStart || r.mortgageDeductStart || le.mortgage.startYear || '';
   document.getElementById('leMortgageDeductYears').value = le.mortgage.deductYears || r.mortgageDeductYears || 13;
+  const _mortgageHousingTypeEl = document.getElementById('leMortgageHousingType');
+  if (_mortgageHousingTypeEl) _mortgageHousingTypeEl.value = le.mortgage.housingType || 'general';
   calcMortgage();
   renderCFEvents();
   renderScholarships();
@@ -14253,6 +14267,9 @@ function calcIntegratedSim(years, opts = {}) {
     a.dividendMode === 'cashout' && a.dividendYield > 0
   );
 
+  // [Phase 2.5 05-C03 fix] 住宅ローン amortization スケジュールをループ外で1回生成
+  const _mortgageSchedule = calcMortgageSchedule();
+
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const leCost = calcLECostByYear(yr, opts);
@@ -14272,16 +14289,11 @@ function calcIntegratedSim(years, opts = {}) {
       return s + netDiv;
     }, 0);
 
-    // 住宅ローン控除（現役期にも反映）
-    const mortgageBalanceInteg = (() => {
-      const m = state.lifeEvents?.mortgage || {};
-      const principal = parseFloat(m.amount) || 0;
-      const startYr = parseInt(m.startYear) || currentYear;
-      const term = parseInt(m.term) || 35;
-      const elapsed = yr - startYr;
-      if (elapsed < 0 || elapsed >= term || !principal) return 0;
-      return principal * (1 - elapsed / term);
-    })();
+    // [Phase 2.5 05-C03 fix] 統合シミュも退職シミュと同じ amortization を使う（線形近似は廃止）
+    const _mortgageRow = _mortgageSchedule && _mortgageSchedule.get ? _mortgageSchedule.get(yr) : null;
+    const mortgageBalanceInteg = _mortgageRow
+      ? (_mortgageRow.principalEnd ?? _mortgageRow.balance ?? 0)
+      : 0;
     const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);
 
     // 年間収支の累積（収入 − 支出 − ライフイベント + 一時収支 + 配当 + 控除）
@@ -14659,6 +14671,8 @@ function renderRetirementPage() {
   const m = state.lifeEvents?.mortgage || {};
   document.getElementById('leMortgageDeductStart').value = m.deductStart || r.mortgageDeductStart || m.startYear || '';
   document.getElementById('leMortgageDeductYears').value = m.deductYears || r.mortgageDeductYears || 13;
+  const _retMortgageHousingTypeEl = document.getElementById('leMortgageHousingType');
+  if (_retMortgageHousingTypeEl) _retMortgageHousingTypeEl.value = m.housingType || 'general';
 
   calcPensionEstimate('self');
   calcPensionEstimate('partner');
@@ -17222,14 +17236,60 @@ function getMedicalAddition(age, model) {
   return 0;
 }
 
-// ⑧ 住宅ローン控除: 指定期間の減税額を計算（万円/年）
+// [Phase 2.5 05-C02 helper] 簡易所得税計算（万円単位）。正確な給与所得控除・各種控除は考慮せず、課税対象所得ベースの概算。
+function calcIncomeTaxAmount(taxableIncomeMan) {
+  if (taxableIncomeMan <= 0) return 0;
+  // 国税庁 No.2260（2026年4月現在）速算表
+  const brackets = [
+    { upper: 195,  rate: 0.05,  deduction: 0 },
+    { upper: 330,  rate: 0.10,  deduction: 9.75 },
+    { upper: 695,  rate: 0.20,  deduction: 42.75 },
+    { upper: 900,  rate: 0.23,  deduction: 63.6 },
+    { upper: 1800, rate: 0.33,  deduction: 153.6 },
+    { upper: 4000, rate: 0.40,  deduction: 279.6 },
+    { upper: Infinity, rate: 0.45, deduction: 479.6 },
+  ];
+  for (const b of brackets) {
+    if (taxableIncomeMan <= b.upper) {
+      return Math.max(0, taxableIncomeMan * b.rate - b.deduction);
+    }
+  }
+  return 0;
+}
+
+// ⑧ [Phase 2.5 05-C01/05-C02 fix] 住宅ローン控除: 住宅種別の借入限度・税額 cap を考慮（万円/年）
 function calcMortgageDeduction(year, balance) {
   const p = getRetirementParams();
+  const m = state.lifeEvents?.mortgage || {};
   if (!p.mortgageDeductStart || !p.mortgageDeductYears || !balance) return 0;
   const endYear = p.mortgageDeductStart + p.mortgageDeductYears - 1;
   if (year < p.mortgageDeductStart || year > endYear) return 0;
-  // 控除額 = 年末残高 × 0.7%（上限あり：新築4500万円×0.7%=31.5万円）
-  return Math.min(balance * 0.007, 31.5);
+
+  // 住宅種別ごとの借入限度額（万円、2026年4月・国税庁 No.1211-1 準拠）
+  const HOUSING_TYPES = {
+    general:       { limit: 2000 },
+    long_term:     { limit: 5000 },
+    low_carbon:    { limit: 5000 },
+    zeh:           { limit: 4500 },
+    energy_saving: { limit: 4000 },
+  };
+  const housingType = m.housingType || 'general';
+  const loanLimit = HOUSING_TYPES[housingType]?.limit ?? 2000;
+  const controlledBalance = Math.min(balance, loanLimit);
+
+  // 控除額（上限前）= 残高 × 0.7%
+  const rawDeduction = controlledBalance * 0.007;
+
+  // 税額 cap: 所得税 + 住民税（住民税控除上限 9.75 万円/年）
+  const incomeMan = ((parseFloat(state.finance?.income) || 0) * 12)
+                  + (parseFloat(state.finance?.bonus) || 0);
+  // 概算: 課税所得 ≒ 年収 × 0.7（給与所得控除・基礎控除・社保控除の超ざっくり）
+  const taxableIncome = incomeMan * 0.7;
+  const incomeTax = calcIncomeTaxAmount(taxableIncome);
+  const residentTaxCap = 9.75; // 万円/年（国税庁 No.1211）
+  const deductCap = incomeTax + residentTaxCap;
+
+  return Math.min(rawDeduction, deductCap);
 }
 
 // ===== ④ 年金受給開始年齢 損益分岐チャート =====
