@@ -254,6 +254,9 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
 ### 🟡 Important
 
 - **`08-I01` 配当税・譲渡益税が未反映（税引前額面の取り崩し・配当収入）**
+
+  > **[Resolved in Phase 4a commit `982644f`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G2 税引き）
+
   - `dividendIncome = Math.round(dividendPool * _divYield)` は**税引前**。特定口座なら源泉徴収で 20.315% 差し引かれ、手取りは `dividendPool * _divYield * 0.79685`。
     - 例: dividendPool 1,000 万、_divYield 4% → 配当 40 万 → 手取り 31.87 万、**差額 8.13 万円が過大計上**。
   - 取り崩し額 `actualWithdrawn` も**税引前額面**で「生活費を賄う」計算。実際には特定口座から 100 万取り崩すと含み益分の 20.315% が税で引かれ手取りは減る。
@@ -262,6 +265,9 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
   - FP 出典: Pfau 2019 Ch.7; 野村證券「出口戦略と税金」 <https://www.nomura.co.jp/toushin/>
 
 - **`08-I02` NISA 温存の取り崩し順序が無い（税効率最適化の未実装）**
+
+  > **[Resolved in Phase 4a commit `d43985e`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G3 NISA+iDeCo）
+
   - `drawdownOrder` は**アセット種別**（cash / index / div / emergency）で分類されるが、税制口座（NISA / iDeCo / 特定口座）の区別は無い。
   - FP 業界の標準（§3.1）は「課税口座 → iDeCo（退職所得控除使い切り）→ NISA（非課税を最後まで）」。現行コードは全てのインデックスアセットを `indexPool` にマージして同率で崩すので、NISA のような**非課税メリット**が計算に乗らない。
   - 影響: 長期退職後シミュで手取りが保守的すぎる側に倒れる（NISA を温存して税負担を減らせば実質の資産寿命が延びる）。30 年シミュで NISA 比率 50% 想定なら手取り差は **総累計 5〜10%** オーダー。
@@ -269,6 +275,9 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
   - Task 8 `07-I04` と同じ欠落が 4 プール版でも継承。
 
 - **`08-I03` 退職金が退職所得控除なしの額面加算（高額退職金で過大計上）**
+
+  > **[Resolved in Phase 4a commit `0f45742`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G4 退職計算）
+
   - §3.4 の通り、国税庁 No.1420 の退職所得控除（勤続 30 年なら 1,500 万円）を無視して `assetsAtRetire` / `indexPool` に額面加算。
   - 勤続 30 年・退職金 3,000 万円の場合:
     - 控除: `800 + 70 × 10 = 1,500` 万
@@ -282,11 +291,17 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
   - 出典: 国税庁 No.1420 <https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1420.htm>
 
 - **`08-I04` `cashFloor` で引き出せなかった場合、emergency・index の残高が十分でも `depleted: true` 扱い**
+
+  > **[Resolved in Phase 4a commit `0f45742`]** （実際は Phase 2.5 `criticalPoolDepleted` で既に対応済み、本 Task で確認済み）
+
   - `cashFloor` は現金維持の閾値で、超過分 (`cashAboveFloor`) しか取り崩し候補にならない。`cashAboveFloor < netExpense` かつ `indexPool = 0, dividendPool = 0` のケースで `_fromEmerg` が発動するはずだが、`_deductable = min(_poolTotal, actualDeduction)` は `emergencyPool` も合算した `_poolTotal` から引けるので、理論上は埋められる。しかし `cashFloor` がロックしている cash 分は `_poolTotal` に含まれない（emergency + indexPool + dividendPool + cashAboveFloor）ため、`_poolTotal < actualDeduction` になると `_deductable = _poolTotal < actualDeduction` → `withdrawalShortfall = actualDeduction − actualWithdrawn > 0`。
   - つまり **cashFloor 200 万円をロックしているせいで、生活費 300 万不足のうち 100 万しか取り崩せず `depleted:true`** のケース。ユーザー視点では「あと 200 万円あるのに枯渇判定」。cashFloor の目的（現金を残す）が**破綻判定の誤検出**を引き起こす。
   - 改善案: 緊急時は cashFloor を無視するモード（"emergency override"）を追加するか、`cashFloor` で枯渇となった年に「緊急時は cashFloor 分も使用可能」という UI 注記を出す。
 
 - **`08-I05` `returnMod` がインデックス・高配当のみに加算され、cash / emergency の金利は楽観／悲観シナリオで不動**
+
+  > **[Resolved in Phase 4a commit `0f45742`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G4 退職計算）
+
   - シナリオ `+1 %pt` で cash 金利が 0.1% のまま。現実には金利上昇局面では預金金利も上がるため、低リスク資産も含めた全面的な楽観／悲観ができない。
   - 逆に悲観 `−1 %pt` でも cash 金利は下がらない（既に 0.1% 近辺で下限に近い）ので、現状は **低金利環境では大きな影響はない**。
   - 影響: 楽観シナリオで「株式 +1%」だけに賭ける構造なので、**インフレ対策（金利上昇シナリオ）を評価できない**。

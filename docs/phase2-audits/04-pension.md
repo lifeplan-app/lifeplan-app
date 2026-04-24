@@ -286,6 +286,9 @@ function adjustRate(startAge) {
 ### 🟡 Important
 
 - **`04-I01` 厚生年金の 2003 年 3 月以前区間（乗率 7.125/1000）が未対応**
+
+  > **[Resolved in Phase 4a commit `2130e0a`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G1 年金）
+
   - §3.3 参照。40 代後半以上のユーザーに最大 7% 前後の過少推計が出る。
   - 数値インパクト（1970 年生・平均年収 500 万・65 歳退職）:
     - 正しい: `41.67 × 7.125/1000 × 132 + 41.67 × 5.481/1000 × 384 = 39.19 + 87.70 = 126.89 万円/年 → 10.57 万円/月`
@@ -294,6 +297,9 @@ function adjustRate(startAge) {
   - **修正方針**: 生年月日（`state.profile.birth`）から 2003 年 3 月時点の年齢を逆算し、「2003 年 3 月以前の加入月数」を推定。または UI に「2003 年 3 月以前の加入年数」欄を追加。
 
 - **`04-I02` 繰上げ・繰下げ率が試算結果に反映されない（計算は正しいが表示専用）**
+
+  > **[Resolved in Phase 4a commit `2130e0a`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G1 年金）
+
   - `calcAndShowDeferralSim` は 60〜75 歳の月額テーブルを表示するだけ。`applyPensionEstimate` は 65 歳基準値をそのまま `retPensionMonthly` に転記する。
   - UI の `retPensionAge`（受給開始年齢）は統合シミュレーションで **年金受給の開始年を遅らせるだけ**で、月額は変動しない。繰下げで 70 歳受給を選んだユーザーは、月額は 65 歳基準のまま・受給開始だけ 70 歳に遅れる = **金額増額が効かない = シミュレーションで過少推計**。
   - 数値インパクト（65 歳基準月 15 万、70 歳繰下げ、余命 90 歳）:
@@ -303,6 +309,9 @@ function adjustRate(startAge) {
   - **修正方針**: `applyPensionEstimate` で `retPensionAge` が 65 と異なる場合、`_calcPensionCore` の出力に `adjustRate(retPensionAge)` を掛けて反映。または統合シミュレーション側で `pensionMonthly` を `retPensionAge` に応じて自動補正。
 
 - **`04-I03` 手取り率 0.87 固定は年金額・年齢で大きくぶれる**
+
+  > **[Resolved in Phase 4a commit `2130e0a`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G1 年金）
+
   - §3.7 参照。
   - 数値インパクト（試算 3 パターン）:
     - 年金額 100 万円/年（低所得・非課税世帯）: 実際の手取り率 ≈ 0.97 → 本コード 0.87 × 100 = 87 万円、実際 97 万円 → 11% 過少。
@@ -311,6 +320,9 @@ function adjustRate(startAge) {
   - **修正方針**: 年金額階層別の手取り率テーブルを用意（100 万未満 95%、100〜200 万 90%、200〜300 万 87%、300〜400 万 83%、400 万超 78% 等）。または年齢（65〜74 / 75〜）で国保・後期高齢者の区分を追加。
 
 - **`04-I04` `calcPensionEstimate` の結果と `pensionSlide` の二重適用の懸念**
+
+  > **[Resolved in Phase 4a commit `2130e0a`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G1 年金）
+
   - `calcPensionEstimate` は 2024 年度満額 6.8 万円ベース（§3.1）で計算し、それをユーザーが `retPensionMonthly` にコピー → 統合シミュレーションで `× (1 − pensionSlide)` を掛ける。
   - UI 文言では `pensionSlide = 10%` を「財政検証標準」としており、2024 年度値に対して **将来累積 10% 減**を掛ける想定。現在水準ベースで計算した値に将来削減率を掛けるのは**設計通り**だが、UI にその関係性が明示されていない。
   - 混乱の余地:

@@ -268,3 +268,27 @@ Phase 2.5 で全 Critical 10 件が修正された結果、シナリオ B の挙
   - `finance.inflationRate` と `retirement.inflationRate` の既定値違い（2% vs 1.5%）は Phase 3 で統一推奨
   - 住宅種別セレクタのサンプル JSON 反映は別タスク
 
+## Phase 4a 完了後の再評価（2026-04-25）
+
+Phase 4a で Important 14 件が修正された結果、シナリオ B の挙動が以下のように変わった：
+
+### 修正された主要な問題
+
+- **04-I01/I02/I03/I04** (`2130e0a`): 年金制度対応
+  - シナリオ B の `pensionMonthly` は手入力固定のため pension 側の改修は snapshot に直接反映されなかったが、UI 経由で再試算すると反映される
+- **07-I01/08-I01/09-I02** (`982644f`): 清算・配当・取崩の税引き
+  - シナリオ B の投資構成（NISA/iDeCo 中心）のため、配当・清算の加重実効税率はほぼゼロ、snapshot 差分は限定的
+- **07-I04/08-I02** (`d43985e`): NISA 温存取崩順序 + iDeCo 一時金化
+  - シナリオ B の iDeCo 90 万円が 60 歳時点で cashPool に合流
+  - NISA 温存順序で `startAssets` 8245→8166（-79）、`cashPool` +604、`indexPool` -697 の変化
+- **08-I03/I04/I05** (`0f45742`): 退職計算
+  - シナリオ B の退職金設定次第で影響
+- **09-I01/I03** (`5fd23b7`): 統合シム一貫性
+  - シナリオ B は net モードのため直接的な snapshot 変化なし
+
+### 判定の更新
+
+- **Phase 2.5 完了時**: ✅ 妥当（Critical 10 件解消）
+- **Phase 4a 完了後**: ✅ 妥当（Important 14 件も解消、より現実的な数値）
+- **残存懸念**: Important 25 件（G5-G10）は Phase 4b 以降
+

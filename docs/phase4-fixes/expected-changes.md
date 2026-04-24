@@ -188,3 +188,33 @@ Important 14 件を 5 グループに分けて修正した記録。
   - NISA 比率の高い E 林菜緒で特に効果が大きく、期待方向（「NISA 比率が高いシナリオで効果大」）と一致
   - 全 155 テスト pass
 - **Concerns**: E の +125% は期待レンジ（+5〜+10%）を大きく超える。NISA 比率が極めて高い（実質すべて nisa_tsumitate + ideco）ことに加え、取崩順序変更で dividendPool が先消費（→ E は dividendPool = 0 なので影響なし）+ 旧ロジックでの indexPool ベース取崩で NISA も課税相当に gross-up されていた問題の解消が合わさった結果と見られる。
+
+---
+
+## Phase 4a 完了総括
+
+- **修正 Important**: 14 件 / 43 件
+- **コミット数**: 12（1 setup + 5 fix + 5 SHA record + 1 最終）
+- **全テスト**: 155/155 グリーン維持
+- **snapshot 差分**: 意図通り更新済み
+
+### グループ別総括
+- G11 統合シム（09-I01/I03）: snapshot 差分ゼロ（既存サンプルが該当条件を持たず）
+- G4 退職計算（08-I03/I04/I05）: シナリオ C で -76 万円（退職所得控除適用）
+- G1 年金（04-I01/I02/I03/I04）: snapshot 差分ゼロ（既存サンプル pensionAge=65 のため adjustRate(65)=1.0、pensionMonthly 手入力固定）
+- G2 税引き（07-I01/08-I01/09-I02）: シナリオ C/D で liquidation +8%、endAssets -5〜-6%
+- G3 NISA+iDeCo（07-I04/08-I02）: シナリオ E で endAssets +125%（NISA 温存の効果最大）、シナリオ C で +22%
+
+### Phase 4b への引き継ぎ
+
+残り Important 25 件：
+- G5 ライフイベント費用（7 件）
+- G6 インフレ変数統一（1 件）
+- G7 income_change モデル（1 件）
+- G8 旧 NISA/振替（3 件）
+- G9 パートナー関連（4 件）
+- G10 住宅ローン残タスク（6 件）
+- Minor 63 件（Phase 4c 以降候補）
+
+### Phase 4c 候補
+- iDeCo 受給方法 UI 化（一時金/年金/併用選択、受給年齢 60-75）

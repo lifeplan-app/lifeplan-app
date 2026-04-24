@@ -235,6 +235,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
 ### 🟡 Important
 
 - **`09-I01` 収入本体の税引き（所得税・住民税・社保）が `_inputMode` 設定に完全依存し、配当だけ自動税引きするため一貫性がない**
+
+  > **[Resolved in Phase 4a commit `5fd23b7`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G11 統合シム）
+
   - `getIncomeForYearWithGrowth` は `state.finance.income`（月額）× 12 を返すのみ（`index.html:17107`）。ユーザーが「手取り入力」か「額面入力」かを `_inputMode` で明示する設計だが、UI からは切替が見えにくく、かつ**どちらで入れたか判別するフラグはあるが `calcIntegratedSim` は参照しない**。
   - 一方 `dividendCashout` は特定・一般に対して 20.315% を**自動控除**。→ 本体が gross で入っていても配当だけ手取りになる**混合**状態が起こりうる。
   - 年金収入は `calcRetirementSimWithOpts` 側で扱われるため統合では無関係だが、パートナー収入も同じく手動。
@@ -242,6 +245,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
   - 出典: 日本 FP 協会 <https://www.jafp.or.jp/personal_finance/know/lifeplan/cashflow/>（「可処分所得」列の標準形）。
 
 - **`09-I02` 投資清算時、`liquidationThisYear` は税引前額面でプールから差し引かれ、譲渡益税・含み益比率が考慮されない（Task 8 `07-I01` の再確認）**
+
+  > **[Resolved in Phase 4a commit `982644f`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G2 税引き）
+
   - `liquidationThisYear = -virtualCash` を `_investDeficit` に加算し、**同額を `investAssetBase` から引く**。実際には特定口座から 100 万円売却すると含み益 × 20.315% が税で引かれ、手取りは 100 万円未満 → 不足分をさらに売らなければならない。
   - **数値例**: `virtualCash = -100` 万円、清算対象プール全体が含み益 50% 想定 → 実効税率 10.16%（=50% × 20.315%）→ 手取り 89.84 万円 → 不足が 10.16 万円残る。**本コードは税コストをゼロ扱い**にするため、実際より投資プールの持ちが **10% 程度良く**見える。
   - 恒等式検算には直接影響しないが（`_investDeficit` の記録は額面）、シナリオ B のような清算発生ケースで `investPool` が実態より 5〜10% 過大表示される。
@@ -249,6 +255,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
   - 改善案: `state.assets[].taxType` と `state.assets[].nisaBasis` から含み益比率を推定し、`effectiveTax = 含み益比率 × 0.20315` で清算額を scale up。
 
 - **`09-I03` 住宅ローン控除は `state.lifeEvents.mortgage` を直接読むが、`opts.noLoan=true` での除外対象外**
+
+  > **[Resolved in Phase 4a commit `5fd23b7`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G11 統合シム）
+
   - `calcLECostByYear(yr, opts)` は `opts.noLoan` で住宅負担を除外できるが、**統合シミュの `annualMortgageDeduct` は opts を見ずに `state.lifeEvents.mortgage` を直接読む**（`index.html:14276-14285`）。→ シナリオ比較で「住宅なしシミュ」を作ると**ローン支払いゼロなのに控除だけ 31.5 万円/年計上**される。
   - 影響: `calcIntegratedSim` を `noLoan: true` で呼び出すのは `renderAlternativeScenarios` の「住宅取得しない場合」等。ここで `mortgageDeduct` が継続計上 → `cashFlow` 過大 → 「住宅なしシナリオの方が控除分だけ得」という**逆転表示**。
   - 改善案: `const annualMortgageDeduct = (y === 0 || opts.noLoan) ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);` の 1 行修正。

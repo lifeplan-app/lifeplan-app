@@ -185,6 +185,9 @@ const cashFlow = y === 0
 ### 🟡 Important
 
 - **`07-I01` 清算額の税引前額面問題 — 譲渡益税 20.315% を差し引いて補填額を見積もらないため、現金不足の補填が過少**
+
+  > **[Resolved in Phase 4a commit `982644f`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G2 税引き）
+
   - 実際に特定口座の投資信託を 100 万円分取り崩すとき、含み益の 20.315% が源泉徴収され**手取りは 100 × (1 − 含み益率 × 0.20315)** になる。例: 取得価格 50・時価 100 の投信を全部売ると含み益 50、税 50 × 0.20315 = 10.16 万円、手取り 89.84 万円。
   - 本コードは `liquidationThisYear = -virtualCash`（=不足額そのまま）を `_investDeficit` に計上し、`adjustedCashFlow` に同額を注入する。つまり**税金で目減りしない前提**。
   - 影響: 税引前で `liquidationThisYear` を計上する限り、**現金不足が発動しやすく（税引き後手取りで見るとさらに清算しないと足りない）**、かつ `_investDeficit` は額面で計算されるので機会損失が税抜き想定より小さく出る（保守性/楽観性が混在）。
@@ -204,6 +207,9 @@ const cashFlow = y === 0
   - 改善案: 毎年の `_investGD[i].data[y]` を使って年次で `_wInvestReturn_y = Σ (data[y] × r_i) / Σ data[y]` を再計算する（O(N × years) で計算コストも微小）。
 
 - **`07-I04` 退職後の取り崩し優先順位（NISA 非課税枠温存）が二プールモデルに入っていない**
+
+  > **[Resolved in Phase 4a commit `d43985e`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G3 NISA+iDeCo）
+
   - 退職後取り崩し戦略の定石は「**課税口座 → iDeCo → NISA**」の順（NISA の非課税メリットを長期に温存する；Pfau 2019; Morningstar "Sequence of withdrawals matters" <https://www.morningstar.com/retirement/tax-efficient-withdrawal-strategy>）。本コードは投資プール合計として一括清算するので、NISA 温存の恩恵が反映されない。
   - 影響: 長期退職後シミュで手取り過少（保守側）。Task 9 の出口戦略でも同様のロジックがあれば要確認。
 
