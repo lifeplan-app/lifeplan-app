@@ -63,7 +63,17 @@
 - **commit SHA**: `30e0219`
 
 ## Step 6: calc/retirement.js（退職シミュ）
-（Task 7 実施時に記入）
+
+- **抽出関数**: `calcRetirementSim`, `getRetirementParams`, `calcRetirementSimWithOpts`（3 関数）
+- **calc/retirement.js 行数**: 606 行
+- **index.html 削減行数**: 591 行（22,703 → 22,112。`<script src="calc/retirement.js">` 追加で +1 含む）
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
+- **補足**:
+  - Phase 2.5 の Critical fix コメント（`[Phase 2.5 08-C01 fix]`）を忠実に保持。`06-C02` / `07-C01` は該当関数以外（`calcIntegratedSim`）のコメントのため本ファイルには含まれない。
+  - `calcRetirementSim()` は `document.getElementById('retHybridSwitchAge')` を 1 箇所で参照する（ハイブリッド切替年齢 UI 入力のフォールバック）。Node sandbox には `document` がないが、snapshot テストは Playwright 経由のブラウザ実行なので問題なし。他テストは `calcRetirementSimWithOpts` のみ使用。
+  - `getRetirementParams` は Step 5 で抽出済みの `calcMortgageDeduction` から呼ばれる。同一 sandbox で解決。
+  - 3 関数はすべて `function` 宣言なので sandbox へ自動露出。依存: `calcAge`, `ASSET_TYPES`, `calcMortgageSchedule`, `calcMortgageDeduction`, `calcLECostByYear`, `getRecurringExpenseForYear`, `getMedicalAddition`（index.html 残置）, `calcIntegratedSim`（未抽出・Step 8 予定）。
+- **commit SHA**: （Step 10 で追記）
 
 ## Step 7: calc/scenarios.js（シナリオ比較）
 （Task 8 実施時に記入）
