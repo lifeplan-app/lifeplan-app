@@ -14270,12 +14270,24 @@ function calcIntegratedSim(years, opts = {}) {
   // [Phase 2.5 05-C03 fix] 住宅ローン amortization スケジュールをループ外で1回生成
   const _mortgageSchedule = calcMortgageSchedule();
 
+  // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化をループ外で事前算出
+  const _rIS = state.retirement || {};
+  const _pBirthStrIS = state.profile?.partnerBirth || state.profile?.partnerbirth;
+  const _pBirthYearIS = _pBirthStrIS ? new Date(_pBirthStrIS).getFullYear() : null;
+  const _pRetireYearIS = (_pBirthYearIS && _rIS.partnerTargetAge)
+    ? _pBirthYearIS + parseInt(_rIS.partnerTargetAge) : null;
+  const _pExpChangeMonthlyIS = parseFloat(_rIS.partnerExpenseChange) || 0;
+
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
     const leCost = calcLECostByYear(yr, opts);
     const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
     const annualIncome  = getIncomeForYearWithGrowth(yr);
-    const annualExpense = getExpenseForYear(yr);
+    let annualExpense   = getExpenseForYear(yr);
+    // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化を加算（calcRetirementSimWithOpts:17666 と同等ロジック）
+    if (_pRetireYearIS !== null && yr >= _pRetireYearIS) {
+      annualExpense += _pExpChangeMonthlyIS * 12;
+    }
     const oneTime       = getOneTimeForYear(yr);
 
     // 配当受取（cashout）アセットの年間配当をキャッシュフローに加算
@@ -18681,7 +18693,10 @@ function _runMonteCarloCalc(RUNS) {
       // main sim と同じ追加費用（繰り返し支出・一時支出計画）
       const recurringCost = getRecurringExpenseForYear(yr);
       const plannedOneTime = (state.expenses || []).reduce((s, e) => parseInt(e.year) === yr ? s + (parseFloat(e.amount) || 0) : s, 0);
-      const totalExpense = inflatedExpense + medicalAdd + annualLE + recurringCost + plannedOneTime;
+      // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化（calcRetirementSimWithOpts:17666 と同等ロジック）
+      const _partnerExpChangeMC = (_partnerRetireYear !== null && yr >= _partnerRetireYear)
+        ? (parseFloat(r.partnerExpenseChange) || 0) * 12 : 0;
+      const totalExpense = inflatedExpense + medicalAdd + annualLE + recurringCost + plannedOneTime + _partnerExpChangeMC;
       // main sim と同じ収入オフセット
       const pension = age >= pensionAge ? pensionAnnual : 0;
       const pension_p = age >= pensionAge_p ? pensionAnnual_p : 0;
