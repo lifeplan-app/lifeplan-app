@@ -32,7 +32,7 @@
 - **切替したテストファイル**: 5（calc-asset-growth, calc-all-asset-growth, golden-master, regression, property-based）
 - **補足**: `vm.runInContext` では `const` がサンドボックスに露出しないため、`ASSET_TYPES` / `TAX_TYPE_DEFAULT` / `TAX_RATE` は `var` で宣言。`calcAllAssetGrowth` は `state.finance?.simYears` を参照するため、`test/helpers/load-calc.js` のサンドボックスに `state = { profile: {}, finance: {} }` を追加。
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
-- **commit SHA**: （Step 12 で追記）
+- **commit SHA**: `00c5837`
 
 ## Step 3: calc/income-expense.js（年次収入・支出）
 （Task 4 実施時に記入）
