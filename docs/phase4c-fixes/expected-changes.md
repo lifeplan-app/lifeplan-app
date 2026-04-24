@@ -9,10 +9,16 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 10-quick: 住宅ローン計算バグ修正（05-I05, 05-I06）
 
 ### 期待方向
-（Task 2 実施時に記入）
+- **05-I05**: `principal × r ≥ monthly` で `newN` が `NaN` / `Infinity` になる場合、即完済扱い（`principal = 0, endYear = year`）にフォールバック。
+- **05-I06**: 同年に `refi` と `prepay` が混在する場合、常に `refi → prepay` の順で処理する（既存の `sort((a,b)=>a.year-b.year)` は年のみでソートし同年内順不定）。
+
+### 想定される snapshot 差分
+既存 5 シナリオのうち、NaN 発症条件（極端に低い monthly）や同年 refi+prepay を持つサンプルは皆無のため **snapshot 差分なし**。リグレッションテスト（test/regression.test.js）で挙動を固定する。
 
 ### 実測サマリー
-（Task 2 修正後に記入）
+- snapshot 差分: **なし**（既存 5 シナリオに該当条件のイベント未登録）
+- regression.test.js に BUG#2/#3 を追加して挙動固定
+- テスト: 157/157 グリーン（155 + 新規 2）
 
 ---
 

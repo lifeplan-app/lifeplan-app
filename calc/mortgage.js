@@ -26,7 +26,12 @@ function calcMortgageSchedule() {
   const startYear = parseInt(m.startYear);
   let endYear = startYear + parseInt(m.term);
   let monthly = calcMonthlyPayment(principal, rate, (endYear - startYear) * 12);
-  const events = (m.events || []).slice().sort((a, b) => a.year - b.year);
+  // [Phase 4c 05-I06] 同年内は refi → prepay の順に固定
+  const eventOrder = { refi: 0, prepay: 1 };
+  const events = (m.events || []).slice().sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return (eventOrder[a.type] ?? 99) - (eventOrder[b.type] ?? 99);
+  });
   const schedule = new Map();
 
   for (let year = startYear; year < endYear && principal > 0.01; year++) {
@@ -42,9 +47,23 @@ function calcMortgageSchedule() {
           monthly = calcMonthlyPayment(principal, rate, remaining);
         } else {
           // 期間短縮型：同monthly額で残期間再計算
+          // [Phase 4c 05-I05] principal×r ≥ monthly のとき newN が NaN/Infinity になるため即完済扱いにフォールバック
           const r = rate / 100 / 12;
-          const newN = r === 0 ? Math.ceil(principal / monthly)
-            : Math.ceil(Math.log(monthly / (monthly - principal * r)) / Math.log(1 + r));
+          let newN;
+          if (r === 0) {
+            newN = Math.ceil(principal / monthly);
+          } else if (principal * r >= monthly) {
+            principal = 0;
+            endYear = year;
+            continue;
+          } else {
+            newN = Math.ceil(Math.log(monthly / (monthly - principal * r)) / Math.log(1 + r));
+          }
+          if (!Number.isFinite(newN)) {
+            principal = 0;
+            endYear = year;
+            continue;
+          }
           endYear = year + Math.ceil(newN / 12);
         }
       } else if (ev.type === 'refi') {
