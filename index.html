@@ -5338,6 +5338,8 @@
 </div>
 
 
+    <!-- Phase 3: calc/ 下の計算ロジックモジュール -->
+    <script src="calc/utils.js"></script>
 <script>
 // ===== DATA =====
 const ASSET_TYPES = {
@@ -6678,33 +6680,6 @@ function saveProfile() {
   maybeShowSimpleModeInput();
 }
 
-function calcAge() {
-  const b = state.profile.birth;
-  if (!b) return null;
-  const birth = new Date(b);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  if (now.getMonth() < birth.getMonth() ||
-      (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
-// 指定年におけるユーザーの年齢（birth未設定なら null）
-function calcAgeAtYear(yr) {
-  const b = state.profile.birth;
-  if (!b) return null;
-  const birthYear = new Date(b).getFullYear();
-  return yr - birthYear;
-}
-
-// 指定年におけるパートナーの年齢（partnerbirth未設定なら null）
-function calcPartnerAgeAtYear(yr) {
-  const b = state.profile.partnerbirth;
-  if (!b) return null;
-  const birthYear = new Date(b).getFullYear();
-  return yr - birthYear;
-}
-
 // X軸ラベル（年 + 年齢）を生成。currentYear起点でlength本
 // 例: ["2026年\n29歳/配偶者27歳", ...]
 function makeYearLabels(length, startYear) {
@@ -6736,14 +6711,6 @@ function ageTooltipTitle(yr) {
 }
 
 // ===== CASH FLOW EVENT HELPERS =====
-// 年齢 → 西暦年（calcAge()がnullなら現在年から推算）
-function ageToYear(age) {
-  const ca = calcAge();
-  const currentYear = new Date().getFullYear();
-  if (!ca) return currentYear + Math.max(0, age - 30);
-  return currentYear + (age - ca);
-}
-
 // 特定の暦年における年間収入（万円/年）
 function getIncomeForYear(yr) {
   const base = (state.finance.income || 0) * 12 + (state.finance.bonus || 0);

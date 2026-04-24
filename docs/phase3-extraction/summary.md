@@ -16,7 +16,12 @@
 ---
 
 ## Step 1: calc/utils.js（年齢補助）
-（Task 2 実施時に記入）
+
+- **抽出関数**: `calcAge`, `calcAgeAtYear`, `calcPartnerAgeAtYear`, `ageToYear`
+- **calc/utils.js 行数**: 41 行
+- **index.html 削減行数**: 33 行（23,489 → 23,456）
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
+- **commit SHA**: （Step 9 で追記）
 
 ## Step 2: calc/asset-growth.js（資産成長・税率）
 （Task 3 実施時に記入）
