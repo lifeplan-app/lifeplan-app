@@ -24,7 +24,11 @@ const __dirname = dirname(__filename);
 const SAMPLE_DIR = resolve(__dirname, '..', 'sample_data');
 
 const SCENARIOS = [
-  { key: 'A', label: 'シナリオA 田中葵', file: 'シナリオA_26歳独身奨学金返済中.json' },
+  { key: 'A', label: 'シナリオA 田中葵 26歳独身',      file: 'シナリオA_26歳独身奨学金返済中.json' },
+  { key: 'B', label: 'シナリオB 鈴木健太 35歳共働き',   file: 'シナリオB_35歳共働き夫婦子1人住宅ローン.json' },
+  { key: 'C', label: 'シナリオC 山本誠 45歳FIRE目標',   file: 'シナリオC_45歳高収入FIRE目標子2人.json' },
+  { key: 'D', label: 'シナリオD 中村博 55歳老後準備',   file: 'シナリオD_55歳老後準備期奨学金残あり.json' },
+  { key: 'E', label: 'シナリオE 林菜緒 38歳シングル',   file: 'シナリオE_38歳シングルマザー賃貸奨学金返済中.json' },
 ];
 
 describe('scenario snapshots', () => {
