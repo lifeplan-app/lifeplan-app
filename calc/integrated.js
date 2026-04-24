@@ -61,6 +61,14 @@ function calcIntegratedSim(years, opts = {}) {
   const _pRetireYearIS = (_pBirthYearIS && _rIS.partnerTargetAge)
     ? _pBirthYearIS + parseInt(_rIS.partnerTargetAge) : null;
   const _pExpChangeMonthlyIS = parseFloat(_rIS.partnerExpenseChange) || 0;
+  // [Phase 4b 06-I03] パートナー退職後 60 歳未満の国民年金保険料（17,510 円/月 × 12 = 21.012 万円/年、令和 7 年度）
+  const _pAge60YearIS = _pBirthYearIS ? _pBirthYearIS + 60 : null;
+  // [Phase 4b 06-I02] 配偶者控除の簡易近似（gross モード限定）
+  // 厳密実装は calcTakeHome 改修が必要（Phase 4c 候補）
+  // 簡易近似：gross モードで partnerAnnualIncome ≤ 103 万円なら本人 annualIncome に +0.5%
+  const _partnerAnnualIncomeIS = (parseFloat(state.finance?.partnerIncome) || 0) * 12
+                               + (parseFloat(state.finance?.partnerBonus) || 0);
+  const _applySpouseDeduction = state.finance?._inputMode === 'gross' && _partnerAnnualIncomeIS <= 103;
 
   // [Phase 2.5 09-C01 fix] 現役期もインフレ係数を適用（退職シミュとの非対称性解消）
   // [Phase 4b 02-I02] インフレ変数統一: retirement.inflationRate 明示設定なら優先、
@@ -87,11 +95,19 @@ function calcIntegratedSim(years, opts = {}) {
     let annualIncome  = getIncomeForYearWithGrowth(yr);
     // [Phase 4a 09-I01] gross モード時は手取率 NET_RATIO(0.78) を乗算（配当は calcAllAssetGrowth で税引き済みのため二重適用しない）
     if (state.finance?._inputMode === 'gross') annualIncome *= 0.78;
+    // [Phase 4b 06-I02] 配偶者控除の簡易近似（gross モードで配偶者収入 ≤ 103 万円）
+    // 配偶者控除枠 38 万円 × 実効税率 15-20% ≈ 5.7-7.6 万円/年 → 本人 annualIncome 500 万円想定で +0.5% 程度
+    if (_applySpouseDeduction) annualIncome *= 1.005;
     // [Phase 2.5 09-C01 fix] 現役期の年間支出にもインフレを適用
     let annualExpense   = getExpenseForYear(yr) * _infFactorIS;
     // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化を加算（calcRetirementSimWithOpts:17666 と同等ロジック）
     if (_pRetireYearIS !== null && yr >= _pRetireYearIS) {
       annualExpense += _pExpChangeMonthlyIS * 12;
+    }
+    // [Phase 4b 06-I03] パートナー退職後 60 歳未満の国民年金保険料を支出に加算
+    if (_pRetireYearIS !== null && yr >= _pRetireYearIS
+        && _pAge60YearIS !== null && yr < _pAge60YearIS) {
+      annualExpense += 21.012;
     }
     const oneTime       = getOneTimeForYear(yr);
 

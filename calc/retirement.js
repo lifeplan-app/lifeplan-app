@@ -531,7 +531,7 @@ function calcRetirementSimWithOpts(opts = {}) {
       indexPool = indexTaxablePool + indexNisaPool;
     }
 
-    const pension = age >= pensionAge ? basePensionAnnual : 0;
+    let pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
     // パートナーリタイア後の就労収入・支出変化（本人リタイア後もパートナーが働いている場合に加算）
@@ -542,13 +542,32 @@ function calcRetirementSimWithOpts(opts = {}) {
     const _partnerSemiEndAge = parseInt(r.partnerSemiEndAge) || null;
     const _partnerSemiEndYear = (_partnerBirthYear && _partnerSemiEndAge) ? _partnerBirthYear + _partnerSemiEndAge : null;
     const _partnerBaseAnnual = ((parseFloat(state.finance?.partnerIncome) || 0) * 12) + (parseFloat(state.finance?.partnerBonus) || 0);
+    // [Phase 4b 06-I01] パートナー就労収入にも昇給累積適用
+    // Phase 2.5 02-C01/06-C01 と同じく partnerCurrentAge はパートナー自身の年齢基準
+    const _partnerGrowthRate = (parseFloat(state.finance?.partnerGrowthRate) || 0) / 100;
+    const _partnerCurrentAgeRet = _partnerBirthYear ? (currentYear - _partnerBirthYear) : currentAge;
+    const _partnerUntilAge = parseInt(state.finance?.partnerGrowthUntilAge) || (_partnerCurrentAgeRet + 30);
+    const _partnerAgeAtYear = _partnerBirthYear ? (yr - _partnerBirthYear) : null;
+    const _partnerGrowthYears = Math.max(0, Math.min(
+      _partnerUntilAge - _partnerCurrentAgeRet,
+      (_partnerAgeAtYear != null ? _partnerAgeAtYear : age) - _partnerCurrentAgeRet
+    ));
+    const _partnerBaseAnnualWithGrowth = _partnerBaseAnnual * Math.pow(1 + _partnerGrowthRate, _partnerGrowthYears);
     let partnerWorkIncome = 0;
     if (_partnerBaseAnnual > 0) {
       if (_partnerRetireYear === null || yr < _partnerRetireYear) {
-        partnerWorkIncome = _partnerBaseAnnual; // まだ現役
+        partnerWorkIncome = _partnerBaseAnnualWithGrowth; // まだ現役（昇給累積適用）
       } else if (r.partnerType === 'semi' && (_partnerSemiEndYear === null || yr < _partnerSemiEndYear)) {
         partnerWorkIncome = (parseFloat(r.partnerSemiMonthlyIncome) || 0) * 12; // セミリタイア中
       }
+    }
+    // [Phase 4b 06-I04] 加給年金（簡易）
+    // 厳密条件：本人が厚生年金 20 年以上 + 配偶者 65 歳未満
+    // 簡易実装：本人 65-74 歳かつ配偶者 65 歳未満なら +40 万円/年
+    const _hasKakyuNenkin = age >= 65 && age < 75
+      && _partnerAgeAtYear != null && _partnerAgeAtYear < 65;
+    if (_hasKakyuNenkin) {
+      pension += 40;
     }
     const extra = extraIncomes.reduce((s, inc) => {
       const ok = (!inc.startAge || age >= inc.startAge) && (!inc.endAge || age <= inc.endAge);
@@ -561,13 +580,19 @@ function calcRetirementSimWithOpts(opts = {}) {
     // パートナーリタイア後の月支出変化（通勤費削減・余暇費増加など）
     const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYear)
       ? (parseFloat(r.partnerExpenseChange) || 0) * 12 : 0;
+    // [Phase 4b 06-I03] パートナー退職後 60 歳未満の国民年金保険料
+    // 17,510 円/月 × 12 = 21.012 万円/年（令和 7 年度）
+    const _partnerAge60YearRet = _partnerBirthYear ? _partnerBirthYear + 60 : null;
+    const _partnerKokunen = (_partnerRetireYear !== null && yr >= _partnerRetireYear
+                              && _partnerAge60YearRet !== null && yr < _partnerAge60YearRet)
+      ? 21.012 : 0;
     // 配当収入（高配当プール × 配当利回り）
     // dividendPoolのキャピタルゲインは _divCapitalReturn で成長し、配当分は別収入として計上
     // [Phase 4a 08-I01] 配当に実効税率を適用（NISA/iDeCo 等は非課税扱い）
     const dividendGross = dividendPool * _divYield;
     const dividendIncome = Math.round(dividendGross * (1 - _divTaxRate));
     const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct + dividendIncome;
-    const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange) - totalNonAssetIncome);
+    const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange + _partnerKokunen) - totalNonAssetIncome);
 
     // ===== 資産使い切り哲学: 全モードで生活費は必ず確保 =====
     // 各モードは「いくら多めに取り崩すか」の戦略であり、不足は発生しない
