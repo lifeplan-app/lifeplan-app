@@ -17146,10 +17146,12 @@ function getIncomeForYearWithGrowth(yr) {
                           + (parseFloat(state.finance.partnerBonus) || 0);
   const partnerGrowthRate = (parseFloat(state.finance.partnerGrowthRate) || 0) / 100;
   const partnerUntilAge   = parseInt(state.finance.partnerGrowthUntilAge) || untilAge;
+  // [Phase 2.5 02-C01/06-C01 fix] パートナー昇給年数はパートナー自身の年齢基準で計算。生年未設定時は本人年齢 fallback で後方互換。
+  const partnerCurrentAge = partnerBirthYear ? (currentYear - partnerBirthYear) : currentAge;
 
   let partnerIncomeThisYear = 0;
   if (partnerBase > 0) {
-    const partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - currentAge));
+    const partnerGrowthYears = Math.max(0, Math.min(yearsElapsed, partnerUntilAge - partnerCurrentAge));
     partnerIncomeThisYear = partnerBase * Math.pow(1 + partnerGrowthRate, partnerGrowthYears);
 
     // パートナーのリタイア・セミリタイア設定を反映
