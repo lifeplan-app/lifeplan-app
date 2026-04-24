@@ -119,7 +119,7 @@ Important 18 件を 6 グループに分けて修正した記録。
 - **確認ポイント**: サンプルの partnerGrowthRate、partnerTargetAge、年齢差
 
 ### 実測サマリー
-- **commit SHA**: （Step 10 で追記）
+- **commit SHA**: `33f50dd`
 - **snapshot 差分行数**: 1,750 行（挿入 875 / 削除 875）
 - **サンプルのパートナー情報**:
   - A（石川花子・独身）: パートナーなし → 全修正が no-op
