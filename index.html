@@ -5343,6 +5343,7 @@
     <script src="calc/asset-growth.js"></script>
     <script src="calc/income-expense.js"></script>
     <script src="calc/life-events.js"></script>
+    <script src="calc/mortgage.js"></script>
 <script>
 // ===== DATA =====
 // ASSET_TYPES は calc/asset-growth.js に移動（Phase 3 Step 2）
@@ -12080,65 +12081,8 @@ function renderChildrenList() {
   renderLeSectionStatuses();
 }
 
-// 月次返済額を計算するヘルパー
-function calcMonthlyPayment(principal, annualRate, remainingMonths) {
-  if (!principal || !remainingMonths) return 0;
-  const r = annualRate / 100 / 12;
-  return r === 0 ? principal / remainingMonths
-    : principal * r * Math.pow(1+r, remainingMonths) / (Math.pow(1+r, remainingMonths) - 1);
-}
-
-// ローンスケジュール計算（繰り上げ返済・借り換えイベント考慮）
-// 戻り値: Map<year, {monthlyPayment, principalStart, principalEnd}>
-function calcMortgageSchedule() {
-  const m = state.lifeEvents.mortgage;
-  if (!m.amount || !m.startYear || !m.term) return new Map();
-  let principal = m.amount;
-  let rate = m.rate || 1.5;
-  const startYear = parseInt(m.startYear);
-  let endYear = startYear + parseInt(m.term);
-  let monthly = calcMonthlyPayment(principal, rate, (endYear - startYear) * 12);
-  const events = (m.events || []).slice().sort((a, b) => a.year - b.year);
-  const schedule = new Map();
-
-  for (let year = startYear; year < endYear && principal > 0.01; year++) {
-    // イベント処理（この年の開始時）
-    for (const ev of events) {
-      if (parseInt(ev.year) !== year) continue;
-      if (ev.type === 'prepay') {
-        const amt = parseFloat(ev.amount) || 0;
-        principal = Math.max(0, principal - amt);
-        if (ev.method === 'payment') {
-          // 返済額軽減型：同期間でmonthly再計算
-          const remaining = (endYear - year) * 12;
-          monthly = calcMonthlyPayment(principal, rate, remaining);
-        } else {
-          // 期間短縮型：同monthly額で残期間再計算
-          const r = rate / 100 / 12;
-          const newN = r === 0 ? Math.ceil(principal / monthly)
-            : Math.ceil(Math.log(monthly / (monthly - principal * r)) / Math.log(1 + r));
-          endYear = year + Math.ceil(newN / 12);
-        }
-      } else if (ev.type === 'refi') {
-        rate = parseFloat(ev.newRate) || rate;
-        const newTerm = parseInt(ev.newTerm) || (endYear - year);
-        endYear = year + newTerm;
-        monthly = calcMonthlyPayment(principal, rate, newTerm * 12);
-      }
-    }
-    // 年次残高計算（月次ループで元本減算）
-    const r = rate / 100 / 12;
-    let p = principal;
-    for (let mo = 0; mo < 12 && p > 0.01; mo++) {
-      const interest = p * r;
-      const principalPay = Math.min(p, monthly - interest);
-      p -= principalPay;
-    }
-    schedule.set(year, { monthlyPayment: monthly, principalStart: principal, principalEnd: Math.max(0, p) });
-    principal = Math.max(0, p);
-  }
-  return schedule;
-}
+// [Phase 3 Step 5] calcMonthlyPayment / calcMortgageSchedule は calc/mortgage.js に抽出
+// calcMortgage() は DOM 参照のため本ファイルに残置
 
 function calcMortgage() {
   const amount    = parseFloat(document.getElementById('leMortgageAmount').value) || 0;
@@ -16594,61 +16538,7 @@ function getMedicalAddition(age, model) {
   return 0;
 }
 
-// [Phase 2.5 05-C02 helper] 簡易所得税計算（万円単位）。正確な給与所得控除・各種控除は考慮せず、課税対象所得ベースの概算。
-function calcIncomeTaxAmount(taxableIncomeMan) {
-  if (taxableIncomeMan <= 0) return 0;
-  // 国税庁 No.2260（2026年4月現在）速算表
-  const brackets = [
-    { upper: 195,  rate: 0.05,  deduction: 0 },
-    { upper: 330,  rate: 0.10,  deduction: 9.75 },
-    { upper: 695,  rate: 0.20,  deduction: 42.75 },
-    { upper: 900,  rate: 0.23,  deduction: 63.6 },
-    { upper: 1800, rate: 0.33,  deduction: 153.6 },
-    { upper: 4000, rate: 0.40,  deduction: 279.6 },
-    { upper: Infinity, rate: 0.45, deduction: 479.6 },
-  ];
-  for (const b of brackets) {
-    if (taxableIncomeMan <= b.upper) {
-      return Math.max(0, taxableIncomeMan * b.rate - b.deduction);
-    }
-  }
-  return 0;
-}
-
-// ⑧ [Phase 2.5 05-C01/05-C02 fix] 住宅ローン控除: 住宅種別の借入限度・税額 cap を考慮（万円/年）
-function calcMortgageDeduction(year, balance) {
-  const p = getRetirementParams();
-  const m = state.lifeEvents?.mortgage || {};
-  if (!p.mortgageDeductStart || !p.mortgageDeductYears || !balance) return 0;
-  const endYear = p.mortgageDeductStart + p.mortgageDeductYears - 1;
-  if (year < p.mortgageDeductStart || year > endYear) return 0;
-
-  // 住宅種別ごとの借入限度額（万円、2026年4月・国税庁 No.1211-1 準拠）
-  const HOUSING_TYPES = {
-    general:       { limit: 2000 },
-    long_term:     { limit: 5000 },
-    low_carbon:    { limit: 5000 },
-    zeh:           { limit: 4500 },
-    energy_saving: { limit: 4000 },
-  };
-  const housingType = m.housingType || 'general';
-  const loanLimit = HOUSING_TYPES[housingType]?.limit ?? 2000;
-  const controlledBalance = Math.min(balance, loanLimit);
-
-  // 控除額（上限前）= 残高 × 0.7%
-  const rawDeduction = controlledBalance * 0.007;
-
-  // 税額 cap: 所得税 + 住民税（住民税控除上限 9.75 万円/年）
-  const incomeMan = ((parseFloat(state.finance?.income) || 0) * 12)
-                  + (parseFloat(state.finance?.bonus) || 0);
-  // 概算: 課税所得 ≒ 年収 × 0.7（給与所得控除・基礎控除・社保控除の超ざっくり）
-  const taxableIncome = incomeMan * 0.7;
-  const incomeTax = calcIncomeTaxAmount(taxableIncome);
-  const residentTaxCap = 9.75; // 万円/年（国税庁 No.1211）
-  const deductCap = incomeTax + residentTaxCap;
-
-  return Math.min(rawDeduction, deductCap);
-}
+// [Phase 3 Step 5] calcIncomeTaxAmount / calcMortgageDeduction は calc/mortgage.js に抽出
 
 // ===== ④ 年金受給開始年齢 損益分岐チャート =====
 let retBreakevenChartObj = null;
