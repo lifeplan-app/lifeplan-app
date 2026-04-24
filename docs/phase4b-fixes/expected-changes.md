@@ -19,7 +19,7 @@ Important 18 件を 6 グループに分けて修正した記録。
   - 初年度 snapshot が既存と一致（初年度の `_wInvestReturn` は同じ）
 
 ### 実測サマリー
-- **commit SHA**: （Step 8 で追記）
+- **commit SHA**: `cef2643`
 - **snapshot 差分行数**: 約 2890 行（挿入 1445 / 削除 1445）
 - **サンプルの `cash_reserved`**: 0 件（5 サンプルいずれも未使用）
 - **シナリオ別変化**:
