@@ -11,6 +11,20 @@
 //     ブラウザ実行するため問題なし。他のテストは `calcRetirementSimWithOpts()` のみ使用。
 //   - Phase 2.5 の Critical fix コメント（06-C02 / 07-C01 / 08-C01 など）は忠実に保持する。
 
+// [Phase 4b 02-I02] インフレ変数統一
+// retirement.inflationRate が明示設定なら優先、未設定なら finance.inflationRate（既定 2%）にフォールバック
+// 既定値の二重管理（retirement=1.5%, finance=2%）を解消し、現役期と退職期で同じソースから取得
+// 返値は年率小数（例: 2% → 0.02）
+function _getInflationRate(state) {
+  const r = (state && state.retirement) || {};
+  const f = (state && state.finance) || {};
+  if (r.inflationRate != null && r.inflationRate !== '') {
+    const v = parseFloat(r.inflationRate);
+    if (!isNaN(v)) return v / 100;
+  }
+  return (parseFloat(f.inflationRate) || 2) / 100;
+}
+
 function calcRetirementSim() {
   const r = state.retirement || {};
   const currentAge = calcAge();
@@ -252,7 +266,9 @@ function calcRetirementSim() {
 function getRetirementParams() {
   const r = state.retirement || {};
   return {
-    inflationRate:     (parseFloat(r.inflationRate)     || 1.5) / 100,
+    // [Phase 4b 02-I02] インフレ率は _getInflationRate 経由で finance/retirement を統一参照
+    //   retirement.inflationRate 明示設定時は従来通り、未設定なら finance.inflationRate（既定 2%）にフォールバック
+    inflationRate:     _getInflationRate(state),
     expenseDecayRate:  (parseFloat(r.expenseDecayRate)  || 0)   / 100,
     pensionSlide:      (parseFloat(r.pensionSlide)      || 0)   / 100,
     medicalModel:      r.medicalModel || 'moderate',

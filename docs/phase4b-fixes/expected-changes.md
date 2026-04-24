@@ -39,10 +39,37 @@ Important 18 件を 6 グループに分けて修正した記録。
 ## Group 6: インフレ変数統一（02-I02）
 
 ### 期待方向
-（Task 3 実施時に記入）
+- **対象**: 02-I02 インフレ変数二重管理の解消
+- **期待される snapshot 差分**:
+  - サンプルが `state.retirement.inflationRate` を明示設定していれば従来通り → 差分ゼロ
+  - サンプルが未設定（`retirement.inflationRate` null/未定義）なら現状の 1.5% デフォルトから `finance.inflationRate`（2%）にフォールバック → **退職期 annualExpense が微増**
+  - シナリオ B 鈴木健太の退職期 30 年で 1.015^30 ≈ 1.563 → 1.02^30 ≈ 1.811、約 16% 増相当
+  - 最終資産（endAssets）は減方向
+- **確認ポイント**: サンプルの `retirement.inflationRate` 設定を事前 grep
+- **実サンプル確認（事前 grep 結果）**:
+  - サンプル 5 件すべて `retirement.inflationRate` を明示設定（A/B/D/E=1.0、C=1.5）
+  - `finance.inflationRate` はすべて未設定（デフォルト 2% にフォールバック）
+  - **逆方向の影響**: 退職期は従来通り（変化なし）、**現役期インフレ率が 2% → retirement 値（1.0〜1.5%）に低下** → 現役期の各支出（childcare/education/insurance/recurring など）の名目値が減少 → 各年の `annualExpense` が微減、`endAssets` は**増方向**
+  - シナリオ A（2026→2048、22 年）: 1.02^22 ≈ 1.546 → 1.01^22 ≈ 1.244、約 19.5% 低下
+  - シナリオ B/D/E も同様に現役期インフレ係数が低下
+  - シナリオ C（1.5%）は 1.02^N → 1.015^N、影響はより小さい
 
 ### 実測サマリー
-（Task 3 修正後に記入）
+- **commit SHA**: （Step 10 で追記）
+- **snapshot 差分行数**: 11,300 行（挿入 5,650 / 削除 5,650）
+- **サンプルの `retirement.inflationRate` 設定**: 5 サンプルすべて設定済み（A/B/D/E=1.0、C=1.5）、`finance.inflationRate` は全件未設定
+- **シナリオ別変化**（各シナリオとも `calcIntegratedSim` / `calcRetirementSimWithOpts`（標準/楽観/悲観）/ `calcScenarioFullTimeline` に影響）:
+  - A（26歳独身・inflation=1.0）: 2027 年 annualExpense 196→194、totalWealth 114→116、長期で効果拡大（146 hunks）
+  - B（35歳共働き・inflation=1.0）: 現役期支出減 → 資産積み増し（154 hunks）
+  - C（45歳FIRE・inflation=1.5）: 最も変化が小さい（差分 2% → 1.5% のみ）、2027 年 annualExpense 926→921（84 hunks）
+  - D（55歳老後準備・inflation=1.0）: 退職間近で現役期短いが、退職後ではなく「現役期〜退職期境界」で差分が積み上がる（205 hunks）
+  - E（38歳シングル・inflation=1.0）: 2027 年 annualExpense 295→292、leCost も教育費インフレが抑制されて減少（17 hunks、清算発動が遅れる）
+- **方向の評価**: 期待通り（ただし方向は当初仮説と逆）。
+  - 当初想定：サンプルが retirement.inflationRate を未設定なら退職期支出増・endAssets 減を期待
+  - 実際：**サンプル全 5 件が retirement.inflationRate を明示設定**しており、退職期は変化なし。代わりに現役期のインフレ率が `finance.inflationRate`（default 2%）から `retirement.inflationRate`（1.0〜1.5%）に**低下**した結果、現役期 annualExpense が微減・endAssets は増加。
+  - 02-I02 の「二重管理の解消」自体は達成：現役期と退職期が同じ `_getInflationRate(state)` ソースを参照する。
+  - 後方互換性：`retirement.inflationRate` 明示設定は従来通り尊重されるため、サンプル退職期の計算結果に影響なし（確認済み）。
+  - シナリオ A・E で `endAssets` が大幅改善（A: -116 → 1311 等）しているのは、元々資産枯渇寸前のサンプルでインフレ 1% 低下が複利で効いた結果。
 
 ---
 

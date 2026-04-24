@@ -63,7 +63,10 @@ function calcIntegratedSim(years, opts = {}) {
   const _pExpChangeMonthlyIS = parseFloat(_rIS.partnerExpenseChange) || 0;
 
   // [Phase 2.5 09-C01 fix] 現役期もインフレ係数を適用（退職シミュとの非対称性解消）
-  const _infRateIS = (parseFloat(state.finance?.inflationRate) || 2) / 100;
+  // [Phase 4b 02-I02] インフレ変数統一: retirement.inflationRate 明示設定なら優先、
+  //   未設定なら finance.inflationRate（既定 2%）にフォールバック。
+  //   calc/retirement.js の _getInflationRate を script 読み込み順で global 共有。
+  const _infRateIS = _getInflationRate(state);
 
   for (let y = 0; y <= years; y++) {
     const yr = currentYear + y;
