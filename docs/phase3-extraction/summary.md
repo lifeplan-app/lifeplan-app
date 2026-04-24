@@ -156,5 +156,5 @@
 - **残置（index.html に残す）**: `calcPensionEstimate(who)`, `calcSimplePensionEstimate`, `calcAndShowDeferralSim`（すべて DOM glue）
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
 - **依存**: なし（完全な純粋関数）。`calcPensionEstimate(who)` は同一グローバルスコープから `_calcPensionCore` / `KOKUMIN_FULL_MONTHLY` を参照
-- **commit SHA**: （Phase 3.5 実装コミット時に追記）
+- **commit SHA**: `b044118`
 - **Phase 4 での活用**: `04-I02`（年金繰下げ反映）修正時、`_calcPensionCore` に `pensionAge` 引数を追加する or `calc/retirement.js` 側で `adjustRate(pensionAge)` を掛けるかの選択ができる状態
