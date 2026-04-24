@@ -76,10 +76,30 @@ Important 18 件を 6 グループに分けて修正した記録。
 ## Group 8: 旧 NISA/振替（01-I01, 01-I02, 01-I03）
 
 ### 期待方向
-（Task 4 実施時に記入）
+- **対象**:
+  - 01-I01: 課税口座の毎年課税近似（Phase 4b では現状維持＋コメント追加のみ、Phase 5 で完全実装）
+  - 01-I02: 旧 NISA noNewContrib 非 UI 経路ガード（`calcAssetGrowth` 内で強制 annualContrib = 0）
+  - 01-I03: 振替サイクル _wastedContribsByYear 補正（既存コード確認、漏れがあれば補完）
+- **期待される snapshot 差分**:
+  - 01-I02: サンプルに旧 NISA（`nisa_old_tsumitate`, `nisa_old_general`）が含まれかつ `yr > endYear` で `monthly > 0` のケースでのみ差分。通常サンプルは UI 経由で `monthly=0` になっているため差分ゼロの可能性
+  - 01-I03: サイクルのある振替設定がないサンプルでは差分ゼロ
+  - 01-I01: 本 Task では差分ゼロ（コメント追加のみ）
+- **確認ポイント**: サンプルの旧 NISA・振替設定を事前 grep
+- **実サンプル確認（事前 grep 結果）**:
+  - `nisa_old_tsumitate` / `nisa_old_general`: 5 サンプルいずれも 0 件（grep 結果一致なし）
+  - `overflowTargetId` / `overflowTargetId2` / `nisaOverflowTargetId`: 5 サンプルいずれも 0 件
+  - → 01-I02 / 01-I03 は本サンプルセットでは差分ゼロ見込み。ガード・補完は非 UI 経路（JSON import / 将来の振替設定追加）への二重防御として実装。
 
 ### 実測サマリー
-（Task 4 修正後に記入）
+- **commit SHA**: （Step 8 で追記）
+- **snapshot 差分行数**: 0 行（差分なし）
+- **サンプルの旧 NISA 有無**: なし（5 サンプルいずれも `nisa_old_tsumitate` / `nisa_old_general` 未使用）
+- **サンプルの振替サイクル有無**: なし（5 サンプルいずれも `overflowTargetId` / `overflowTargetId2` / `nisaOverflowTargetId` 未設定）
+- **01-I01 の扱い**: コメント追加のみ、Phase 5 で本格実装
+- **方向の評価**: 期待通り。
+  - 01-I02: 旧 NISA `noNewContrib && yr > endYear` ガードを `calcAssetGrowth` 内に挿入。サンプルに該当データなしのため差分ゼロ（コードパスは二重防御として整備）。
+  - 01-I03: サイクル時のフォールバックで `_wastedContribsByYear` がサイクル内→サイクル内への振替を wasted 計上するように改善。サンプルにサイクル設定なしのため差分ゼロ。
+  - 01-I01: `effectiveReturn` に Phase 5 TODO コメントのみ追加（挙動変更なし）。
 
 ---
 
