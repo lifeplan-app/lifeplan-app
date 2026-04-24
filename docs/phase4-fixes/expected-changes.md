@@ -87,7 +87,7 @@ Important 14 件を 5 グループに分けて修正した記録。
   - サンプルで繰下げ設定（66 歳以上）があれば snapshot 変化。全員 65 歳なら差分ゼロ
 
 ### 実測サマリー
-- **commit SHA**: （Step 9 で追記）
+- **commit SHA**: 2130e0a
 - **サンプル pensionAge grep 結果**: A/B/C/D/E 全サンプルで `pensionAge=65` かつ `pensionAge_p=65`（繰下げ/繰上げ設定なし）
   - A: pensionAge=65, pensionMonthly=12, pensionAge_p=65, pensionMonthly_p=0
   - B: pensionAge=65, pensionMonthly=16, pensionAge_p=65, pensionMonthly_p=10
