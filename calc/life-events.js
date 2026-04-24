@@ -6,9 +6,10 @@
 // 将来テストで sb.EDU_COST を参照する必要が生じたら var に変更する。
 
 // 教育費プリセット（万円/年, 文部科学省子供の学習費調査 令和3年度ベース）
+// [Phase 4b 03-I05] 公立幼稚園 6 → 18.46 万円（文科省令和5年度「子供の学習費調査」基準）
 const EDU_COST = {
   nursery:      { public: 20,  private: 45 },   // 0-2歳
-  kindergarten: { public: 6,   private: 17 },   // 3-5歳（無償化後）
+  kindergarten: { public: 18.46, private: 17 }, // 3-5歳（無償化後・令和5年度「子供の学習費調査」）
   elementary:   { public: 35,  private: 167 },  // 6-11歳
   juniorhigh:   { public: 53,  private: 143 },  // 12-14歳
   highschool:   { public: 51,  private: 105 },  // 15-17歳
@@ -31,7 +32,29 @@ function calcLECostByYear(year, opts = {}) {
   const le = state.lifeEvents;
 
   if (!noChild) {
-    le.children.forEach(c => {
+    // [Phase 4b 03-I10] 同一 birthYear の子は双子として 1 組に集約（育休減収の 2 重計上防止）
+    // 教育費・保育費は count 倍で集約（双子は 2 倍）、育休減収は 1 回分のみ（双子でも 1 組の育児）
+    const childrenGrouped = (le.children || []).reduce((acc, c) => {
+      const existing = acc.find(g => g.birthYear === c.birthYear);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        acc.push({ ...c, count: 1 });
+      }
+      return acc;
+    }, []);
+
+    // [Phase 4b 03-I06] 保育料所得連動（最小実装・3 段階）
+    // 公立保育園の所得別目安（都市部ベース）。出典: 江東区・川崎市の保育料早見表。
+    // 年収 = 月収 × 12 + ボーナス の簡易換算（万円）
+    const monthlyIncomeForNursery = parseFloat(state.finance?.income) || 0;
+    const bonusForNursery = parseFloat(state.finance?.bonus) || 0;
+    const annualIncomeForNursery = monthlyIncomeForNursery * 12 + bonusForNursery;
+    const publicNurseryCostPerYear = annualIncomeForNursery >= 800 ? 54   // 高所得：月 4.5 万円相当
+                                   : annualIncomeForNursery >= 500 ? 30   // 中所得：月 2.5 万円相当
+                                   : 20;                                  // 低所得：月 1.7 万円相当
+
+    childrenGrouped.forEach(c => {
       const age = year - c.birthYear;
       if (age < 0) return;
 
@@ -53,34 +76,64 @@ function calcLECostByYear(year, opts = {}) {
         const monthlyIncome = person.income != null
           ? person.income
           : (state.finance.income || 0);
-        const rate = (person.incomeRate ?? 67) / 100;
-        return monthlyIncome * overlapMonths * (1 - rate);
+        // [Phase 4b 03-I07] 育休給付の期間分岐（雇用保険法）
+        // 180 日（6 ヶ月）まで：月収の 67%、181 日（7 ヶ月目）以降：50%
+        // 重なり区間 [overlapStart, overlapEnd) が育休開始（startMonthFromBirth）からどの位置かで按分。
+        // 前半レートは `incomeRate`（指定時）、後半は 50% 固定。
+        const firstHalfRate  = (person.incomeRate ?? 67) / 100;
+        const secondHalfRate = 0.50;
+        const firstHalfEnd = startMonthFromBirth + 6; // 前半 6 ヶ月の境界
+        const firstHalfMonths  = Math.max(0, Math.min(overlapEnd, firstHalfEnd) - overlapStart);
+        const secondHalfMonths = Math.max(0, overlapEnd - Math.max(overlapStart, firstHalfEnd));
+        return monthlyIncome * (
+          firstHalfMonths  * (1 - firstHalfRate) +
+          secondHalfMonths * (1 - secondHalfRate)
+        );
       };
 
       const pl = c.parentalLeave;
+      // 当年に育休期間が重なるか（03-I09 用）
+      let hasLeaveThisYear = false;
       if (pl) {
         // パートナー（産休・育休）
         const momOffset = pl.mom?.leaveStart === 'after_maternity' ? 2 : 0;
-        costs.childcare += calcLeaveReduction(pl.mom || {}, momOffset);
+        const momReduction = calcLeaveReduction(pl.mom || {}, momOffset);
+        costs.childcare += momReduction;
         // 本人（育休開始タイミングによりoffset）
         const dadOffset = pl.dad?.leaveStart === 'after'
           ? (pl.mom?.leaveMonths || 0) + (pl.mom?.leaveStart === 'after_maternity' ? 2 : 0)
           : 0;
-        costs.childcare += calcLeaveReduction(pl.dad || {}, dadOffset);
+        const dadReduction = calcLeaveReduction(pl.dad || {}, dadOffset);
+        costs.childcare += dadReduction;
+        if (momReduction > 0 || dadReduction > 0) hasLeaveThisYear = true;
       } else {
         // 旧データ互換
+        // [Phase 4b 03-I02] 旧互換 maternityMonths パスで賞与を除外（新形式は既にボーナス除外済み）
+        // 月給 × 12 ヶ月相当を基準とし、ボーナスは含めない
         const maternityYears = (c.maternityMonths || 0) / 12;
         if (age < maternityYears) {
-          const annualIncome = (state.finance.income || 0) * 12 + (state.finance.bonus || 0);
+          const annualIncome = (state.finance.income || 0) * 12; // ボーナス除外
           costs.childcare += annualIncome * (1 - (c.maternityRate || 67) / 100);
+          hasLeaveThisYear = true;
         }
       }
 
-      // 教育費
+      // 教育費（03-I10: count 倍、03-I06: 公立 nursery は所得連動、03-I09: 育休中 nursery 排他）
       Object.entries(PHASE_AGES).forEach(([phase, ages]) => {
-        if (ages.includes(age)) {
-          costs.education += EDU_COST[phase][c.phases?.[phase] || 'public'] || 0;
+        if (!ages.includes(age)) return;
+        const phaseKey = c.phases?.[phase] || 'public';
+        let unitCost;
+        if (phase === 'nursery' && phaseKey === 'public') {
+          // [Phase 4b 03-I06] 公立保育園は所得連動値を使用
+          unitCost = publicNurseryCostPerYear;
+        } else {
+          unitCost = EDU_COST[phase][phaseKey] || 0;
         }
+        // [Phase 4b 03-I09] 出産年重複：育休期間中は nursery 費用を計上しない（排他ロジック）
+        if (phase === 'nursery' && age === 0 && hasLeaveThisYear) {
+          unitCost = 0;
+        }
+        costs.education += unitCost * (c.count || 1);
       });
     });
   }
@@ -135,13 +188,35 @@ function calcLECostByYear(year, opts = {}) {
     if (ca.startYear && year >= parseInt(ca.startYear) && (!ca.endYear || year <= parseInt(ca.endYear))) {
       costs.care += (parseFloat(ca.monthlyFee) || 0) * 12;
     }
+    // [Phase 4b 03-I01] 介護一時費用（平均 47.2 万円、生命保険文化センター 2024）
+    // 介護開始年（care.startAge 到達年 または care.startYear 到達年）に一時費用を加算。
+    // サンプルデータは care.startYear 形式のため両経路をサポート。
+    if (ca) {
+      const pBirth = state.profile?.birth;
+      const profBirthYear = pBirth ? parseInt(String(pBirth).slice(0, 4)) : null;
+      const ageAtYear = profBirthYear ? (year - profBirthYear) : null;
+      const careStartAge  = ca.startAge != null ? parseInt(ca.startAge) : null;
+      const careStartYear = ca.startYear != null ? parseInt(ca.startYear) : null;
+      const matchByAge  = careStartAge != null && ageAtYear === careStartAge;
+      const matchByYear = careStartYear != null && year === careStartYear;
+      if (matchByAge || matchByYear) {
+        const oneTimeFee = parseFloat(ca.oneTimeFee);
+        costs.care += Number.isFinite(oneTimeFee) ? oneTimeFee : 47.2;
+      }
+    }
   }
 
   if (!noScholarship) {
     (le.scholarships || []).forEach(sc => {
       if (!sc.monthlyPayment || !sc.startYear) return;
       const sy = parseInt(sc.startYear);
-      const ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12) - 1);
+      let ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12) - 1);
+      // [Phase 4b 03-I03] JASSO 第二種（1.641%）の利息補正（簡易実装：返済終了年を 1 年延長）
+      // 厳密な元利均等計算は Phase 5 候補。`scType === 'jasso_2'` または `loanType === 'type2'` を対象。
+      const isJasso2 = sc.scType === 'jasso_2' || sc.loanType === 'type2';
+      if (isJasso2) {
+        ey = ey + 1;
+      }
       if (year >= sy && year <= ey) {
         costs.scholarship += (parseFloat(sc.monthlyPayment) || 0) * 12;
       }
