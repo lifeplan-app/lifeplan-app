@@ -61,8 +61,10 @@ function calcRetirementSim() {
 
   // Post-retirement settings
   const pensionAge = parseInt(r.pensionAge) || 65;
-  const pensionAnnual   = (parseFloat(r.pensionMonthly)   || 0) * 12 * (1 - params.pensionSlide);
-  const pensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 - params.pensionSlide);
+  const pensionAge_p = parseInt(r.pensionAge_p) || 65;
+  // [Phase 4a 04-I02] 繰下げ/繰上げ率を年金額に乗算（adjustRate は calc/pension.js で定義）
+  const pensionAnnual   = (parseFloat(r.pensionMonthly)   || 0) * 12 * adjustRate(pensionAge)   * (1 - params.pensionSlide);
+  const pensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * adjustRate(pensionAge_p) * (1 - params.pensionSlide);
   const withdrawalType  = r.withdrawalType || 'hybrid';
   const withdrawalRate  = (parseFloat(r.withdrawalRate) || 4) / 100;
   const simYears        = lifeExpectancy - targetAge;
@@ -376,9 +378,10 @@ function calcRetirementSimWithOpts(opts = {}) {
   const baseMonthlyExpense2 = parseFloat(r.monthlyExpense2) || baseMonthlyExpense;
   const baseMonthlyExpense3 = parseFloat(r.monthlyExpense3) || baseMonthlyExpense;
   const pensionAge = parseInt(r.pensionAge) || 65;
-  const basePensionAnnual = (parseFloat(r.pensionMonthly) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
   const pensionAge_p = parseInt(r.pensionAge_p) || 65;
-  const basePensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * (1 + pensionMod) * (1 - params.pensionSlide);
+  // [Phase 4a 04-I02] 繰下げ/繰上げ率を年金額に乗算（adjustRate は calc/pension.js で定義）
+  const basePensionAnnual   = (parseFloat(r.pensionMonthly)   || 0) * 12 * adjustRate(pensionAge)   * (1 + pensionMod) * (1 - params.pensionSlide);
+  const basePensionAnnual_p = (parseFloat(r.pensionMonthly_p) || 0) * 12 * adjustRate(pensionAge_p) * (1 + pensionMod) * (1 - params.pensionSlide);
   const semiEndAge = r.type === 'semi' ? (parseInt(r.semiEndAge) || 999) : 0;
   const extraIncomes = r.extraIncomes || [];
   const withdrawalType = r.withdrawalType || 'hybrid';

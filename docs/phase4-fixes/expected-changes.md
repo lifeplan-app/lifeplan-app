@@ -72,10 +72,33 @@ Important 14 件を 5 グループに分けて修正した記録。
 ## Group 1: 年金制度対応（04-I01, 04-I02, 04-I03, 04-I04）
 
 ### 期待方向
-（Task 4 実施時に記入）
+- **対象**:
+  - 04-I01: 2003 年 3 月以前の乗率 7.125/1000
+  - 04-I02: 繰下げ率 `adjustRate(pensionAge)` を retirement.js で乗算
+  - 04-I03: 手取率を年金額階層別テーブル（0.95/0.90/0.85/0.82）に
+  - 04-I04: `KOKUMIN_FULL_MONTHLY` 6.8 → 7.06（2026 年度）
+- **期待される snapshot 差分**:
+  - 04-I04（基礎年金 +3.8%）は `_calcPensionCore` 経由なので、サンプルの `retPensionMonthly` が手入力固定なら**直接影響なし**
+  - 04-I02 の繰下げ率は `state.retirement.pensionAge` が 65 以外に設定されたサンプルで影響（多くのサンプルは 65 のはず）
+  - 実測の snapshot 差分はほぼゼロの想定。各サンプルの `pensionMonthly` が UI 手入力のままなら、04-I01/03/04 は snapshot に反映されない
+  - 04-I02 だけが `pensionAge` 設定に応じて snapshot 変化
+- **確認ポイント**: 
+  - サンプルの `state.retirement.pensionAge` と `pensionAge_p` を事前 grep で確認
+  - サンプルで繰下げ設定（66 歳以上）があれば snapshot 変化。全員 65 歳なら差分ゼロ
 
 ### 実測サマリー
-（Task 4 修正後に記入）
+- **commit SHA**: （Step 9 で追記）
+- **サンプル pensionAge grep 結果**: A/B/C/D/E 全サンプルで `pensionAge=65` かつ `pensionAge_p=65`（繰下げ/繰上げ設定なし）
+  - A: pensionAge=65, pensionMonthly=12, pensionAge_p=65, pensionMonthly_p=0
+  - B: pensionAge=65, pensionMonthly=16, pensionAge_p=65, pensionMonthly_p=10
+  - C: pensionAge=65, pensionMonthly=18, pensionAge_p=65, pensionMonthly_p=8
+  - D: pensionAge=65, pensionMonthly=22, pensionAge_p=65, pensionMonthly_p=8
+  - E: pensionAge=65, pensionMonthly=11, pensionAge_p=65, pensionMonthly_p=0
+- **snapshot 差分行数**: 0 行
+- **シナリオ別変化**: 
+  - A〜E: 差分なし（全サンプルで `adjustRate(65) = 1.0` のため `basePensionAnnual` 値変化なし。`pensionMonthly` は UI 手入力値でサンプルに固定済みのため `_calcPensionCore` 改修の影響は snapshot には出ない）
+- **方向の評価**: 期待通り
+- **補足**: 155 テスト全件 pass。`_calcPensionCore` の birthYear 引数は後方互換（未指定時 oldMonths=0）。`adjustRate` 関数は index.html 内の同名関数と衝突しない（index.html 側は `getPensionSimulation` スコープ内の function 宣言）
 
 ---
 
