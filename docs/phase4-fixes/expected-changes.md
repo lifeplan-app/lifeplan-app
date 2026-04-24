@@ -160,7 +160,7 @@ Important 14 件を 5 グループに分けて修正した記録。
   - `indexPool` / `investPool` 既存フィールドの後方互換（合計値出力）
 
 ### 実測サマリー
-- **commit SHA**: （Step 12 で追記）
+- **commit SHA**: d43985e
 - **snapshot 差分行数**: 7732 行（insertions 3866 + deletions 3866）
 - **サンプルの iDeCo アセット（currentVal）**:
   - A 田中葵: iDeCo 保有なし
