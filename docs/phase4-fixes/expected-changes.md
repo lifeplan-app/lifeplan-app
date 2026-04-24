@@ -117,7 +117,7 @@ Important 14 件を 5 グループに分けて修正した記録。
   - `TAX_RATE = 0.20315`、1 / (1 - 0.20315) ≈ 1.2548 倍 → 額面換算時の係数
 
 ### 実測サマリー
-- **commit SHA**: （Step 9 で追記）
+- **commit SHA**: 982644f
 - **新設関数**: 
   - `calcCapitalGainsTax(amount, taxType)` in calc/asset-growth.js
   - `calcResidentTax(taxableIncomeMan)` in calc/mortgage.js
