@@ -64,7 +64,9 @@ function calcIntegratedSim(years, opts = {}) {
       scholarship: leCostRaw.scholarship, // 奨学金返済も契約額で名目固定
     };
     const totalLE = leCost.childcare + leCost.education + leCost.mortgage + leCost.care + leCost.scholarship;
-    const annualIncome  = getIncomeForYearWithGrowth(yr);
+    let annualIncome  = getIncomeForYearWithGrowth(yr);
+    // [Phase 4a 09-I01] gross モード時は手取率 NET_RATIO(0.78) を乗算（配当は calcAllAssetGrowth で税引き済みのため二重適用しない）
+    if (state.finance?._inputMode === 'gross') annualIncome *= 0.78;
     // [Phase 2.5 09-C01 fix] 現役期の年間支出にもインフレを適用
     let annualExpense   = getExpenseForYear(yr) * _infFactorIS;
     // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化を加算（calcRetirementSimWithOpts:17666 と同等ロジック）
@@ -89,7 +91,8 @@ function calcIntegratedSim(years, opts = {}) {
     const mortgageBalanceInteg = _mortgageRow
       ? (_mortgageRow.principalEnd ?? _mortgageRow.balance ?? 0)
       : 0;
-    const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);
+    // [Phase 4a 09-I03] opts.noLoan 時は住宅ローン控除を除外
+    const annualMortgageDeduct = (y === 0 || opts.noLoan) ? 0 : calcMortgageDeduction(yr, mortgageBalanceInteg);
 
     // 年間収支の累積（収入 − 支出 − ライフイベント + 一時収支 + 配当 + 控除）
     // y=0 は「現在の残高がそのままスタート地点」とし、支出差し引きはy=1以降のみ適用
