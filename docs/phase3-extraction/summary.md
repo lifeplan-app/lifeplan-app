@@ -50,7 +50,7 @@
 - **index.html 削減行数**: 141 行（22,954 → 22,813）
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
 - **補足**: `EDU_COST` / `PHASE_AGES` はテストから直接参照されないため `const` のまま据え置き（将来テスト側から `sb.EDU_COST` を参照する必要が生じたら `var` へ変更）。`calcLECostByYear` は `function` 宣言なので sandbox へ自動露出。`calcMortgageSchedule` は次 Step で同 sandbox に抽出予定（現状 index.html 側で定義）。
-- **commit SHA**: （補完コミットで追記）
+- **commit SHA**: `076506a`
 
 ## Step 5: calc/mortgage.js（住宅ローン）
 （Task 6 実施時に記入）
