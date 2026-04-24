@@ -41,7 +41,7 @@
 - **index.html 削減行数**: 156 行（23,110 → 22,954）
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
 - **補足**: 5 関数はすべて `function` 宣言で、`vm.runInContext` サンドボックスへ自動露出するため、`var` 化は不要。`getIncomeForYearWithGrowth` は同一ファイル内で `getIncomeForYear` / `ageToYear` / `calcAge` を参照。
-- **commit SHA**: （Step 9 で追記）
+- **commit SHA**: `8ed5539`
 
 ## Step 4: calc/life-events.js（ライフイベント費用）
 （Task 5 実施時に記入）
