@@ -47,10 +47,11 @@ export async function closeContext(ctx) {
 export async function loadAppWithScenario(ctx, scenarioJson) {
   const page = await ctx.context.newPage();
 
-  // addInitScript は page 上で実行される最初のスクリプト前に走る。
-  // about:blank に行ってから goto することで、localStorage のオリジンを index.html に合わせる。
+  // file:// オリジンで localStorage が使えるよう、先に index.html をロードしてオリジンを確立。
+  // その後 JSON を注入してリロードし、index.html の init 処理に state を復元させる。
+  // （初回ロードはデフォルト state で走るため無駄だが、browser context を複数シナリオで
+  //  使い回すため addInitScript ではなくこの方式を採る）
   await page.goto(INDEX_HTML_URL);
-  // 一度ロードしてオリジンを確立 → localStorage に注入 → 再ロード
   await page.evaluate((json) => {
     localStorage.setItem('lifeplan_v1', json);
   }, scenarioJson);
