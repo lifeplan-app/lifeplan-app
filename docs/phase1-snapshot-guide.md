@@ -60,6 +60,13 @@ npm test
 3. `npm run test:update` でスナップショット生成
 4. 生成されたスナップショットを目視確認（数値が妥当か）してからコミット
 
+### ⚠️ `samples/01〜10/` を使いたい場合
+
+`samples/` ディレクトリには10ペルソナ分のテスト用データがあるが、Phase 1 では**未接続**。
+`sample_data/` の単一JSON形式と異なり、`samples/` は `lifeplan_v1.json` / `spending_v1.json` /
+`profile.json` などに分割されている。追加する場合は `samples/*/lifeplan_v1.json` だけを
+読み込んで `SCENARIOS` に登録すれば Phase 1 の仕組みで動く。
+
 ## 検知力の確認方法
 
 スナップショットが実際に計算変更を捕まえるかを確認したい場合：

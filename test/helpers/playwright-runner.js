@@ -30,7 +30,21 @@ export const SIMULATION_FIXED_DATE = new Date('2026-04-24T00:00:00+09:00');
  * ブラウザとコンテキストを起動。5シナリオで使い回すため、テストスイートの beforeAll で1回呼ぶ。
  */
 export async function launchContext() {
-  const browser = await chromium.launch();
+  let browser;
+  try {
+    browser = await chromium.launch();
+  } catch (err) {
+    // Chromium 未インストール時のエラーメッセージを親切に置換。
+    // Playwright の素のエラーは分かりづらいため、初回セットアップで詰まらないようにする。
+    if (/Executable doesn't exist|browserType\.launch/i.test(String(err?.message ?? err))) {
+      throw new Error(
+        'Chromium が見つかりません。初回セットアップとして以下を実行してください:\n' +
+        '  npx playwright install chromium\n' +
+        '（元のエラー: ' + (err?.message ?? err) + '）'
+      );
+    }
+    throw err;
+  }
   const context = await browser.newContext();
   return { browser, context };
 }
