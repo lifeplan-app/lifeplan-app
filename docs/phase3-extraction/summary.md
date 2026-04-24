@@ -145,3 +145,16 @@
 - 例: 02-I01（インフレ統一）→ calc/income-expense.js + calc/life-events.js
 - 例: 03-I05-I10（教育費）→ calc/life-events.js
 - DOM 依存の Important（例: 04-I02 年金繰下げ）は Phase 3.5（B スコープ）で抽出してから修正
+
+---
+
+## Phase 3.5: calc/pension.js（年金コア抽出・Phase 4 支援目的）
+
+- **抽出関数・定数**: `KOKUMIN_FULL_MONTHLY`, `KOKUMIN_FULL_MONTHS`, `_calcPensionCore(employType, koseiYears, avgIncome, kokuminYears)`
+- **calc/pension.js 行数**: 30 行
+- **index.html 削減行数**: 17 行（21,837 → 21,820）
+- **残置（index.html に残す）**: `calcPensionEstimate(who)`, `calcSimplePensionEstimate`, `calcAndShowDeferralSim`（すべて DOM glue）
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
+- **依存**: なし（完全な純粋関数）。`calcPensionEstimate(who)` は同一グローバルスコープから `_calcPensionCore` / `KOKUMIN_FULL_MONTHLY` を参照
+- **commit SHA**: （Phase 3.5 実装コミット時に追記）
+- **Phase 4 での活用**: `04-I02`（年金繰下げ反映）修正時、`_calcPensionCore` に `pensionAge` 引数を追加する or `calc/retirement.js` 側で `adjustRate(pensionAge)` を掛けるかの選択ができる状態
