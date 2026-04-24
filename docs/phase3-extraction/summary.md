@@ -89,7 +89,17 @@
 - **commit SHA**: `12e743f`
 
 ## Step 8: calc/integrated.js（統合シミュ）
-（Task 9 実施時に記入）
+
+- **抽出関数**: `calcIntegratedSim`（1 関数、Phase 1 スナップショット 5 件の主要対象）
+- **calc/integrated.js 行数**: 153 行
+- **index.html 削減行数**: 149 行（21,986 → 21,837。`<script src="calc/integrated.js">` 追加で +1 含む）
+- **テスト結果**: 155/155 グリーン、snapshot 差分 0 行（Phase 1 シナリオA〜E 5 件の `calcIntegratedSim` 出力が完全一致）
+- **補足**:
+  - Phase 2.5 の Critical fix コメントを忠実に保持: `[Phase 2.5 05-C03 fix]`（amortization 事前生成・mortgage balance 取得の 2 箇所）、`[Phase 2.5 06-C02 fix]`（パートナー退職後の月支出変化・事前算出と加算の 2 箇所）、`[Phase 2.5 07-C01 fix]`（投資プール枯渇後の清算停止）、`[Phase 2.5 09-C01 fix]`（現役期インフレ係数の事前算出・ループ内算出・各カテゴリ適用・年間支出適用の 4 箇所）。
+  - DOM 依存なし（`document`/`window` 参照ゼロ）。`state`, `calcAllAssetGrowth`, `calcMortgageSchedule`, `calcMortgageDeduction`, `calcLECostByYear`, `getIncomeForYearWithGrowth`, `getExpenseForYear`, `getOneTimeForYear` を sandbox 経由で参照。
+  - `function` 宣言のため `vm.runInContext` sandbox へ自動露出。Phase 1 snapshot テスト（Playwright 経由のブラウザ実行）も `<script src="calc/integrated.js">` 追加により解決。
+  - `calcScenarioFullTimeline`（Step 7 抽出済）から `calcIntegratedSim` を呼ぶ依存が同一 sandbox で解決されるように。
+- **commit SHA**: （本コミットで補完）
 
 ## Step 9: helpers/core.js 削除
 （Task 10 実施時に記入）
