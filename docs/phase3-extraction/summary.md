@@ -99,7 +99,7 @@
   - DOM 依存なし（`document`/`window` 参照ゼロ）。`state`, `calcAllAssetGrowth`, `calcMortgageSchedule`, `calcMortgageDeduction`, `calcLECostByYear`, `getIncomeForYearWithGrowth`, `getExpenseForYear`, `getOneTimeForYear` を sandbox 経由で参照。
   - `function` 宣言のため `vm.runInContext` sandbox へ自動露出。Phase 1 snapshot テスト（Playwright 経由のブラウザ実行）も `<script src="calc/integrated.js">` 追加により解決。
   - `calcScenarioFullTimeline`（Step 7 抽出済）から `calcIntegratedSim` を呼ぶ依存が同一 sandbox で解決されるように。
-- **commit SHA**: （本コミットで補完）
+- **commit SHA**: `5240cb5`
 
 ## Step 9: helpers/core.js 削除
 （Task 10 実施時に記入）
