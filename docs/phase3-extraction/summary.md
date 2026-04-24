@@ -86,7 +86,7 @@
   - `calcScenarioFullTimeline` は `calcIntegratedSim`（Step 8 で抽出予定）を呼ぶ。ブラウザ実行時は同一グローバルスコープで解決。Node テストでは scenarios 系を直接呼ばないため未解決参照は問題にならない。
   - `calcScenarioSim` は `state.retirement` を一時的に書き換えて `calcRetirementSimWithOpts`（Step 6）を呼び、即座に復元する。副作用は try/finally 相当の復元ロジックで封じ込め。
   - snapshot テスト（Phase 1）の `calcScenarioFullTimeline (getAdaptiveScenarios 各パターン)` 5 件に変化なし。
-- **commit SHA**: （補完予定）
+- **commit SHA**: `12e743f`
 
 ## Step 8: calc/integrated.js（統合シミュ）
 （Task 9 実施時に記入）
