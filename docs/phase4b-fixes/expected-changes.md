@@ -55,7 +55,7 @@ Important 18 件を 6 グループに分けて修正した記録。
   - シナリオ C（1.5%）は 1.02^N → 1.015^N、影響はより小さい
 
 ### 実測サマリー
-- **commit SHA**: （Step 10 で追記）
+- **commit SHA**: `bee694a`
 - **snapshot 差分行数**: 11,300 行（挿入 5,650 / 削除 5,650）
 - **サンプルの `retirement.inflationRate` 設定**: 5 サンプルすべて設定済み（A/B/D/E=1.0、C=1.5）、`finance.inflationRate` は全件未設定
 - **シナリオ別変化**（各シナリオとも `calcIntegratedSim` / `calcRetirementSimWithOpts`（標準/楽観/悲観）/ `calcScenarioFullTimeline` に影響）:
