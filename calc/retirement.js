@@ -40,10 +40,28 @@ function calcRetirementSim() {
   // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
   const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  const severanceAtRetire = calcSeveranceDeduction(severanceGross, 0, serviceYears);
+  // [Phase 4a G3] iDeCo は 60 歳時点で全額一時金受取（デフォルト、UI 選択肢なし）
+  // G4 Task 3 で新設した calcSeveranceDeduction の第 2 引数に渡して退職所得控除と合算
+  // 成長後残高で近似（simple compound growth with monthly contributions）
+  const _idecoAtRetireSim = (state.assets || [])
+    .filter(a => a.type === 'ideco')
+    .reduce((s, a) => {
+      const rate    = ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn ?? 4))) / 100;
+      const monthly = a.monthly || 0;
+      let bal = a.currentVal || 0;
+      for (let y = 0; y < yearsToRetireAccurate; y++) {
+        bal = bal * (1 + rate) + monthly * 12;
+      }
+      return s + bal;
+    }, 0);
+  const idecoLumpsum = _idecoAtRetireSim;
+  const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsum, serviceYears);
+  // postData[0]?.startAssets が優先（calcRetirementSimWithOpts 側で iDeCo 除外済み）。
+  // フォールバック時は totalWealth から iDeCo を差し引いて二重計上を防ぐ。
+  const _baseWealthSim = preRetireSim[yearsToRetireAccurate]?.totalWealth
+    || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const assetsAtRetire = postData?.[0]?.startAssets
-    || ((preRetireSim[yearsToRetireAccurate]?.totalWealth ||
-         state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire);
+    || (Math.max(0, _baseWealthSim - idecoLumpsum) + severanceAtRetire);
 
   // Weighted average return rate from current assets
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -297,8 +315,26 @@ function calcRetirementSimWithOpts(opts = {}) {
   // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
   const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  const severanceAtRetire = calcSeveranceDeduction(severanceGross, 0, serviceYears);
-  let assetsAtRetire = (preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0)) + severanceAtRetire;
+  // [Phase 4a G3] iDeCo は 60 歳時点で全額一時金受取（デフォルト、UI 選択肢なし）
+  // 退職金と合算して退職所得控除枠を活用。サンプル全件で iDeCo 残高は退職控除枠内に収まる想定。
+  // リタイア時の iDeCo 残高（複利成長済み）を lumpsum として扱い、retired 時点で totalWealth から差し引き、
+  // 税引後ネットを severanceAtRetire に合算することで二重計上を防ぐ。
+  const _idecoAtRetire = (state.assets || [])
+    .filter(a => a.type === 'ideco')
+    .reduce((s, a) => {
+      const rate    = ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn ?? 4))) / 100;
+      const monthly = a.monthly || 0;
+      let bal = a.currentVal || 0;
+      for (let y = 0; y < yearsToRetire; y++) {
+        bal = bal * (1 + rate) + monthly * 12;
+      }
+      return s + bal;
+    }, 0);
+  const idecoLumpsum = _idecoAtRetire;
+  const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsum, serviceYears);
+  // totalWealth から iDeCo 残高を引き、税引後合算額を severanceAtRetire として戻す
+  const _baseWealth = preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  let assetsAtRetire = Math.max(0, _baseWealth - idecoLumpsum) + severanceAtRetire;
 
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const baseWeightedReturn = totalVal > 0
@@ -307,16 +343,31 @@ function calcRetirementSimWithOpts(opts = {}) {
   const weightedReturn = baseWeightedReturn + returnMod;
 
   // ===== 資産プール（4プールモデル）分離トラッキング =====
-  // 取り崩し優先度: cashPool → indexPool → dividendPool → emergencyPool（生活防衛資金は最後）
+  // [Phase 4a 07-I04/08-I02] 投資プールを税制別に分離（indexTaxablePool / indexNisaPool）
+  // iDeCo は G3 で既に一時金化済みなので投資プールから除外
+  // 取り崩し優先度: cashPool → dividendPool → indexTaxablePool → indexNisaPool → emergencyPool（NISA 温存）
   const _CASH_TYPES_RET = new Set(['cash_emergency','cash_special','cash_reserved','cash_surplus','cash','savings']);
   const _CASH_NORMAL_TYPES = new Set(['cash_special','cash_reserved','cash_surplus','cash','savings']);
   const _allAssets = state.assets || [];
   // 高配当プール: dividendYield > 0 かつ cashout モードのアセット
   const _isDivPool = a => !_CASH_TYPES_RET.has(a.type) && (parseFloat(a.dividendYield) || 0) > 0 && a.dividendMode === 'cashout';
+  // [Phase 4a G3] iDeCo 除外用判定
+  const _isIdeco = a => a.type === 'ideco';
+  // [Phase 4a 07-I04/08-I02] NISA / 特定口座 の分類
+  const _taxTypeOf = (a) => a.taxType || TAX_TYPE_DEFAULT[a.type] || 'tokutei';
+  const _isTaxable = (a) => _taxTypeOf(a) === 'tokutei';
+  const _isNisa    = (a) => _taxTypeOf(a) === 'nisa';
+  // 投資プール候補: キャッシュ類・高配当・iDeCo を除いたアセット
+  const _isIndexAsset = (a) => !_CASH_TYPES_RET.has(a.type) && !_isDivPool(a) && !_isIdeco(a);
   const _emergCurr = _allAssets.filter(a => a.type === 'cash_emergency').reduce((s, a) => s + (a.currentVal || 0), 0);
   const _cashCurr  = _allAssets.filter(a => _CASH_NORMAL_TYPES.has(a.type)).reduce((s, a) => s + (a.currentVal || 0), 0);
   const _divCurr   = _allAssets.filter(_isDivPool).reduce((s, a) => s + (a.currentVal || 0), 0);
-  const _indexCurr = Math.max(0, _allAssets.reduce((s, a) => s + (a.currentVal || 0), 0) - _emergCurr - _cashCurr - _divCurr);
+  // 投資プールは iDeCo 除外 + taxable/nisa で分離
+  const _indexTaxableCurr = _allAssets.filter(a => _isIndexAsset(a) && _isTaxable(a)).reduce((s, a) => s + (a.currentVal || 0), 0);
+  const _indexNisaCurr    = _allAssets.filter(a => _isIndexAsset(a) && _isNisa(a)).reduce((s, a) => s + (a.currentVal || 0), 0);
+  // その他の投資アセット（other 等、tokutei/nisa/ideco 以外）は taxable 扱いで合算
+  const _indexOtherCurr = _allAssets.filter(a => _isIndexAsset(a) && !_isTaxable(a) && !_isNisa(a)).reduce((s, a) => s + (a.currentVal || 0), 0);
+  const _indexCurr = _indexTaxableCurr + _indexNisaCurr + _indexOtherCurr;
   const _totalCurr = _emergCurr + _cashCurr + _divCurr + _indexCurr;
   const _emergRatio = _totalCurr > 0 ? _emergCurr / _totalCurr : 0.05;
   const _cashRatio  = _totalCurr > 0 ? _cashCurr  / _totalCurr : 0.10;
@@ -331,7 +382,7 @@ function calcRetirementSimWithOpts(opts = {}) {
         s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 0.1) / 100), 0) / _cashCurr
     : 0.001;
   const _indexBaseReturn = _indexCurr > 0
-    ? _allAssets.filter(a => !_CASH_TYPES_RET.has(a.type) && !_isDivPool(a)).reduce((s, a) =>
+    ? _allAssets.filter(_isIndexAsset).reduce((s, a) =>
         s + (a.currentVal || 0) * ((a.annualReturn ?? ASSET_TYPES[a.type]?.defaultReturn ?? 5) / 100), 0) / _indexCurr
     : baseWeightedReturn;
   // 高配当プール: キャピタルゲイン = annualReturn - dividendYield（配当は別収入として計上）
@@ -357,8 +408,14 @@ function calcRetirementSimWithOpts(opts = {}) {
     }, 0);
     return taxed / baseVal;
   };
-  const _indexTaxRate = _poolTaxRate(a => !_CASH_TYPES_RET.has(a.type) && !_isDivPool(a), _indexCurr);
+  // [Phase 4a G3] iDeCo 除外後の投資プール税率（合計 / 互換用）
+  const _indexTaxRate = _poolTaxRate(_isIndexAsset, _indexCurr);
   const _divTaxRate   = _poolTaxRate(_isDivPool, _divCurr);
+  // [Phase 4a 07-I04/08-I02] サブプール別税率
+  //   indexTaxablePool: tokutei + other は TAX_RATE 課税
+  //   indexNisaPool:    非課税（0）
+  const _indexTaxableRate = _poolTaxRate(a => _isIndexAsset(a) && (_isTaxable(a) || (!_isNisa(a) && !_isIdeco(a))), (_indexTaxableCurr + _indexOtherCurr));
+  const _indexNisaRate    = 0;
 
   // ===== 生活防衛資金プールの初期値: targetVal（上限額）を尊重した実額計算 =====
   // 比率スケールではなく「現在残高を上限キャップ付きで yearsToRetire 年分複利成長」させた額を使用
@@ -383,7 +440,14 @@ function calcRetirementSimWithOpts(opts = {}) {
   const _nonEmergCurr = _cashCurr + _indexCurr + _divCurr;
   let emergencyPool = _emergPoolInit;
   let cashPool      = _nonEmergCurr > 0 ? _nonEmergRemainder * (_cashCurr  / _nonEmergCurr) : _nonEmergRemainder * _cashRatio;
-  let indexPool     = _nonEmergCurr > 0 ? _nonEmergRemainder * (_indexCurr / _nonEmergCurr) : _nonEmergRemainder * _indexRatio;
+  // [Phase 4a 07-I04/08-I02] indexPool を課税別に分離
+  //   indexTaxablePool: 特定口座・一般口座（tokutei + other）
+  //   indexNisaPool:    NISA 非課税枠
+  // 取崩は indexTaxablePool を先に消費し、NISA を温存
+  const _indexTotalInit = _nonEmergCurr > 0 ? _nonEmergRemainder * (_indexCurr / _nonEmergCurr) : _nonEmergRemainder * _indexRatio;
+  const _indexTaxableShare = _indexCurr > 0 ? (_indexTaxableCurr + _indexOtherCurr) / _indexCurr : 0.5;
+  let indexTaxablePool = _indexTotalInit * _indexTaxableShare;
+  let indexNisaPool    = _indexTotalInit * (1 - _indexTaxableShare);
   let dividendPool  = _nonEmergCurr > 0 ? _nonEmergRemainder * (_divCurr   / _nonEmergCurr) : _nonEmergRemainder * _divRatio;
   const drawdownOrder = opts.drawdownOrder || r.drawdownOrder || 'proportional';
   const cashFloor = parseFloat(opts.cashFloor != null ? opts.cashFloor : r.cashFloor) || 0;
@@ -416,6 +480,8 @@ function calcRetirementSimWithOpts(opts = {}) {
   let assets = assetsAtRetire;
 
   for (let i = 0; i <= simYears; i++) {
+    // [Phase 4a 07-I04/08-I02] indexPool = indexTaxablePool + indexNisaPool（後方互換用）
+    let indexPool = indexTaxablePool + indexNisaPool;
     assets = emergencyPool + cashPool + indexPool + dividendPool; // 4プール合算で常に同期
     const age = targetAge + i;
     const yr = retireYear + i;
@@ -442,7 +508,12 @@ function calcRetirementSimWithOpts(opts = {}) {
     // [Phase 4a 08-I03] 退職金が targetAge 以降に支給されるケースでも退職所得控除適用
     const severanceGrossThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;
     const severanceThisYear = calcSeveranceDeduction(severanceGrossThisYear, 0, serviceYears);
-    if (severanceThisYear > 0) { indexPool += severanceThisYear; } // 退職金はインデックスプールへ
+    if (severanceThisYear > 0) {
+      // 退職金（一時金）は非課税の現金として受取 → 特定口座扱いの indexTaxablePool へ合流
+      // （既存挙動踏襲: 「インデックスプールへ」を indexTaxablePool として踏襲）
+      indexTaxablePool += severanceThisYear;
+      indexPool = indexTaxablePool + indexNisaPool;
+    }
 
     const pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
@@ -556,42 +627,52 @@ function calcRetirementSimWithOpts(opts = {}) {
     // ===== 4プール成長 =====
     // emergencyPool: 生活防衛資金（最後まで手をつけない）
     // cashPool: 通常現金（低利）
-    // indexPool: インデックス系（成長優先）
+    // indexTaxablePool / indexNisaPool: インデックス系を税制別に分離（成長率は同一）
     // dividendPool: 高配当ETF（キャピタルゲインのみ成長、配当は別収入計上済み）
     // [Phase 4a 08-I05] returnMod 対称化: 既存の returnMod は株式系（index/div）に適用
     //   現金系プール（emergency/cash）は returnModCash 分離（デフォルト 0 = 既存互換）
-    const _emergPre = emergencyPool, _cashPre = cashPool, _indexPre = indexPool, _divPre = dividendPool;
-    emergencyPool *= (1 + Math.max(-1, _emergBaseReturn + returnModCash));
-    cashPool      *= (1 + Math.max(-1, _cashBaseReturn + returnModCash));
-    indexPool     *= (1 + Math.max(-1, _indexBaseReturn + returnModStock));
-    dividendPool  *= (1 + Math.max(-1, _divCapitalReturn + returnModStock));
+    const _emergPre = emergencyPool, _cashPre = cashPool, _indexTaxPre = indexTaxablePool, _indexNisaPre = indexNisaPool, _divPre = dividendPool;
+    emergencyPool    *= (1 + Math.max(-1, _emergBaseReturn + returnModCash));
+    cashPool         *= (1 + Math.max(-1, _cashBaseReturn + returnModCash));
+    indexTaxablePool *= (1 + Math.max(-1, _indexBaseReturn + returnModStock));
+    indexNisaPool    *= (1 + Math.max(-1, _indexBaseReturn + returnModStock));
+    dividendPool     *= (1 + Math.max(-1, _divCapitalReturn + returnModStock));
+    indexPool = indexTaxablePool + indexNisaPool; // sync
     const _annualReturn = Math.round(
-      _emergPre * Math.max(-1, _emergBaseReturn + returnModCash) +
-      _cashPre  * Math.max(-1, _cashBaseReturn + returnModCash) +
-      _indexPre * Math.max(-1, _indexBaseReturn + returnModStock) +
-      _divPre   * Math.max(-1, _divCapitalReturn + returnModStock)
+      _emergPre    * Math.max(-1, _emergBaseReturn + returnModCash) +
+      _cashPre     * Math.max(-1, _cashBaseReturn + returnModCash) +
+      (_indexTaxPre + _indexNisaPre) * Math.max(-1, _indexBaseReturn + returnModStock) +
+      _divPre      * Math.max(-1, _divCapitalReturn + returnModStock)
     );
 
-    // ===== 4プール取り崩し =====
-    // 優先度: cashPool → indexPool → dividendPool → emergencyPool（生活防衛資金は絶対最後）
-    // drawdownOrder は cash/index 間にのみ適用
-    // [Phase 4a 07-I01/09-I02] 課税プール（index/dividend）は税引後ネット → 額面へ grossUp
-    //   cash/emergency は非課税（cash 相当）。取崩 X を net として受け取るには X/(1 - taxRate) 必要
-    const _grossUpIndex = (net) => net / Math.max(0.01, 1 - _indexTaxRate);
-    const _grossUpDiv   = (net) => net / Math.max(0.01, 1 - _divTaxRate);
-    const _poolTotal = emergencyPool + cashPool + indexPool + dividendPool;
+    // ===== 5プール取り崩し（NISA 温存） =====
+    // [Phase 4a 07-I04/08-I02] 優先度: cashPool → dividendPool → indexTaxablePool → indexNisaPool → emergencyPool
+    //   NISA を最後の投資プールとして温存（課税口座先消費で税効率最適化）
+    // drawdownOrder は互換のため残すが、すべて同順序（NISA 温存）に統一
+    // [Phase 4a 07-I01/09-I02] 課税プール（indexTaxable/dividend）は税引後ネット → 額面へ grossUp
+    //   cash/emergency/indexNisa は非課税。NISA は TAX_RATE=0 相当で gross-up 不要
+    const _grossUpIndexTax = (net) => net / Math.max(0.01, 1 - _indexTaxableRate);
+    const _grossUpDiv      = (net) => net / Math.max(0.01, 1 - _divTaxRate);
+    const _poolTotal = emergencyPool + cashPool + indexTaxablePool + indexNisaPool + dividendPool;
     const _deductable = Math.min(_poolTotal, actualDeduction); // actualDeduction は net 必要額
     const _cashAboveFloor = Math.max(0, cashPool - cashFloor);
-    let _fromEmerg = 0, _fromCash = 0, _fromIndex = 0, _fromDiv = 0;
+    let _fromEmerg = 0, _fromCash = 0, _fromIndexTax = 0, _fromIndexNisa = 0, _fromDiv = 0;
 
     // 取崩ヘルパ: remaining(net) 必要額に対し、指定プール・残高から gross 取崩額を決定し残り net を返す
-    const _takeFromIndex = (remainingNet) => {
-      if (remainingNet <= 0 || indexPool <= 0) return remainingNet;
-      const grossWant = _grossUpIndex(remainingNet);
-      const grossTake = Math.min(indexPool, grossWant);
-      _fromIndex += grossTake;
-      const netGot = grossTake * (1 - _indexTaxRate);
+    const _takeFromIndexTax = (remainingNet) => {
+      if (remainingNet <= 0 || indexTaxablePool <= 0) return remainingNet;
+      const grossWant = _grossUpIndexTax(remainingNet);
+      const grossTake = Math.min(indexTaxablePool, grossWant);
+      _fromIndexTax += grossTake;
+      const netGot = grossTake * (1 - _indexTaxableRate);
       return Math.max(0, remainingNet - netGot);
+    };
+    const _takeFromIndexNisa = (remainingNet) => {
+      if (remainingNet <= 0 || indexNisaPool <= 0) return remainingNet;
+      // NISA は非課税（_indexNisaRate = 0）
+      const grossTake = Math.min(indexNisaPool, remainingNet);
+      _fromIndexNisa += grossTake;
+      return Math.max(0, remainingNet - grossTake);
     };
     const _takeFromDiv = (remainingNet) => {
       if (remainingNet <= 0 || dividendPool <= 0) return remainingNet;
@@ -618,59 +699,71 @@ function calcRetirementSimWithOpts(opts = {}) {
 
     let _remaining = _deductable;
     if (drawdownOrder === 'invest_first') {
-      // インデックス優先 → 通常現金 → 高配当 → 生活防衛（最後）
-      _remaining = _takeFromIndex(_remaining);
+      // インデックス優先: 特定 → NISA → 通常現金 → 高配当 → 生活防衛（最後）
+      _remaining = _takeFromIndexTax(_remaining);
+      _remaining = _takeFromIndexNisa(_remaining);
       _remaining = _takeFromCash(_remaining, true);
       _remaining = _takeFromCash(_remaining, false); // フロア以下にも踏み込む
       _remaining = _takeFromDiv(_remaining);
       _remaining = _takeFromEmerg(_remaining);
     } else if (drawdownOrder === 'proportional') {
-      // 按分: cash(フロア超過) + index を比率配分 → 高配当 → 生活防衛（最後）
-      const _softTotal = _cashAboveFloor + indexPool;
+      // 按分: cash(フロア超過) + indexTaxable を比率配分 → indexNisa → 高配当 → 生活防衛（最後）
+      //   NISA は温存のため按分対象外、indexTaxable 消費後に回す
+      const _softTotal = _cashAboveFloor + indexTaxablePool;
       if (_softTotal > 0) {
         const _cf = _cashAboveFloor / _softTotal;
         const cashPart = _remaining * _cf;
         const indexPart = _remaining - cashPart;
         const afterCash = _takeFromCash(cashPart, true);
-        const afterIndex = _takeFromIndex(indexPart + afterCash);
+        const afterIndex = _takeFromIndexTax(indexPart + afterCash);
         _remaining = afterIndex;
         // cash 残があればもう一度
         _remaining = _takeFromCash(_remaining, true);
       }
+      _remaining = _takeFromIndexNisa(_remaining);
       _remaining = _takeFromCash(_remaining, false);
       _remaining = _takeFromDiv(_remaining);
       _remaining = _takeFromEmerg(_remaining);
     } else {
-      // cash_first（デフォルト）: 通常現金 → インデックス → 高配当 → 生活防衛（最後）
+      // cash_first（デフォルト）: 通常現金 → 高配当 → 特定 → NISA → 生活防衛（最後）
+      // 期待方向: cashPool → dividendPool → indexTaxablePool → indexNisaPool → emergencyPool
       _remaining = _takeFromCash(_remaining, true);
-      _remaining = _takeFromIndex(_remaining);
-      _remaining = _takeFromCash(_remaining, false);
       _remaining = _takeFromDiv(_remaining);
+      _remaining = _takeFromIndexTax(_remaining);
+      _remaining = _takeFromIndexNisa(_remaining);
+      _remaining = _takeFromCash(_remaining, false);
       _remaining = _takeFromEmerg(_remaining);
     }
 
-    const _emergBeforeDeduct  = emergencyPool;
-    const _cashBeforeDeduct   = cashPool;
-    const _indexBeforeDeduct  = indexPool;
-    const _divBeforeDeduct    = dividendPool;
-    emergencyPool = Math.max(0, emergencyPool - _fromEmerg);
-    cashPool      = Math.max(0, cashPool      - _fromCash);
-    indexPool     = Math.max(0, indexPool     - _fromIndex);
-    dividendPool  = Math.max(0, dividendPool  - _fromDiv);
+    const _emergBeforeDeduct     = emergencyPool;
+    const _cashBeforeDeduct      = cashPool;
+    const _indexTaxBeforeDeduct  = indexTaxablePool;
+    const _indexNisaBeforeDeduct = indexNisaPool;
+    const _divBeforeDeduct       = dividendPool;
+    emergencyPool    = Math.max(0, emergencyPool    - _fromEmerg);
+    cashPool         = Math.max(0, cashPool         - _fromCash);
+    indexTaxablePool = Math.max(0, indexTaxablePool - _fromIndexTax);
+    indexNisaPool    = Math.max(0, indexNisaPool    - _fromIndexNisa);
+    dividendPool     = Math.max(0, dividendPool     - _fromDiv);
+    indexPool = indexTaxablePool + indexNisaPool; // sync after deduction
     const endAssets = emergencyPool + cashPool + indexPool + dividendPool;
 
     // プールの実変化量で「実際に引き出せた額（額面）」を計算
     // [Phase 4a 07-I01/09-I02] 額面（gross）ベース。税引き後 net は actualDeduction 相当を受け取る
-    const actualWithdrawn = (_emergBeforeDeduct - emergencyPool) + (_cashBeforeDeduct - cashPool) + (_indexBeforeDeduct - indexPool) + (_divBeforeDeduct - dividendPool);
+    const actualWithdrawn = (_emergBeforeDeduct - emergencyPool)
+      + (_cashBeforeDeduct - cashPool)
+      + (_indexTaxBeforeDeduct - indexTaxablePool)
+      + (_indexNisaBeforeDeduct - indexNisaPool)
+      + (_divBeforeDeduct - dividendPool);
     // 不足額は「未充足の net 必要額」（プール枯渇時に _remaining が残る）
     const withdrawalShortfall = Math.max(0, Math.round(_remaining));
     // 資金不足: 実引き出し < 必要額（cashFloorで引き出せない場合を含む）
     const isFundingShortfall = withdrawalShortfall > 0;
 
     // [Phase 2.5 08-C01 fix] 取り崩し不能な中間プール枯渇も破綻として検知
-    // 取り崩し可能なプール（index/dividend/cash/emergency）が全て空で、かつ取り崩しが必要な場合
+    // [Phase 4a 07-I04/08-I02] 新プール構造（indexTaxable / indexNisa）でも「全プール枯渇」で fire
     const criticalPoolDepleted =
-      (indexPool <= 0 && dividendPool <= 0 && cashPool <= 0 && emergencyPool <= 0 && actualDeduction > 0);
+      (indexTaxablePool <= 0 && indexNisaPool <= 0 && dividendPool <= 0 && cashPool <= 0 && emergencyPool <= 0 && actualDeduction > 0);
 
     postData.push({
       year: yr, age,

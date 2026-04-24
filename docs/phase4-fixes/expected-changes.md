@@ -149,7 +149,42 @@ Important 14 件を 5 グループに分けて修正した記録。
 ## Group 3: NISA 温存取崩順序 + iDeCo 一時金化（07-I04, 08-I02）
 
 ### 期待方向
-（Task 6 実施時に記入）
+- **対象**: 07-I04 + 08-I02（NISA 温存順序）+ iDeCo 一時金化（08-I03 連携）
+- **期待される snapshot 差分**:
+  - iDeCo を含むシナリオ（A 田中葵・B 鈴木健太・C 山本誠・D 中村博・E 林菜緒、サンプルごとに要確認）で退職年の cashPool に iDeCo 残高が合流
+  - 退職金 + iDeCo 合算での退職所得控除は Task 3 `calcSeveranceDeduction` 経由
+  - 取崩順序変更で長期は NISA 温存 → 課税口座先消費で **手取り +5〜+10%**（NISA 比率が高いシナリオ A/B/E で効果大）
+- **確認ポイント**:
+  - サンプルの `type === 'ideco'` アセット一覧
+  - Phase 2.5 の `criticalPoolDepleted` 判定が新プール構造（`indexTaxablePool + indexNisaPool`）でも動作するか
+  - `indexPool` / `investPool` 既存フィールドの後方互換（合計値出力）
 
 ### 実測サマリー
-（Task 6 修正後に記入）
+- **commit SHA**: （Step 12 で追記）
+- **snapshot 差分行数**: 7732 行（insertions 3866 + deletions 3866）
+- **サンプルの iDeCo アセット（currentVal）**:
+  - A 田中葵: iDeCo 保有なし
+  - B 鈴木健太: 90 万円
+  - C 山本誠: 420 万円
+  - D 中村博: 520 万円
+  - E 林菜緒: 30 万円
+- **変更内容**:
+  - `idecoLumpsum` を「成長後残高（retirement time）」として算出（currentVal × (1+rate)^years + monthly 積立）
+  - `calcSeveranceDeduction(severance, idecoLumpsum, serviceYears)` に第 2 引数を追加（`calcRetirementSim` / `calcRetirementSimWithOpts` の 2 箇所）
+  - `assetsAtRetire = max(0, totalWealth - idecoLumpsum) + severanceAtRetire` で二重計上を防止
+  - 投資プールを `indexTaxablePool` / `indexNisaPool` に分離（iDeCo 除外）
+  - 取崩順序（cash_first）: `cashPool → dividendPool → indexTaxablePool → indexNisaPool → emergencyPool`（NISA 温存）
+  - `criticalPoolDepleted` 判定を新プール構造に対応（taxable/nisa/div/cash/emerg 全部 0 で fire）
+  - snapshot 互換のため `indexPool` / `investPool` は合計値を出力（新フィールド追加なし）
+- **シナリオ別変化**:
+  - A 田中葵: iDeCo 保有なし → 差分なし ✅
+  - B 鈴木健太: targetAge=65, severance=1200, iDeCo=90 → `startAssets` 8245→8166（-79）、`cashPool` +604, `indexPool` -697、長期 `endAssets` 改善方向
+  - C 山本誠: targetAge=55, severance=2500, iDeCo=420 → `startAssets` 7964→7784（-180・iDeCo 税込計）、age 75 の `endAssets` 4475→5466（**+991, +22%**）= NISA 温存効果
+  - D 中村博: targetAge=65, severance=2200, iDeCo=520 → `startAssets` 8277→8193（-84）、後期の `endAssets` 赤字が大幅改善（-264→-124、age 92）
+  - E 林菜緒: targetAge=65, severance=400, iDeCo=30 → `startAssets` 変化 +、age 65 の `endAssets` 532→1195（**+125%**）= NISA 温存 + dividendPool 先消費の効果大
+- **方向の評価**: 期待通り
+  - iDeCo 一時金化で退職年の一時的影響（税引き込みで startAssets は小幅マイナス）は軽微
+  - NISA 温存順序により、長期（age 70 以降）で手取り資産が大幅改善（C: +22%、D: 赤字縮小、E: +125%）
+  - NISA 比率の高い E 林菜緒で特に効果が大きく、期待方向（「NISA 比率が高いシナリオで効果大」）と一致
+  - 全 155 テスト pass
+- **Concerns**: E の +125% は期待レンジ（+5〜+10%）を大きく超える。NISA 比率が極めて高い（実質すべて nisa_tsumitate + ideco）ことに加え、取崩順序変更で dividendPool が先消費（→ E は dividendPool = 0 なので影響なし）+ 旧ロジックでの indexPool ベース取崩で NISA も課税相当に gross-up されていた問題の解消が合わさった結果と見られる。
