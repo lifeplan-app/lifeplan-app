@@ -107,7 +107,7 @@
 - **移動先**: `test/helpers/test-helpers.js`（`projectEmergencyBalance`, `calcEndYearFromAge`, `calcEndAgeFromYear`）
 - **import 先変更**: `test/golden-master.test.js`, `test/regression.test.js`
 - **テスト結果**: 155/155 グリーン、snapshot 差分 0 行
-- **commit SHA**: （Step 9 で追記）
+- **commit SHA**: `c17ed27`
 
 ## 完了時点（Phase 3 完了後）
 
