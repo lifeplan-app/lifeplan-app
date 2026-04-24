@@ -17,7 +17,7 @@ Important 14 件を 5 グループに分けて修正した記録。
 - **確認ポイント**: 差分が小さいか、ある場合は明確に gross モード or noLoan 経由
 
 ### 実測サマリー
-- **commit SHA**: （Step 8 で追記）
+- **commit SHA**: 5fd23b7
 - **snapshot 差分行数**: 0 行
 - **サンプルの `_inputMode`**: A/B/C/D/E すべて未設定（grep で `_inputMode` 記述は 5 サンプル全てヒットせず）
 - **シナリオ別変化**: 
