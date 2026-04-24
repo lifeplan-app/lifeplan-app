@@ -14322,21 +14322,27 @@ function calcIntegratedSim(years, opts = {}) {
     const cashAssetBase   = _cashGD.reduce((s, g) => s + (g.data[y] || 0), 0);
     const investAssetBase = _investGD.reduce((s, g) => s + (g.data[y] || 0), 0);
 
+    // [Phase 2.5 07-C01 fix] 投資プール枯渇後は機会損失複利と清算を停止
+    // investAssetBase は積立で年次増加するため、一度枯渇しても積立で復活する場合は継続
+    const investPoolHealthy = _investDeficit < investAssetBase;
+
     // 既存の不足累積に複利をかける（前年に清算した分の機会損失）
-    if (y > 0) _investDeficit *= (1 + _wInvestReturn);
+    // 枯渇中は複利成長させない（架空残高の防止）
+    if (y > 0 && investPoolHealthy) _investDeficit *= (1 + _wInvestReturn);
 
     // 仮想現金プール = 現金資産 + 累積収支
     const virtualCash = cashAssetBase + cashFlow;
     let liquidationThisYear = 0;
     let adjustedCashFlow = cashFlow;
 
-    if (y > 0 && virtualCash < 0) {
+    if (y > 0 && virtualCash < 0 && investPoolHealthy) {
       // 現金プールが不足 → 投資資産を清算して補填
       liquidationThisYear = -virtualCash;
       _investDeficit += liquidationThisYear;
       adjustedCashFlow = cashFlow + liquidationThisYear; // 清算後: cashPool ≒ 0
       _liquidationEvents.push({ y, yr, amount: Math.round(liquidationThisYear) });
     }
+    // else: 投資プール枯渇中は清算不能 → adjustedCashFlow はマイナスのまま残す
 
     const cashPool   = Math.max(0, cashAssetBase + adjustedCashFlow);
     const investPool = Math.max(0, investAssetBase - _investDeficit);
@@ -17823,6 +17829,11 @@ function calcRetirementSimWithOpts(opts = {}) {
     // 資金不足: 実引き出し < 必要額（cashFloorで引き出せない場合を含む）
     const isFundingShortfall = withdrawalShortfall > 0;
 
+    // [Phase 2.5 08-C01 fix] 取り崩し不能な中間プール枯渇も破綻として検知
+    // 取り崩し可能なプール（index/dividend/cash/emergency）が全て空で、かつ取り崩しが必要な場合
+    const criticalPoolDepleted =
+      (indexPool <= 0 && dividendPool <= 0 && cashPool <= 0 && emergencyPool <= 0 && actualDeduction > 0);
+
     postData.push({
       year: yr, age,
       startAssets: Math.round(assets),
@@ -17850,7 +17861,7 @@ function calcRetirementSimWithOpts(opts = {}) {
       annualSurplus: isFundingShortfall ? 0 : annualSurplus,
       annualDeficit: isFundingShortfall ? withdrawalShortfall : annualDeficit,
       hybridPhase,
-      depleted: endAssets <= 0 || isFundingShortfall,
+      depleted: endAssets <= 0 || isFundingShortfall || criticalPoolDepleted,
     });
 
     // assets はループ先頭で cashPool+indexPool+dividendPool から再計算するため代入不要
