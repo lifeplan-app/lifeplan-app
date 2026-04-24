@@ -22,6 +22,10 @@ const __dirname = dirname(__filename);
 const PROJECT_ROOT = resolve(__dirname, '..', '..');
 const INDEX_HTML_URL = 'file://' + resolve(PROJECT_ROOT, 'index.html');
 
+// スナップショットが年越しで自動的にズレないよう、テスト時の「現在時刻」を固定する。
+// 値を変更するとすべてのスナップショットを再生成する必要がある。
+export const SIMULATION_FIXED_DATE = new Date('2026-04-24T00:00:00+09:00');
+
 /**
  * ブラウザとコンテキストを起動。5シナリオで使い回すため、テストスイートの beforeAll で1回呼ぶ。
  */
@@ -46,6 +50,10 @@ export async function closeContext(ctx) {
  */
 export async function loadAppWithScenario(ctx, scenarioJson) {
   const page = await ctx.context.newPage();
+
+  // 「現在時刻」を固定。Date.now() や引数なしの new Date() が常に SIMULATION_FIXED_DATE を返す。
+  // これがないと年越しで全シナリオのシミュレーション期間がズレ、スナップショットが一斉に赤くなる。
+  await page.clock.setFixedTime(SIMULATION_FIXED_DATE);
 
   // file:// オリジンで localStorage が使えるよう、先に index.html をロードしてオリジンを確立。
   // その後 JSON を注入してリロードし、index.html の init 処理に state を復元させる。
