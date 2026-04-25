@@ -18549,6 +18549,81 @@ function runInputDiagnosis() {
     });
   }
 
+  // ---- [Phase 4r] iDeCo 受給設定整合性 ----
+  const idecoAssets = assets.filter(a => a.type === 'ideco');
+  const idecoMethod = ret.idecoReceiptMethod || 'lump';
+  if (idecoAssets.length > 0) {
+    const idecoStart = parseInt(ret.idecoStartAge) || ret.targetAge || 65;
+    const tAge = parseInt(ret.targetAge) || 65;
+    const gap = Math.abs(idecoStart - tAge);
+    if (gap > 10) {
+      warns.push({ text: `iDeCo 受給開始年齢（${idecoStart}歳）がリタイア目標年齢（${tAge}歳）と ${gap} 年離れています。意図通りか確認してください。`, page: 'retirement' });
+    }
+    if (idecoMethod === 'mixed') {
+      const ratio = parseInt(ret.idecoLumpRatio);
+      if (ratio === 0 || ratio === 100) {
+        oks.push({ text: `iDeCo 併用の比率が${ratio}%（実質${ratio === 0 ? '純年金' : '純一時金'}と同等）` });
+      } else if (ratio > 0 && ratio < 100) {
+        oks.push({ text: `iDeCo 併用受給: 一時金 ${ratio}% / 年金 ${100 - ratio}%` });
+      }
+    } else {
+      oks.push({ text: `iDeCo 受給方法: ${idecoMethod === 'lump' ? '一時金' : '年金'}（受給開始 ${idecoStart}歳）` });
+    }
+  } else if (idecoMethod !== 'lump') {
+    warns.push({ text: `iDeCo 受給方法を「${idecoMethod === 'pension' ? '年金' : '併用'}」に設定していますが、iDeCo 資産が登録されていません。`, page: 'finance' });
+  }
+
+  // ---- [Phase 4r] 住宅ローン整合性 ----
+  if (housingType === 'mortgage') {
+    const mPrice = parseFloat(le.mortgage?.price) || 0;
+    const mDown = parseFloat(le.mortgage?.downPayment) || 0;
+    const mAmt = parseFloat(le.mortgage?.amount) || 0;
+    if (mPrice > 0 && mDown >= 0 && mAmt > 0) {
+      const expectedAmount = Math.max(0, mPrice - mDown);
+      if (Math.abs(expectedAmount - mAmt) > 1) { // 1万円以上のズレ
+        warns.push({ text: `住宅ローン: 物件価格 ${mPrice}万 − 頭金 ${mDown}万 = ${expectedAmount}万 ですが借入額は ${mAmt}万で不整合です。手動で確認してください。`, page: 'lifeevents' });
+      } else {
+        oks.push({ text: `住宅ローン整合: 物件 ${mPrice}万 = 頭金 ${mDown}万 + 借入 ${mAmt}万` });
+      }
+    }
+    if (le.mortgage?.isChildCareHousehold) {
+      const startYr = parseInt(le.mortgage?.startYear) || 0;
+      if (startYr !== 2024 && startYr !== 2025) {
+        warns.push({ text: `子育て世帯特例 ON ですが借入開始年（${startYr}年）が令和 6・7 年（2024/2025）外のため、特例は適用されません。`, page: 'lifeevents' });
+      } else {
+        oks.push({ text: `子育て世帯特例 適用（令和 ${startYr === 2024 ? '6' : '7'} 年入居）` });
+      }
+    }
+  }
+
+  // ---- [Phase 4r] 保険料整合性 ----
+  const insItems = (state.insurance?.items) || [];
+  if (insItems.length > 0) {
+    const totalMonthly = insItems.reduce((s, i) => s + (parseFloat(i.premium) || 0), 0);
+    if (totalMonthly > 0) {
+      oks.push({ text: `保険料 月 ${totalMonthly.toFixed(1)}万円（年 ${Math.round(totalMonthly * 12)}万円）がシミュレーションに反映されます` });
+    }
+    const zeroPremium = insItems.filter(i => !i.premium || parseFloat(i.premium) === 0);
+    if (zeroPremium.length > 0) {
+      warns.push({ text: `保険商品 ${zeroPremium.length} 件で月額保険料が 0 万円になっています。入力もれの可能性があります。`, page: 'insurance' });
+    }
+  }
+
+  // ---- [Phase 4r] 贈与計画整合性 ----
+  const giftPlans = (state.inheritance?.giftPlans) || [];
+  if (giftPlans.length > 0) {
+    const currentYr = new Date().getFullYear();
+    const pastGifts = giftPlans.filter(p => parseInt(p.year) < currentYr);
+    const futureGifts = giftPlans.filter(p => parseInt(p.year) >= currentYr);
+    if (futureGifts.length > 0) {
+      const totalAmt = futureGifts.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+      oks.push({ text: `贈与計画 ${futureGifts.length} 件（合計 ${totalAmt}万円）がシミュレーションに反映されます` });
+    }
+    if (pastGifts.length > 0) {
+      warns.push({ text: `贈与計画 ${pastGifts.length} 件が過去年（< ${currentYr}年）に登録されています。シミュ対象外です。`, page: 'inheritance' });
+    }
+  }
+
   // ---- レポートHTML生成 ----
   const resultEl = document.getElementById('diagnosisResult');
   if (!resultEl) return;
