@@ -1238,3 +1238,57 @@ describe('[BUG#15] 奨学金 borrowedAmount=0 fallback（Phase 4j 03-M07）', ()
     expect(yr15.scholarship).toBe(0);
   });
 });
+
+// ─── BUG#16 (Phase 4l): 2026 税制改正 9/20 年ルール対応 ──────────
+// 修正前: calcSeveranceWith519Rule は 5/19 ハードコード
+// 修正後: 第 7/8 引数で閾値選択可能、呼び出し元で受給年から判定
+describe('[BUG#16] 9/20 年ルール (Phase 4l)', () => {
+  let calcSeveranceWith519Rule, calcSeveranceDeduction, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcSeveranceWith519Rule = localSb.calcSeveranceWith519Rule;
+    calcSeveranceDeduction = localSb.calcSeveranceDeduction;
+  });
+
+  it('引数省略は 5/19 既定（後方互換）', () => {
+    // 退職金先・gap 19 → 既定 19 で別枠
+    const r = calcSeveranceWith519Rule(2000, 60, 38, 800, 79, 35);
+    const sNet = calcSeveranceDeduction(2000, 0, 38);
+    const iNet = calcSeveranceDeduction(0, 800, 35);
+    expect(r).toBeCloseTo(sNet + iNet, 1);
+  });
+
+  it('改正後 (20/9): 退職金先 gap=19 → 合算（旧 19→別枠だったが新 20 未達）', () => {
+    const r = calcSeveranceWith519Rule(2000, 60, 38, 800, 79, 35, 20, 9);
+    const expected = calcSeveranceDeduction(2000, 800, 38);
+    expect(r).toBeCloseTo(expected, 1);
+  });
+
+  it('改正後 (20/9): 退職金先 gap=20 → 別枠', () => {
+    const r = calcSeveranceWith519Rule(2000, 60, 38, 800, 80, 35, 20, 9);
+    const sNet = calcSeveranceDeduction(2000, 0, 38);
+    const iNet = calcSeveranceDeduction(0, 800, 35);
+    expect(r).toBeCloseTo(sNet + iNet, 1);
+  });
+
+  it('改正後 (20/9): iDeCo 先 gap=5 → 合算（旧 5→別枠だったが新 9 未達）', () => {
+    const r = calcSeveranceWith519Rule(2000, 65, 38, 800, 60, 35, 20, 9);
+    const expected = calcSeveranceDeduction(2000, 800, 38);
+    expect(r).toBeCloseTo(expected, 1);
+  });
+
+  it('改正後 (20/9): iDeCo 先 gap=9 → 別枠', () => {
+    const r = calcSeveranceWith519Rule(2000, 69, 38, 800, 60, 35, 20, 9);
+    const sNet = calcSeveranceDeduction(2000, 0, 38);
+    const iNet = calcSeveranceDeduction(0, 800, 35);
+    expect(r).toBeCloseTo(sNet + iNet, 1);
+  });
+});

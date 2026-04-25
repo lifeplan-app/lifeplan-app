@@ -90,11 +90,18 @@ function calcRetirementSim() {
       (idecoMethodSim === 'lump')  ? _idecoBalanceAtStartSim
     : (idecoMethodSim === 'mixed') ? _idecoBalanceAtStartSim * idecoLumpRatioSim
     :                                 0;
-  // [Phase 4h] 5/19 年ルール: 退職金と iDeCo 一時金の年差で別枠 / 合算分岐
+  // [Phase 4h/4l] 5/19 or 9/20 年ルール: 受給年が 2026 年以降なら 9/20 (税制改正)
   const _idecoEnrollYearsSim = Math.max(1, idecoStartAgeSim - 22);
+  const _birthYearForRule = _birthYear || (currentYear - currentAge);
+  const _sevReceiptYearSim = _birthYearForRule + (parseFloat(severanceAge) || 0);
+  const _idecoReceiptYearSim = _birthYearForRule + idecoStartAgeSim;
+  const _isPost2026Sim = Math.max(_sevReceiptYearSim, _idecoReceiptYearSim) >= 2026;
+  const _sevThrSim = _isPost2026Sim ? 20 : 19;
+  const _idcThrSim = _isPost2026Sim ? 9 : 5;
   const severanceAtRetire = calcSeveranceWith519Rule(
     severanceGross, severanceAge, serviceYears,
-    idecoLumpsumSim, idecoStartAgeSim, _idecoEnrollYearsSim
+    idecoLumpsumSim, idecoStartAgeSim, _idecoEnrollYearsSim,
+    _sevThrSim, _idcThrSim
   );
   const _baseWealthSim = preRetireSim[yearsToRetireAccurate]?.totalWealth
     || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -336,8 +343,10 @@ function calcSeveranceDeduction(severance, idecoLumpsum, serviceYears) {
 
 // [Phase 4h] 退職所得控除の 5/19 年ルール: 退職金と iDeCo 一時金の受給年差が
 //   ≥ 19 年（退職金先）or ≥ 5 年（iDeCo 先）なら別枠で控除適用、それ以外は合算
+// [Phase 4l] 2026 税制改正対応: 第 7/8 引数で閾値を指定可能（既定 19/5 で後方互換）
+//   2026 年以降受給は 20/9 に変更（呼び出し元で受給年から判定して渡す）
 // 出典: 国税庁 No.1420（退職所得）、所得税法施行令 69 条等
-function calcSeveranceWith519Rule(severance, severanceAge, severanceServiceYears, idecoLumpsum, idecoStartAge, idecoEnrollYears) {
+function calcSeveranceWith519Rule(severance, severanceAge, severanceServiceYears, idecoLumpsum, idecoStartAge, idecoEnrollYears, severanceFirstThreshold, idecoFirstThreshold) {
   const sAmt = parseFloat(severance) || 0;
   const iAmt = parseFloat(idecoLumpsum) || 0;
   if (sAmt <= 0 && iAmt <= 0) return 0;
@@ -349,10 +358,13 @@ function calcSeveranceWith519Rule(severance, severanceAge, severanceServiceYears
   if (!sAge || !iAge) {
     return calcSeveranceDeduction(sAmt, iAmt, severanceServiceYears);
   }
+  // [Phase 4l] 閾値は引数で受け取る（既定 19/5 で後方互換、改正後は 20/9）
+  const sevThr = parseFloat(severanceFirstThreshold) || 19;
+  const idcThr = parseFloat(idecoFirstThreshold) || 5;
   const gap = Math.abs(iAge - sAge);
   const severanceFirst = sAge < iAge;
   const idecoFirst = iAge < sAge;
-  if ((severanceFirst && gap >= 19) || (idecoFirst && gap >= 5)) {
+  if ((severanceFirst && gap >= sevThr) || (idecoFirst && gap >= idcThr)) {
     const sNet = calcSeveranceDeduction(sAmt, 0, severanceServiceYears);
     const iNet = calcSeveranceDeduction(0, iAmt, idecoEnrollYears);
     return sNet + iNet;
@@ -433,11 +445,18 @@ function calcRetirementSimWithOpts(opts = {}) {
         ? _idecoPensionPortion * _idecoWeightedRate / (1 - Math.pow(1 + _idecoWeightedRate, -idecoPensionYears))
         : _idecoPensionPortion / idecoPensionYears)
     : 0;
-  // [Phase 4h] 5/19 年ルール: 退職金と iDeCo 一時金の年差で別枠 / 合算分岐
+  // [Phase 4h/4l] 5/19 or 9/20 年ルール: 受給年が 2026 年以降なら 9/20 (税制改正)
   const _idecoEnrollYears = Math.max(1, idecoStartAge - 22);
+  const _birthYearForRuleOpts = _birthYear || (currentYear - currentAge);
+  const _sevReceiptYear = _birthYearForRuleOpts + (parseFloat(severanceAge) || 0);
+  const _idecoReceiptYear = _birthYearForRuleOpts + idecoStartAge;
+  const _isPost2026 = Math.max(_sevReceiptYear, _idecoReceiptYear) >= 2026;
+  const _sevThr = _isPost2026 ? 20 : 19;
+  const _idcThr = _isPost2026 ? 9 : 5;
   const severanceAtRetire = calcSeveranceWith519Rule(
     severanceGross, severanceAge, serviceYears,
-    idecoLumpsum, idecoStartAge, _idecoEnrollYears
+    idecoLumpsum, idecoStartAge, _idecoEnrollYears,
+    _sevThr, _idcThr
   );
   // [Phase 4d] totalWealth から iDeCo 残高を引く（pension 経路でも別経路で受給するため二重計上を防ぐ）
   const _baseWealth = preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
