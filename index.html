@@ -7728,8 +7728,12 @@ function assetCard(a, growthData, ownerColor) {
   const annualContrib = (a.monthly || 0) * 12 + (a.annualBonus || 0);
   const limitWarn = t.annualLimit && annualContrib > t.annualLimit
     ? `<span class="asset-limit-warn">⚠️ 年間上限 ${t.annualLimit}万円を超えています</span>` : '';
-  const monthLimitWarn = t.monthlyLimit && (a.monthly || 0) > t.monthlyLimit
-    ? `<span class="asset-limit-warn">⚠️ 月額上限 ${t.monthlyLimit}万円を超えています</span>` : '';
+  // [Phase 4t] iDeCo は年月依存の上限を使用（2027 以降 6.2 万）
+  const _monthlyLimitForCheck = (a.type === 'ideco' && typeof getIdecoMonthlyLimit === 'function')
+    ? getIdecoMonthlyLimit(new Date().getFullYear())
+    : t.monthlyLimit;
+  const monthLimitWarn = _monthlyLimitForCheck && (a.monthly || 0) > _monthlyLimitForCheck
+    ? `<span class="asset-limit-warn">⚠️ 月額上限 ${_monthlyLimitForCheck}万円を超えています</span>` : '';
   const endStr = a.endYear ? `〜${a.endYear}年` : '';
   const startStr = a.startYear ? `${a.startYear}年` : '';
 
@@ -8309,8 +8313,14 @@ function checkAssetLimit() {
   const totalAnnual = monthly * 12 + annualBonus;
   if (t.annualLimit && totalAnnual > t.annualLimit) {
     warns.push(`年間積立合計 ${totalAnnual.toFixed(1)}万円（月積立${(monthly*12).toFixed(1)}万円＋ボーナス${annualBonus.toFixed(1)}万円）が年間非課税枠(${t.annualLimit}万円)を超えます`);
-  } else if (t.monthlyLimit && monthly > t.monthlyLimit) {
-    warns.push(`月額 ${monthly}万円 が月額上限(${t.monthlyLimit}万円)を超えます`);
+  } else {
+    // [Phase 4t] iDeCo は年月依存の上限を使用
+    const _monthlyLimitForModal = (type === 'ideco' && typeof getIdecoMonthlyLimit === 'function')
+      ? getIdecoMonthlyLimit(new Date().getFullYear())
+      : t.monthlyLimit;
+    if (_monthlyLimitForModal && monthly > _monthlyLimitForModal) {
+      warns.push(`月額 ${monthly}万円 が月額上限(${_monthlyLimitForModal}万円)を超えます`);
+    }
   }
 
   // 生涯上限チェック

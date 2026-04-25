@@ -12,4 +12,8 @@ iDeCo 拠出限度額 年月依存自動切替 (2026 改正対応の最終仕上
 - ノート文字列を最新化
 
 ## 実測サマリー
-（修正後に記入）
+- snapshot 差分: なし（計算側変更なし）
+- `getIdecoMonthlyLimit(year)` 追加 (calc/asset-growth.js)
+- UI 警告 2 箇所で年月依存判定に変更
+- ASSET_TYPES.ideco.note 文言を「予定」から「税制改正対応」へ明確化
+- テスト: 240/240 グリーン (235 + BUG#21 5 件)

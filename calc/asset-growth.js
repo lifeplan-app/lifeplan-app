@@ -14,7 +14,7 @@ var ASSET_TYPES = {
   nisa_growth:        { label: '新NISA 成長投資枠',           emoji: '📈', color: '#3B82F6', bg: '#DBEAFE', defaultReturn: 6,   annualLimit: 240,  monthlyLimit: 20,  lifetimeLimit: 1200, note: '新NISA成長投資枠：年間240万円まで。成長枠の生涯上限は1200万円（積立枠と合算で生涯1800万円）。' },
   nisa_old_tsumitate: { label: '旧つみたてNISA',               emoji: '🌿', color: '#059669', bg: '#D1FAE5', defaultReturn: 5,   noNewContrib: true, endYearDefault: 2042, note: '旧つみたてNISA：2023年末で新規積み立て終了。最長2042年末まで非課税で保有・売却可能。2042年以降は自動で特定口座へ移管され、売却益に課税（約20%）が生じます。新規積み立ては不可です。' },
   nisa_old_general:   { label: '旧一般NISA',                   emoji: '📋', color: '#1D4ED8', bg: '#DBEAFE', defaultReturn: 5,   noNewContrib: true, endYearDefault: 2027, note: '旧一般NISA：2023年末で新規投資終了。2023年分は2027年末まで非課税で保有可能。2027年以降は自動で特定口座へ移管され、売却益に課税（約20%）が生じます。新規積み立ては不可です。' },
-  ideco:          { label: 'iDeCo',                       emoji: '🏛️', color: '#8B5CF6', bg: '#EDE9FE', defaultReturn: 4,   monthlyLimit: 2.3, note: '会社員(企業年金なし)：月2.3万円。2026年12月以降は月6.2万円に引き上げ予定。掛金全額所得控除。60歳まで原則引出不可。' },
+  ideco:          { label: 'iDeCo',                       emoji: '🏛️', color: '#8B5CF6', bg: '#EDE9FE', defaultReturn: 4,   monthlyLimit: 2.3, note: '会社員(企業年金なし)：月2.3万円（2026年11月まで）／月6.2万円（2026年12月～、税制改正対応）。掛金全額所得控除。60歳まで原則引出不可。' },
   insurance:      { label: '積立保険',                    emoji: '🛡️', color: '#F59E0B', bg: '#FEF3C7', defaultReturn: 1.5, note: '積立型保険。解約返戻金が積立額を上回るまで時間がかかる場合あり。' },
   trust_allworld: { label: '投資信託（全世界・オルカン）', emoji: '🌍', color: '#06B6D4', bg: '#CFFAFE', defaultReturn: 7,   note: 'eMAXIS Slim 全世界株式(オルカン)など。過去実績ベースの期待リターン。' },
   trust_sp500:    { label: '投資信託（S&P500）',           emoji: '🇺🇸', color: '#4F46E5', bg: '#EEF2FF', defaultReturn: 8,   note: 'eMAXIS Slim 米国株式(S&P500)など。過去平均年率約10%（円建て変動あり）。' },
@@ -29,6 +29,15 @@ var ASSET_TYPES = {
   cash:           { label: '現金・預金（その他）',          emoji: '💵', color: '#6B7280', bg: '#F3F4F6', defaultReturn: 0.1, note: '普通預金・定期預金など。' },
   other:          { label: 'その他',                      emoji: '✨', color: '#84CC16', bg: '#ECFCCB', defaultReturn: 3,   note: '不動産・債券・仮想通貨など。' },
 };
+
+// [Phase 4t 01-M04] iDeCo 拠出限度額の年月依存切替
+// 2025 税制改正: 会社員(企業年金なし) 月 2.3 万円 → 6.2 万円
+// 施行: 2026/12 ～。シミュレーションは年単位のため 2027 年から新限度額を適用
+function getIdecoMonthlyLimit(year) {
+  const yr = parseInt(year);
+  if (!yr) return 2.3; // フォールバック（旧基準）
+  return yr >= 2027 ? 6.2 : 2.3;
+}
 
 // 口座種別の自動判定（アセットタイプから推定）
 var TAX_TYPE_DEFAULT = {

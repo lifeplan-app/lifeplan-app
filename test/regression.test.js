@@ -1570,3 +1570,42 @@ describe('[BUG#20] Phase 4s 保険・贈与 統合テスト', () => {
     expect(withInsExp - noInsExp).toBeCloseTo(12, 1);
   });
 });
+
+// ─── BUG#21 (Phase 4t): iDeCo 拠出限度額 年月依存切替 ──────────
+describe('[BUG#21] Phase 4t iDeCo 限度額切替', () => {
+  let getIdecoMonthlyLimit, ASSET_TYPES, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    localSb = getSandbox();
+    getIdecoMonthlyLimit = localSb.getIdecoMonthlyLimit;
+    ASSET_TYPES = localSb.ASSET_TYPES;
+  });
+
+  it('2026 年以前は月 2.3 万円', () => {
+    expect(getIdecoMonthlyLimit(2024)).toBe(2.3);
+    expect(getIdecoMonthlyLimit(2025)).toBe(2.3);
+    expect(getIdecoMonthlyLimit(2026)).toBe(2.3);
+  });
+
+  it('2027 年以降は月 6.2 万円', () => {
+    expect(getIdecoMonthlyLimit(2027)).toBe(6.2);
+    expect(getIdecoMonthlyLimit(2030)).toBe(6.2);
+    expect(getIdecoMonthlyLimit(2050)).toBe(6.2);
+  });
+
+  it('year 不明（0/null/undefined）は 2.3 fallback', () => {
+    expect(getIdecoMonthlyLimit(0)).toBe(2.3);
+    expect(getIdecoMonthlyLimit(null)).toBe(2.3);
+    expect(getIdecoMonthlyLimit(undefined)).toBe(2.3);
+  });
+
+  it('ASSET_TYPES.ideco.monthlyLimit は後方互換のため 2.3 のまま', () => {
+    expect(ASSET_TYPES.ideco.monthlyLimit).toBe(2.3);
+  });
+
+  it('ASSET_TYPES.ideco.note は 2026年12月切替を明示', () => {
+    expect(ASSET_TYPES.ideco.note).toMatch(/2026年12月/);
+    expect(ASSET_TYPES.ideco.note).toMatch(/6\.2/);
+  });
+});
