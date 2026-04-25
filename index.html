@@ -434,6 +434,24 @@
       appearance: none;
     }
 
+    /* [Phase 4j follow-up] radio/checkbox はグローバル input ルールから除外（appearance:none で巨大な箱になるのを防ぐ） */
+    input[type="radio"], input[type="checkbox"] {
+      width: auto;
+      height: auto;
+      padding: 0;
+      border: none;
+      background: transparent;
+      -webkit-appearance: auto;
+      appearance: auto;
+      margin: 0 4px 0 0;
+      vertical-align: middle;
+      box-shadow: none;
+    }
+    input[type="radio"]:focus, input[type="checkbox"]:focus {
+      box-shadow: 0 0 0 2px rgba(0,122,255,.25);
+      outline: none;
+    }
+
     select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%233c3c4399'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
@@ -2888,6 +2906,7 @@
               <div class="form-group" style="margin:0">
                 <label>控除適用：居住開始年</label>
                 <input type="number" id="leMortgageDeductStart" placeholder="2026" min="2000" max="2100" oninput="calcMortgage()">
+                <div id="mortgageDeductStartWarn" style="color:#EF4444;font-size:11px;margin-top:4px;display:none">⚠️ 控除開始年が借入開始年より前です。借入前の年は控除されません。</div>
               </div>
               <div class="form-group" style="margin:0">
                 <label>控除期間（年）</label>
@@ -12242,19 +12261,12 @@ function updateMortgageDeductResult() {
         ✅ 家計・資産の資産推移グラフ（現役期）および出口戦略シミュレーションの両方に反映されます
       </div>
     </div>`;
-  // [Phase 4i 05-M05] deductStart < startYear 警告（XSS 安全に createElement + textContent 使用）
+  // [Phase 4j follow-up] deductStart < startYear 警告を入力欄の直下に表示（mortgageDeductStartWarn 要素）
   const _deductStart = parseInt(document.getElementById('leMortgageDeductStart').value) || 0;
   const _startYear = parseInt(document.getElementById('leMortgageStartYear').value) || 0;
-  if (_deductStart && _startYear && _deductStart < _startYear) {
-    const warnEl = document.getElementById('mortgageDeductResult');
-    if (warnEl) {
-      const warnDiv = document.createElement('div');
-      warnDiv.style.color = '#EF4444';
-      warnDiv.style.marginTop = '4px';
-      warnDiv.style.fontSize = '11px';
-      warnDiv.textContent = '⚠️ 控除開始年が借入開始年より前です。借入前の年は控除されません。';
-      warnEl.appendChild(warnDiv);
-    }
+  const _warnEl = document.getElementById('mortgageDeductStartWarn');
+  if (_warnEl) {
+    _warnEl.style.display = (_deductStart && _startYear && _deductStart < _startYear) ? '' : 'none';
   }
 }
 
