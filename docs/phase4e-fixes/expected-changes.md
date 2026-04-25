@@ -23,3 +23,4 @@
 - `calcSpouseDeduction` シグネチャに第3引数追加、軸2 multiplier 適用
 - `calcTakeHome` で `selfTotalIncome = max(0, grossAnnual - salaryDeduction)` を計算して渡す
 - テスト: 189/189 グリーン（183 + BUG#10 6 件）
+- 実コミット: 47337fb
