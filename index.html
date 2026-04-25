@@ -6117,6 +6117,20 @@ function applyRatePresets(forceAll = false) {
 
 // ===== バックアップ: 書き出し / 読み込み =====
 // ===== PDF出力 =====
+// [Phase 4m] チャートを Chart.js の API で base64 PNG 画像にキャプチャ
+// 当該 canvas が未レンダリング or Chart.js インスタンス未生成なら null を返す
+function captureChartAsBase64(canvasId) {
+  try {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+    const chart = (typeof Chart !== 'undefined' && Chart.getChart) ? Chart.getChart(canvas) : null;
+    if (!chart) return null;
+    return chart.toBase64Image('image/png', 1);
+  } catch (e) {
+    return null;
+  }
+}
+
 function printLifePlan() {
   const p = state.profile || {};
   const age = calcAge();
@@ -6131,6 +6145,11 @@ function printLifePlan() {
 
   let retResult = null;
   try { retResult = calcRetirementSim(); } catch(e) {}
+
+  // [Phase 4m] チャート画像をキャプチャ（未レンダリングなら null）
+  const _chart_sim = captureChartAsBase64('simChart');
+  const _chart_drawdown = captureChartAsBase64('retDrawdownChart');
+  const _chart_le = captureChartAsBase64('leStackedChart');
 
   // 目標サマリー
   const goalsHtml = state.goals.slice(0, 10).map(g => {
@@ -6202,6 +6221,26 @@ function printLifePlan() {
       <td style="padding:4px 8px;text-align:right;color:${(d.annualSurplus||0)>0?'#16A34A':'#94A3B8'}">${(d.annualSurplus||0)>0?'+'+fmtMoney(d.annualSurplus):'—'}</td>
     </tr>`;
   }).join('') || '';
+
+  // [Phase 4m] チャート画像セクション（取得できたチャートのみ表示）
+  const chartsHtmlSrc = [
+    _chart_sim     && { title: '資産推移（現役期）',    src: _chart_sim },
+    _chart_drawdown && { title: '退職後の資産推移',     src: _chart_drawdown },
+    _chart_le      && { title: 'ライフイベント費用',    src: _chart_le },
+  ].filter(Boolean);
+  const chartsSection = chartsHtmlSrc.length ? `
+    <div style="page-break-before:always"></div>
+    <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px;margin:24px 0 12px">グラフ</h2>
+    ${chartsHtmlSrc.map(c => `
+      <h3 style="font-size:11pt;color:#475569;margin:14px 0 6px">${c.title}</h3>
+      <img src="${c.src}" alt="${c.title}" style="width:100%;max-width:780px;display:block;margin-bottom:8px;border:1px solid #E2E8F0;border-radius:4px">
+    `).join('')}
+    <p style="font-size:9pt;color:#94A3B8;margin-top:8px">※ 表示されないグラフがある場合は、PDF出力前にそのタブを一度開いてください。</p>
+  ` : `
+    <div style="margin-top:16px;padding:10px 14px;background:#FEF3C7;border-left:3px solid #F59E0B;font-size:9.5pt;color:#92400E;border-radius:4px">
+      💡 グラフを PDF に含めるには、PDF 出力前に各タブ（家計サマリー / 出口戦略 / ライフイベント）を一度開いて表示してください。
+    </div>
+  `;
 
   const retSection = retResult ? `
     <div style="page-break-before:always"></div>
@@ -6464,6 +6503,9 @@ function printLifePlan() {
     </tr></thead>
     <tbody>${insHtml}</tbody>
   </table>` : ''}
+
+  <!-- グラフ -->
+  ${chartsSection}
 
   <!-- 出口戦略シミュレーション -->
   ${retSection}
