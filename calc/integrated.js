@@ -26,8 +26,9 @@ function calcIntegratedSim(years, opts = {}) {
   const _totalInvestVal = _investGD.reduce((s, g) => s + (g.asset.currentVal || 0), 0);
   const _wInvestReturn = _totalInvestVal > 0
     ? _investGD.reduce((s, g) => {
+        // [Phase 4n 07-M01] per-asset デフォルトを 5% に統一（overall fallback の 0.05 と整合）
         const rate = (g.asset.return != null ? g.asset.return
-          : (g.asset.annualReturn != null ? g.asset.annualReturn : 3)) / 100;
+          : (g.asset.annualReturn != null ? g.asset.annualReturn : 5)) / 100;
         return s + (g.asset.currentVal || 0) * rate;
       }, 0) / _totalInvestVal
     : 0.05;
@@ -37,8 +38,9 @@ function calcIntegratedSim(years, opts = {}) {
     const totalNow = _investGD.reduce((s, g) => s + (g.data[y] || 0), 0);
     if (totalNow <= 0) return _wInvestReturn;
     return _investGD.reduce((s, g) => {
+      // [Phase 4n 07-M01] per-asset デフォルトを 5% に統一
       const rate = (g.asset.return != null ? g.asset.return
-        : (g.asset.annualReturn != null ? g.asset.annualReturn : 3)) / 100;
+        : (g.asset.annualReturn != null ? g.asset.annualReturn : 5)) / 100;
       return s + (g.data[y] || 0) * rate;
     }, 0) / totalNow;
   }

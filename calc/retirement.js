@@ -113,7 +113,8 @@ function calcRetirementSim() {
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const weightedReturn = totalVal > 0
     ? state.assets.reduce((s, a) => {
-        const rate = (a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn || 3)) / 100;
+        // [Phase 4n 07-M01] per-asset デフォルトを 5% に統一
+        const rate = (a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn || 5)) / 100;
         return s + (a.currentVal || 0) * rate;
       }, 0) / totalVal
     : 0.03;
@@ -464,7 +465,7 @@ function calcRetirementSimWithOpts(opts = {}) {
 
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const baseWeightedReturn = totalVal > 0
-    ? state.assets.reduce((s, a) => s + (a.currentVal || 0) * ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn || 3)) / 100), 0) / totalVal
+    ? state.assets.reduce((s, a) => s + (a.currentVal || 0) * ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn || 5)) / 100), 0) / totalVal
     : 0.03;
   const weightedReturn = baseWeightedReturn + returnMod;
 
@@ -654,7 +655,9 @@ function calcRetirementSimWithOpts(opts = {}) {
     const _partnerBirthYear = _partnerBirthStr ? new Date(_partnerBirthStr).getFullYear() : null;
     const _partnerRetireAge = parseInt(r.partnerTargetAge) || null;
     const _partnerRetireYear = (_partnerBirthYear && _partnerRetireAge) ? _partnerBirthYear + _partnerRetireAge : null;
-    const _partnerSemiEndAge = parseInt(r.partnerSemiEndAge) || null;
+    // [Phase 4n 06-M05] partnerSemiEndAge 未入力時は lifeExpectancy でキャップ（無期限セミリタイア防止）
+    const _partnerSemiEndAgeRaw = parseInt(r.partnerSemiEndAge);
+    const _partnerSemiEndAge = (_partnerSemiEndAgeRaw > 0) ? _partnerSemiEndAgeRaw : (parseInt(r.lifeExpectancy) || 90);
     const _partnerSemiEndYear = (_partnerBirthYear && _partnerSemiEndAge) ? _partnerBirthYear + _partnerSemiEndAge : null;
     const _partnerBaseAnnual = ((parseFloat(state.finance?.partnerIncome) || 0) * 12) + (parseFloat(state.finance?.partnerBonus) || 0);
     // [Phase 4b 06-I01] パートナー就労収入にも昇給累積適用

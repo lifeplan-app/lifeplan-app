@@ -60,7 +60,8 @@ function getRecurringExpenseForYear(year) {
     const iv = parseInt(e.intervalYears) || 1;
     if (year < sy) return total;
     if (ey !== null && year > ey) return total;
-    if ((e.excludeYears || []).includes(year)) return total; // その年だけ削除済み
+    // [Phase 4n 02-M03] excludeYears が string 混入していても number 比較できるよう正規化
+    if ((e.excludeYears || []).map(y => parseInt(y)).includes(parseInt(year))) return total;
     if ((year - sy) % iv === 0) {
       // この年だけオーバーライドがあれば優先
       const override = (e.overrideAmounts || {})[String(year)];

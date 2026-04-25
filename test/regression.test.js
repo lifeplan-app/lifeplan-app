@@ -1292,3 +1292,42 @@ describe('[BUG#16] 9/20 年ルール (Phase 4l)', () => {
     expect(r).toBeCloseTo(sNet + iNet, 1);
   });
 });
+
+// ─── BUG#17 (Phase 4n): Minor 5 件一括修正 ──────────
+describe('[BUG#17] Phase 4n Minor fixes', () => {
+  let _calcPensionCore, getRecurringExpenseForYear, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('pension.js');
+    localSb = getSandbox();
+    _calcPensionCore = localSb._calcPensionCore;
+    getRecurringExpenseForYear = localSb.getRecurringExpenseForYear;
+  });
+
+  it('04-M03: avgIncome 50 万 (月 4.17) は 8.8 万円下限でクランプされ koseiMonthly が増える', () => {
+    // 修正前: hyojunGekkyu = 4.17 → koseiMonthly = 4.17 × 5.481/1000 × 30 = 0.69 (過少)
+    // 修正後: hyojunGekkyu = 8.8 → koseiMonthly = 8.8 × 5.481/1000 × 30 = 1.45
+    const result = _calcPensionCore('employee', 30, 50, 40);
+    // 8.8 × 0.005481 × 360 / 12 = 1.448... → koseiMonthly ≈ 1.4
+    expect(result.koseiMonthly).toBeGreaterThan(1.0);
+  });
+
+  it('02-M03: excludeYears が string 混入していても number 比較できる', () => {
+    localSb.state = {
+      profile: { birth: `${new Date().getFullYear() - 30}-01-01` },
+      finance: {},
+      cashFlowEvents: [], expenses: [],
+      recurringExpenses: [{
+        startYear: 2026,
+        amount: 30,
+        intervalYears: 1,
+        excludeYears: ['2027', 2028], // string と number 混在
+      }],
+    };
+    expect(getRecurringExpenseForYear(2027)).toBe(0); // string '2027' でも除外
+    expect(getRecurringExpenseForYear(2028)).toBe(0); // number 2028 で除外
+    expect(getRecurringExpenseForYear(2029)).toBe(30); // 除外対象外
+  });
+});
