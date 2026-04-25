@@ -31,17 +31,17 @@
 
 ## 実際の SHA（実装後記載）
 
-- chore: TBD
-- fix: TBD
-- docs: TBD
+- chore: `949e5bd`
+- fix: `5000b73`
+- docs: TBD → next commit
 
 ## 実際の修正件数（実装後記載）
 
-- ${...name}: TBD 件
-- ${...title}: TBD 件
-- ${...note}: TBD 件
-- ${...memo}: TBD 件
-- 合計: TBD 件
+- ${...name}: 21 件
+- ${...title}: 1 件
+- ${...note}: 1 件
+- ${...memo}: 1 件
+- 合計: **24 件**
 
 ## テスト
 
