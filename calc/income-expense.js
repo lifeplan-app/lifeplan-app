@@ -240,8 +240,10 @@ function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge, selfTotalIncome
   else if (selfInc > 950) highIncomeMultiplier = 1/3;
   else if (selfInc > 900) highIncomeMultiplier = 2/3;
   if (highIncomeMultiplier !== 1) {
+    // [Phase 4e 06-I02 軸2] NTA / 住民税表に整合: 端数は Math.ceil で切り上げ
+    // 例: 38 × 2/3 = 25.33 → 26（NTA 表の値）
     incomeTaxDeduction = Math.ceil(incomeTaxDeduction * highIncomeMultiplier);
-    residentTaxDeduction = Math.round(residentTaxDeduction * highIncomeMultiplier);
+    residentTaxDeduction = Math.ceil(residentTaxDeduction * highIncomeMultiplier);
   }
 
   return { incomeTaxDeduction, residentTaxDeduction };

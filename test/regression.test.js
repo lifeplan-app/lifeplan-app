@@ -854,9 +854,9 @@ describe('[BUG#10] 配偶者控除 軸2 本人高所得者逓減（Phase 4e 06-I
     expect(r.residentTaxDeduction).toBe(0);
   });
 
-  it('老人加算 + 本人 920 万 → 48×2/3=32 / 38×2/3=25', () => {
+  it('老人加算 + 本人 920 万 → 48×2/3=32 / 38×2/3→ceil 26', () => {
     const r = calcSpouseDeduction(0, 70, 920);
     expect(r.incomeTaxDeduction).toBe(32);
-    expect(r.residentTaxDeduction).toBe(25);
+    expect(r.residentTaxDeduction).toBe(26); // 38 × 2/3 = 25.33 → ceil = 26（NTA 住民税表）
   });
 });
