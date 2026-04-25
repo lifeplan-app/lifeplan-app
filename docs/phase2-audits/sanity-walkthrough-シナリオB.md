@@ -389,3 +389,26 @@ Phase 4d で iDeCo 受給方法 UI が拡張された結果、シナリオ B の
 - **Phase 4d 完了後**: ✅ 妥当（iDeCo 受給方法 UI 拡張で機能完成度向上）
 - **残存**: Minor 63 件、Phase 4e 候補（一時金+年金併用、06-I02 軸2、5/19 年ルール、annuity 計算等）
 
+## Phase 4e 完了後の再評価（2026-04-25）
+
+Phase 4e で配偶者控除の軸2（本人高所得者逓減）が実装され、3 軸全対応となった結果：
+
+### 修正された主要な機能拡張
+
+- **配偶者控除 軸2** (`47337fb`):
+  - `calcSpouseDeduction` に第3引数 `selfTotalIncomeMan` 追加
+  - 本人合計所得 900/950/1000 万円ラインで multiplier (1, 2/3, 1/3, 0) を `Math.ceil` で適用
+  - NTA 表値と整合（38×2/3=25.33→26 等）
+  - シナリオ B は本人年収 < 900 万 → multiplier=1 → snapshot 不変
+  - 配偶者控除 3 軸（軸1 partner 所得逓減・軸2 本人所得逓減・軸3 老人加算）すべて完了
+
+### 判定の更新
+
+- **Phase 2.5 完了時**: ✅ 妥当（Critical 10 件解消）
+- **Phase 4a 完了後**: ✅ 妥当（Important 14 件解消）
+- **Phase 4b 完了後**: ✅ 妥当（Important 18 件解消、計 32 件）
+- **Phase 4c 完了後**: ✅ 妥当（Important 8 件解消、計 40 件、全 Important 対応済み）
+- **Phase 4d 完了後**: ✅ 妥当（iDeCo 受給方法 UI 拡張）
+- **Phase 4e 完了後**: ✅ 妥当（配偶者控除 3 軸完全実装、税計算精度向上）
+- **残存**: Minor 63 件、Phase 4f 候補（iDeCo 一時金+年金併用、5/19 年ルール、annuity 計算等）
+
