@@ -17612,6 +17612,45 @@ function toggleRetRowDetail(tr) {
   // 参照元ラベル
   const srcLabel = (text) => `<span class="src">← ${text}</span>`;
 
+  // [Phase 4j follow-up] 取り崩し金額の計算根拠テキストを生成
+  function getWithdrawalBasisText(d, r) {
+    const type = (r || {}).withdrawalType || 'needs';
+    const startAssets = d.startAssets || 0;
+    if (type === 'fixed_rate') {
+      const rate = parseFloat(r.withdrawalRate) || 4;
+      const calc = startAssets * rate / 100;
+      return `（総資産 <strong>${fmtM(startAssets)}</strong> × ${rate}% = <strong>${fmtM(calc)}</strong>）`;
+    }
+    if (type === 'fixed_amount') {
+      const monthly = parseFloat(r.withdrawalMonthly) || 0;
+      return `（必要支出補填 + 月 ${monthly} 万 × 12 = 年 ${monthly * 12} 万 の追加）`;
+    }
+    if (type === 'hybrid') {
+      const switchAge = parseInt(r.withdrawalHybridSwitchAge) || 75;
+      if ((d.age || 0) < switchAge) {
+        const p1 = r.withdrawalHybridP1Type || 'rate';
+        if (p1 === 'amount') {
+          const monthly = parseFloat(r.withdrawalHybridMonthly) || 20;
+          return `（前半 ${switchAge} 歳まで: 必要支出補填 + 月 ${monthly} 万 × 12 = 年 ${monthly * 12} 万 の追加）`;
+        }
+        const rate = parseFloat(r.withdrawalHybridRate) || 4;
+        const calc = startAssets * rate / 100;
+        return `（前半 ${switchAge} 歳まで: 総資産 <strong>${fmtM(startAssets)}</strong> × ${rate}% = <strong>${fmtM(calc)}</strong>）`;
+      }
+      return `（後半 ${switchAge} 歳以降: 必要支出のみ補填）`;
+    }
+    if (type === 'hybrid_reverse') {
+      const switchAge = parseInt(r.withdrawalHybridReverseSwitchAge) || 75;
+      if ((d.age || 0) < switchAge) {
+        return `（前半 ${switchAge} 歳まで: 必要支出のみ補填）`;
+      }
+      const rate = parseFloat(r.withdrawalHybridReverseRate) || 4;
+      const calc = startAssets * rate / 100;
+      return `（後半 ${switchAge} 歳以降: 総資産 <strong>${fmtM(startAssets)}</strong> × ${rate}% = <strong>${fmtM(calc)}</strong>）`;
+    }
+    return `（必要支出のみ補填）`;
+  }
+
   // 収支差（収入のみ vs 支出）- 説明文用
   const netBalance = totalIncome - totalExpense;
   // 月間収支 = (収入 + 取り崩し - 支出) / 12 ← メインテーブルと同じ定義
@@ -17768,8 +17807,8 @@ function toggleRetRowDetail(tr) {
           ${(d.assetWithdrawal||0) === 0
             ? `<span style="font-weight:600;color:#16A34A">✅ 取り崩しなし：</span>収入合計 <strong>${fmtM(totalIncome)}</strong> が支出合計 <strong>${fmtM(totalExpense)}</strong> を <strong style="color:#16A34A">${fmtM(netBalance)}上回る</strong>ため、資産から引き出す必要なし`
             : netBalance >= 0
-              ? `<span style="font-weight:600;color:var(--text-secondary)">取り崩しの内訳：</span>収入合計 <strong>${fmtM(totalIncome)}</strong> は支出を上回りますが、取り崩し方式（${(state.retirement||{}).withdrawalType||'needs'}）により <strong style="color:#F97316">${fmtM(d.assetWithdrawal)}</strong> を追加引き出し`
-              : `<span style="font-weight:600;color:var(--text-secondary)">取り崩しの内訳：</span>収入合計 <strong>${fmtM(totalIncome)}</strong> では支出合計 <strong>${fmtM(totalExpense)}</strong> を <strong style="color:#DC2626">${fmtM(Math.abs(netBalance))}不足</strong>のため資産から補填`
+              ? `<span style="font-weight:600;color:var(--text-secondary)">取り崩しの内訳：</span>収入合計 <strong>${fmtM(totalIncome)}</strong> は支出を上回りますが、取り崩し方式（${(state.retirement||{}).withdrawalType||'needs'}）により <strong style="color:#F97316">${fmtM(d.assetWithdrawal)}</strong> を追加引き出し<br><span style="font-size:10px;color:var(--text-muted)">${getWithdrawalBasisText(d, state.retirement || {})}（取り崩し優先順位: 通常現金 → インデックス系投資信託・NISA等）</span>`
+              : `<span style="font-weight:600;color:var(--text-secondary)">取り崩しの内訳：</span>収入合計 <strong>${fmtM(totalIncome)}</strong> では支出合計 <strong>${fmtM(totalExpense)}</strong> を <strong style="color:#DC2626">${fmtM(Math.abs(netBalance))}不足</strong>のため資産から補填<br><span style="font-size:10px;color:var(--text-muted)">${getWithdrawalBasisText(d, state.retirement || {})}（取り崩し優先順位: 通常現金 → インデックス系投資信託・NISA等）</span>`
           }
         </div>
 
