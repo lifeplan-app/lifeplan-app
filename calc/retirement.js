@@ -56,7 +56,9 @@ function calcRetirementSim() {
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
   // [Phase 4d] iDeCo 受給方法（calcRetirementSimWithOpts と同じ判定ロジック）
   const idecoMethodSim = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
-  // idecoStartAge: 明示設定時は 60-75 にクランプ、未設定時は targetAge をそのまま使用（後方互換）
+  // 未設定時は targetAge をそのまま使用（クランプしない）。
+  // 既存サンプルの snapshot 互換のため legal floor 60 を適用せず、
+  // UI 側 (select 60-75) で入力を制限する。シナリオ C (targetAge=55) 等で重要。
   const idecoStartAgeSim = (r.idecoStartAge != null && r.idecoStartAge !== '')
     ? Math.max(60, Math.min(75, parseInt(r.idecoStartAge)))
     : targetAge;
@@ -340,7 +342,9 @@ function calcRetirementSimWithOpts(opts = {}) {
   // 既定値: idecoMethod='lump', idecoStartAge=targetAge, idecoPensionYears=10
   // → 既存サンプルは未指定 → targetAge ベースの一時金で従来挙動と一致
   const idecoMethod = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
-  // idecoStartAge: 明示設定時は 60-75 にクランプ、未設定時は targetAge をそのまま使用（後方互換）
+  // 未設定時は targetAge をそのまま使用（クランプしない）。
+  // 既存サンプルの snapshot 互換のため legal floor 60 を適用せず、
+  // UI 側 (select 60-75) で入力を制限する。シナリオ C (targetAge=55) 等で重要。
   const idecoStartAge = (r.idecoStartAge != null && r.idecoStartAge !== '')
     ? Math.max(60, Math.min(75, parseInt(r.idecoStartAge)))
     : targetAge;
