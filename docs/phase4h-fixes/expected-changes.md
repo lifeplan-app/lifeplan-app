@@ -24,3 +24,4 @@
 - 2 箇所で `calcSeveranceDeduction` 呼び出しを新関数に置換
 - idecoEnrollYears は `Math.max(1, idecoStartAge - 22)` で自動推定
 - テスト: 207/207 グリーン（201 + BUG#13 6 件）
+- 実コミット: 363d432
