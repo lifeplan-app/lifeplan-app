@@ -24,3 +24,4 @@ iDeCo 一時金+年金 併用受給（mixed mode）の実装記録。
 - save/render に idecoLumpRatio 対応
 - onIdecoMethodChange を 3 状態（lump / pension / mixed）対応に拡張
 - テスト: 201/201 グリーン（196 + BUG#12 5 件）
+- 実コミット: 35620a8
