@@ -120,4 +120,4 @@ Important 8 件を 6 グループに分けて修正した記録。
 - `applyHousingScenarioToPlan(idx)`: 確認ダイアログ → type 別 housingType/mortgage/rent 転記 → 頭金 expenses 再生成 → save → 再描画
 - type 'rent' のときは持ち家頭金 expenses を削除する（housingType 切替整合）
 - テスト: 179/179 グリーン維持
-- 実コミット: （下記コミット後に記入）
+- 実コミット: 9034d3f
