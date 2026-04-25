@@ -216,6 +216,8 @@ const cashFlow = y === 0
 
   > **[Resolved in Phase 4a commit `d43985e`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G3 NISA+iDeCo）
 
+  > **[Phase 4d 拡張 commit `036d724`]**: 受給方法（一時金/年金）と受給開始年齢（60-75 歳）、年金受給期間（5/10/15/20）を UI から選択可能に。`calcSeveranceDeduction` への lump 渡しと年次 idecoYearly 加算で分岐。詳細: `docs/phase4d-fixes/expected-changes.md`
+
   - 退職後取り崩し戦略の定石は「**課税口座 → iDeCo → NISA**」の順（NISA の非課税メリットを長期に温存する；Pfau 2019; Morningstar "Sequence of withdrawals matters" <https://www.morningstar.com/retirement/tax-efficient-withdrawal-strategy>）。本コードは投資プール合計として一括清算するので、NISA 温存の恩恵が反映されない。
   - 影響: 長期退職後シミュで手取り過少（保守側）。Task 9 の出口戦略でも同様のロジックがあれば要確認。
 

@@ -268,6 +268,8 @@ const pessimistic = runScenario({ returnMod: -0.01, expenseMod: +0.10, pensionMo
 
   > **[Resolved in Phase 4a commit `d43985e`]** （詳細: `docs/phase4-fixes/expected-changes.md` の G3 NISA+iDeCo）
 
+  > **[Phase 4d 拡張 commit `036d724`]**: 受給方法（一時金/年金）と受給開始年齢（60-75 歳）、年金受給期間（5/10/15/20）を UI から選択可能に。pension 経路では idecoLumpsum=0 で退職所得控除に含めず、年次 idecoYearly を totalNonAssetIncome に加算。詳細: `docs/phase4d-fixes/expected-changes.md`
+
   - `drawdownOrder` は**アセット種別**（cash / index / div / emergency）で分類されるが、税制口座（NISA / iDeCo / 特定口座）の区別は無い。
   - FP 業界の標準（§3.1）は「課税口座 → iDeCo（退職所得控除使い切り）→ NISA（非課税を最後まで）」。現行コードは全てのインデックスアセットを `indexPool` にマージして同率で崩すので、NISA のような**非課税メリット**が計算に乗らない。
   - 影響: 長期退職後シミュで手取りが保守的すぎる側に倒れる（NISA を温存して税負担を減らせば実質の資産寿命が延びる）。30 年シミュで NISA 比率 50% 想定なら手取り差は **総累計 5〜10%** オーダー。

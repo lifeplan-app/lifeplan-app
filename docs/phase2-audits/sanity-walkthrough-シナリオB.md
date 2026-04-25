@@ -367,3 +367,25 @@ Phase 4c で UI 変更を含む Important 8 件が修正された結果、シナ
 - **Phase 4c 完了後**: ✅ 妥当（Important 8 件解消、計 40 件、**Phase 2 検出 Important すべて解決**）
 - **残存**: Minor 63 件、Phase 4d 候補（iDeCo 受給方法 UI、06-I02 軸2 本人高所得者逓減）
 
+## Phase 4d 完了後の再評価（2026-04-25）
+
+Phase 4d で iDeCo 受給方法 UI が拡張された結果、シナリオ B の挙動が以下のように変わった：
+
+### 修正された主要な機能拡張
+
+- **iDeCo 受給方法 UI** (`036d724`):
+  - `state.retirement.idecoReceiptMethod`（lump/pension、既定 lump）
+  - `state.retirement.idecoStartAge`（60-75、既定 targetAge ※非クランプ）
+  - `state.retirement.idecoPensionYears`（5/10/15/20、既定 10）
+  - 既定 lump + idecoStartAge=targetAge → 既存 snapshot 不変
+  - シナリオ B は新フィールド未指定 → 既定値適用 → 従来挙動維持
+
+### 判定の更新
+
+- **Phase 2.5 完了時**: ✅ 妥当（Critical 10 件解消）
+- **Phase 4a 完了後**: ✅ 妥当（Important 14 件解消）
+- **Phase 4b 完了後**: ✅ 妥当（Important 18 件解消、計 32 件）
+- **Phase 4c 完了後**: ✅ 妥当（Important 8 件解消、計 40 件、全 Important 対応済み）
+- **Phase 4d 完了後**: ✅ 妥当（iDeCo 受給方法 UI 拡張で機能完成度向上）
+- **残存**: Minor 63 件、Phase 4e 候補（一時金+年金併用、06-I02 軸2、5/19 年ルール、annuity 計算等）
+
