@@ -277,6 +277,9 @@ if ((year - sy) % iv === 0) {
   - **修正方針**: 単一のインフレ率に統一するか、UI で「現役期・退職期で異なる値を使う」ことを明示。あるいは `finance.inflationRate` をマスターとし、`retirement.inflationRate` は optional なオーバーライドとして扱う。
 
 - **`02-I03` `cashFlowEvents.income_change` 適用時に本人の昇給モデルが完全停止**
+
+  > **[Resolved in Phase 4c commit `424b271`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 7）
+
   - `hasOverride` が true になると、`selfIncome = baseIncome`（イベントの額そのまま、以後の昇給なし、`index.html:17119-17120`）。
   - **想定されるユーザー操作**: 「40 歳で転職して年収 600 万になる」を登録 → 40 歳以降の年収が **永久に 600 万のまま**。昇給率 `g` は 40 歳以降の転職後キャリアには全く効かない。
   - **影響**: 若いうちに転職イベントを登録するほど生涯年収が過少推計される。50 歳 `untilAge` まで 10 年昇給機会を失う計算。`g = 2%` なら 10 年で `1.02^10 ≈ 1.2190`。正しい値（昇給継続）に対する相対差は `(1 − 1/1.2190) ≈ 17.97%` の過少推計（正しい値の約 82% しか出ない）。

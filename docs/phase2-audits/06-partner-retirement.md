@@ -207,7 +207,7 @@ const _partnerExpChange = (_partnerRetireYear !== null && yr >= _partnerRetireYe
 
 - **`06-I02` 配偶者控除・配偶者特別控除が税計算に反映されていない**
 
-  > **[Resolved in Phase 4b commit `33f50dd`]**（近似対応：リタイア期の世帯支出側で逓減控除を減じる方式。`calcTakeHome` 本体への本実装は Phase 4c 予定。詳細: `docs/phase4b-fixes/expected-changes.md` の G9 パートナー関連）
+  > **[Resolved in Phase 4c commit `ee6e24e`]**（`calcTakeHome` 本体へ `calcSpouseDeduction` を組込み、配偶者合計所得別の逓減・老人加算に対応。Phase 4b の支出側近似は削除済。軸2（本人高所得者逓減）は Phase 4d 以降で検討。詳細: `docs/phase4c-fixes/expected-changes.md` の Group 9b。Phase 4b 暫定対応は `33f50dd`）
 
   - 場所: `calcTakeHome()` (`index.html:17027-17078`)
   - §3.1 参照。gross 入力モードでパートナーが無収入ならば本来は本人の手取りが **38 万円（所得税）＋ 33 万円（住民税）分**の節税効果を受ける。国税庁 No.1191 / No.1195 参照。

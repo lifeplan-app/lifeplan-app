@@ -332,6 +332,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
 ### 🟡 Important
 
 - **`05-I01` 子育て世帯・若者夫婦世帯の借入限度額上乗せ措置（令和 6・7 年）未対応**
+
+  > **[Resolved in Phase 4c commit `1b1726f`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-housing）
+
   - 認定住宅 5,000 万 × 0.007 = **35 万円/年**、ZEH 4,500 万 × 0.007 = **31.5 万円/年**、省エネ 4,000 万 × 0.007 = **28 万円/年**の特例。本コードはすべて 31.5 万円上限で頭打ち。
   - 数値インパクト（子育て特例・認定 5,000 万・1.5%・35 年、1 年目）:
     - 本コード上限: `min(4898 × 0.007, 31.5) = min(34.29, 31.5) = 31.5 万円`（本来は 34.29 万円が満額還付対象）
@@ -340,6 +343,9 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
   - **修正方針**: `05-C01` と同時に UI で「子育て特例適用あり」トグルを用意し、上限を動的に切替。
 
 - **`05-I02` 頭金の計上導線がなく、ユーザーが購入当年の一時支出を忘れる設計**
+
+  > **[Resolved in Phase 4c commit `1b1726f`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-housing）
+
   - タスク 4 `03-M05` の検証結果として新たに浮上。UI ラベルが「借入額」であり、物件価格や頭金を促すフィールドがない。ユーザーは `state.expenses[]` に「住宅購入時の頭金」を別途登録しなければ、購入当年の資産減少がシミュレーションに反映されない。
   - 数値インパクト（物件 3,500 万 / 頭金 500 万 / 借入 3,000 万、頭金登録忘れ）:
     - 正しい購入年キャッシュフロー: `−500 万円`（頭金）＋ 借入 0（融資は資産ではない）
@@ -347,22 +353,34 @@ const annualMortgageDeduct = y === 0 ? 0 : calcMortgageDeduction(yr, mortgageBal
   - **修正方針**: `#housingPanelMortgage` に「物件価格」「頭金」欄を追加し、購入年に `expenses[]` へ自動追記（または仮想計上）。UI に「別途頭金を `state.expenses[]` に登録してください」と注記を出すだけでもリスク軽減。
 
 - **`05-I03` シナリオ比較 (`lifeScenario.housingOptions[]`) の決定がメインシミュレーションに連動しない**
+
+  > **[Resolved in Phase 4c commit `9034d3f`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-scenario）
+
   - `sc.downPayment` / `sc.purchasePrice` / `sc.loanRate` を変更してもメインの `state.lifeEvents.mortgage` / `state.expenses[]` に反映されない別エンジン。ユーザーがシナリオ比較で「頭金 1,000 万が最適」と判断しても、メインプランに適用するには手動で住居計画フォームを書き換える必要がある。
   - 数値インパクト: プラン転記漏れによる「試算と実計画の乖離」。具体額化は困難だが、ユーザー体験上の致命的割れ目。
   - **修正方針**: シナリオ比較画面に「このシナリオをメインプランに適用」ボタンを追加し、`state.lifeScenario` の選択結果を `state.lifeEvents` へコピーする `applyScenarioToPlan()` を実装。
 
 - **`05-I04` 借換え `refi` が諸費用（保証料戻し・事務手数料・登記費用）を計上しない**
+
+  > **[Resolved in Phase 4c commit `23b155c`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-refi）
+
   - 実際の借換えは 30〜80 万円の諸費用が発生。本コードは `rate` と `term` の変更のみ。
   - 数値インパクト（2,000 万残債で借換え、諸費用 50 万無視）: **初年度に 50 万円の過少計上**。
   - 出典: SBI 新生銀行「住宅ローンの繰り上げ返済はした方がいい？」 <https://www.sbishinseibank.co.jp/retail/housing/column/vol162.html>
   - **修正方針**: `refi` イベントに `cost` フィールドを追加し、`costs.mortgage` に当年分として加算。
 
 - **`05-I05` 繰上返済で利息 ≥ 月額のケースに NaN 伝播バグ**
+
+  > **[Resolved in Phase 4c commit `c196760`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-quick）
+
   - §5-5 参照。`P × r ≥ M` だと `log(M / (M − P × r))` が NaN → `endYear = year + NaN` → ループ継続条件が false 評価で**スケジュールの残りが消失**。繰上返済額が**非常に大きい**ケースや、かつて借換えで **M を小さくしすぎた**ケースで発症。
   - 数値インパクト（`P = 3,000 万、r = 1.5% 月利 0.00125、M = 3.5 万円 （借換えで極端に月額を下げた）`）: `P × r = 3.75 万 > M = 3.5 万` → NaN → 控除計算も残りすべて欠落。
   - **修正方針**: 繰上返済額の上限チェック（`principal * r < monthly` の保証、あるいは `newN` が Finite であることを確認）を入れ、NaN の場合は即完済（`principal = 0, endYear = year`）扱いにする。
 
 - **`05-I06` `events[]` 同年複数イベントの順序依存**
+
+  > **[Resolved in Phase 4c commit `c196760`]** （詳細: `docs/phase4c-fixes/expected-changes.md` の Group 10-quick）
+
   - §5-9 参照。同じ暦年に `refi` と `prepay` が両方登録された場合、配列順が挙動を決める。ユーザー UI が登録順を制御できない場合、再計算の都度結果が変わるリスク。
   - **修正方針**: 年内の処理順を「`refi` → `prepay`」に固定（または逆）し、UI に「先に借換え、その後に繰上」の順序を明示。
 

@@ -121,3 +121,43 @@ Important 8 件を 6 グループに分けて修正した記録。
 - type 'rent' のときは持ち家頭金 expenses を削除する（housingType 切替整合）
 - テスト: 179/179 グリーン維持
 - 実コミット: 9034d3f
+
+---
+
+## 完了総括（2026-04-25）
+
+### 達成事項
+
+- **6 グループ・8 Important 解決**:
+  - G10-quick (2件): 05-I05, 05-I06 — `c196760`
+  - G7 (1件): 02-I03 — `424b271`
+  - G9b (1件): 06-I02 — `ee6e24e`
+  - G10-refi (1件): 05-I04 — `23b155c`
+  - G10-housing (2件): 05-I01, 05-I02 — `1b1726f`
+  - G10-scenario (1件): 05-I03 — `9034d3f`
+- **テスト**: 179/179 グリーン（Phase 4b 末 155 → +20 件のリグレッションテスト 2/3/8/3/4/4 = 24 件追加 → ※実数 179 = baseline 155 + 各タスク追加分の合計、内訳は Group 期待方向に記録）
+- **コミット構成**: setup 1 + fix 6 + SHA record 6 + 中間 test fix 1 + 最終 docs 1 = 計 15 コミット
+
+### 実測インパクト（5 シナリオ合計）
+
+- **G10-quick**: snapshot 差分なし、リグレッションテストで挙動固定（無限ループ防止）
+- **G7**: snapshot 差分なし、後方互換のみ（既存サンプルは continueGrowth 未指定）
+- **G9b**: snapshot 差分なし（既存サンプルが gross+lowPartner 条件を満たさず Phase 4b 近似が元々無効）
+- **G10-refi**: snapshot 差分なし（既存サンプルに refi イベントなし）
+- **G10-housing**: snapshot 差分なし（既存サンプルに新フィールド未指定）
+- **G10-scenario**: snapshot 対象外（UI 操作のみ）
+
+### Phase 4c 完了で残存する Important
+
+- **なし**（Phase 2 監査で検出された Important 43 件すべて解決状態）
+
+### Phase 4d 以降への橋渡し
+
+- **iDeCo 受給方法 UI**: 一時金 / 年金 / 併用 × 受給年齢 60-75 歳選択（Phase 4a `07-I04`/`08-I02` の発展）
+- **06-I02 軸2**: 本人高所得者逓減（合計所得 900/950/1000 万円ライン）
+- **Minor 項目 63 件の選別修正**: 出典コメント更新、境界値、UI helper 拡充
+- **新規 UI 機能候補**: PDF 出力、シナリオ共有 URL など
+
+### 補足
+
+- Phase 4c の最終 commit `docs(phase4c): mark Importants resolved and update walkthrough` で Phase 2 監査レポート 3 ファイルへの Resolved 注記、サニティウォークスルーの Phase 4c 評価追記、本ファイルの 完了総括 を反映。
