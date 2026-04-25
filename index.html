@@ -12242,6 +12242,20 @@ function updateMortgageDeductResult() {
         ✅ 家計・資産の資産推移グラフ（現役期）および出口戦略シミュレーションの両方に反映されます
       </div>
     </div>`;
+  // [Phase 4i 05-M05] deductStart < startYear 警告（XSS 安全に createElement + textContent 使用）
+  const _deductStart = parseInt(document.getElementById('leMortgageDeductStart').value) || 0;
+  const _startYear = parseInt(document.getElementById('leMortgageStartYear').value) || 0;
+  if (_deductStart && _startYear && _deductStart < _startYear) {
+    const warnEl = document.getElementById('mortgageDeductResult');
+    if (warnEl) {
+      const warnDiv = document.createElement('div');
+      warnDiv.style.color = '#EF4444';
+      warnDiv.style.marginTop = '4px';
+      warnDiv.style.fontSize = '11px';
+      warnDiv.textContent = '⚠️ 控除開始年が借入開始年より前です。借入前の年は控除されません。';
+      warnEl.appendChild(warnDiv);
+    }
+  }
 }
 
 // ===== ローンイベント UI =====

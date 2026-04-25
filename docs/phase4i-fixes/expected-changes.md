@@ -23,7 +23,13 @@ Minor 5 件選別修正の記録（01-M04, 02-M01, 02-M05, 04-M07, 05-M05）。
 ## Group: 05-M05 mortgage deductStart UI
 
 ### 期待方向
-（Task 3 実施時に記入）
+- `index.html` の `calcMortgage()` 関数内で `deductStart < startYear` を検出した時、`mortgageDeductResult` エリアに警告メッセージを表示
+- 既存の控除計算は変更なし（balance=0 → deduction=0 で実害なし）
+- 単に UI 一貫性向上のみ
+- 警告は createElement + textContent で XSS 安全に
+- snapshot 影響なし（UI のみ）
 
 ### 実測サマリー
-（Task 3 修正後に記入）
+- UI 警告メッセージ追加（calcMortgage 内、createElement + textContent で安全に）
+- snapshot 差分: なし（UI のみ）
+- ブラウザ動作確認済み
