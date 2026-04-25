@@ -42,10 +42,19 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 9b: calcTakeHome 配偶者控除本実装（06-I02）
 
 ### 期待方向
-（Task 4 実施時に記入）
+- `calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge)` を `calc/income-expense.js` に新設。軸1（パートナー所得逓減）+ 軸3（70歳以上老人加算）。
+- `calcTakeHome` (index.html) で課税所得から所得税分を減算、住民税は別途逓減控除を適用。
+- `calc/integrated.js` L66-71/L98-100 の Phase 4b 近似 `annualIncome *= 1.005` を削除。
+- snapshot 影響: `_inputMode === 'gross'` AND `partnerAnnualIncome ≤ 103` のシナリオでのみ `annualIncome` 値が +0.5% 補正分だけ減る方向。サンプル B/D（net モード）は不変。
+- 既存 5 サンプルが該当条件を持たなければ snapshot 差分なし。持つ場合は退職前資産が微減方向。
 
 ### 実測サマリー
-（Task 4 修正後に記入）
+- snapshot 差分: **なし**（既存 5 サンプルに gross モード + partnerAnnualIncome ≤ 103 の組み合わせなし）
+- `calcSpouseDeduction` 新設（calc/income-expense.js 末尾）
+- `calcTakeHome` (index.html L16072+) に配偶者控除統合 — gross モードでパートナー低所得時に税額減
+- Phase 4b 近似削除: `calc/integrated.js` L66-71 + L98-100
+- テスト: 168/168 グリーン（160 + BUG#5 8 件）
+- 実コミット: （次行に記入）
 
 ---
 

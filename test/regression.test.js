@@ -494,3 +494,64 @@ describe('[BUG#4] income_change continueGrowth フラグ（Phase 4c 02-I03）', 
     expect(atAge60).toBeCloseTo(atAge50, 0);
   });
 });
+
+// ─── BUG#5 (Phase 4c): 配偶者控除本実装 ──────────
+// 修正前: 配偶者控除は税計算に未反映、Phase 4b で支出側に annualIncome *= 1.005 近似
+// 修正後: calcSpouseDeduction(partnerIncome, partnerAge) が控除額を返し、calcTakeHome で反映
+describe('[BUG#5] 配偶者控除本実装（Phase 4c 06-I02）', () => {
+  let calcSpouseDeduction, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    localSb = getSandbox();
+    calcSpouseDeduction = localSb.calcSpouseDeduction;
+  });
+
+  it('パートナー合計所得 0 万円なら 所得税 38 / 住民税 33', () => {
+    const r = calcSpouseDeduction(0, 40);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('パートナー合計所得 48 万円（103 万円収入相当）なら 満額', () => {
+    const r = calcSpouseDeduction(48, 40);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('パートナー合計所得 95 万円以下まで配偶者特別控除も満額', () => {
+    const r = calcSpouseDeduction(95, 40);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('パートナー合計所得 100 万円なら 所得税 36', () => {
+    const r = calcSpouseDeduction(100, 40);
+    expect(r.incomeTaxDeduction).toBe(36);
+  });
+
+  it('パートナー合計所得 133 万円超なら 0/0', () => {
+    const r = calcSpouseDeduction(135, 40);
+    expect(r.incomeTaxDeduction).toBe(0);
+    expect(r.residentTaxDeduction).toBe(0);
+  });
+
+  it('老人配偶者（70歳以上）かつ 所得 48 万円以下なら 所得税 48 / 住民税 38', () => {
+    const r = calcSpouseDeduction(0, 70);
+    expect(r.incomeTaxDeduction).toBe(48);
+    expect(r.residentTaxDeduction).toBe(38);
+  });
+
+  it('老人配偶者でも 所得 48 万円超なら老人加算なし', () => {
+    const r = calcSpouseDeduction(60, 75);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('partnerAge が null なら老人加算を無効化', () => {
+    const r = calcSpouseDeduction(0, null);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+});

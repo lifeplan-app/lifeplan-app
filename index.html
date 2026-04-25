@@ -16072,8 +16072,20 @@ function calcTakeHome() {
   // 社会保険料
   const socialIns = Math.round(grossAnnual * SOCIAL_INS_RATE_EMPLOYEE * 10) / 10;
 
-  // 課税所得 (基礎控除48万円を加算)
-  const taxableIncome = Math.max(0, grossAnnual - salaryDeduction - socialIns - 48);
+  // [Phase 4c 06-I02] 配偶者控除・配偶者特別控除（calcSpouseDeduction は calc/income-expense.js）
+  // パートナー合計所得の推定: 年間額面 − 給与所得控除最低 55 万円（簡略）
+  const partnerGrossAnnual = (parseFloat(state.finance?.partnerIncome) || 0) * 12
+                           + (parseFloat(state.finance?.partnerBonus) || 0);
+  const partnerTotalIncome = Math.max(0, partnerGrossAnnual - 55);
+  const partnerBirthStr = state.profile?.partnerBirth;
+  const partnerBirthYear = partnerBirthStr ? new Date(partnerBirthStr).getFullYear() : null;
+  const partnerAge = partnerBirthYear ? (new Date().getFullYear() - partnerBirthYear) : null;
+  const spouseDeduction = (typeof calcSpouseDeduction === 'function')
+    ? calcSpouseDeduction(partnerTotalIncome, partnerAge)
+    : { incomeTaxDeduction: 0, residentTaxDeduction: 0 };
+
+  // 課税所得 (基礎控除48万円 + 配偶者控除 所得税分)
+  const taxableIncome = Math.max(0, grossAnnual - salaryDeduction - socialIns - 48 - spouseDeduction.incomeTaxDeduction);
 
   // 所得税
   let incomeTax = 0;
@@ -16085,8 +16097,8 @@ function calcTakeHome() {
   }
   incomeTax = Math.round(incomeTax * 1.021 * 10) / 10; // 復興特別所得税2.1%
 
-  // 住民税
-  const residentTax = Math.round(Math.max(0, taxableIncome - 43) * 0.10 * 10) / 10;
+  // 住民税（所得税側で引いた配偶者控除を一旦戻し、住民税版を引く）
+  const residentTax = Math.round(Math.max(0, taxableIncome - 43 + spouseDeduction.incomeTaxDeduction - spouseDeduction.residentTaxDeduction) * 0.10 * 10) / 10;
 
   const totalDeductions = socialIns + incomeTax + residentTax;
   const takeHomeAnnual = Math.round((grossAnnual - totalDeductions) * 10) / 10;

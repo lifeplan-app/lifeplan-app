@@ -181,3 +181,56 @@ function getIncomeForYearWithGrowth(yr) {
 
   return selfIncome + partnerIncomeThisYear;
 }
+
+// ===== [Phase 4c 06-I02] 配偶者控除・配偶者特別控除（本実装） =====
+// 国税庁 No.1191 / No.1195 準拠（2026年4月時点、軸1=パートナー所得 + 軸3=老人加算）
+// 軸2（本人高所得者逓減 900/950/1000 万）は Phase 4d 以降。
+// partnerAnnualIncomeMan: パートナーの年間合計所得（万円、給与所得控除後）
+// partnerAge: パートナーの年齢（歳、null/NaN なら老人加算を無効化）
+// 戻り値: { incomeTaxDeduction: 万円, residentTaxDeduction: 万円 }
+function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge) {
+  const inc = parseFloat(partnerAnnualIncomeMan) || 0;
+  let incomeTaxDeduction, residentTaxDeduction;
+
+  // 軸1: パートナー合計所得による逓減
+  if (inc <= 95) {
+    incomeTaxDeduction = 38;
+    residentTaxDeduction = 33;
+  } else if (inc <= 100) {
+    incomeTaxDeduction = 36;
+    residentTaxDeduction = 33;
+  } else if (inc <= 105) {
+    incomeTaxDeduction = 31;
+    residentTaxDeduction = 31;
+  } else if (inc <= 110) {
+    incomeTaxDeduction = 26;
+    residentTaxDeduction = 26;
+  } else if (inc <= 115) {
+    incomeTaxDeduction = 21;
+    residentTaxDeduction = 21;
+  } else if (inc <= 120) {
+    incomeTaxDeduction = 16;
+    residentTaxDeduction = 16;
+  } else if (inc <= 125) {
+    incomeTaxDeduction = 11;
+    residentTaxDeduction = 11;
+  } else if (inc <= 130) {
+    incomeTaxDeduction = 6;
+    residentTaxDeduction = 6;
+  } else if (inc <= 133) {
+    incomeTaxDeduction = 3;
+    residentTaxDeduction = 3;
+  } else {
+    incomeTaxDeduction = 0;
+    residentTaxDeduction = 0;
+  }
+
+  // 軸3: 老人配偶者加算（partnerAge ≥ 70 かつ 所得 ≤ 48）
+  const age = Number.isFinite(partnerAge) ? partnerAge : null;
+  if (age !== null && age >= 70 && inc <= 48) {
+    incomeTaxDeduction += 10; // 38 → 48
+    residentTaxDeduction += 5; // 33 → 38
+  }
+
+  return { incomeTaxDeduction, residentTaxDeduction };
+}
