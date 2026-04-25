@@ -878,3 +878,83 @@ describe('[BUG#10] 配偶者控除 軸2 本人高所得者逓減（Phase 4e 06-I
     expect(r.residentTaxDeduction).toBe(11);
   });
 });
+
+// ─── BUG#11 (Phase 4f): iDeCo 年金受給時の annuity 計算 ──────────
+// 修正前: idecoYearly = balance / pensionYears（運用無視で保守的）
+// 修正後: annuity formula = balance × r / (1 − (1+r)^-n)、r=0 フォールバック
+describe('[BUG#11] iDeCo annuity 計算（Phase 4f）', () => {
+  let calcRetirementSimWithOpts, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcRetirementSimWithOpts = localSb.calcRetirementSimWithOpts;
+    localSb.getRetirementParams = () => ({
+      mortgageDeductStart: 0, mortgageDeductYears: 0,
+      pensionSlide: 0, expenseGrowthRate: 0, residualAssets: 0,
+      inflationRate: 0.02, expenseDecayRate: 0, medicalModel: 'none',
+    });
+    // getMedicalAddition は index.html 側で定義されるため sandbox にスタブを注入
+    localSb.getMedicalAddition = () => 0;
+  });
+
+  function setupBaseState(idecoReturn = 4) {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 35}-01-01` },
+      finance: { income: 30, bonus: 60, expense: 20 },
+      assets: [
+        { id: 'ideco1', type: 'ideco', name: 'iDeCo', currentVal: 100, monthly: 0, annualReturn: idecoReturn },
+      ],
+      retirement: {
+        targetAge: 65, lifeExpectancy: 90,
+        pensionMonthly: 0, pensionMonthly_p: 0, pensionAge: 65, pensionAge_p: 65,
+        severance: 0, severanceAge: null, serviceYears: 30,
+        monthlyExpense: 20, withdrawalType: 'needs',
+        idecoReceiptMethod: 'pension', idecoStartAge: 65, idecoPensionYears: 10,
+      },
+      lifeEvents: { housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [], children: [] },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+    };
+  }
+
+  it('annuity formula: r=4%, balance ≈ 324（30 年複利）, n=10 → idecoYearly ≈ 39.99', () => {
+    setupBaseState(4);
+    const sim = calcRetirementSimWithOpts({});
+    const at65 = sim.find(d => d.age === 65);
+    expect(at65.totalNonAssetIncome ?? 0).toBeGreaterThan(35);
+    expect(at65.totalNonAssetIncome ?? 0).toBeLessThan(45);
+  });
+
+  it('annuity r=0% fallback: balance / n（既存挙動）', () => {
+    setupBaseState(0);
+    const sim = calcRetirementSimWithOpts({});
+    const at65 = sim.find(d => d.age === 65);
+    expect(at65.totalNonAssetIncome ?? 0).toBeGreaterThanOrEqual(9);
+    expect(at65.totalNonAssetIncome ?? 0).toBeLessThanOrEqual(11);
+  });
+
+  it('受給期間中の合計受給額 > balance（複利効果確認）', () => {
+    setupBaseState(4);
+    const sim = calcRetirementSimWithOpts({});
+    let total = 0;
+    for (let age = 65; age <= 74; age++) {
+      const row = sim.find(d => d.age === age);
+      if (row) total += row.totalNonAssetIncome || 0;
+    }
+    expect(total).toBeGreaterThan(324);
+  });
+
+  it('受給期間外（75 歳以降）は idecoIncomeThisYear=0', () => {
+    setupBaseState(4);
+    const sim = calcRetirementSimWithOpts({});
+    const at75 = sim.find(d => d.age === 75);
+    expect(at75.totalNonAssetIncome ?? 0).toBeLessThan(5);
+  });
+});

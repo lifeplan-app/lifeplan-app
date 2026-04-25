@@ -23,7 +23,12 @@ const sandbox = {
 };
 vm.createContext(sandbox);
 
+// ロード済みファイルを追跡（const 二重宣言エラーを防ぐ）
+const _loadedFiles = new Set();
+
 export function loadCalc(filename) {
+  if (_loadedFiles.has(filename)) return; // 既にロード済みなら skip
+  _loadedFiles.add(filename);
   const src = readFileSync(resolve(CALC_DIR, filename), 'utf8');
   vm.runInContext(src, sandbox, { filename });
 }
