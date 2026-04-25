@@ -17,3 +17,4 @@
 - `calc/integrated.js` の現役期 annualExpense に加算
 - `calc/retirement.js` の退職期 totalAnnualExpense に加算
 - テスト: 226/226 グリーン (220 + BUG#18 6 件)
+- 実コミット SHA: ef56704
