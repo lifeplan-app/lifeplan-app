@@ -6219,6 +6219,43 @@ function printLifePlan() {
         <td style="padding:8px 12px">取り崩し方式</td>
         <td style="padding:8px 12px">${withdrawalLabel}</td>
       </tr>
+      ${(() => {
+        // [Phase 4k] iDeCo 受給設定（Phase 4d/4f/4g）
+        const r = state.retirement || {};
+        const method = r.idecoReceiptMethod || 'lump';
+        const methodLabel = method === 'lump' ? '一時金（一括）' : method === 'pension' ? '年金（分割）' : '併用';
+        const startAge = r.idecoStartAge ? `${r.idecoStartAge}歳` : '未設定';
+        const idecoBits = [`方法: ${methodLabel}`, `開始: ${startAge}`];
+        if (method === 'pension' || method === 'mixed') {
+          idecoBits.push(`期間: ${r.idecoPensionYears || 10}年`);
+        }
+        if (method === 'mixed') {
+          idecoBits.push(`一時金比率: ${r.idecoLumpRatio != null ? r.idecoLumpRatio : 50}%`);
+        }
+        return `<tr>
+          <td style="padding:8px 12px">iDeCo 受給設定</td>
+          <td style="padding:8px 12px;font-size:9pt">${idecoBits.join(' / ')}</td>
+        </tr>`;
+      })()}
+      ${(() => {
+        // [Phase 4k] 5/19 年ルール判定（Phase 4h）
+        const r = state.retirement || {};
+        const sAge = parseFloat(r.severanceAge) || 0;
+        const iAge = parseInt(r.idecoStartAge) || 0;
+        const sev = parseFloat(r.severance) || 0;
+        const idecoMethod = r.idecoReceiptMethod || 'lump';
+        const hasIdecoLump = idecoMethod === 'lump' || idecoMethod === 'mixed';
+        if (!sev || !hasIdecoLump || !sAge || !iAge) return '';
+        const gap = Math.abs(iAge - sAge);
+        let ruleLabel = '合算（既定）';
+        if (sAge < iAge && gap >= 19) ruleLabel = `別枠（19年ルール、年差 ${gap}年）`;
+        else if (iAge < sAge && gap >= 5) ruleLabel = `別枠（5年ルール、年差 ${gap}年）`;
+        else if (gap > 0) ruleLabel = `合算（年差 ${gap}年、ルール非該当）`;
+        return `<tr style="background:#F5F3FF">
+          <td style="padding:8px 12px">退職所得控除（5/19年ルール）</td>
+          <td style="padding:8px 12px;font-size:9pt">${ruleLabel}</td>
+        </tr>`;
+      })()}
       <tr>
         <td style="padding:8px 12px">想定余命</td>
         <td style="padding:8px 12px">${retResult.lifeExpectancy || '—'}歳</td>
@@ -6320,6 +6357,89 @@ function printLifePlan() {
       <td></td>
     </tr></tfoot>
   </table>` : ''}
+
+  <!-- 住宅ローン詳細（持ち家ローンがある場合のみ） -->
+  ${(() => {
+    // [Phase 4k] 住宅ローン詳細セクション
+    const m = state.lifeEvents?.mortgage || {};
+    if (!m.amount || (state.lifeEvents?.housingType !== 'mortgage' && state.lifeEvents?.housingType !== undefined)) return '';
+    const events = (m.events || []).slice().sort((a, b) => (a.year || 0) - (b.year || 0));
+    const eventsRows = events.map(ev => {
+      const typeLabel = ev.type === 'refi' ? '借換' : ev.type === 'prepay' ? '繰上返済' : ev.type;
+      const detail = ev.type === 'refi'
+        ? `新金利 ${ev.newRate ?? '—'}% / 期間 ${ev.newTerm ?? '—'}年${ev.cost ? ` / 諸費用 ${ev.cost}万` : ''}`
+        : `額 ${ev.amount ?? '—'}万${ev.method === 'payment' ? '（返済額軽減）' : '（期間短縮）'}`;
+      return `<tr>
+        <td style="padding:5px 10px;text-align:center">${ev.year || '—'}年</td>
+        <td style="padding:5px 10px">${typeLabel}</td>
+        <td style="padding:5px 10px;font-size:9pt">${detail}</td>
+      </tr>`;
+    }).join('');
+    return `
+    <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">住宅ローン詳細</h2>
+    <table style="margin-bottom:16px;font-size:9.5pt">
+      <tr style="background:#EFF6FF">
+        <td style="padding:7px 12px;width:40%">物件価格 / 頭金 / 借入額</td>
+        <td style="padding:7px 12px">${m.price ? `${m.price}万` : '未設定'} / ${m.downPayment ? `${m.downPayment}万` : '0万'} / <strong>${m.amount}万</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:7px 12px">借入条件</td>
+        <td style="padding:7px 12px">年利 ${m.rate ?? '—'}% / 期間 ${m.term ?? '—'}年 / 借入開始 ${m.startYear || '—'}年</td>
+      </tr>
+      <tr style="background:#EFF6FF">
+        <td style="padding:7px 12px">住宅種別</td>
+        <td style="padding:7px 12px">${({general:'一般住宅',long_term:'認定長期優良',low_carbon:'認定低炭素',zeh:'ZEH 水準省エネ',energy_saving:'省エネ基準適合'})[m.housingType || 'general']}${m.isChildCareHousehold ? ' + 子育て世帯特例（令和6・7年入居）' : ''}</td>
+      </tr>
+    </table>
+    ${events.length ? `
+    <h3 style="font-size:11pt;color:#475569;margin:8px 0">借換え・繰上返済イベント</h3>
+    <table style="margin-bottom:20px;font-size:9.5pt">
+      <thead><tr style="background:#3B82F6;color:white">
+        <th style="padding:5px 10px">年</th>
+        <th style="padding:5px 10px;text-align:left">種別</th>
+        <th style="padding:5px 10px;text-align:left">詳細</th>
+      </tr></thead>
+      <tbody>${eventsRows}</tbody>
+    </table>` : ''}
+    `;
+  })()}
+
+  <!-- ライフイベント概要 -->
+  ${(() => {
+    // [Phase 4k] ライフイベント概要
+    const le = state.lifeEvents || {};
+    const children = (le.children || []).filter(c => c.birthYear);
+    const care = le.care && le.care.startYear ? le.care : null;
+    const scholarships = (le.scholarships || []).filter(s => s.startYear || s.borrowedAmount);
+    if (!children.length && !care && !scholarships.length) return '';
+    const childrenStr = children.length
+      ? `${children.length}人（出生年: ${children.map(c => c.birthYear).join(', ')}）`
+      : 'なし';
+    const careStr = care
+      ? `${care.startYear}〜${care.endYear || '—'}年 / 月 ${care.monthlyFee || 0}万 / 種別 ${care.careType === 'home' ? '在宅' : care.careType === 'facility' ? '施設' : '—'}`
+      : 'なし';
+    const scholarshipsTotal = scholarships.reduce((s, sc) => s + ((parseFloat(sc.borrowedAmount) || 0)), 0);
+    const scholarshipsStr = scholarships.length
+      ? `${scholarships.length}件 / 合計借入 ${Math.round(scholarshipsTotal)}万`
+      : 'なし';
+    return `
+    <h2 style="font-size:13pt;color:#3B82F6;border-left:4px solid #3B82F6;padding-left:10px">ライフイベント概要</h2>
+    <table style="margin-bottom:20px;font-size:9.5pt">
+      <tr style="background:#EFF6FF">
+        <td style="padding:7px 12px;width:30%">子供</td>
+        <td style="padding:7px 12px">${childrenStr}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 12px">介護</td>
+        <td style="padding:7px 12px">${careStr}</td>
+      </tr>
+      <tr style="background:#EFF6FF">
+        <td style="padding:7px 12px">奨学金</td>
+        <td style="padding:7px 12px">${scholarshipsStr}</td>
+      </tr>
+    </table>
+    `;
+  })()}
 
   <!-- 目標一覧 -->
   ${state.goals.length ? `
