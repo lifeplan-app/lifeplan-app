@@ -17,3 +17,4 @@
 - `getOneTimeForYear` で giftPlans を減算
 - 他 4 サンプル不変
 - テスト: 229/229 グリーン (226 + BUG#19 3 件)
+- メインコミット SHA: 210ff86
