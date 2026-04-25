@@ -21,7 +21,8 @@ function _calcPensionCore(employType, koseiYears, avgIncome, kokuminYears, birth
   const kokuminMonthly = Math.round(KOKUMIN_FULL_MONTHLY * (kokuminMonths / KOKUMIN_FULL_MONTHS) * 10) / 10;
   let koseiMonthly = 0;
   if (employType === 'employee' && koseiYears > 0 && avgIncome > 0) {
-    const hyojunGekkyu = Math.min(avgIncome / 12, 65);
+    // [Phase 4i 04-M07] 深層防御: avgIncome 負値を 0 にクランプ
+    const hyojunGekkyu = Math.min(Math.max(0, avgIncome) / 12, 65);
     const totalMonths = koseiYears * 12;
     // [Phase 4a 04-I01] 2003 年 3 月以前の加入月数を 7.125/1000、以降を 5.481/1000 で分割計算
     // 入社 22 歳想定で 2003-03 時点の加入月数を年単位で近似

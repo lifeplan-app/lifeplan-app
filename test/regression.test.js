@@ -1113,3 +1113,59 @@ describe('[BUG#13] 退職所得控除 5/19 年ルール（Phase 4h）', () => {
     expect(result).toBeCloseTo(expected, 2);
   });
 });
+
+// ─── BUG#14 (Phase 4i): Minor 計算修正一括（01-M04, 02-M01, 02-M05, 04-M07） ──────────
+describe('[BUG#14] Phase 4i Minor calc fixes', () => {
+  let localSb, getIncomeForYearWithGrowth, getOneTimeForYear, _calcPensionCore, ASSET_TYPES;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('pension.js');
+    localSb = getSandbox();
+    getIncomeForYearWithGrowth = localSb.getIncomeForYearWithGrowth;
+    getOneTimeForYear = localSb.getOneTimeForYear;
+    _calcPensionCore = localSb._calcPensionCore;
+    ASSET_TYPES = localSb.ASSET_TYPES;
+  });
+
+  it('01-M04: ASSET_TYPES.ideco.note は 2026年12月の改正に言及', () => {
+    expect(ASSET_TYPES.ideco.note).toMatch(/2026年12月/);
+  });
+
+  it('02-M01: incomeGrowthUntilAge 未指定なら 55 fallback', () => {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 30}-01-01` },
+      finance: { income: 40, bonus: 0, incomeGrowthRate: 2 },
+      retirement: {},
+      cashFlowEvents: [],
+    };
+    // currentAge=30 → cy+25 で min(25, 55-30)=25 年（既定 55 が効く）
+    const at25y = getIncomeForYearWithGrowth(cy + 25);
+    expect(at25y).toBeCloseTo(480 * Math.pow(1.02, 25), 0);
+    // currentAge=30 → cy+30 で min(30, 55-30)=25 年（55 で停止、26 年成長しない）
+    const at30y = getIncomeForYearWithGrowth(cy + 30);
+    expect(at30y).toBeCloseTo(480 * Math.pow(1.02, 25), 0);
+  });
+
+  it('02-M05: one_time_expense の負値が二重マイナスにならない（Math.abs）', () => {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 30}-01-01` },
+      finance: { income: 40, bonus: 0 },
+      cashFlowEvents: [
+        { type: 'one_time_expense', startAge: 31, amount: -100 },
+      ],
+      expenses: [],
+      recurringExpenses: [],
+    };
+    const result = getOneTimeForYear(cy + 1);
+    expect(result).toBe(-100);
+  });
+
+  it('04-M07: avgIncome 負値で hyojunGekkyu が 0 クランプ → 厚生年金 0', () => {
+    const result = _calcPensionCore('employee', 30, -500, 40);
+    expect(result.koseiMonthly).toBe(0);
+  });
+});

@@ -76,7 +76,7 @@ function getOneTimeForYear(yr) {
     const eYr = ageToYear(e.startAge);
     if (eYr === yr) {
       if (e.type === 'one_time_income')  return total + (e.amount || 0);
-      if (e.type === 'one_time_expense') return total - (e.amount || 0);
+      if (e.type === 'one_time_expense') return total - Math.abs(e.amount || 0);
     }
     return total;
   }, 0);
@@ -101,7 +101,8 @@ function getIncomeForYearWithGrowth(yr) {
 
   // ── 本人収入 ──
   const growthRate  = (parseFloat(state.finance.incomeGrowthRate) || 0) / 100;
-  const untilAge    = parseInt(state.finance.incomeGrowthUntilAge) || 50;
+  // [Phase 4i 02-M01] 既定値 50→55（賃金構造基本統計調査ピーク整合）
+  const untilAge    = parseInt(state.finance.incomeGrowthUntilAge) || 55;
   const selfBase    = (state.finance.income || 0) * 12 + (state.finance.bonus || 0);
 
   // cashFlowEvents（転職・副業等）で上書きがある場合はそちら優先

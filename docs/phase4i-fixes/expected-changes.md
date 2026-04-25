@@ -7,10 +7,16 @@ Minor 5 件選別修正の記録（01-M04, 02-M01, 02-M05, 04-M07, 05-M05）。
 ## Group: Minor calc fixes
 
 ### 期待方向
-（Task 2 実施時に記入）
+- **01-M04**: `calc/asset-growth.js` の `ASSET_TYPES.ideco.note` に「2026年12月以降は月6.2万円に引き上げ予定」を追記
+- **02-M01**: `calc/income-expense.js:104` と `index.html:9333` の `incomeGrowthUntilAge || 50` → `|| 55`（賃金統計ピーク整合）
+- **02-M05**: `calc/income-expense.js:79` の `total - (e.amount || 0)` → `total - Math.abs(e.amount || 0)`
+- **04-M07**: `calc/pension.js:24` の `Math.min(avgIncome / 12, 65)` → `Math.min(Math.max(0, avgIncome) / 12, 65)`（深層防御）
+- snapshot 影響: 02-M01 が既存サンプルで効く可能性。サンプルが `incomeGrowthUntilAge` 明示指定なら不変、未指定で既定 50 依存なら影響あり
 
 ### 実測サマリー
-（Task 2 修正後に記入）
+- snapshot 差分: 10 hunks: 全シナリオで `incomeGrowthUntilAge` 既定 50→55 により年収増（`endAssets` 値が上昇、方向一致）。全サンプルが明示指定なしのため全件影響
+- 4 件すべて修正済み
+- テスト: 211/211 グリーン（207 + BUG#14 4 件）
 
 ---
 
