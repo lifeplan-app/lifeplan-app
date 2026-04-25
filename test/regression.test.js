@@ -1169,3 +1169,72 @@ describe('[BUG#14] Phase 4i Minor calc fixes', () => {
     expect(result.koseiMonthly).toBe(0);
   });
 });
+
+// ─── BUG#15 (Phase 4j): 奨学金 borrowedAmount=0 計上漏れ（03-M07） ──────────
+// 修正前: borrowedAmount=0 + endYear 未設定 で ey = sy-1 → 永久に計上されない
+// 修正後: borrowedAmount<=0 なら sy+14 (15年デフォルト) でフォールバック
+describe('[BUG#15] 奨学金 borrowedAmount=0 fallback（Phase 4j 03-M07）', () => {
+  let calcLECostByYear, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    localSb = getSandbox();
+    calcLECostByYear = localSb.calcLECostByYear;
+  });
+
+  it('borrowedAmount=0 + endYear 未設定 でも 15 年計上される', () => {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 30}-01-01` },
+      finance: {},
+      lifeEvents: {
+        children: [],
+        housingType: 'rent', mortgage: {}, rent: {},
+        care: {},
+        scholarships: [{
+          startYear: cy + 5, // 5 年後返済開始
+          monthlyPayment: 2.0, // 2 万/月 → 24 万/年
+          // borrowedAmount, endYear 両方未設定
+        }],
+      },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+      assets: [],
+    };
+    // 5 年後（startYear）に計上されるべき
+    const yr5 = calcLECostByYear(cy + 5, {});
+    expect(yr5.scholarship).toBeGreaterThan(0);
+    // 19 年後（startYear + 14、ey = sy + 14 内）も計上
+    const yr19 = calcLECostByYear(cy + 19, {});
+    expect(yr19.scholarship).toBeGreaterThan(0);
+    // 20 年後（ey 超過）は計上されない
+    const yr20 = calcLECostByYear(cy + 20, {});
+    expect(yr20.scholarship).toBe(0);
+  });
+
+  it('borrowedAmount > 0 のとき従来挙動を維持', () => {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 30}-01-01` },
+      finance: {},
+      lifeEvents: {
+        children: [],
+        housingType: 'rent', mortgage: {}, rent: {},
+        care: {},
+        scholarships: [{
+          startYear: cy + 5,
+          monthlyPayment: 2.0,
+          borrowedAmount: 240, // 240 万 ÷ 月 2 万 ÷ 12 = 10 年
+        }],
+      },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+      assets: [],
+    };
+    // ey = sy + 9（10 年返済）→ sy + 9 まで計上
+    const yr14 = calcLECostByYear(cy + 14, {}); // sy + 9
+    expect(yr14.scholarship).toBeGreaterThan(0);
+    const yr15 = calcLECostByYear(cy + 15, {}); // sy + 10、ey 超過
+    expect(yr15.scholarship).toBe(0);
+  });
+});

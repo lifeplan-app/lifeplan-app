@@ -214,7 +214,15 @@ function calcLECostByYear(year, opts = {}) {
     (le.scholarships || []).forEach(sc => {
       if (!sc.monthlyPayment || !sc.startYear) return;
       const sy = parseInt(sc.startYear);
-      let ey = sc.endYear ? parseInt(sc.endYear) : (sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12) - 1);
+      // [Phase 4j 03-M07] borrowedAmount=0 で endYear 未設定だと sy-1 が返り計上漏れ → 15 年デフォルトでフォールバック
+      let ey;
+      if (sc.endYear) {
+        ey = parseInt(sc.endYear);
+      } else if ((parseFloat(sc.borrowedAmount) || 0) > 0) {
+        ey = sy + Math.ceil((parseFloat(sc.borrowedAmount) || 0) / (parseFloat(sc.monthlyPayment) || 1) / 12) - 1;
+      } else {
+        ey = sy + 14; // 15 年デフォルト
+      }
       // [Phase 4b 03-I03] JASSO 第二種（1.641%）の利息補正（簡易実装：返済終了年を 1 年延長）
       // 厳密な元利均等計算は Phase 5 候補。`scType === 'jasso_2'` または `loanType === 'type2'` を対象。
       const isJasso2 = sc.scType === 'jasso_2' || sc.loanType === 'type2';
