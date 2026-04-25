@@ -935,7 +935,7 @@
 </div>
 
 <!-- ===================== ONBOARDING OVERLAY ===================== -->
-<div id="onboardingOverlay" style="display:none;position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto">
+<div id="onboardingOverlay" style="display:none;position:fixed;inset:0;z-index:320;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y">
   <div style="max-width:480px;margin:0 auto;padding:32px 20px 48px;min-height:100%;display:flex;flex-direction:column;justify-content:center">
 
     <!-- App icon + title -->
@@ -1903,12 +1903,21 @@ function showOnboardingIfNeeded() {
   if (state._onboardingDone) return;
   if (Object.keys(state.months || {}).length > 0) return;
   document.getElementById('onboardingOverlay').style.display = '';
+  // iOS Safari: 背後のbodyスクロールが先にイベントを取ってオーバーレイのボタンが反応しないのを防ぐ
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 
 function _closeOnboarding() {
   state._onboardingDone = true;
   saveState();
   document.getElementById('onboardingOverlay').style.display = 'none';
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
 }
 
 function startOnboardingCSV() {
