@@ -1,0 +1,54 @@
+# Phase 5c 影響箇所 dump
+
+## ${...name} 未保護
+8172:      opt.textContent = `${t.emoji} ${a.name || t.label}`;
+8202:        opt.textContent = `${t.emoji} ${a.name || t.label}`;
+8466:      return `${t.emoji} ${a.name}（${valStr})`;
+8473:        <div class="tpl-card__name">${tpl.name}</div>
+8481:      <div class="tpl-card__name">${tpl.name}<span class="tpl-tag ${planClass}" style="margin-left:6px;vertical-align:middle">${planLabel}</span></div>
+8528:  showNotification(`「${tpl.name}」を適用しました ✅`);
+9711:      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.monthly||0).toLocaleString()}万円/月</span></div>`
+9714:      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.annualBonus||0).toLocaleString()}万円/年</span></div>`
+10485:      title: `${child.name || '子ども'}誕生`, desc: '出産', done: by <= currentYear });
+10491:        title: `${child.name || '子ども'} ${m.label}`, desc: '', done: (by + m.offset) <= currentYear });
+10704:      if (!confirm(`${year}年の「${entry.name}」を削除しますか？\n（この年のみ削除。全期間を削除するにはイベントページから行ってください）`)) return;
+11197:          if (yr >= thisYear) items.push({ year: yr, icon: '🎓', label: `${child.name||'子ども'} ${m.l}`, sub: '' });
+11560:          <div class="onb-tpl-name">${tpl.name}</div>
+11586:            <div style="font-size:13px;font-weight:600;color:#111">${escapeHtml(a.name)}</div>
+16706:      <div style="font-weight:700;color:${s.color};margin-bottom:4px">${s.name}</div>
+17939:            <span style="font-size:11px;color:var(--text-secondary)">${e.emoji||'📋'} ${e.name} <span style="font-size:9px;color:var(--text-muted)">定期支出</span></span>
+17944:            <span style="font-size:11px;color:var(--text-secondary)">💥 ${e.name} <span style="font-size:9px;color:var(--text-muted)">一時支出</span></span>
+18408:  else          oks.push({ text: `名前: ${p.name}` });
+18450:      const key = `${a.owner || 'self'}::${a.name}`;
+18464:      if (r > 15) warns.push({ text: `「${a.name}」の期待年利が${r}%と高い設定です。現実的な値か確認してください（一般的な株式インデックス: 5〜7%）。`, page: 'finance' });
+18471:      if (d > r) warns.push({ text: `「${a.name}」の配当利回り（${d}%）が期待年利（${r}%）を超えています。期待年利は値上がり益＋配当の合計を入力してください。`, page: 'finance' });
+18477:      warns.push({ text: `「${a.name}」は毎月${a.monthly}万円積立中ですが期待年利が0%です。運用益がシミュレーションに反映されません。`, page: 'finance' });
+18577:        warns.push({ text: `${c.name || 'お子さん'}の教育費フェーズが未設定です（公立・私立の選択）。教育費の計算に使用されます。`, page: 'lifeevents' });
+19740:        <input type="text" value="${sc.name}"
+19951:    `<th style="padding:10px;background:${SCENARIO_COLORS[i]}18;color:${SCENARIO_COLORS[i]};font-weight:700;border-bottom:2px solid ${SCENARIO_COLORS[i]};">${sc.name}</th>`
+20086:    insights.push({ icon: '✅', text: `すべてのプランが成立しています。最も余裕があるのは「${scs[best.i]?.name}」で、${endAge}歳時点の推計残高が ${fmtMoney(best.finalAssets)}です。`, color: '#16A34A' });
+20088:    const okNames = results.map((r,i) => r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
+20089:    const ngNames = results.map((r,i) => !r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
+20102:      insights.push({ icon: '📅', text: `退職を${diff}年遅らせると（${scs[minRetireIdx].name}→${scs[maxRetireIdx].name}）、${endAge}歳時点の残高が ${sign}${fmtMoney(Math.abs(assetDiff))}変わります。`, color: '#4F46E5' });
+20167:  showNotification(`「${sc.name}」を設定に反映しました（退職${retireAge}歳、月支出${expense}万円）`);
+20171:  if (mcNote) mcNote.textContent = `✅ 現在のプラン：「${sc.name}」（退職${retireAge}歳・月${expense}万円）`;
+21558:            <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
+21899:      ${escapeHtml(d.name)}
+22003:      ${escapeHtml(d.name)}
+
+## ${...title} 未保護
+6235:      <h3 style="font-size:11pt;color:#475569;margin:14px 0 6px">${c.title}</h3>
+6236:      <img src="${c.src}" alt="${c.title}" style="width:100%;max-width:780px;display:block;margin-bottom:8px;border:1px solid #E2E8F0;border-radius:4px">
+11503:        <h2 class="onb-title" style="text-align:center;white-space:pre-line">${ONBOARDING_COPY.welcome.title}</h2>
+11611:          <h2 class="onb-title" style="text-align:center">${ONBOARDING_COPY.finish.title}</h2>
+12117:            <span style="font-size:13px;font-weight:700;color:${s.tc}">${ins.title}</span>
+13290:        <div style="font-size:14px;font-weight:600;margin-bottom:2px">${e.title || e.label || '（タイトル未設定）'}</div>
+14600:          <span style="font-weight:700;font-size:12px;color:${d.tag.color}">${d.title}</span>
+18208:    <div class="wz-title">${s.title}</div>
+
+## ${...note} 未保護
+13292:        ${e.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${e.note}</div>` : ''}
+
+## ${...memo} 未保護
+16238:            <td style="padding:6px 8px;color:var(--text-secondary);font-size:12px">${p.memo || '－'}</td>
+21559:            ${sc.memo ? '<div class="ssn-card__memo">' + escapeHtml(sc.memo) + '</div>' : ''}
