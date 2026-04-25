@@ -35,6 +35,7 @@ Important 8 件を 6 グループに分けて修正した記録。
 - snapshot 差分: **なし**（既存 5 サンプルは `continueGrowth` 未指定）
 - UI: index.html の `renderCFETypeFields` / `saveCFEvent` に continueGrowth 取り扱いを追加
 - テスト: 160/160 グリーン（157 + 新規 BUG#4 3 件）
+- 実コミット: 424b271
 
 ---
 
