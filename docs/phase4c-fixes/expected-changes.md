@@ -80,10 +80,25 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 10-housing: 子育て特例＋頭金（05-I01, 05-I02）
 
 ### 期待方向
-（Task 6 実施時に記入）
+**05-I01 子育て特例:**
+- `state.lifeEvents.mortgage.isChildCareHousehold: boolean`（既定 false）追加。
+- `mortgage.startYear` が 2024 または 2025 のときに限り有効。
+- general 以外の `HOUSING_TYPES` の limit に +500 万を加算。
+- 既存サンプルに 2024/2025 startYear で isChildCareHousehold=true のデータなし → snapshot 変化なし。
+
+**05-I02 頭金:**
+- `mortgage.price`（物件価格、万円）、`mortgage.downPayment`（頭金、万円）フィールド追加。
+- 保存時に `syncDownPaymentExpense` で `expenses[]` に `source: 'mortgage-downpayment'` のエントリを追加 / 上書き / 削除。
+- 既存サンプルに price/downPayment 未指定 → 自動追記なし → snapshot 変化なし。
+
+**Note**: 仕様書では `mortgage.purchaseYear` と書かれていたが、コードベースの既存規約に合わせて `mortgage.startYear` を使用する（同一の意味、購入年＝借入開始年）。
 
 ### 実測サマリー
-（Task 6 修正後に記入）
+- snapshot 差分: なし（既存 5 サンプルに price/downPayment/isChildCareHousehold 未指定）
+- UI: 住居パネルに「物件価格」「頭金」入力 + 子育て特例チェックボックス追加
+- `syncDownPaymentExpense` 追加で頭金 expenses エントリを source タグ付きで管理
+- テスト: 179/179 グリーン（171 + BUG#7 4 件 + BUG#8 4 件）
+- 実コミット: （コミット後に記入）
 
 ---
 

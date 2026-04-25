@@ -134,7 +134,14 @@ function calcMortgageDeduction(year, balance) {
     energy_saving: { limit: 4000 },
   };
   const housingType = m.housingType || 'general';
-  const loanLimit = HOUSING_TYPES[housingType]?.limit ?? 2000;
+  let loanLimit = HOUSING_TYPES[housingType]?.limit ?? 2000;
+  // [Phase 4c 05-I01] 子育て世帯・若者夫婦世帯の借入限度額上乗せ措置（令和 6・7 年入居、general は対象外）
+  // 国土交通省「住宅ローン減税の子育て世帯等に対する借入限度額の上乗せ措置」
+  // long_term/low_carbon: 5000→5500, zeh: 4500→5000, energy_saving: 4000→4500
+  const purchaseYear = parseInt(m.startYear) || 0;
+  if (m.isChildCareHousehold && housingType !== 'general' && (purchaseYear === 2024 || purchaseYear === 2025)) {
+    loanLimit += 500;
+  }
   const controlledBalance = Math.min(balance, loanLimit);
 
   // 控除額（上限前）= 残高 × 0.7%
@@ -150,4 +157,26 @@ function calcMortgageDeduction(year, balance) {
   const deductCap = incomeTax + residentTaxCap;
 
   return Math.min(rawDeduction, deductCap);
+}
+
+// [Phase 4c 05-I02] 頭金を expenses[] に自動同期
+// - downPayment > 0 と purchaseYear が揃っていれば mortgage-downpayment エントリを追加 or 更新
+// - downPayment ≤ 0 または purchaseYear 未指定なら既存エントリを削除
+// 戻り値: 新しい expenses 配列（元配列は非破壊）
+function syncDownPaymentExpense(expenses, mortgage) {
+  const purchaseYear = parseInt(mortgage?.startYear) || 0;
+  const downPayment = parseFloat(mortgage?.downPayment) || 0;
+  const without = (expenses || []).filter(e => e.source !== 'mortgage-downpayment');
+  if (!purchaseYear || downPayment <= 0) {
+    return without;
+  }
+  return [
+    ...without,
+    {
+      source: 'mortgage-downpayment',
+      name: '住宅購入頭金',
+      year: purchaseYear,
+      amount: downPayment,
+    },
+  ];
 }

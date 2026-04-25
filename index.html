@@ -2861,6 +2861,25 @@
             <label>借入開始年</label>
             <input type="number" id="leMortgageStartYear" placeholder="2026" min="1900" max="2100" oninput="calcMortgage()">
           </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>物件価格（万円）</label>
+              <input type="number" id="leMortgagePrice" placeholder="3500" min="0" step="10" oninput="calcMortgage()">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">借入額 = 物件価格 − 頭金（手動で整合を取ってください）</div>
+            </div>
+            <div class="form-group">
+              <label>頭金（万円）</label>
+              <input type="number" id="leMortgageDownPayment" placeholder="500" min="0" step="10" oninput="calcMortgage()">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">購入年の支出として自動計上されます</div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:6px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+              <input type="checkbox" id="leMortgageChildCareHousehold" onchange="calcMortgage()">
+              子育て世帯・若者夫婦世帯（令和 6・7 年入居特例）
+            </label>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">認定住宅・ZEH・省エネ住宅の借入限度額が +500 万円されます</div>
+          </div>
           <div class="mortgage-result" id="mortgageResult">借入額・金利・返済期間を入力すると月額返済額が自動計算されます</div>
           <!-- 住宅ローン控除 -->
           <div style="margin-top:10px;padding:10px 14px;background:rgba(52,199,89,.06);border-radius:8px;border:.5px solid rgba(52,199,89,.2)">
@@ -12610,6 +12629,10 @@ function saveLifeEvents() {
     rate:      parseFloat(document.getElementById('leMortgageRate').value)     || 1.5,
     term:      parseInt(document.getElementById('leMortgageTerm').value)       || 35,
     startYear: document.getElementById('leMortgageStartYear').value,
+    // [Phase 4c 05-I02 / 05-I01]
+    price:                parseFloat(document.getElementById('leMortgagePrice').value) || 0,
+    downPayment:          parseFloat(document.getElementById('leMortgageDownPayment').value) || 0,
+    isChildCareHousehold: document.getElementById('leMortgageChildCareHousehold').checked,
   };
   le.rent = {
     monthly:   parseFloat(document.getElementById('leRentMonthly').value)   || 0,
@@ -12626,6 +12649,10 @@ function saveLifeEvents() {
     careType:   document.getElementById('leCareType').value,
   };
   // 奨学金は個別に保存済みのため、ここでは何もしない（state.lifeEvents.scholarships はリアルタイム更新）
+  // [Phase 4c 05-I02] 頭金を expenses[] に自動同期
+  if (typeof syncDownPaymentExpense === 'function') {
+    state.expenses = syncDownPaymentExpense(state.expenses || [], le.mortgage);
+  }
   save();
   renderLifeEventCharts();
   showNotification('ライフイベント情報を保存しました');
@@ -13023,6 +13050,9 @@ function renderLifeEventsPage() {
   document.getElementById('leMortgageRate').value      = le.mortgage.rate      != null && le.mortgage.rate !== 0 ? le.mortgage.rate : '';
   document.getElementById('leMortgageTerm').value      = le.mortgage.term      ? le.mortgage.term : '';
   document.getElementById('leMortgageStartYear').value = le.mortgage.startYear || '';
+  document.getElementById('leMortgagePrice').value          = le.mortgage.price          || '';
+  document.getElementById('leMortgageDownPayment').value    = le.mortgage.downPayment    || '';
+  document.getElementById('leMortgageChildCareHousehold').checked = !!le.mortgage.isChildCareHousehold;
   // 賃貸フィールド
   document.getElementById('leRentMonthly').value   = le.rent.monthly   || '';
   document.getElementById('leRentAdmin').value     = le.rent.admin     || '';

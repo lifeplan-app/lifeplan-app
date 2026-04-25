@@ -610,3 +610,105 @@ describe('[BUG#6] refi 諸費用の計上（Phase 4c 05-I04）', () => {
     expect(schedule.get(2030).refiCost).toBe(50);
   });
 });
+
+// ─── BUG#7 (Phase 4c): 子育て特例 uplift ──────────
+// 修正前: 認定住宅 limit 5000 で頭打ち、令和 6・7 年子育て特例の +500 上乗せが効かない
+// 修正後: m.isChildCareHousehold && startYear ∈ {2024, 2025} && housingType !== 'general' で +500
+describe('[BUG#7] 子育て特例 uplift（Phase 4c 05-I01）', () => {
+  let calcMortgageDeduction, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('mortgage.js');
+    localSb = getSandbox();
+    calcMortgageDeduction = localSb.calcMortgageDeduction;
+    // getRetirementParams は index.html 側関数のためスタブ（index.html を読み込まないテストでは必要）
+  });
+
+  it('2024 入居 + 子育て特例 + 認定住宅(long_term) なら limit 5500 万', () => {
+    localSb.getRetirementParams = () => ({ mortgageDeductStart: 2024, mortgageDeductYears: 13 });
+    localSb.state.lifeEvents = {
+      mortgage: { housingType: 'long_term', startYear: 2024, isChildCareHousehold: true }
+    };
+    localSb.state.finance = { income: 50, bonus: 100 };
+    const d = calcMortgageDeduction(2024, 5500);
+    // balance 5500 → 5500×0.007 = 38.5 万円が控除上限前
+    expect(d).toBeCloseTo(5500 * 0.007, 1);
+  });
+
+  it('2024 入居 + 子育て特例なし は limit 5000 万止まり', () => {
+    localSb.getRetirementParams = () => ({ mortgageDeductStart: 2024, mortgageDeductYears: 13 });
+    localSb.state.lifeEvents = {
+      mortgage: { housingType: 'long_term', startYear: 2024, isChildCareHousehold: false }
+    };
+    localSb.state.finance = { income: 50, bonus: 100 };
+    const d = calcMortgageDeduction(2024, 5500);
+    expect(d).toBeCloseTo(5000 * 0.007, 1);
+  });
+
+  it('2026 入居（制度対象外）は子育て特例ありでも uplift 無効', () => {
+    localSb.getRetirementParams = () => ({ mortgageDeductStart: 2026, mortgageDeductYears: 13 });
+    localSb.state.lifeEvents = {
+      mortgage: { housingType: 'long_term', startYear: 2026, isChildCareHousehold: true }
+    };
+    localSb.state.finance = { income: 50, bonus: 100 };
+    const d = calcMortgageDeduction(2026, 5500);
+    expect(d).toBeCloseTo(5000 * 0.007, 1);
+  });
+
+  it('一般住宅(general) は子育て特例の対象外（制度設計）', () => {
+    localSb.getRetirementParams = () => ({ mortgageDeductStart: 2024, mortgageDeductYears: 13 });
+    localSb.state.lifeEvents = {
+      mortgage: { housingType: 'general', startYear: 2024, isChildCareHousehold: true }
+    };
+    localSb.state.finance = { income: 50, bonus: 100 };
+    const d = calcMortgageDeduction(2024, 3000);
+    expect(d).toBeCloseTo(2000 * 0.007, 1); // 一般住宅 limit 2000 のまま
+  });
+});
+
+// ─── BUG#8 (Phase 4c): 頭金を expenses[] に自動同期 ──────────
+describe('[BUG#8] 頭金自動同期（Phase 4c 05-I02）', () => {
+  let syncDownPaymentExpense;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('mortgage.js');
+    syncDownPaymentExpense = getSandbox().syncDownPaymentExpense;
+  });
+
+  it('downPayment と startYear が揃っていれば新規エントリ追加', () => {
+    const expenses = [];
+    const m = { startYear: 2028, downPayment: 500 };
+    const result = syncDownPaymentExpense(expenses, m);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      source: 'mortgage-downpayment',
+      name: '住宅購入頭金',
+      year: 2028,
+      amount: 500,
+    });
+  });
+
+  it('既存 mortgage-downpayment エントリは in-place 更新', () => {
+    const expenses = [{ source: 'mortgage-downpayment', name: '住宅購入頭金', year: 2028, amount: 400 }];
+    const m = { startYear: 2028, downPayment: 600 };
+    const result = syncDownPaymentExpense(expenses, m);
+    expect(result).toHaveLength(1);
+    expect(result[0].amount).toBe(600);
+  });
+
+  it('downPayment が 0 / 未指定なら既存 mortgage-downpayment エントリを削除', () => {
+    const expenses = [{ source: 'mortgage-downpayment', name: '住宅購入頭金', year: 2028, amount: 500 }];
+    const m = { startYear: 2028, downPayment: 0 };
+    const result = syncDownPaymentExpense(expenses, m);
+    expect(result.filter(e => e.source === 'mortgage-downpayment')).toHaveLength(0);
+  });
+
+  it('ユーザー登録の他 expenses は保持（source 判定）', () => {
+    const expenses = [{ name: '車購入', year: 2027, amount: 200 }];
+    const m = { startYear: 2028, downPayment: 500 };
+    const result = syncDownPaymentExpense(expenses, m);
+    expect(result).toHaveLength(2);
+    expect(result.find(e => e.source === 'mortgage-downpayment')?.amount).toBe(500);
+    expect(result.find(e => e.name === '車購入')?.amount).toBe(200);
+  });
+});
