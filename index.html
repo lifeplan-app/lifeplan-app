@@ -12261,6 +12261,11 @@ function addMortgageEvent(type) {
       <div class="form-group">
         <label>新返済期間（年）</label>
         <input type="number" id="meNewTerm" placeholder="${Math.max(1, term - (defaultYear - startYear))}" min="1" max="50">
+      </div>
+      <div class="form-group">
+        <label>諸費用（万円）</label>
+        <input type="number" id="meRefiCost" min="0" step="1" placeholder="50">
+        <p class="hint">保証料戻し・事務手数料・登記費用の合計。30〜80 万円が相場。</p>
       </div>`;
   }
 
@@ -12292,7 +12297,8 @@ function saveMortgageEvent(type, btn) {
     const newRate = parseFloat(modal.querySelector('#meNewRate').value);
     const newTerm = parseInt(modal.querySelector('#meNewTerm').value);
     if (!newRate || !newTerm) { alert('新金利と新期間を入力してください'); return; }
-    state.lifeEvents.mortgage.events.push({ id: uid(), type: 'refi', year, newRate, newTerm });
+    const cost = parseFloat(modal.querySelector('#meRefiCost')?.value) || 0;
+    state.lifeEvents.mortgage.events.push({ id: uid(), type: 'refi', year, newRate, newTerm, cost });
   }
   modal.remove();
   renderMortgageEventList();
@@ -12341,6 +12347,11 @@ function editMortgageEvent(id) {
       <div class="form-group">
         <label>新返済期間（年）</label>
         <input type="number" id="meNewTerm" value="${ev.newTerm}" min="1" max="50">
+      </div>
+      <div class="form-group">
+        <label>諸費用（万円）</label>
+        <input type="number" id="meRefiCost" min="0" step="1" placeholder="50" value="${ev.cost ?? ''}">
+        <p class="hint">保証料戻し・事務手数料・登記費用の合計。30〜80 万円が相場。</p>
       </div>`;
   }
   const modal = document.createElement('div');
@@ -12373,7 +12384,8 @@ function updateMortgageEvent(id, type, btn) {
     const newRate = parseFloat(modal.querySelector('#meNewRate').value);
     const newTerm = parseInt(modal.querySelector('#meNewTerm').value);
     if (!newRate || !newTerm) { alert('新金利と新期間を入力してください'); return; }
-    events[idx] = { ...events[idx], year, newRate, newTerm };
+    const cost = parseFloat(modal.querySelector('#meRefiCost')?.value) || 0;
+    events[idx] = { ...events[idx], year, newRate, newTerm, cost };
   }
   save();
   modal.remove();

@@ -555,3 +555,58 @@ describe('[BUG#5] 配偶者控除本実装（Phase 4c 06-I02）', () => {
     expect(r.residentTaxDeduction).toBe(33);
   });
 });
+
+// ─── BUG#6 (Phase 4c): 借換諸費用の計上 ──────────
+// 修正前: refi 諸費用が schedule に乗らず costs.mortgage に加算されない
+// 修正後: schedule.set(year, { ..., refiCost }) で諸費用が cost 集計に流れる
+describe('[BUG#6] refi 諸費用の計上（Phase 4c 05-I04）', () => {
+  let calcMortgageSchedule, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('mortgage.js');
+    localSb = getSandbox();
+    calcMortgageSchedule = localSb.calcMortgageSchedule;
+  });
+
+  it('refi.cost が schedule の該当年に refiCost として含まれる', () => {
+    localSb.state.lifeEvents = {
+      mortgage: {
+        amount: 3000, startYear: 2026, term: 30, rate: 2.0,
+        events: [
+          { year: 2030, type: 'refi', newRate: 1.0, newTerm: 25, cost: 50 },
+        ]
+      }
+    };
+    const schedule = calcMortgageSchedule();
+    expect(schedule.get(2030).refiCost).toBe(50);
+    expect(schedule.get(2029).refiCost || 0).toBe(0);
+    expect(schedule.get(2031).refiCost || 0).toBe(0);
+  });
+
+  it('refi.cost 未指定は 0 扱い', () => {
+    localSb.state.lifeEvents = {
+      mortgage: {
+        amount: 3000, startYear: 2026, term: 30, rate: 2.0,
+        events: [
+          { year: 2030, type: 'refi', newRate: 1.0, newTerm: 25 },
+        ]
+      }
+    };
+    const schedule = calcMortgageSchedule();
+    expect(schedule.get(2030).refiCost || 0).toBe(0);
+  });
+
+  it('同年に refi 2 回（極稀）でも cost が累積される', () => {
+    localSb.state.lifeEvents = {
+      mortgage: {
+        amount: 3000, startYear: 2026, term: 30, rate: 2.0,
+        events: [
+          { year: 2030, type: 'refi', newRate: 1.5, newTerm: 28, cost: 30 },
+          { year: 2030, type: 'refi', newRate: 1.0, newTerm: 25, cost: 20 },
+        ]
+      }
+    };
+    const schedule = calcMortgageSchedule();
+    expect(schedule.get(2030).refiCost).toBe(50);
+  });
+});

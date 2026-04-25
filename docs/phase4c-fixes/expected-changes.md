@@ -61,10 +61,18 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 10-refi: 借換諸費用（05-I04）
 
 ### 期待方向
-（Task 5 実施時に記入）
+- `events[{type:'refi'}]` に `cost` フィールド追加（万円、既定 0）。
+- `calcMortgageSchedule` の戻り値 `schedule.get(yr)` に `refiCost` を含める。
+- `calc/life-events.js` の住居費集計（L169-181 付近）で `costs.mortgage += scheduleEntry.refiCost` を加算（繰上有無・一括返済の各分岐に共通適用）。
+- 既存サンプル 5 シナリオに `refi` イベントがなければ snapshot 差分なし。
+- UI: refi 編集フォームに「諸費用（万円）」入力欄を追加。
 
 ### 実測サマリー
-（Task 5 修正後に記入）
+- snapshot 差分: なし（既存 5 シナリオに refi イベント未登録）
+- `calcMortgageSchedule` 戻り値に `refiCost` 追加
+- `calc/life-events.js` で refiCost を住居費に加算
+- UI: refi 編集フォームに「諸費用（万円）」欄追加（addMortgageEvent / editMortgageEvent / saveMortgageEvent / updateMortgageEvent 対応）
+- テスト: 171/171 グリーン（168 + BUG#6 3 件）
 
 ---
 

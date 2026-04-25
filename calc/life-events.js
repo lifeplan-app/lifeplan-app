@@ -179,6 +179,10 @@ function calcLECostByYear(year, opts = {}) {
         } else if (scheduleEntry) {
           costs.mortgage += annualPayment;
         }
+        // [Phase 4c 05-I04] 借換諸費用を当年の住居費に加算
+        if (scheduleEntry?.refiCost) {
+          costs.mortgage += scheduleEntry.refiCost;
+        }
       }
     }
   }

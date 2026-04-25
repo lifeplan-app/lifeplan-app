@@ -35,6 +35,7 @@ function calcMortgageSchedule() {
   const schedule = new Map();
 
   for (let year = startYear; year < endYear && principal > 0.01; year++) {
+    let yearlyRefiCost = 0;
     // イベント処理（この年の開始時）
     for (const ev of events) {
       if (parseInt(ev.year) !== year) continue;
@@ -71,6 +72,7 @@ function calcMortgageSchedule() {
         const newTerm = parseInt(ev.newTerm) || (endYear - year);
         endYear = year + newTerm;
         monthly = calcMonthlyPayment(principal, rate, newTerm * 12);
+        yearlyRefiCost += parseFloat(ev.cost) || 0;
       }
     }
     // 年次残高計算（月次ループで元本減算）
@@ -81,7 +83,7 @@ function calcMortgageSchedule() {
       const principalPay = Math.min(p, monthly - interest);
       p -= principalPay;
     }
-    schedule.set(year, { monthlyPayment: monthly, principalStart: principal, principalEnd: Math.max(0, p) });
+    schedule.set(year, { monthlyPayment: monthly, principalStart: principal, principalEnd: Math.max(0, p), refiCost: yearlyRefiCost });
     principal = Math.max(0, p);
   }
   return schedule;
