@@ -859,4 +859,22 @@ describe('[BUG#10] 配偶者控除 軸2 本人高所得者逓減（Phase 4e 06-I
     expect(r.incomeTaxDeduction).toBe(32);
     expect(r.residentTaxDeduction).toBe(26); // 38 × 2/3 = 25.33 → ceil = 26（NTA 住民税表）
   });
+
+  it('境界値: selfTotalIncome = 900 ちょうどは満額（≤ 900 buckets）', () => {
+    const r = calcSpouseDeduction(0, 40, 900);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('境界値: selfTotalIncome = 950 ちょうどは ×2/3（900-950 bucket）', () => {
+    const r = calcSpouseDeduction(0, 40, 950);
+    expect(r.incomeTaxDeduction).toBe(26);
+    expect(r.residentTaxDeduction).toBe(22);
+  });
+
+  it('境界値: selfTotalIncome = 1000 ちょうどは ×1/3（950-1000 bucket）', () => {
+    const r = calcSpouseDeduction(0, 40, 1000);
+    expect(r.incomeTaxDeduction).toBe(13);
+    expect(r.residentTaxDeduction).toBe(11);
+  });
 });

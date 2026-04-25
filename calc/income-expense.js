@@ -184,7 +184,7 @@ function getIncomeForYearWithGrowth(yr) {
 
 // ===== [Phase 4c 06-I02] 配偶者控除・配偶者特別控除（本実装） =====
 // 国税庁 No.1191 / No.1195 準拠（2026年4月時点、軸1=パートナー所得 + 軸3=老人加算）
-// 軸2（本人高所得者逓減 900/950/1000 万）は Phase 4d 以降。
+// [Phase 4e 06-I02 軸2 完全実装] 本人高所得者逓減（900/950/1000 万）追加で 3 軸完全対応。
 // partnerAnnualIncomeMan: パートナーの年間合計所得（万円、給与所得控除後）
 // partnerAge: パートナーの年齢（歳、null/NaN なら老人加算を無効化）
 // 戻り値: { incomeTaxDeduction: 万円, residentTaxDeduction: 万円 }

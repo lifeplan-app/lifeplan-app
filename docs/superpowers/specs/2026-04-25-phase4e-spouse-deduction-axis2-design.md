@@ -51,8 +51,12 @@ function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge, selfTotalIncome
   else if (selfInc > 950) highIncomeMultiplier = 1/3;
   else if (selfInc > 900) highIncomeMultiplier = 2/3;
 
-  incomeTaxDeduction = Math.round(incomeTaxDeduction * highIncomeMultiplier);
-  residentTaxDeduction = Math.round(residentTaxDeduction * highIncomeMultiplier);
+  // 端数は Math.ceil で切り上げ（NTA / 住民税表に整合）
+  // 例: 38 × 2/3 = 25.33 → 26（NTA 表値）
+  if (highIncomeMultiplier !== 1) {
+    incomeTaxDeduction = Math.ceil(incomeTaxDeduction * highIncomeMultiplier);
+    residentTaxDeduction = Math.ceil(residentTaxDeduction * highIncomeMultiplier);
+  }
 
   return { incomeTaxDeduction, residentTaxDeduction };
 }
@@ -79,7 +83,7 @@ const spouseDeduction = (typeof calcSpouseDeduction === 'function')
 | 950-1000 | 13 / 11（×1/3） | 12 / 11 |
 | > 1000 | 0 / 0 | 0 / 0 |
 
-`Math.round(x * 2/3)` and `Math.round(x * 1/3)` give NTA-correct values for all 軸1 tier values (38/36/31/26/21/16/11/6/3 → 26/24/21/17/14/11/7/4/2 [×2/3] → 13/12/10/9/7/5/4/2/1 [×1/3]). 老人加算（48/38）も同様に逓減される。
+`Math.ceil(x * 2/3)` and `Math.ceil(x * 1/3)` give NTA-correct values for all 軸1 tier values（端数 .33 / .67 の場合は切り上げで NTA 表値と一致。Math.round では .33 が切り捨てとなり 38 × 2/3 = 25.33 → 25 となるが NTA 表値は 26、不整合） (38/36/31/26/21/16/11/6/3 → 26/24/21/17/14/11/7/4/2 [×2/3] → 13/12/10/9/7/5/4/2/1 [×1/3]). 老人加算（48/38）も同様に逓減される。
 
 ## 後方互換
 
