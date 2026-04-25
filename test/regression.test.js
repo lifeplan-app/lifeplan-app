@@ -1451,3 +1451,122 @@ describe('[BUG#19] Phase 4q 贈与計画統合', () => {
     expect(getOneTimeForYear(cy + 6)).toBe(0);
   });
 });
+
+// ─── BUG#20 (Phase 4s): 保険料・贈与の統合シミュレーション反映確認 ──────────
+// Phase 4p/4q で calc に組込んだ保険料・贈与計画が、シミュレーション全体の出力に
+// 正しく反映されることを明示検証する統合テスト
+describe('[BUG#20] Phase 4s 保険・贈与 統合テスト', () => {
+  let calcIntegratedSim, calcRetirementSimWithOpts, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcIntegratedSim = localSb.calcIntegratedSim;
+    calcRetirementSimWithOpts = localSb.calcRetirementSimWithOpts;
+    // getMedicalAddition は index.html 側で定義されるため sandbox にスタブを注入
+    localSb.getMedicalAddition = () => 0;
+    localSb.getRetirementParams = () => ({
+      mortgageDeductStart: 0, mortgageDeductYears: 0,
+      pensionSlide: 0, expenseGrowthRate: 0, residualAssets: 0,
+    });
+  });
+
+  function setupBase(overrides = {}) {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 35}-01-01` },
+      finance: { income: 30, bonus: 60, expense: 20 },
+      assets: [{ id: 'a1', type: 'cash', name: '現金', currentVal: 500 }],
+      retirement: {
+        targetAge: 65, lifeExpectancy: 90,
+        pensionMonthly: 0, pensionMonthly_p: 0, pensionAge: 65, pensionAge_p: 65,
+        severance: 0, severanceAge: null, serviceYears: 30,
+        monthlyExpense: 20, withdrawalType: 'needs',
+      },
+      lifeEvents: { housingType: 'rent', mortgage: {}, rent: { monthly: 0 }, care: {}, scholarships: [], children: [] },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+      insurance: { items: [] },
+      inheritance: { giftPlans: [] },
+      ...overrides,
+    };
+  }
+
+  it('保険なし vs 保険あり: calcIntegratedSim の annualExpense 差 = premium × 12', () => {
+    const cy = new Date().getFullYear();
+    setupBase();
+    const simNoIns = calcIntegratedSim(10);
+    setupBase({ insurance: { items: [{ premium: 1.5, startYear: cy, endYear: cy + 30 }] } });
+    const simWithIns = calcIntegratedSim(10);
+    // y=5（中間年）で annualExpense 差を確認
+    const noInsExp = simNoIns[5].annualExpense || 0;
+    const withInsExp = simWithIns[5].annualExpense || 0;
+    expect(withInsExp - noInsExp).toBeCloseTo(18, 1); // 1.5 × 12
+  });
+
+  it('保険の startYear 前は加算されない', () => {
+    const cy = new Date().getFullYear();
+    setupBase({ insurance: { items: [{ premium: 1.5, startYear: cy + 10, endYear: cy + 30 }] } });
+    const sim = calcIntegratedSim(10);
+    setupBase();
+    const simNoIns = calcIntegratedSim(10);
+    // y=5 → currentYear+5、保険 startYear=cy+10 なので加算なし
+    expect(sim[5].annualExpense).toBeCloseTo(simNoIns[5].annualExpense, 1);
+  });
+
+  it('保険の endYear 後は加算されない', () => {
+    const cy = new Date().getFullYear();
+    setupBase({ insurance: { items: [{ premium: 1.5, startYear: cy, endYear: cy + 5 }] } });
+    const sim = calcIntegratedSim(10);
+    setupBase();
+    const simNoIns = calcIntegratedSim(10);
+    // y=8 → currentYear+8、保険 endYear=cy+5 なので加算なし
+    expect(sim[8].annualExpense).toBeCloseTo(simNoIns[8].annualExpense, 1);
+  });
+
+  it('贈与年で oneTime が gift amount 分減る', () => {
+    const cy = new Date().getFullYear();
+    setupBase({ inheritance: { giftPlans: [{ year: cy + 5, amount: 100 }] } });
+    const sim = calcIntegratedSim(10);
+    setupBase();
+    const simNoGift = calcIntegratedSim(10);
+    // 贈与年 (y=5) の oneTime は -100 万少なくなる方向
+    const giftRow = sim[5];
+    const noGiftRow = simNoGift[5];
+    expect(noGiftRow.oneTime - giftRow.oneTime).toBeCloseTo(100, 1);
+  });
+
+  it('複数贈与年でそれぞれ oneTime に反映', () => {
+    const cy = new Date().getFullYear();
+    setupBase({
+      inheritance: { giftPlans: [
+        { year: cy + 3, amount: 50 },
+        { year: cy + 7, amount: 200 },
+      ]},
+    });
+    const sim = calcIntegratedSim(10);
+    setupBase();
+    const simNoGift = calcIntegratedSim(10);
+    expect(simNoGift[3].oneTime - sim[3].oneTime).toBeCloseTo(50, 1);
+    expect(simNoGift[7].oneTime - sim[7].oneTime).toBeCloseTo(200, 1);
+    // 贈与年以外は影響なし
+    expect(sim[5].oneTime).toBeCloseTo(simNoGift[5].oneTime, 1);
+  });
+
+  it('calcRetirementSimWithOpts: 退職期にも保険料が annualExpense に反映', () => {
+    const cy = new Date().getFullYear();
+    setupBase();
+    const simNoIns = calcRetirementSimWithOpts({});
+    setupBase({ insurance: { items: [{ premium: 1.0, startYear: 2000, endYear: 2080 }] } });
+    const simWithIns = calcRetirementSimWithOpts({});
+    // 退職後 1 年目で annualExpense 差 = 12 万
+    const noInsExp = simNoIns[0]?.annualExpense || 0;
+    const withInsExp = simWithIns[0]?.annualExpense || 0;
+    expect(withInsExp - noInsExp).toBeCloseTo(12, 1);
+  });
+});
