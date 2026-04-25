@@ -20022,11 +20022,30 @@ function renderLsRetireAgeCards() {
         oninput="updateLsScenario('retireAge',${i},'retireAge',+this.value);scTrack(this,45,75,'${color}')"
         style="--sc-color:${color};${scTrackStyle(sc.retireAge,45,75,color)}">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:#bbb;margin-top:2px;"><span>45歳</span><span>75歳</span></div>
+      <button onclick="applyRetireAgeScenarioToPlan(${i})"
+              style="width:100%;margin-top:10px;padding:8px;background:${color};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">
+        このシナリオをメインプランに適用
+      </button>
     </div>
     `;
   }).join('');
   renderLsChart('retireAge');
   renderLsTable('retireAge');
+}
+
+// [Phase 4j follow-up] 退職年齢シナリオをメインプランに適用
+function applyRetireAgeScenarioToPlan(idx) {
+  const sc = state.lifeScenario?.retireAge?.scenarios?.[idx];
+  if (!sc) return;
+  const newAge = parseInt(sc.retireAge);
+  if (!confirm(`現在の退職年齢を ${newAge} 歳に変更します。よろしいですか？`)) return;
+  state.retirement = state.retirement || {};
+  state.retirement.targetAge = newAge;
+  save();
+  showNotification(`退職年齢を ${newAge} 歳に設定しました`);
+  if (typeof renderRetirementPage === 'function') {
+    try { renderRetirementPage(); } catch (e) {}
+  }
 }
 
 // 退職時点のライフイベント月換算コストを取得（住宅＋教育＋介護）
@@ -20086,11 +20105,31 @@ function renderLsExpenseCards() {
         </div>
         ${fixedNote}
       </div>
+      <button onclick="applyExpenseScenarioToPlan(${i})"
+              style="width:100%;margin-top:10px;padding:8px;background:${color};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">
+        このシナリオをメインプランに適用
+      </button>
     </div>
     `;
   }).join('');
   renderLsChart('expense');
   renderLsTable('expense');
+}
+
+// [Phase 4j follow-up] 生活費水準シナリオをメインプランに適用
+function applyExpenseScenarioToPlan(idx) {
+  const sc = state.lifeScenario?.expense?.scenarios?.[idx];
+  if (!sc) return;
+  const newExpense = parseFloat(sc.monthlyExpense);
+  if (!Number.isFinite(newExpense)) return;
+  if (!confirm(`退職後の月支出を ${newExpense} 万円に変更します。よろしいですか？`)) return;
+  state.retirement = state.retirement || {};
+  state.retirement.monthlyExpense = newExpense;
+  save();
+  showNotification(`退職後の月支出を ${newExpense} 万円に設定しました`);
+  if (typeof renderRetirementPage === 'function') {
+    try { renderRetirementPage(); } catch (e) {}
+  }
 }
 
 // シナリオ値更新
