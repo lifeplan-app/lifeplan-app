@@ -2153,7 +2153,7 @@
   <!-- リンク -->
   <div class="drawer-section">
     <div class="drawer-section-label">その他</div>
-    <a class="drawer-item" href="legal.html" target="_blank" style="text-decoration:none">
+    <a class="drawer-item" href="legal.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
       <span class="d-icon">📄</span>プライバシーポリシー・利用規約
     </a>
   </div>
@@ -4353,7 +4353,7 @@
       <strong style="color:#fff">🔒 データの取り扱いについて</strong><br>
       このアプリに入力した情報（氏名・生年月日・資産・収入など）は、<strong>すべてお使いのブラウザ内（localStorage）にのみ保存</strong>されます。外部サーバーへの送信・共有は一切行いません。
       シミュレーション結果は参考値であり、投資・財務アドバイスではありません。
-      詳しくは<a href="legal.html" target="_blank">プライバシーポリシー・免責事項・利用規約</a>をご確認ください。
+      詳しくは<a href="legal.html" target="_blank" rel="noopener noreferrer">プライバシーポリシー・免責事項・利用規約</a>をご確認ください。
     </div>
     <div class="consent-actions">
       <button class="btn btn-secondary" onclick="consentDecline()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px">詳細を確認</button>
@@ -4548,7 +4548,7 @@
     <div style="margin-bottom:20px">
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)">💾 バックアップ（エクスポート）</div>
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">ブラウザのデータ消去やPC変更時に備え、定期的にバックアップを保存することをお勧めします。</p>
-      <button class="btn btn-primary" onclick="closeDataSettings();exportData()" style="width:100%">🔐 データを書き出す（暗号化対応）</button>
+      <button class="btn btn-primary" onclick="closeDataSettings();exportData()" style="width:100%">🔐 データを書き出す（簡易難読化）</button>
     </div>
 
     <div style="margin-bottom:20px">
@@ -4563,9 +4563,9 @@
     </div>
 
     <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:16px">
-      <a href="legal.html" target="_blank" style="color:var(--primary)">プライバシーポリシー</a> ·
-      <a href="legal.html#disclaimer" target="_blank" style="color:var(--primary)">免責事項</a> ·
-      <a href="legal.html#terms" target="_blank" style="color:var(--primary)">利用規約</a>
+      <a href="legal.html" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">プライバシーポリシー</a> ·
+      <a href="legal.html#disclaimer" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">免責事項</a> ·
+      <a href="legal.html#terms" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">利用規約</a>
     </div>
 
     <div class="modal-footer">
@@ -6586,7 +6586,7 @@ async function exportData() {
     a.click();
     URL.revokeObjectURL(a.href);
     localStorage.setItem('lifeplan_last_export', Date.now().toString());
-    showNotification(`🔐 ${filename} を暗号化して書き出しました`);
+    showNotification(`🔐 ${filename} を保存しました（簡易難読化、機密情報として扱ってください）`);
   } catch (e) {
     showNotification('書き出しに失敗しました: ' + e.message, 'error');
   }
@@ -6594,11 +6594,25 @@ async function exportData() {
 
 // ===== インポート処理 =====
 function _applyImportedData(jsonStr, fileName) {
-  const data = JSON.parse(jsonStr);
+  // [Phase 5b R4] サイズ上限チェック (5MB)
+  const MAX_IMPORT_SIZE = 5 * 1024 * 1024;
+  if (jsonStr && jsonStr.length > MAX_IMPORT_SIZE) {
+    showNotification(`⚠️ ファイルサイズが大きすぎます（5MB 制限）`, 'error');
+    return;
+  }
+  let data;
+  try {
+    data = JSON.parse(jsonStr);
+  } catch (e) {
+    showNotification('⚠️ ファイル形式が不正です（JSON 解析失敗）', 'error');
+    return;
+  }
   if (!data._version && !data.profile && !data.assets) {
     showNotification('⚠️ 対応していないファイル形式です');
     return;
   }
+  // [Phase 5b R4] 危険 key を再帰除去
+  data = sanitizeImported(data);
   const { _version, _exportedAt, ...imported } = data;
   if (!confirm(`「${fileName}」のデータを読み込みます。現在のデータは上書きされます。よろしいですか？`)) return;
   state = {
@@ -6645,6 +6659,12 @@ async function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   event.target.value = '';
+  // [Phase 5b R4] ファイルサイズ上限チェック (5MB)
+  const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024;
+  if (file.size > MAX_IMPORT_FILE_SIZE) {
+    showNotification(`⚠️ ファイルサイズが大きすぎます（${(file.size/1024/1024).toFixed(1)}MB / 上限 5MB）`, 'error');
+    return;
+  }
 
   const text = await file.text();
   let jsonText = text;

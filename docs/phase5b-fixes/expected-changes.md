@@ -20,4 +20,22 @@
 snapshot 影響: なし（UI ・I/O 層の変更）
 
 ## 実測サマリー
-（修正後に記入）
+
+### R2 noopener 追加
+- 5 箇所すべてに `rel="noopener noreferrer"` 追加完了
+- 確認: `grep target="_blank" index.html | grep -v noopener` → 0 件
+
+### R4 インポート検証強化
+- sanitizeImported を calc/utils.js に追加（テスト可能化）
+- _applyImportedData にサイズ上限・JSON parse エラーハンドリング・sanitize 適用
+- importData にファイルサイズ上限チェック追加
+- BUG#22 6 件パス
+
+### R1 (B 案) 表記正直化
+- エクスポート通知を「暗号化して書き出しました」→「保存しました（簡易難読化、機密情報として扱ってください）」に変更
+- エクスポートボタンラベルを「暗号化対応」→「簡易難読化」に変更
+- 内部実装名（encryptLifeplan / LIFEPLAN_ENCRYPTED_V1）は後方互換のため維持
+
+### テスト
+- 246/246 グリーン (240 + BUG#22 6 件)
+- snapshot 不変

@@ -1609,3 +1609,59 @@ describe('[BUG#21] Phase 4t iDeCo 限度額切替', () => {
     expect(ASSET_TYPES.ideco.note).toMatch(/6\.2/);
   });
 });
+
+// ─── BUG#22 (Phase 5b R4): インポート JSON sanitize ──────────
+describe('[BUG#22] Phase 5b インポート JSON sanitize', () => {
+  let sanitizeImported, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    localSb = getSandbox();
+    sanitizeImported = localSb.sanitizeImported;
+  });
+
+  it('plain object はそのまま返す', () => {
+    const input = { a: 1, b: 'hello', c: [1, 2, 3] };
+    const out = sanitizeImported(input);
+    expect(out).toEqual({ a: 1, b: 'hello', c: [1, 2, 3] });
+  });
+
+  it('__proto__ key を除去', () => {
+    const input = JSON.parse('{"a": 1, "__proto__": {"polluted": true}}');
+    const out = sanitizeImported(input);
+    expect(out.a).toBe(1);
+    expect(out.__proto__.polluted).toBeUndefined();
+  });
+
+  it('constructor / prototype key も除去', () => {
+    const input = { a: 1, constructor: { evil: 1 }, prototype: { evil: 2 } };
+    const out = sanitizeImported(input);
+    expect(out.a).toBe(1);
+    // constructor は危険 key として除去され、clean オブジェクトの prototype 由来のものが残る
+    expect(typeof out.constructor).toBe('function');
+    // evil プロパティは存在しないことを確認（注入されていない）
+    expect(out.constructor.evil).toBeUndefined();
+    expect(out.prototype).toBeUndefined();
+  });
+
+  it('ネストしたオブジェクトでも再帰除去', () => {
+    const input = JSON.parse('{"nested": {"a": 1, "__proto__": {"polluted": true}}}');
+    const out = sanitizeImported(input);
+    expect(out.nested.a).toBe(1);
+    expect(out.nested.__proto__.polluted).toBeUndefined();
+  });
+
+  it('配列内のオブジェクトも再帰除去', () => {
+    const input = JSON.parse('[{"a": 1}, {"b": 2, "__proto__": {"polluted": true}}]');
+    const out = sanitizeImported(input);
+    expect(out[0].a).toBe(1);
+    expect(out[1].b).toBe(2);
+    expect(out[1].__proto__.polluted).toBeUndefined();
+  });
+
+  it('null / プリミティブ値はそのまま', () => {
+    expect(sanitizeImported(null)).toBe(null);
+    expect(sanitizeImported(42)).toBe(42);
+    expect(sanitizeImported('hello')).toBe('hello');
+    expect(sanitizeImported(true)).toBe(true);
+  });
+});

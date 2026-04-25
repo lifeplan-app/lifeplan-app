@@ -39,3 +39,17 @@ function ageToYear(age) {
   if (!ca) return currentYear + Math.max(0, age - 30);
   return currentYear + (age - ca);
 }
+
+// [Phase 5b R4] インポート JSON の sanitize（__proto__ / constructor / prototype 再帰除去）
+// index.html 側の _applyImportedData からも参照可能。テスト用にも public。
+function sanitizeImported(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeImported);
+  const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+  const clean = {};
+  for (const key of Object.keys(obj)) {
+    if (DANGEROUS_KEYS.has(key)) continue;
+    clean[key] = sanitizeImported(obj[key]);
+  }
+  return clean;
+}
