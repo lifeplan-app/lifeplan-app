@@ -958,3 +958,98 @@ describe('[BUG#11] iDeCo annuity 計算（Phase 4f）', () => {
     expect(at75.totalNonAssetIncome ?? 0).toBeLessThan(5);
   });
 });
+
+// ─── BUG#12 (Phase 4g): iDeCo 一時金+年金 併用受給 ──────────
+// 修正前: idecoReceiptMethod は 'lump' or 'pension' のみ
+// 修正後: 'mixed' 値追加 + idecoLumpRatio (0-100) で比率分割
+describe('[BUG#12] iDeCo 一時金+年金 併用受給（Phase 4g）', () => {
+  let calcRetirementSimWithOpts, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcRetirementSimWithOpts = localSb.calcRetirementSimWithOpts;
+    localSb.getRetirementParams = () => ({
+      mortgageDeductStart: 0, mortgageDeductYears: 0,
+      pensionSlide: 0, expenseGrowthRate: 0, residualAssets: 0,
+    });
+    // getMedicalAddition は index.html 側で定義されるため sandbox にスタブを注入
+    localSb.getMedicalAddition = () => 0;
+  });
+
+  function setupBaseState(method = 'mixed', ratio = 50) {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 35}-01-01` },
+      finance: { income: 30, bonus: 60, expense: 20 },
+      assets: [
+        { id: 'ideco1', type: 'ideco', name: 'iDeCo', currentVal: 100, monthly: 0, annualReturn: 4 },
+      ],
+      retirement: {
+        targetAge: 65, lifeExpectancy: 90,
+        pensionMonthly: 0, pensionMonthly_p: 0, pensionAge: 65, pensionAge_p: 65,
+        severance: 0, severanceAge: null, serviceYears: 30,
+        monthlyExpense: 20, withdrawalType: 'needs',
+        idecoReceiptMethod: method, idecoStartAge: 65, idecoPensionYears: 10,
+        idecoLumpRatio: ratio,
+      },
+      lifeEvents: { housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [], children: [] },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+    };
+  }
+
+  it('mixed 50%: 一時金 50% / 年金 50% で年金額が pure pension の半分強', () => {
+    setupBaseState('mixed', 50);
+    const sim = calcRetirementSimWithOpts({});
+    const at65 = sim.find(d => d.age === 65);
+    expect(at65.totalNonAssetIncome ?? 0).toBeGreaterThan(15);
+    expect(at65.totalNonAssetIncome ?? 0).toBeLessThan(25);
+  });
+
+  it('mixed 0% は pension 単独と同等', () => {
+    setupBaseState('mixed', 0);
+    const simMixed = calcRetirementSimWithOpts({});
+    setupBaseState('pension');
+    const simPension = calcRetirementSimWithOpts({});
+    const mixed65 = simMixed.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    const pension65 = simPension.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    expect(mixed65).toBeCloseTo(pension65, 0);
+  });
+
+  it('mixed 100% は lump 単独と同等', () => {
+    setupBaseState('mixed', 100);
+    const simMixed = calcRetirementSimWithOpts({});
+    setupBaseState('lump');
+    const simLump = calcRetirementSimWithOpts({});
+    const mixed65 = simMixed.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    const lump65 = simLump.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    expect(mixed65).toBeCloseTo(lump65, 0);
+  });
+
+  it('mixed の年金額は pension 単独より少ない（pensionPortion が balance より小さいため）', () => {
+    setupBaseState('mixed', 50);
+    const simMixed = calcRetirementSimWithOpts({});
+    setupBaseState('pension');
+    const simPension = calcRetirementSimWithOpts({});
+    const mixed65 = simMixed.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    const pension65 = simPension.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    expect(mixed65).toBeLessThan(pension65);
+    expect(mixed65).toBeCloseTo(pension65 / 2, 0);
+  });
+
+  it('idecoLumpRatio 範囲外（150）はクランプして 100 として動作', () => {
+    setupBaseState('mixed', 150);
+    const simClamped = calcRetirementSimWithOpts({});
+    setupBaseState('mixed', 100);
+    const simExpected = calcRetirementSimWithOpts({});
+    const clamped65 = simClamped.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    const expected65 = simExpected.find(d => d.age === 65)?.totalNonAssetIncome ?? 0;
+    expect(clamped65).toBeCloseTo(expected65, 0);
+  });
+});

@@ -3510,12 +3510,15 @@
       <div style="padding:10px 14px;background:rgba(139,92,246,.06);border-radius:8px;border:.5px solid rgba(139,92,246,.2);margin-bottom:12px">
         <div class="form-group" style="margin:0 0 8px">
           <label>受給方法</label>
-          <div style="display:flex;gap:16px;font-size:13px;margin-top:4px">
+          <div style="display:flex;gap:16px;font-size:13px;margin-top:4px;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
               <input type="radio" name="retIdecoMethod" value="lump" onchange="onIdecoMethodChange();saveRetirementField()"> 一時金（一括）
             </label>
             <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
               <input type="radio" name="retIdecoMethod" value="pension" onchange="onIdecoMethodChange();saveRetirementField()"> 年金（分割）
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="radio" name="retIdecoMethod" value="mixed" onchange="onIdecoMethodChange();saveRetirementField()"> 併用
             </label>
           </div>
         </div>
@@ -3533,6 +3536,11 @@
               <option value="20">20 年</option>
             </select>
           </div>
+        </div>
+        <div class="form-group" id="retIdecoLumpRatioGroup" style="margin:8px 0 0;display:none">
+          <label>一時金比率（%）</label>
+          <input type="number" id="retIdecoLumpRatio" min="0" max="100" step="5" value="50" onchange="saveRetirementField()" oninput="saveRetirementField()">
+          <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">残り（100%−一時金比率）が年金部分。0% で純年金、100% で純一時金。</p>
         </div>
         <p style="font-size:11px;color:var(--text-muted);margin:8px 0 0">一時金は退職所得控除（退職金と合算）、年金は公的年金等控除（公的年金と合算）の対象です。</p>
       </div>
@@ -13937,6 +13945,9 @@ function renderRetirementPage() {
   const _targetAgeForIdeco = parseInt(r.targetAge) || 65;
   document.getElementById('retIdecoStartAge').value = parseInt(r.idecoStartAge) || _targetAgeForIdeco;
   document.getElementById('retIdecoPensionYears').value = parseInt(r.idecoPensionYears) || 10;
+  // [Phase 4g] 一時金比率
+  const _ratioEl = document.getElementById('retIdecoLumpRatio');
+  if (_ratioEl) _ratioEl.value = (r.idecoLumpRatio != null && !isNaN(parseInt(r.idecoLumpRatio))) ? parseInt(r.idecoLumpRatio) : 50;
   onIdecoMethodChange();
   document.getElementById('retWithdrawalType').value = r.withdrawalType || 'hybrid';
   document.getElementById('retWithdrawalRate').value = r.withdrawalRate || 4;
@@ -14128,6 +14139,7 @@ function saveRetirement() {
     idecoReceiptMethod: document.querySelector('input[name="retIdecoMethod"]:checked')?.value || 'lump',
     idecoStartAge: parseInt(document.getElementById('retIdecoStartAge')?.value) || (parseFloat(document.getElementById('retTargetAge').value) || 65),
     idecoPensionYears: parseInt(document.getElementById('retIdecoPensionYears')?.value) || 10,
+    idecoLumpRatio: parseInt(document.getElementById('retIdecoLumpRatio')?.value),
     pension: {
       employType: document.getElementById('penEmployType').value,
       koseiYears: parseFloat(document.getElementById('penKosei').value) || 0,
@@ -14188,7 +14200,11 @@ function populateIdecoStartAgeOptions() {
 function onIdecoMethodChange() {
   const method = document.querySelector('input[name="retIdecoMethod"]:checked')?.value || 'lump';
   const yearsGroup = document.getElementById('retIdecoPensionYearsGroup');
-  if (yearsGroup) yearsGroup.style.display = (method === 'pension') ? '' : 'none';
+  const ratioGroup = document.getElementById('retIdecoLumpRatioGroup');
+  // [Phase 4g] pension or mixed のとき年金受給期間欄を表示
+  if (yearsGroup) yearsGroup.style.display = (method === 'pension' || method === 'mixed') ? '' : 'none';
+  // [Phase 4g] mixed のときのみ一時金比率欄を表示
+  if (ratioGroup) ratioGroup.style.display = (method === 'mixed') ? '' : 'none';
 }
 
 function updateRetirementTypeUI() {

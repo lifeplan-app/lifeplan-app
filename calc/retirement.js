@@ -54,8 +54,14 @@ function calcRetirementSim() {
   // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
   const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  // [Phase 4d] iDeCo 受給方法（calcRetirementSimWithOpts と同じ判定ロジック）
-  const idecoMethodSim = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
+  // [Phase 4d/4g] iDeCo 受給方法（calcRetirementSimWithOpts と同じ判定ロジック）
+  // [Phase 4g] mixed 受給対応（一時金 + 年金 併用）
+  const idecoMethodSim = (r.idecoReceiptMethod === 'pension') ? 'pension'
+                       : (r.idecoReceiptMethod === 'mixed') ? 'mixed'
+                       : 'lump';
+  const idecoLumpRatioSim = (idecoMethodSim === 'mixed')
+    ? Math.max(0, Math.min(100, (r.idecoLumpRatio != null && !isNaN(parseInt(r.idecoLumpRatio))) ? parseInt(r.idecoLumpRatio) : 50)) / 100
+    : null;
   // 未設定時は targetAge をそのまま使用（クランプしない）。
   // 既存サンプルの snapshot 互換のため legal floor 60 を適用せず、
   // UI 側 (select 60-75) で入力を制限する。シナリオ C (targetAge=55) 等で重要。
@@ -79,7 +85,11 @@ function calcRetirementSim() {
     }, { totalBal: 0, weightedRateSum: 0 });
   const _idecoBalanceAtStartSim = _idecoStatsSim.totalBal;
   // 加重平均利回りは calcRetirementSim 側では使用しない（calcRetirementSimWithOpts 側で annuity 計算するため）
-  const idecoLumpsumSim = (idecoMethodSim === 'lump') ? _idecoBalanceAtStartSim : 0;
+  // [Phase 4g] 一時金部分: lump=全額, mixed=ratio分, pension=0
+  const idecoLumpsumSim =
+      (idecoMethodSim === 'lump')  ? _idecoBalanceAtStartSim
+    : (idecoMethodSim === 'mixed') ? _idecoBalanceAtStartSim * idecoLumpRatioSim
+    :                                 0;
   const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsumSim, serviceYears);
   const _baseWealthSim = preRetireSim[yearsToRetireAccurate]?.totalWealth
     || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -344,7 +354,13 @@ function calcRetirementSimWithOpts(opts = {}) {
   // [Phase 4d] iDeCo 受給方法（一時金 / 年金）と受給開始年齢（60-75）に対応
   // 既定値: idecoMethod='lump', idecoStartAge=targetAge, idecoPensionYears=10
   // → 既存サンプルは未指定 → targetAge ベースの一時金で従来挙動と一致
-  const idecoMethod = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
+  // [Phase 4g] mixed 受給対応（一時金 + 年金 併用）
+  const idecoMethod = (r.idecoReceiptMethod === 'pension') ? 'pension'
+                    : (r.idecoReceiptMethod === 'mixed') ? 'mixed'
+                    : 'lump';
+  const idecoLumpRatio = (idecoMethod === 'mixed')
+    ? Math.max(0, Math.min(100, (r.idecoLumpRatio != null && !isNaN(parseInt(r.idecoLumpRatio))) ? parseInt(r.idecoLumpRatio) : 50)) / 100
+    : null;
   // 未設定時は targetAge をそのまま使用（クランプしない）。
   // 既存サンプルの snapshot 互換のため legal floor 60 を適用せず、
   // UI 側 (select 60-75) で入力を制限する。シナリオ C (targetAge=55) 等で重要。
@@ -370,13 +386,21 @@ function calcRetirementSimWithOpts(opts = {}) {
     }, { totalBal: 0, weightedRateSum: 0 });
   const _idecoBalanceAtStart = _idecoStats.totalBal;
   const _idecoWeightedRate = _idecoStats.totalBal > 0 ? _idecoStats.weightedRateSum / _idecoStats.totalBal : 0;
-  // [Phase 4d] 一時金は退職所得控除に渡し、年金は 0 を渡す（控除に含めない）
-  const idecoLumpsum = (idecoMethod === 'lump') ? _idecoBalanceAtStart : 0;
+  // [Phase 4d/4g] 一時金部分（退職所得控除に渡す金額）
+  const idecoLumpsum =
+      (idecoMethod === 'lump')  ? _idecoBalanceAtStart
+    : (idecoMethod === 'mixed') ? _idecoBalanceAtStart * idecoLumpRatio
+    :                              0;
+  // [Phase 4g] 年金部分（annuity の元本）
+  const _idecoPensionPortion =
+      (idecoMethod === 'pension') ? _idecoBalanceAtStart
+    : (idecoMethod === 'mixed')   ? _idecoBalanceAtStart * (1 - idecoLumpRatio)
+    :                                0;
   // [Phase 4f] 年金額は annuity formula で算出（受給期間中の運用継続を反映）。r=0 は balance/n フォールバック。
-  const idecoYearly = (idecoMethod === 'pension')
+  const idecoYearly = (_idecoPensionPortion > 0)
     ? (_idecoWeightedRate > 0
-        ? _idecoBalanceAtStart * _idecoWeightedRate / (1 - Math.pow(1 + _idecoWeightedRate, -idecoPensionYears))
-        : _idecoBalanceAtStart / idecoPensionYears)
+        ? _idecoPensionPortion * _idecoWeightedRate / (1 - Math.pow(1 + _idecoWeightedRate, -idecoPensionYears))
+        : _idecoPensionPortion / idecoPensionYears)
     : 0;
   const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsum, serviceYears);
   // [Phase 4d] totalWealth から iDeCo 残高を引く（pension 経路でも別経路で受給するため二重計上を防ぐ）
@@ -564,8 +588,9 @@ function calcRetirementSimWithOpts(opts = {}) {
 
     let pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
-    // [Phase 4d] iDeCo 年金: 受給期間中のみ加算（公的年金と合算扱い）
-    const idecoIncomeThisYear = (idecoMethod === 'pension'
+    // [Phase 4d/4g] iDeCo 年金: 受給期間中のみ加算（公的年金と合算扱い）
+    // [Phase 4g] mixed モードでも年金部分（idecoYearly）を加算
+    const idecoIncomeThisYear = ((idecoMethod === 'pension' || idecoMethod === 'mixed')
       && age >= idecoStartAge
       && age < idecoStartAge + idecoPensionYears) ? idecoYearly : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
