@@ -93,7 +93,9 @@ function calcIntegratedSim(years, opts = {}) {
     if (state.finance?._inputMode === 'gross') annualIncome *= 0.78;
     // [Phase 4c 06-I02] 配偶者控除は calcTakeHome 本体で本実装。Phase 4b の annualIncome *= 1.005 近似は削除。
     // [Phase 2.5 09-C01 fix] 現役期の年間支出にもインフレを適用
-    let annualExpense   = getExpenseForYear(yr) * _infFactorIS;
+    // [Phase 4p F1] 保険料を支出に加算
+    const _annualInsurance = (typeof getInsurancePremiumsForYear === 'function') ? getInsurancePremiumsForYear(yr) : 0;
+    let annualExpense   = getExpenseForYear(yr) * _infFactorIS + _annualInsurance;
     // [Phase 2.5 06-C02 fix] パートナー退職後の月支出変化を加算（calcRetirementSimWithOpts:17666 と同等ロジック）
     if (_pRetireYearIS !== null && yr >= _pRetireYearIS) {
       annualExpense += _pExpChangeMonthlyIS * 12;

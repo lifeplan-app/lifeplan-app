@@ -12,4 +12,8 @@
 - 30-50 年の累計で数百〜千万円規模の差
 
 ## 実測サマリー
-（修正後に記入）
+- snapshot 差分: 全 5 シナリオで支出増 / endAssets 減（期待方向通り）
+- `getInsurancePremiumsForYear` 追加（calc/income-expense.js）
+- `calc/integrated.js` の現役期 annualExpense に加算
+- `calc/retirement.js` の退職期 totalAnnualExpense に加算
+- テスト: 226/226 グリーン (220 + BUG#18 6 件)

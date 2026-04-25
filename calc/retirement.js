@@ -630,7 +630,9 @@ function calcRetirementSimWithOpts(opts = {}) {
     const plannedOneTimeExpense = (state.expenses || []).reduce((total, e) => {
       return parseInt(e.year) === yr ? total + (parseFloat(e.amount) || 0) : total;
     }, 0);
-    const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd + recurringCost + plannedOneTimeExpense;
+    // [Phase 4p F1] 保険料を退職期支出に加算
+    const _annualInsuranceRet = (typeof getInsurancePremiumsForYear === 'function') ? getInsurancePremiumsForYear(yr) : 0;
+    const totalAnnualExpense = inflatedExpense + annualLE + medicalAdd + recurringCost + plannedOneTimeExpense + _annualInsuranceRet;
 
     // [Phase 4a 08-I03] 退職金が targetAge 以降に支給されるケースでも退職所得控除適用
     const severanceGrossThisYear = (severance > 0 && severanceAge && severanceAge > targetAge && age === severanceAge) ? severance : 0;

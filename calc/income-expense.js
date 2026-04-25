@@ -71,6 +71,25 @@ function getRecurringExpenseForYear(year) {
   }, 0);
 }
 
+// [Phase 4p F1] 保険料の年次合計取得
+// state.insurance.items[] から該当年に有効な保険料を集計（万円/年）
+// premium は月額（万円/月）、年額 = premium × 12
+function getInsurancePremiumsForYear(year) {
+  const items = (typeof state !== 'undefined' && state.insurance && state.insurance.items) || [];
+  let totalAnnual = 0;
+  const yr = parseInt(year);
+  for (const item of items) {
+    const monthly = parseFloat(item.premium) || 0;
+    if (monthly <= 0) continue;
+    const startYr = parseInt(item.startYear);
+    const endYr = parseInt(item.endYear);
+    if (startYr && yr < startYr) continue;
+    if (endYr && yr > endYr) continue;
+    totalAnnual += monthly * 12;
+  }
+  return totalAnnual;
+}
+
 // 特定の暦年における一時的な収支（正=収入、負=支出、万円）
 function getOneTimeForYear(yr) {
   const cfTotal = (state.cashFlowEvents || []).reduce((total, e) => {

@@ -1331,3 +1331,73 @@ describe('[BUG#17] Phase 4n Minor fixes', () => {
     expect(getRecurringExpenseForYear(2029)).toBe(30); // 除外対象外
   });
 });
+
+// ─── BUG#18 (Phase 4p): 保険料シミュレーション統合 (F1) ──────────
+describe('[BUG#18] Phase 4p 保険料統合', () => {
+  let getInsurancePremiumsForYear, calcIntegratedSim, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    localSb = getSandbox();
+    getInsurancePremiumsForYear = localSb.getInsurancePremiumsForYear;
+    calcIntegratedSim = localSb.calcIntegratedSim;
+  });
+
+  it('items 空 / 未定義で 0 返却', () => {
+    localSb.state = { insurance: { items: [] } };
+    expect(getInsurancePremiumsForYear(2030)).toBe(0);
+    localSb.state = {};
+    expect(getInsurancePremiumsForYear(2030)).toBe(0);
+  });
+
+  it('単一保険、期間内なら premium × 12 万返却', () => {
+    localSb.state = {
+      insurance: { items: [
+        { premium: 1.5, startYear: 2025, endYear: 2050 },
+      ]},
+    };
+    expect(getInsurancePremiumsForYear(2030)).toBeCloseTo(18, 2); // 1.5 × 12
+  });
+
+  it('期間外（startYear 前）は 0', () => {
+    localSb.state = {
+      insurance: { items: [
+        { premium: 1.5, startYear: 2025, endYear: 2050 },
+      ]},
+    };
+    expect(getInsurancePremiumsForYear(2024)).toBe(0);
+  });
+
+  it('期間外（endYear 後）は 0', () => {
+    localSb.state = {
+      insurance: { items: [
+        { premium: 1.5, startYear: 2025, endYear: 2050 },
+      ]},
+    };
+    expect(getInsurancePremiumsForYear(2051)).toBe(0);
+  });
+
+  it('endYear 未設定は終身扱い（高齢年も計上）', () => {
+    localSb.state = {
+      insurance: { items: [
+        { premium: 1.5, startYear: 2025 }, // endYear なし
+      ]},
+    };
+    expect(getInsurancePremiumsForYear(2080)).toBeCloseTo(18, 2);
+  });
+
+  it('複数保険合計', () => {
+    localSb.state = {
+      insurance: { items: [
+        { premium: 1.0, startYear: 2025, endYear: 2050 },
+        { premium: 0.5, startYear: 2025 },
+      ]},
+    };
+    expect(getInsurancePremiumsForYear(2030)).toBeCloseTo(18, 2); // (1.0 + 0.5) × 12
+  });
+});
