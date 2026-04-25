@@ -54,7 +54,7 @@ Important 8 件を 6 グループに分けて修正した記録。
 - `calcTakeHome` (index.html L16072+) に配偶者控除統合 — gross モードでパートナー低所得時に税額減
 - Phase 4b 近似削除: `calc/integrated.js` L66-71 + L98-100
 - テスト: 168/168 グリーン（160 + BUG#5 8 件）
-- 実コミット: （次行に記入）
+- 実コミット: ee6e24e
 
 ---
 
