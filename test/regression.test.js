@@ -1053,3 +1053,63 @@ describe('[BUG#12] iDeCo 一時金+年金 併用受給（Phase 4g）', () => {
     expect(clamped65).toBeCloseTo(expected65, 0);
   });
 });
+
+// ─── BUG#13 (Phase 4h): 退職所得控除 5/19 年ルール ──────────
+// 修正前: severance + iDeCo lump はすべて合算で控除適用
+// 修正後: 受給年差 ≥ 19 (退職先) or ≥ 5 (ideco先) で別枠計算
+describe('[BUG#13] 退職所得控除 5/19 年ルール（Phase 4h）', () => {
+  let calcSeveranceWith519Rule, calcSeveranceDeduction, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcSeveranceWith519Rule = localSb.calcSeveranceWith519Rule;
+    calcSeveranceDeduction = localSb.calcSeveranceDeduction;
+  });
+
+  it('severance のみ（iDeCo lump=0）→ 単独 calcSeveranceDeduction と同等', () => {
+    const result = calcSeveranceWith519Rule(2000, 65, 38, 0, 65, 30);
+    const expected = calcSeveranceDeduction(2000, 0, 38);
+    expect(result).toBeCloseTo(expected, 2);
+  });
+
+  it('iDeCo lump のみ（severance=0）→ idecoEnrollYears で控除適用', () => {
+    const result = calcSeveranceWith519Rule(0, 0, 0, 800, 65, 35);
+    const expected = calcSeveranceDeduction(0, 800, 35);
+    expect(result).toBeCloseTo(expected, 2);
+  });
+
+  it('退職金先（60 歳）+ iDeCo 後（80 歳、gap 20）→ 19 年ルール適用、別枠', () => {
+    const result = calcSeveranceWith519Rule(2000, 60, 38, 800, 80, 35);
+    const sNet = calcSeveranceDeduction(2000, 0, 38);
+    const iNet = calcSeveranceDeduction(0, 800, 35);
+    expect(result).toBeCloseTo(sNet + iNet, 2);
+    const combined = calcSeveranceDeduction(2000, 800, 38);
+    expect(result).toBeGreaterThanOrEqual(combined);
+  });
+
+  it('退職金先 + iDeCo 後（gap 10、19 年未満）→ ルール非該当、合算', () => {
+    const result = calcSeveranceWith519Rule(2000, 60, 38, 800, 70, 35);
+    const expected = calcSeveranceDeduction(2000, 800, 38);
+    expect(result).toBeCloseTo(expected, 2);
+  });
+
+  it('iDeCo 先（60 歳）+ 退職金後（70 歳、gap 10）→ 5 年ルール適用、別枠', () => {
+    const result = calcSeveranceWith519Rule(2000, 70, 38, 800, 60, 35);
+    const sNet = calcSeveranceDeduction(2000, 0, 38);
+    const iNet = calcSeveranceDeduction(0, 800, 35);
+    expect(result).toBeCloseTo(sNet + iNet, 2);
+  });
+
+  it('iDeCo 先 + 退職金後（gap 3、5 年未満）→ ルール非該当、合算', () => {
+    const result = calcSeveranceWith519Rule(2000, 65, 38, 800, 62, 35);
+    const expected = calcSeveranceDeduction(2000, 800, 38);
+    expect(result).toBeCloseTo(expected, 2);
+  });
+});
