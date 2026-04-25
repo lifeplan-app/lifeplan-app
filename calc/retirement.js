@@ -54,28 +54,33 @@ function calcRetirementSim() {
   // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
   const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  // [Phase 4a G3] iDeCo は 60 歳時点で全額一時金受取（デフォルト、UI 選択肢なし）
-  // G4 Task 3 で新設した calcSeveranceDeduction の第 2 引数に渡して退職所得控除と合算
-  // 成長後残高で近似（simple compound growth with monthly contributions）
-  const _idecoAtRetireSim = (state.assets || [])
+  // [Phase 4d] iDeCo 受給方法（calcRetirementSimWithOpts と同じ判定ロジック）
+  const idecoMethodSim = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
+  // idecoStartAge: 明示設定時は 60-75 にクランプ、未設定時は targetAge をそのまま使用（後方互換）
+  const idecoStartAgeSim = (r.idecoStartAge != null && r.idecoStartAge !== '')
+    ? Math.max(60, Math.min(75, parseInt(r.idecoStartAge)))
+    : targetAge;
+  // birth year ベースで計算（yearsToRetireAccurate と同じ方式でズレを防ぐ）
+  const _idecoStartYearSim = _birthYear ? _birthYear + idecoStartAgeSim : currentYear + Math.max(0, idecoStartAgeSim - currentAge);
+  const yearsToIdecoStartSim = Math.max(0, _idecoStartYearSim - currentYear);
+  const _idecoBalanceAtStartSim = (state.assets || [])
     .filter(a => a.type === 'ideco')
     .reduce((s, a) => {
       const rate    = ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn ?? 4))) / 100;
       const monthly = a.monthly || 0;
       let bal = a.currentVal || 0;
-      for (let y = 0; y < yearsToRetireAccurate; y++) {
+      for (let y = 0; y < yearsToIdecoStartSim; y++) {
         bal = bal * (1 + rate) + monthly * 12;
       }
       return s + bal;
     }, 0);
-  const idecoLumpsum = _idecoAtRetireSim;
-  const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsum, serviceYears);
-  // postData[0]?.startAssets が優先（calcRetirementSimWithOpts 側で iDeCo 除外済み）。
-  // フォールバック時は totalWealth から iDeCo を差し引いて二重計上を防ぐ。
+  const idecoLumpsumSim = (idecoMethodSim === 'lump') ? _idecoBalanceAtStartSim : 0;
+  const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsumSim, serviceYears);
   const _baseWealthSim = preRetireSim[yearsToRetireAccurate]?.totalWealth
     || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
+  // [Phase 4d] 必要資産計算は postData[0].startAssets 優先（既存通り）。フォールバックでは iDeCo 残高を一律差し引き。
   const assetsAtRetire = postData?.[0]?.startAssets
-    || (Math.max(0, _baseWealthSim - idecoLumpsum) + severanceAtRetire);
+    || (Math.max(0, _baseWealthSim - _idecoBalanceAtStartSim) + severanceAtRetire);
 
   // Weighted average return rate from current assets
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
@@ -331,26 +336,37 @@ function calcRetirementSimWithOpts(opts = {}) {
   // [Phase 4a 08-I03] 退職所得控除適用（UI 未入力時は targetAge-22 で近似）
   const serviceYears = parseInt(r.serviceYears) || Math.max(1, targetAge - 22);
   const severanceGross = (severance > 0 && severanceAge && severanceAge <= targetAge) ? severance : 0;
-  // [Phase 4a G3] iDeCo は 60 歳時点で全額一時金受取（デフォルト、UI 選択肢なし）
-  // 退職金と合算して退職所得控除枠を活用。サンプル全件で iDeCo 残高は退職控除枠内に収まる想定。
-  // リタイア時の iDeCo 残高（複利成長済み）を lumpsum として扱い、retired 時点で totalWealth から差し引き、
-  // 税引後ネットを severanceAtRetire に合算することで二重計上を防ぐ。
-  const _idecoAtRetire = (state.assets || [])
+  // [Phase 4d] iDeCo 受給方法（一時金 / 年金）と受給開始年齢（60-75）に対応
+  // 既定値: idecoMethod='lump', idecoStartAge=targetAge, idecoPensionYears=10
+  // → 既存サンプルは未指定 → targetAge ベースの一時金で従来挙動と一致
+  const idecoMethod = (r.idecoReceiptMethod === 'pension') ? 'pension' : 'lump';
+  // idecoStartAge: 明示設定時は 60-75 にクランプ、未設定時は targetAge をそのまま使用（後方互換）
+  const idecoStartAge = (r.idecoStartAge != null && r.idecoStartAge !== '')
+    ? Math.max(60, Math.min(75, parseInt(r.idecoStartAge)))
+    : targetAge;
+  const idecoPensionYearsRaw = parseInt(r.idecoPensionYears) || 10;
+  const idecoPensionYears = [5, 10, 15, 20].includes(idecoPensionYearsRaw) ? idecoPensionYearsRaw : 10;
+  // [Phase 4d] idecoStartAge も birth year ベースで計算（yearsToRetire と同じ方式でズレを防ぐ）
+  const _idecoStartYear = _birthYear ? _birthYear + idecoStartAge : currentYear + Math.max(0, idecoStartAge - currentAge);
+  const yearsToIdecoStart = Math.max(0, _idecoStartYear - currentYear);
+  const _idecoBalanceAtStart = (state.assets || [])
     .filter(a => a.type === 'ideco')
     .reduce((s, a) => {
       const rate    = ((a.annualReturn != null ? a.annualReturn : (ASSET_TYPES[a.type]?.defaultReturn ?? 4))) / 100;
       const monthly = a.monthly || 0;
       let bal = a.currentVal || 0;
-      for (let y = 0; y < yearsToRetire; y++) {
+      for (let y = 0; y < yearsToIdecoStart; y++) {
         bal = bal * (1 + rate) + monthly * 12;
       }
       return s + bal;
     }, 0);
-  const idecoLumpsum = _idecoAtRetire;
+  // [Phase 4d] 一時金は退職所得控除に渡し、年金は 0 を渡す（控除に含めない）
+  const idecoLumpsum = (idecoMethod === 'lump') ? _idecoBalanceAtStart : 0;
+  const idecoYearly = (idecoMethod === 'pension') ? _idecoBalanceAtStart / idecoPensionYears : 0;
   const severanceAtRetire = calcSeveranceDeduction(severanceGross, idecoLumpsum, serviceYears);
-  // totalWealth から iDeCo 残高を引き、税引後合算額を severanceAtRetire として戻す
+  // [Phase 4d] totalWealth から iDeCo 残高を引く（pension 経路でも別経路で受給するため二重計上を防ぐ）
   const _baseWealth = preRetireSim[yearsToRetire]?.totalWealth || state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
-  let assetsAtRetire = Math.max(0, _baseWealth - idecoLumpsum) + severanceAtRetire;
+  let assetsAtRetire = Math.max(0, _baseWealth - _idecoBalanceAtStart) + severanceAtRetire;
 
   const totalVal = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const baseWeightedReturn = totalVal > 0
@@ -533,6 +549,10 @@ function calcRetirementSimWithOpts(opts = {}) {
 
     let pension = age >= pensionAge ? basePensionAnnual : 0;
     const pension_p = age >= pensionAge_p ? basePensionAnnual_p : 0;
+    // [Phase 4d] iDeCo 年金: 受給期間中のみ加算（公的年金と合算扱い）
+    const idecoIncomeThisYear = (idecoMethod === 'pension'
+      && age >= idecoStartAge
+      && age < idecoStartAge + idecoPensionYears) ? idecoYearly : 0;
     const semi = (r.type === 'semi' && age < semiEndAge) ? (parseFloat(r.semiMonthlyIncome) || 0) * 12 : 0;
     // パートナーリタイア後の就労収入・支出変化（本人リタイア後もパートナーが働いている場合に加算）
     const _partnerBirthStr = state.profile?.partnerBirth || state.profile?.partnerbirth;
@@ -591,7 +611,7 @@ function calcRetirementSimWithOpts(opts = {}) {
     // [Phase 4a 08-I01] 配当に実効税率を適用（NISA/iDeCo 等は非課税扱い）
     const dividendGross = dividendPool * _divYield;
     const dividendIncome = Math.round(dividendGross * (1 - _divTaxRate));
-    const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct + dividendIncome;
+    const totalNonAssetIncome = pension + pension_p + semi + partnerWorkIncome + extra + mortgageDeduct + dividendIncome + idecoIncomeThisYear;
     const netExpense = Math.max(0, (totalAnnualExpense + _partnerExpChange + _partnerKokunen) - totalNonAssetIncome);
 
     // ===== 資産使い切り哲学: 全モードで生活費は必ず確保 =====

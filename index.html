@@ -3505,6 +3505,37 @@
         </div>
       </div>
       <div id="retSeveranceNote" style="font-size:11px;color:var(--text-muted);margin-top:-8px;margin-bottom:8px"></div>
+      <!-- [Phase 4d] iDeCo 受給設定 -->
+      <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:12px 0 8px">iDeCo 受給設定</div>
+      <div style="padding:10px 14px;background:rgba(139,92,246,.06);border-radius:8px;border:.5px solid rgba(139,92,246,.2);margin-bottom:12px">
+        <div class="form-group" style="margin:0 0 8px">
+          <label>受給方法</label>
+          <div style="display:flex;gap:16px;font-size:13px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="radio" name="retIdecoMethod" value="lump" onchange="onIdecoMethodChange();saveRetirementField()"> 一時金（一括）
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer">
+              <input type="radio" name="retIdecoMethod" value="pension" onchange="onIdecoMethodChange();saveRetirementField()"> 年金（分割）
+            </label>
+          </div>
+        </div>
+        <div class="form-row" style="margin:0">
+          <div class="form-group" style="margin:0">
+            <label>受給開始年齢</label>
+            <select id="retIdecoStartAge" onchange="saveRetirementField()"></select>
+          </div>
+          <div class="form-group" id="retIdecoPensionYearsGroup" style="margin:0;display:none">
+            <label>年金受給期間</label>
+            <select id="retIdecoPensionYears" onchange="saveRetirementField()">
+              <option value="5">5 年</option>
+              <option value="10" selected>10 年</option>
+              <option value="15">15 年</option>
+              <option value="20">20 年</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin:8px 0 0">一時金は退職所得控除（退職金と合算）、年金は公的年金等控除（公的年金と合算）の対象です。</p>
+      </div>
       <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin:12px 0 8px">その他定期収入（家賃・フリーランスなど）</div>
       <div id="retExtraIncomeList"></div>
       <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="addRetExtraIncome()">＋ 収入を追加</button>
@@ -13898,6 +13929,15 @@ function renderRetirementPage() {
   document.getElementById('retPensionMonthly_p').value = r.pensionMonthly_p || '';
   document.getElementById('retSeverance').value = r.severance || '';
   document.getElementById('retSeveranceAge').value = r.severanceAge || '';
+  // [Phase 4d] iDeCo 受給設定を UI に復元
+  populateIdecoStartAgeOptions();
+  const _idecoMethod = r.idecoReceiptMethod || 'lump';
+  const _idecoMethodInput = document.querySelector(`input[name="retIdecoMethod"][value="${_idecoMethod}"]`);
+  if (_idecoMethodInput) _idecoMethodInput.checked = true;
+  const _targetAgeForIdeco = parseInt(r.targetAge) || 65;
+  document.getElementById('retIdecoStartAge').value = parseInt(r.idecoStartAge) || _targetAgeForIdeco;
+  document.getElementById('retIdecoPensionYears').value = parseInt(r.idecoPensionYears) || 10;
+  onIdecoMethodChange();
   document.getElementById('retWithdrawalType').value = r.withdrawalType || 'hybrid';
   document.getElementById('retWithdrawalRate').value = r.withdrawalRate || 4;
   document.getElementById('retWithdrawalMonthly').value = r.withdrawalMonthly || '';
@@ -14084,6 +14124,10 @@ function saveRetirement() {
     pensionMonthly_p: parseFloat(document.getElementById('retPensionMonthly_p').value) || 0,
     severance: parseFloat(document.getElementById('retSeverance').value) || 0,
     severanceAge: parseFloat(document.getElementById('retSeveranceAge').value) || null,
+    // [Phase 4d] iDeCo 受給設定
+    idecoReceiptMethod: document.querySelector('input[name="retIdecoMethod"]:checked')?.value || 'lump',
+    idecoStartAge: parseInt(document.getElementById('retIdecoStartAge')?.value) || (parseFloat(document.getElementById('retTargetAge').value) || 65),
+    idecoPensionYears: parseInt(document.getElementById('retIdecoPensionYears')?.value) || 10,
     pension: {
       employType: document.getElementById('penEmployType').value,
       koseiYears: parseFloat(document.getElementById('penKosei').value) || 0,
@@ -14126,6 +14170,25 @@ function saveRetirement() {
   save();
   showNotification('出口戦略を保存しました');
   runRetirementSim();
+}
+
+// [Phase 4d] iDeCo 受給開始年齢の選択肢を動的生成（60-75）
+function populateIdecoStartAgeOptions() {
+  const sel = document.getElementById('retIdecoStartAge');
+  if (!sel || sel.options.length > 0) return;
+  for (let age = 60; age <= 75; age++) {
+    const opt = document.createElement('option');
+    opt.value = age;
+    opt.textContent = `${age} 歳`;
+    sel.appendChild(opt);
+  }
+}
+
+// [Phase 4d] 受給方法切替時の表示制御
+function onIdecoMethodChange() {
+  const method = document.querySelector('input[name="retIdecoMethod"]:checked')?.value || 'lump';
+  const yearsGroup = document.getElementById('retIdecoPensionYearsGroup');
+  if (yearsGroup) yearsGroup.style.display = (method === 'pension') ? '' : 'none';
 }
 
 function updateRetirementTypeUI() {

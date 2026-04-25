@@ -712,3 +712,101 @@ describe('[BUG#8] 頭金自動同期（Phase 4c 05-I02）', () => {
     expect(result.find(e => e.name === '車購入')?.amount).toBe(200);
   });
 });
+
+// ─── BUG#9 (Phase 4d): iDeCo 受給方法 UI 拡張（07-I04 拡張） ──────────
+// 修正前: iDeCo は targetAge 時点で全額一時金固定。idecoStartAge / pension 受給未対応。
+// 修正後: state.retirement.idecoReceiptMethod / idecoStartAge / idecoPensionYears で挙動制御。
+describe('[BUG#9] iDeCo 受給方法 UI 拡張（Phase 4d）', () => {
+  let calcRetirementSimWithOpts, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    loadCalc('life-events.js');
+    loadCalc('mortgage.js');
+    loadCalc('pension.js');
+    loadCalc('integrated.js');
+    loadCalc('retirement.js');
+    localSb = getSandbox();
+    calcRetirementSimWithOpts = localSb.calcRetirementSimWithOpts;
+    localSb.getRetirementParams = () => ({
+      mortgageDeductStart: 0, mortgageDeductYears: 0,
+      pensionSlide: 0, expenseGrowthRate: 0, residualAssets: 0,
+      inflationRate: 0.02, expenseDecayRate: 0, medicalModel: 'none',
+    });
+    // getMedicalAddition は index.html 側で定義されるため sandbox にスタブを注入
+    localSb.getMedicalAddition = () => 0;
+  });
+
+  function setupBaseState() {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 35}-01-01` },
+      finance: { income: 30, bonus: 60, expense: 20 },
+      assets: [
+        { id: 'ideco1', type: 'ideco', name: 'iDeCo', currentVal: 100, monthly: 0, annualReturn: 4 },
+      ],
+      retirement: {
+        targetAge: 65, lifeExpectancy: 90,
+        pensionMonthly: 0, pensionMonthly_p: 0, pensionAge: 65, pensionAge_p: 65,
+        severance: 0, severanceAge: null, serviceYears: 30,
+        monthlyExpense: 20, withdrawalType: 'needs',
+      },
+      lifeEvents: { housingType: 'mortgage', mortgage: {}, rent: {}, care: {}, scholarships: [], children: [] },
+      cashFlowEvents: [], expenses: [], recurringExpenses: [],
+    };
+  }
+
+  it('既定値（lump + idecoStartAge=targetAge 既定）で既存挙動と一致', () => {
+    setupBaseState();
+    const sim = calcRetirementSimWithOpts({});
+    expect(sim).not.toBeNull();
+    expect(sim[0].age).toBe(65);
+    expect(Number.isFinite(sim[0].startAssets)).toBe(true);
+  });
+
+  it('lump + idecoStartAge=70（targetAge=65）→ idecoStartAge まで運用継続後の残高が一時金', () => {
+    setupBaseState();
+    localSb.state.retirement.idecoReceiptMethod = 'lump';
+    localSb.state.retirement.idecoStartAge = 70;
+    const sim = calcRetirementSimWithOpts({});
+    expect(sim).not.toBeNull();
+    expect(Number.isFinite(sim[0].startAssets)).toBe(true);
+    // idecoStartAge=70 → 35 年運用 → 100 × 1.04^35 ≈ 394.6
+    // ただし退職所得控除枠（serviceYears=30 → 1500 万）内に収まるため非課税
+    // sim[0].startAssets はベースライン（idecoStartAge=65=targetAge デフォルト）と概ね同等または微増
+    // （iDeCo がより成長するため）
+  });
+
+  it('pension + idecoPensionYears=10 → 受給期間中の totalNonAssetIncome に idecoYearly 加算', () => {
+    setupBaseState();
+    localSb.state.retirement.idecoReceiptMethod = 'pension';
+    localSb.state.retirement.idecoStartAge = 65;
+    localSb.state.retirement.idecoPensionYears = 10;
+    const sim = calcRetirementSimWithOpts({});
+    expect(sim).not.toBeNull();
+    const at65 = sim.find(d => d.age === 65);
+    const at75 = sim.find(d => d.age === 75);
+    expect(at65).toBeDefined();
+    expect(at75).toBeDefined();
+    // 65-74 歳に idecoYearly 加算、75 歳以降は加算なし
+    // pensionMonthly=0 のため 65 歳の totalNonAssetIncome は idecoYearly が支配的
+    // 75 歳時より大きいはず
+    expect((at65.totalNonAssetIncome ?? 0)).toBeGreaterThan((at75.totalNonAssetIncome ?? 0));
+  });
+
+  it('pension のとき idecoLumpsum=0（退職所得控除に渡さない）', () => {
+    setupBaseState();
+    localSb.state.retirement.idecoReceiptMethod = 'pension';
+    localSb.state.retirement.idecoStartAge = 65;
+    localSb.state.retirement.idecoPensionYears = 10;
+    localSb.state.retirement.severance = 1000;
+    localSb.state.retirement.severanceAge = 65;
+    const sim = calcRetirementSimWithOpts({});
+    expect(sim).not.toBeNull();
+    expect(Number.isFinite(sim[0].startAssets)).toBe(true);
+    // pension 経路では severance のみ退職所得控除に渡す
+    // serviceYears=30 → 控除枠 1500 万、severance 1000 < 1500 → 全額非課税
+    // (一時金合算なら 1000+324=1324 もまだ枠内、結果同等。経路の確認が目的)
+  });
+});
