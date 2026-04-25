@@ -434,3 +434,63 @@ describe('[BUG#3] 同年 refi+prepay の順序固定（Phase 4c 05-I06）', () =
     expect(a.get(2030).principalEnd).toBeCloseTo(b.get(2030).principalEnd, 1);
   });
 });
+
+// ─── BUG#4 (Phase 4c): income_change 適用時の昇給継続フラグ ──────────
+// 修正前: hasOverride === true のとき selfIncome = baseIncome（以降の昇給なし）
+// 修正後: continueGrowth: true なら baseIncome × pow(1+g, yr − eventYear) を適用
+describe('[BUG#4] income_change continueGrowth フラグ（Phase 4c 02-I03）', () => {
+  let getIncomeForYearWithGrowth, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    localSb = getSandbox();
+    getIncomeForYearWithGrowth = localSb.getIncomeForYearWithGrowth;
+  });
+
+  it('continueGrowth 未指定（既定）では転職後の収入が固定される（後方互換）', () => {
+    const currentYear = new Date().getFullYear();
+    localSb.state.profile = { birth: `${currentYear - 30}-01-01` };
+    localSb.state.finance = { income: 40, bonus: 0, incomeGrowthRate: 3, incomeGrowthUntilAge: 55 };
+    localSb.state.retirement = {};
+    localSb.state.cashFlowEvents = [{
+      type: 'income_change', startAge: 40, monthlyAmount: 50, bonusAmount: 0
+      // continueGrowth 未指定
+    }];
+    const atAge40 = getIncomeForYearWithGrowth(currentYear + 10); // イベント年
+    const atAge50 = getIncomeForYearWithGrowth(currentYear + 20); // +10 年後
+    expect(atAge40).toBeCloseTo(600, 0); // 50×12 = 600
+    expect(atAge50).toBeCloseTo(600, 0); // 固定（従来挙動）
+  });
+
+  it('continueGrowth: true のとき転職後も昇給率が適用される', () => {
+    const currentYear = new Date().getFullYear();
+    localSb.state.profile = { birth: `${currentYear - 30}-01-01` };
+    localSb.state.finance = { income: 40, bonus: 0, incomeGrowthRate: 3, incomeGrowthUntilAge: 55 };
+    localSb.state.retirement = {};
+    localSb.state.cashFlowEvents = [{
+      type: 'income_change', startAge: 40, monthlyAmount: 50, bonusAmount: 0,
+      continueGrowth: true,
+    }];
+    const atAge40 = getIncomeForYearWithGrowth(currentYear + 10); // イベント年
+    const atAge50 = getIncomeForYearWithGrowth(currentYear + 20); // +10 年後
+    expect(atAge40).toBeCloseTo(600, 0);
+    // 600 × 1.03^10 ≈ 806.35
+    expect(atAge50).toBeCloseTo(600 * Math.pow(1.03, 10), 0);
+  });
+
+  it('continueGrowth: true でも untilAge 以降は昇給停止', () => {
+    const currentYear = new Date().getFullYear();
+    localSb.state.profile = { birth: `${currentYear - 30}-01-01` };
+    localSb.state.finance = { income: 40, bonus: 0, incomeGrowthRate: 3, incomeGrowthUntilAge: 50 };
+    localSb.state.retirement = {};
+    localSb.state.cashFlowEvents = [{
+      type: 'income_change', startAge: 40, monthlyAmount: 50, bonusAmount: 0,
+      continueGrowth: true,
+    }];
+    // 50歳=untilAge で昇給停止 → 60歳と50歳が同じ
+    const atAge50 = getIncomeForYearWithGrowth(currentYear + 20);
+    const atAge60 = getIncomeForYearWithGrowth(currentYear + 30);
+    expect(atAge60).toBeCloseTo(atAge50, 0);
+  });
+});

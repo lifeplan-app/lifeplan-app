@@ -106,16 +106,27 @@ function getIncomeForYearWithGrowth(yr) {
 
   // cashFlowEvents（転職・副業等）で上書きがある場合はそちら優先
   const baseIncome  = getIncomeForYear(yr);
-  const hasOverride = (state.cashFlowEvents || []).some(e => {
+  // [Phase 4c 02-I03] 適用中の income_change イベントを取得（continueGrowth 判定用）
+  const activeIncomeChange = (state.cashFlowEvents || []).find(e => {
     if (e.type !== 'income_change') return false;
     const startYr = ageToYear(e.startAge);
     const endYr = (e.endAge != null && e.endAge !== '') ? ageToYear(e.endAge) : null;
     return yr >= startYr && (endYr == null || yr < endYr);
   });
+  const hasOverride = !!activeIncomeChange;
 
   let selfIncome;
   if (hasOverride) {
-    selfIncome = baseIncome; // cashFlowEventsの値をそのまま使用
+    // [Phase 4c 02-I03] continueGrowth: true のときイベント起点で昇給を継続
+    if (activeIncomeChange.continueGrowth) {
+      const eventStartYr = ageToYear(activeIncomeChange.startAge);
+      // 昇給可能年数 = min(イベントからの経過年数, untilAge - イベント開始時の本人年齢)
+      const ageAtEventStart = currentAge + (eventStartYr - currentYear);
+      const postEventYears = Math.max(0, Math.min(yr - eventStartYr, untilAge - ageAtEventStart));
+      selfIncome = baseIncome * Math.pow(1 + growthRate, postEventYears);
+    } else {
+      selfIncome = baseIncome; // 従来挙動: 以降固定
+    }
   } else {
     // 昇給モデル（untilAge 以降は停止時点を維持）
     const selfGrowthYears = Math.max(0, Math.min(yearsElapsed, untilAge - currentAge));

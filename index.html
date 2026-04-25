@@ -12872,6 +12872,15 @@ function renderCFETypeFields(event) {
           <input type="number" id="cfeBonus" placeholder="0" min="0" value="${event?.bonusAmount ?? ''}">
         </div>
       </div>
+      <div class="form-group" style="margin-top:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+          <input type="checkbox" id="cfeContinueGrowth" ${event?.continueGrowth ? 'checked' : ''}>
+          転職・昇給後も昇給率（収入設定の「昇給率」）を継続する
+        </label>
+        <p style="font-size:11px;color:var(--text-muted);margin:4px 0 0">
+          未チェック = イベント額が以後固定 ／ チェックあり = イベント額を起点に年率 g で複利加算（昇給打ち切り年齢で停止）
+        </p>
+      </div>
       <p style="font-size:11px;color:var(--text-muted);margin:0">現在の月収: ${state.finance.income||0}万円 / ボーナス: ${state.finance.bonus||0}万円</p>`;
   } else if (type === 'expense_change') {
     container.innerHTML = `
@@ -12925,6 +12934,8 @@ function saveCFEvent() {
   if (type === 'income_change') {
     event.monthlyAmount = parseFloat(document.getElementById('cfeMonthly')?.value) || 0;
     event.bonusAmount   = parseFloat(document.getElementById('cfeBonus')?.value) || 0;
+    // [Phase 4c 02-I03]
+    event.continueGrowth = !!document.getElementById('cfeContinueGrowth')?.checked;
   } else if (type === 'expense_change') {
     event.monthlyAmount = parseFloat(document.getElementById('cfeMonthly')?.value) || 0;
   } else {

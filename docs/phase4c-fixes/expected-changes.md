@@ -26,10 +26,15 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 7: income_change 昇給継続フラグ（02-I03）
 
 ### 期待方向
-（Task 3 実施時に記入）
+- `cashFlowEvents[{type:'income_change'}]` に `continueGrowth: boolean` フィールドを追加（既定 `false`）。
+- `continueGrowth === true` のとき、イベント年を起点に `× pow(1 + growthRate, yr − eventYear)` を適用。`incomeGrowthUntilAge` 超過年は昇給停止。
+- 既存サンプル 5 シナリオはすべて `continueGrowth` 未指定 → `false` 扱い → 従来挙動を維持 → snapshot 差分なし。
+- UI: cashFlowEvent 編集モーダルに「転職・昇給後も昇給率を継続する」チェックボックスを追加。
 
 ### 実測サマリー
-（Task 3 修正後に記入）
+- snapshot 差分: **なし**（既存 5 サンプルは `continueGrowth` 未指定）
+- UI: index.html の `renderCFETypeFields` / `saveCFEvent` に continueGrowth 取り扱いを追加
+- テスト: 160/160 グリーン（157 + 新規 BUG#4 3 件）
 
 ---
 
