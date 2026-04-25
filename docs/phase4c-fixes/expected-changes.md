@@ -105,7 +105,19 @@ Important 8 件を 6 グループに分けて修正した記録。
 ## Group 10-scenario: シナリオ連動（05-I03）
 
 ### 期待方向
-（Task 7 実施時に記入）
+- `state.lifeScenario.housing.scenarios[]` の各カードに「このシナリオをメインプランに適用」ボタン追加。
+- クリック時:
+  1. confirm ダイアログ
+  2. type に応じて `state.lifeEvents.housingType` / `mortgage` / `rent` を上書き
+  3. `syncDownPaymentExpense` で頭金 expenses エントリを整合
+  4. save() + 再描画
+- 既存 `state.lifeEvents.mortgage.events[]`（refi/prepay）はスプレッド演算子で保持。
+- snapshot 対象外（UI 操作のみ）。動作確認はブラウザで手動。
 
 ### 実測サマリー
-（Task 7 修正後に記入）
+- snapshot 差分: **なし**（UI 操作のみ、snapshot 対象外）
+- UI: housing scenario カードに「メインプランに適用」ボタン追加
+- `applyHousingScenarioToPlan(idx)`: 確認ダイアログ → type 別 housingType/mortgage/rent 転記 → 頭金 expenses 再生成 → save → 再描画
+- type 'rent' のときは持ち家頭金 expenses を削除する（housingType 切替整合）
+- テスト: 179/179 グリーン維持
+- 実コミット: （下記コミット後に記入）

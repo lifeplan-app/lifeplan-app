@@ -20427,6 +20427,10 @@ function renderLsHousingCards() {
         ${sc.type === 'buy_loan' ? `　頭金: <strong style="color:${color};">${sc.downPayment}万円</strong>` : ''}
       </div>
       ${rentInputs}
+      <button onclick="applyHousingScenarioToPlan(${i})"
+              style="width:100%;margin-top:8px;padding:8px;background:${color};color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">
+        このシナリオをメインプランに適用
+      </button>
     </div>
     `;
   }).join('');
@@ -20460,6 +20464,74 @@ function updateLsHousing(idx, field, value) {
   renderLsHousingTable();
   clearTimeout(window._lsSaveTimer);
   window._lsSaveTimer = setTimeout(() => save(), 800);
+}
+
+// [Phase 4c 05-I03] 住宅シナリオをメインプラン (state.lifeEvents) に転記
+function applyHousingScenarioToPlan(idx) {
+  const scs = state.lifeScenario?.housing?.scenarios;
+  const sc = scs?.[idx];
+  if (!sc) return;
+  if (!confirm('現在の住居計画（住まいタイプ・物件価格・頭金・金利・期間または家賃）が上書きされます。続行しますか？')) return;
+
+  state.lifeEvents = state.lifeEvents || {};
+  const currentYear = new Date().getFullYear();
+
+  if (sc.type === 'rent') {
+    // 賃貸シナリオ → housingType を 'rent' に切替、rent.monthly を上書き
+    state.lifeEvents.housingType = 'rent';
+    state.lifeEvents.rent = {
+      ...(state.lifeEvents.rent || {}),
+      monthly: parseFloat(sc.monthlyRent) || 0,
+      startYear: state.lifeEvents.rent?.startYear || String(currentYear),
+    };
+    // 持ち家関連の expenses を整理（rent 切替で持ち家の頭金が残らないよう削除）
+    if (typeof syncDownPaymentExpense === 'function') {
+      state.expenses = syncDownPaymentExpense(state.expenses || [], { startYear: 0, downPayment: 0 });
+    }
+  } else if (sc.type === 'buy_cash') {
+    // 一括購入: amount=0, downPayment=purchasePrice
+    state.lifeEvents.housingType = 'mortgage';
+    state.lifeEvents.mortgage = {
+      ...(state.lifeEvents.mortgage || {}),
+      amount: 0,
+      rate: parseFloat(sc.loanRate) || 1.0,
+      term: parseInt(sc.loanYears) || 0,
+      startYear: state.lifeEvents.mortgage?.startYear || String(currentYear),
+      price: parseFloat(sc.purchasePrice) || 0,
+      downPayment: parseFloat(sc.purchasePrice) || 0, // 一括 = 全額頭金
+    };
+    if (typeof syncDownPaymentExpense === 'function') {
+      state.expenses = syncDownPaymentExpense(state.expenses || [], state.lifeEvents.mortgage);
+    }
+  } else if (sc.type === 'buy_loan') {
+    // ローン購入: amount = price - downPayment
+    state.lifeEvents.housingType = 'mortgage';
+    const price = parseFloat(sc.purchasePrice) || 0;
+    const dp = parseFloat(sc.downPayment) || 0;
+    state.lifeEvents.mortgage = {
+      ...(state.lifeEvents.mortgage || {}),
+      amount: Math.max(0, price - dp),
+      rate: parseFloat(sc.loanRate) || 1.0,
+      term: parseInt(sc.loanYears) || 35,
+      startYear: state.lifeEvents.mortgage?.startYear || String(currentYear),
+      price: price,
+      downPayment: dp,
+    };
+    if (typeof syncDownPaymentExpense === 'function') {
+      state.expenses = syncDownPaymentExpense(state.expenses || [], state.lifeEvents.mortgage);
+    }
+  }
+
+  save();
+  showNotification('メインプランに適用しました');
+
+  // ライフイベントタブが描画済みなら再描画
+  if (typeof renderLifeEventsPage === 'function') {
+    try { renderLifeEventsPage(); } catch (e) { /* タブが未表示の場合は無視 */ }
+  }
+  if (typeof renderLifeEventCharts === 'function') {
+    try { renderLifeEventCharts(); } catch (e) {}
+  }
 }
 
 // 住宅比較: 現在年齢〜老後まで全期間シミュレーション
