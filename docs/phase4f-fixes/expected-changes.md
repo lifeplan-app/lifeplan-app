@@ -20,3 +20,4 @@ iDeCo 年金受給時の運用継続（annuity 計算）の実装記録。
 - 加重平均利回り計算は残高 reduce と一体化（パフォーマンス影響なし）
 - テスト: 196/196 グリーン（192 + BUG#11 4 件）
 - `test/helpers/load-calc.js` に `_loadedFiles` ガードを追加（const 二重宣言エラー回避）
+- 実コミット: bbfcb51
