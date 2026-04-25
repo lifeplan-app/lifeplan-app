@@ -1665,3 +1665,73 @@ describe('[BUG#22] Phase 5b インポート JSON sanitize', () => {
     expect(sanitizeImported(true)).toBe(true);
   });
 });
+
+// ============================================================================
+// BUG#23: escHtml XSS payload defense (Phase 5c)
+// ----------------------------------------------------------------------------
+// Background: Phase 5a audit identified R3 (innerHTML rendering with user-input
+// fields without escape). Phase 5c applied escHtml() wrapping to ~24 sites in
+// index.html. This test verifies the escHtml function itself defends against
+// common XSS payloads.
+// ============================================================================
+
+describe('BUG#23: escHtml XSS payload defense', () => {
+  // Load escHtml definition from index.html into sandbox
+  function loadEscHtml() {
+    const fs = require('fs');
+    const path = require('path');
+    const vm = require('vm');
+    const html = fs.readFileSync(
+      path.join(process.cwd(), 'index.html'),
+      'utf8'
+    );
+    // Match: function escHtml(s) { ... single-statement body ... }
+    const match = html.match(/function escHtml\(s\)\s*\{[^}]+\}/);
+    if (!match) throw new Error('escHtml not found in index.html');
+    const sb = {};
+    vm.createContext(sb);
+    vm.runInContext(match[0], sb);
+    return sb.escHtml;
+  }
+
+  it('1. <script> タグを含む payload をエスケープする', () => {
+    const escHtml = loadEscHtml();
+    const payload = '<script>alert(1)</script>';
+    const result = escHtml(payload);
+    expect(result).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(result).not.toContain('<script>');
+  });
+
+  it('2. <img onerror=...> 系 payload をエスケープする', () => {
+    const escHtml = loadEscHtml();
+    const payload = '<img src=x onerror=alert(1)>';
+    const result = escHtml(payload);
+    expect(result).toBe('&lt;img src=x onerror=alert(1)&gt;');
+    expect(result).not.toContain('<img');
+  });
+
+  it('3. 属性値ブレイク用 quote をエスケープする', () => {
+    const escHtml = loadEscHtml();
+    const payload = '"><script>alert(1)</script>';
+    const result = escHtml(payload);
+    expect(result).toContain('&quot;');
+    expect(result).toContain('&lt;script&gt;');
+    expect(result).not.toContain('"><');
+  });
+
+  it('4. <svg onload=...> 系 payload をエスケープする', () => {
+    const escHtml = loadEscHtml();
+    const payload = '<svg onload=alert(1)>';
+    const result = escHtml(payload);
+    expect(result).toBe('&lt;svg onload=alert(1)&gt;');
+    expect(result).not.toContain('<svg');
+  });
+
+  it('5. & を最初に置換することで二重エスケープを防止する', () => {
+    const escHtml = loadEscHtml();
+    const payload = 'Tom & Jerry <html>';
+    const result = escHtml(payload);
+    expect(result).toBe('Tom &amp; Jerry &lt;html&gt;');
+    // & is replaced first, so subsequent &lt; doesn't become &amp;lt;
+  });
+});

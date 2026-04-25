@@ -7284,7 +7284,7 @@ function updateRePreview() {
 
   previewEl.style.display = 'block';
   previewEl.innerHTML = `
-    <strong>${name}</strong>　${Number(amount).toLocaleString()}万円 / ${ivLabel}　${endLabel}<br>
+    <strong>${escHtml(name)}</strong>　${Number(amount).toLocaleString()}万円 / ${ivLabel}　${endLabel}<br>
     📅 実施年：${yearStr}<br>
     💰 30年間の合計支出見込み：<strong>${Number(total30).toLocaleString()}万円</strong>（${years.length}回）`;
 }
@@ -7863,7 +7863,7 @@ function assetCard(a, growthData, ownerColor) {
             const destName = overflowTarget
               ? (overflowTarget.name || ASSET_TYPES[overflowTarget.type]?.label || '振替先') + _ownerSfx(overflowTarget)
               : '振替先';
-            phases.push({ year: stopYear, monthly: 0, label: `目標達成→${destName}へ` });
+            phases.push({ year: stopYear, monthly: 0, label: `目標達成→${escHtml(destName)}へ` });
           }
         }
         phases.sort((x, y) => x.year - y.year);
@@ -7896,7 +7896,7 @@ function assetCard(a, growthData, ownerColor) {
         const destName = overflowTarget
           ? (overflowTarget.name || ASSET_TYPES[overflowTarget.type]?.label || '振替先') + _ownerSfx(overflowTarget)
           : null;
-        const destStr = destName ? `→ ${destName}へ` : '→ 積立停止';
+        const destStr = destName ? `→ ${escHtml(destName)}へ` : '→ 積立停止';
         contribTimelineHtml = `<div style="margin-top:5px;font-size:11px;color:var(--text-muted)">
           📈 積立推移: <span style="color:var(--primary);font-weight:600">${a.startYear || currentYear}〜 ${(a.monthly).toLocaleString()}万/月</span>
           <span style="color:var(--text-muted);margin:0 3px">→</span>
@@ -9708,10 +9708,10 @@ function renderFinSummary() {
     const investItems = activeAssets.filter(a => (a.monthly||0) > 0);
     const bonusItems  = activeAssets.filter(a => (a.annualBonus||0) > 0);
     const investLines = investItems.map(a =>
-      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.monthly||0).toLocaleString()}万円/月</span></div>`
+      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${escHtml(a.name||a.type)}</span><span style="color:var(--text-muted)">−${(a.monthly||0).toLocaleString()}万円/月</span></div>`
     ).join('');
     const bonusLines = bonusItems.map(a =>
-      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${a.name||a.type}</span><span style="color:var(--text-muted)">−${(a.annualBonus||0).toLocaleString()}万円/年</span></div>`
+      `<div style="display:flex;justify-content:space-between;padding-left:12px"><span style="color:var(--text-muted)">└ ${escHtml(a.name||a.type)}</span><span style="color:var(--text-muted)">−${(a.annualBonus||0).toLocaleString()}万円/年</span></div>`
     ).join('');
     breakdown.innerHTML = `
       ${partnerIncome > 0
@@ -10189,7 +10189,7 @@ function renderFinCharts() {
       if (growth > maxGrowth) { maxGrowth = growth; maxGrowthName = asset.name || asset.type; }
     });
     if (maxGrowthName && maxGrowth > 0) {
-      insights.push(`📈 ${years}年間で最も増加するアセット：<b>${maxGrowthName}</b>（+${fmtMoney(maxGrowth)}）`);
+      insights.push(`📈 ${years}年間で最も増加するアセット：<b>${escHtml(maxGrowthName)}</b>（+${fmtMoney(maxGrowth)}）`);
     }
 
     // 老後目標額
@@ -11604,7 +11604,7 @@ function _onbStepHTML(step) {
     }
 
     case 5: {
-      const name = state.profile?.name ? state.profile.name + 'さんの' : '';
+      const name = state.profile?.name ? escHtml(state.profile.name) + 'さんの' : '';
       return `
         <div style="text-align:center;padding:8px 0">
           <div class="onb-finish-icon">✅</div>
@@ -13287,9 +13287,9 @@ function renderCFEvents() {
     <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;background:var(--surface2);margin-bottom:8px">
       <div style="width:34px;height:34px;border-radius:8px;background:${meta.color}20;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${meta.icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:600;margin-bottom:2px">${e.title || e.label || '（タイトル未設定）'}</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:2px">${escHtml(e.title || e.label || '（タイトル未設定）')}</div>
         <div style="font-size:12px;color:var(--text-muted)">${period} · ${detail}</div>
-        ${e.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${e.note}</div>` : ''}
+        ${e.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escHtml(e.note)}</div>` : ''}
       </div>
       <span style="font-size:11px;font-weight:700;color:${meta.color};padding:3px 8px;background:${meta.color}18;border-radius:20px;white-space:nowrap">${meta.label}</span>
       <button onclick="openCFEModal('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:4px;flex-shrink:0">✏️</button>
@@ -16235,7 +16235,7 @@ function renderGiftPlanList() {
             <td style="padding:6px 8px">${p.recipient}</td>
             <td style="padding:6px 8px"><span style="background:rgba(0,122,255,.1);color:var(--primary);border-radius:4px;padding:2px 6px;font-size:11px">${GIFT_METHOD_LABELS[p.method] || p.method}</span></td>
             <td style="padding:6px 8px;text-align:right;font-weight:600">${p.amount.toLocaleString()}万円</td>
-            <td style="padding:6px 8px;color:var(--text-secondary);font-size:12px">${p.memo || '－'}</td>
+            <td style="padding:6px 8px;color:var(--text-secondary);font-size:12px">${escHtml(p.memo || '－')}</td>
             <td style="padding:6px 8px;white-space:nowrap">
               <button class="btn btn-secondary btn-sm" onclick="openGiftModal('${p.id}')">編集</button>
               <button class="btn btn-sm" style="background:var(--danger);color:#fff;margin-left:4px" onclick="deleteGiftPlan('${p.id}')">削除</button>
@@ -17936,12 +17936,12 @@ function toggleRetRowDetail(tr) {
           </div>` : ''}
           ${recItems.map(e => `
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px dashed #FECACA">
-            <span style="font-size:11px;color:var(--text-secondary)">${e.emoji||'📋'} ${e.name} <span style="font-size:9px;color:var(--text-muted)">定期支出</span></span>
+            <span style="font-size:11px;color:var(--text-secondary)">${e.emoji||'📋'} ${escHtml(e.name)} <span style="font-size:9px;color:var(--text-muted)">定期支出</span></span>
             <span style="font-size:12px;font-weight:600;color:#DC2626">${fmtM(e.amount)}</span>
           </div>`).join('')}
           ${oneTimeItems.map(e => `
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:1px dashed #FECACA">
-            <span style="font-size:11px;color:var(--text-secondary)">💥 ${e.name} <span style="font-size:9px;color:var(--text-muted)">一時支出</span></span>
+            <span style="font-size:11px;color:var(--text-secondary)">💥 ${escHtml(e.name)} <span style="font-size:9px;color:var(--text-muted)">一時支出</span></span>
             <span style="font-size:12px;font-weight:600;color:#DC2626">${fmtM(e.amount)}</span>
           </div>`).join('')}
           <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:6px;margin-top:4px">
@@ -18405,7 +18405,7 @@ function runInputDiagnosis() {
 
   // ---- プロフィール ----
   if (!p.name)  errors.push({ text: '名前が未入力です（表示名に影響します）', page: 'profile' });
-  else          oks.push({ text: `名前: ${p.name}` });
+  else          oks.push({ text: `名前: ${escHtml(p.name)}` });
 
   if (!p.birth) errors.push({ text: '生年月日が未入力です。年齢計算ができないため、シミュレーションが正確に動作しません。', page: 'profile' });
   else          oks.push({ text: `生年月日: ${p.birth}` });
@@ -18454,27 +18454,27 @@ function runInputDiagnosis() {
       if (cnt > 1) {
         const [owner, name] = key.split('::');
         const ownerLabel = owner === 'partner' ? 'パートナー' : '本人';
-        warns.push({ text: `${ownerLabel}の「${name}」が${cnt}件登録されています。同じ資産の重複登録がないか確認してください。重複があると資産総額が二重計上されます。`, page: 'finance' });
+        warns.push({ text: `${ownerLabel}の「${escHtml(name)}」が${cnt}件登録されています。同じ資産の重複登録がないか確認してください。重複があると資産総額が二重計上されます。`, page: 'finance' });
       }
     });
 
     // 年利が異常に高い資産
     assets.forEach(a => {
       const r = parseFloat(a.annualReturn) || 0;
-      if (r > 15) warns.push({ text: `「${a.name}」の期待年利が${r}%と高い設定です。現実的な値か確認してください（一般的な株式インデックス: 5〜7%）。`, page: 'finance' });
+      if (r > 15) warns.push({ text: `「${escHtml(a.name)}」の期待年利が${r}%と高い設定です。現実的な値か確認してください（一般的な株式インデックス: 5〜7%）。`, page: 'finance' });
     });
 
     // 配当利回りの整合性チェック（再投資モードのみ：受取モードは配当が別途キャッシュインカムになるため除外）
     assets.filter(a => a.dividendYield > 0 && a.dividendMode !== 'cashout').forEach(a => {
       const d = parseFloat(a.dividendYield) || 0;
       const r = parseFloat(a.annualReturn) || 0;
-      if (d > r) warns.push({ text: `「${a.name}」の配当利回り（${d}%）が期待年利（${r}%）を超えています。期待年利は値上がり益＋配当の合計を入力してください。`, page: 'finance' });
+      if (d > r) warns.push({ text: `「${escHtml(a.name)}」の配当利回り（${d}%）が期待年利（${r}%）を超えています。期待年利は値上がり益＋配当の合計を入力してください。`, page: 'finance' });
     });
 
     // 積立型資産の利回りが0%チェック
     const cashTypes = ['cash', 'cash_emergency', 'cash_special', 'cash_reserved', 'cash_surplus'];
     assets.filter(a => (parseFloat(a.monthly) || 0) > 0 && (parseFloat(a.annualReturn) || 0) === 0 && !cashTypes.includes(a.type)).forEach(a => {
-      warns.push({ text: `「${a.name}」は毎月${a.monthly}万円積立中ですが期待年利が0%です。運用益がシミュレーションに反映されません。`, page: 'finance' });
+      warns.push({ text: `「${escHtml(a.name)}」は毎月${a.monthly}万円積立中ですが期待年利が0%です。運用益がシミュレーションに反映されません。`, page: 'finance' });
     });
 
     // NISAつみたて枠の月次積立上限チェック（年120万円 = 月10万円、本人・パートナー各別）
@@ -18574,7 +18574,7 @@ function runInputDiagnosis() {
   if (children.length > 0) {
     children.forEach(c => {
       if (!c.educationPhases || Object.values(c.educationPhases || {}).every(v => !v)) {
-        warns.push({ text: `${c.name || 'お子さん'}の教育費フェーズが未設定です（公立・私立の選択）。教育費の計算に使用されます。`, page: 'lifeevents' });
+        warns.push({ text: `${escHtml(c.name || 'お子さん')}の教育費フェーズが未設定です（公立・私立の選択）。教育費の計算に使用されます。`, page: 'lifeevents' });
       }
     });
   }
@@ -19737,7 +19737,7 @@ function renderScenarioCards() {
       <!-- カードヘッダー -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
         <div style="width:24px;height:24px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${label}</div>
-        <input type="text" value="${sc.name}"
+        <input type="text" value="${escHtml(sc.name)}"
           onchange="updateScenarioName(${i}, this.value)"
           style="flex:1;border:none;font-weight:700;font-size:14px;color:#333;outline:none;background:transparent;min-width:0;">
       </div>
@@ -19948,7 +19948,7 @@ function renderScenarioTable() {
 
   // ヘッダー
   const headerCells = (state.scenarioComp || []).map((sc, i) =>
-    `<th style="padding:10px;background:${SCENARIO_COLORS[i]}18;color:${SCENARIO_COLORS[i]};font-weight:700;border-bottom:2px solid ${SCENARIO_COLORS[i]};">${sc.name}</th>`
+    `<th style="padding:10px;background:${SCENARIO_COLORS[i]}18;color:${SCENARIO_COLORS[i]};font-weight:700;border-bottom:2px solid ${SCENARIO_COLORS[i]};">${escHtml(sc.name)}</th>`
   ).join('');
 
   // 各指標行
@@ -20083,10 +20083,10 @@ function renderScenarioInsights() {
     insights.push({ icon: '💡', text: 'すべてのプランで資産が枯渇します。退職年齢を遅くするか、生活費を見直してください。', color: '#DC2626' });
   } else if (okCount === scs.length) {
     const best = results.reduce((a,b,i) => (a.finalAssets||0) > (b?.finalAssets||0) ? a : {...b, i}, {...results[0], i:0});
-    insights.push({ icon: '✅', text: `すべてのプランが成立しています。最も余裕があるのは「${scs[best.i]?.name}」で、${endAge}歳時点の推計残高が ${fmtMoney(best.finalAssets)}です。`, color: '#16A34A' });
+    insights.push({ icon: '✅', text: `すべてのプランが成立しています。最も余裕があるのは「${escHtml(scs[best.i]?.name)}」で、${endAge}歳時点の推計残高が ${fmtMoney(best.finalAssets)}です。`, color: '#16A34A' });
   } else {
-    const okNames = results.map((r,i) => r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
-    const ngNames = results.map((r,i) => !r?.ok ? `「${scs[i].name}」` : null).filter(Boolean);
+    const okNames = results.map((r,i) => r?.ok ? `「${escHtml(scs[i].name)}」` : null).filter(Boolean);
+    const ngNames = results.map((r,i) => !r?.ok ? `「${escHtml(scs[i].name)}」` : null).filter(Boolean);
     insights.push({ icon: '⚠️', text: `${okNames.join('・')}は成立、${ngNames.join('・')}は資産が枯渇します。`, color: '#D97706' });
   }
 
@@ -20099,7 +20099,7 @@ function renderScenarioInsights() {
     const assetDiff = Math.round((results[maxRetireIdx].finalAssets || 0) - (results[minRetireIdx].finalAssets || 0));
     if (Math.abs(assetDiff) > 50) {
       const sign = assetDiff > 0 ? '+' : '';
-      insights.push({ icon: '📅', text: `退職を${diff}年遅らせると（${scs[minRetireIdx].name}→${scs[maxRetireIdx].name}）、${endAge}歳時点の残高が ${sign}${fmtMoney(Math.abs(assetDiff))}変わります。`, color: '#4F46E5' });
+      insights.push({ icon: '📅', text: `退職を${diff}年遅らせると（${escHtml(scs[minRetireIdx].name)}→${escHtml(scs[maxRetireIdx].name)}）、${endAge}歳時点の残高が ${sign}${fmtMoney(Math.abs(assetDiff))}変わります。`, color: '#4F46E5' });
     }
   }
 
