@@ -188,7 +188,7 @@ function getIncomeForYearWithGrowth(yr) {
 // partnerAnnualIncomeMan: パートナーの年間合計所得（万円、給与所得控除後）
 // partnerAge: パートナーの年齢（歳、null/NaN なら老人加算を無効化）
 // 戻り値: { incomeTaxDeduction: 万円, residentTaxDeduction: 万円 }
-function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge) {
+function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge, selfTotalIncomeMan) {
   const inc = parseFloat(partnerAnnualIncomeMan) || 0;
   let incomeTaxDeduction, residentTaxDeduction;
 
@@ -230,6 +230,18 @@ function calcSpouseDeduction(partnerAnnualIncomeMan, partnerAge) {
   if (age !== null && age >= 70 && inc <= 48) {
     incomeTaxDeduction += 10; // 38 → 48
     residentTaxDeduction += 5; // 33 → 38
+  }
+
+  // [Phase 4e 06-I02 軸2] 本人高所得者逓減（合計所得 900/950/1000 万円ライン）
+  // 国税庁 No.1191 / No.1195: 本人合計所得別の控除逓減
+  const selfInc = parseFloat(selfTotalIncomeMan) || 0;
+  let highIncomeMultiplier = 1;
+  if (selfInc > 1000) highIncomeMultiplier = 0;
+  else if (selfInc > 950) highIncomeMultiplier = 1/3;
+  else if (selfInc > 900) highIncomeMultiplier = 2/3;
+  if (highIncomeMultiplier !== 1) {
+    incomeTaxDeduction = Math.ceil(incomeTaxDeduction * highIncomeMultiplier);
+    residentTaxDeduction = Math.round(residentTaxDeduction * highIncomeMultiplier);
   }
 
   return { incomeTaxDeduction, residentTaxDeduction };

@@ -810,3 +810,53 @@ describe('[BUG#9] iDeCo 受給方法 UI 拡張（Phase 4d）', () => {
     // (一時金合算なら 1000+324=1324 もまだ枠内、結果同等。経路の確認が目的)
   });
 });
+
+// ─── BUG#10 (Phase 4e): 配偶者控除 軸2 本人高所得者逓減（06-I02 完全実装） ──────────
+// 修正前: calcSpouseDeduction は軸1（パートナー所得）+ 軸3（老人加算）のみ
+// 修正後: 第3引数 selfTotalIncomeMan で本人高所得者逓減（900/950/1000 万）を適用
+describe('[BUG#10] 配偶者控除 軸2 本人高所得者逓減（Phase 4e 06-I02）', () => {
+  let calcSpouseDeduction, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    localSb = getSandbox();
+    calcSpouseDeduction = localSb.calcSpouseDeduction;
+  });
+
+  it('selfTotalIncome 未指定なら軸2 適用なし（軸1+軸3 のみ）', () => {
+    const r = calcSpouseDeduction(0, 40);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('本人 850 万（≤ 900）は満額', () => {
+    const r = calcSpouseDeduction(0, 40, 850);
+    expect(r.incomeTaxDeduction).toBe(38);
+    expect(r.residentTaxDeduction).toBe(33);
+  });
+
+  it('本人 920 万（900-950）は ×2/3 → 26/22', () => {
+    const r = calcSpouseDeduction(0, 40, 920);
+    expect(r.incomeTaxDeduction).toBe(26);
+    expect(r.residentTaxDeduction).toBe(22);
+  });
+
+  it('本人 980 万（950-1000）は ×1/3 → 13/11', () => {
+    const r = calcSpouseDeduction(0, 40, 980);
+    expect(r.incomeTaxDeduction).toBe(13);
+    expect(r.residentTaxDeduction).toBe(11);
+  });
+
+  it('本人 1050 万（> 1000）は 0/0', () => {
+    const r = calcSpouseDeduction(0, 40, 1050);
+    expect(r.incomeTaxDeduction).toBe(0);
+    expect(r.residentTaxDeduction).toBe(0);
+  });
+
+  it('老人加算 + 本人 920 万 → 48×2/3=32 / 38×2/3=25', () => {
+    const r = calcSpouseDeduction(0, 70, 920);
+    expect(r.incomeTaxDeduction).toBe(32);
+    expect(r.residentTaxDeduction).toBe(25);
+  });
+});

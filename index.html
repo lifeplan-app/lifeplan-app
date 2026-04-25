@@ -16185,8 +16185,10 @@ function calcTakeHome() {
   const partnerBirthStr = state.profile?.partnerBirth;
   const partnerBirthYear = partnerBirthStr ? new Date(partnerBirthStr).getFullYear() : null;
   const partnerAge = partnerBirthYear ? (new Date().getFullYear() - partnerBirthYear) : null;
+  // [Phase 4e 06-I02 軸2] 本人合計所得 = 給与収入 - 給与所得控除
+  const selfTotalIncome = Math.max(0, grossAnnual - salaryDeduction);
   const spouseDeduction = (typeof calcSpouseDeduction === 'function')
-    ? calcSpouseDeduction(partnerTotalIncome, partnerAge)
+    ? calcSpouseDeduction(partnerTotalIncome, partnerAge, selfTotalIncome)
     : { incomeTaxDeduction: 0, residentTaxDeduction: 0 };
 
   // 課税所得 (基礎控除48万円 + 配偶者控除 所得税分)
