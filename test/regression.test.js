@@ -1401,3 +1401,53 @@ describe('[BUG#18] Phase 4p 保険料統合', () => {
     expect(getInsurancePremiumsForYear(2030)).toBeCloseTo(18, 2); // (1.0 + 0.5) × 12
   });
 });
+
+// ─── BUG#19 (Phase 4q): 贈与計画シミュレーション統合 (F2) ──────────
+describe('[BUG#19] Phase 4q 贈与計画統合', () => {
+  let getGiftExpenseForYear, getOneTimeForYear, localSb;
+  beforeAll(() => {
+    loadCalc('utils.js');
+    loadCalc('asset-growth.js');
+    loadCalc('income-expense.js');
+    localSb = getSandbox();
+    getGiftExpenseForYear = localSb.getGiftExpenseForYear;
+    getOneTimeForYear = localSb.getOneTimeForYear;
+  });
+
+  it('giftPlans 空 / 未定義で 0 返却', () => {
+    localSb.state = { inheritance: { giftPlans: [] }, profile: {}, finance: {}, cashFlowEvents: [], expenses: [], recurringExpenses: [] };
+    expect(getGiftExpenseForYear(2030)).toBe(0);
+    localSb.state = { profile: {}, finance: {}, cashFlowEvents: [], expenses: [], recurringExpenses: [] };
+    expect(getGiftExpenseForYear(2030)).toBe(0);
+  });
+
+  it('該当年なら amount 合計返却', () => {
+    localSb.state = {
+      inheritance: { giftPlans: [
+        { year: 2030, amount: 110 },
+        { year: 2030, amount: 50 },
+        { year: 2031, amount: 200 },
+      ]},
+      profile: {}, finance: {}, cashFlowEvents: [], expenses: [], recurringExpenses: [],
+    };
+    expect(getGiftExpenseForYear(2030)).toBe(160);
+    expect(getGiftExpenseForYear(2031)).toBe(200);
+    expect(getGiftExpenseForYear(2032)).toBe(0);
+  });
+
+  it('getOneTimeForYear が giftPlans を支出として減算', () => {
+    const cy = new Date().getFullYear();
+    localSb.state = {
+      profile: { birth: `${cy - 30}-01-01` },
+      finance: {},
+      cashFlowEvents: [],
+      expenses: [],
+      recurringExpenses: [],
+      inheritance: { giftPlans: [{ year: cy + 5, amount: 100 }] },
+    };
+    // year cy+5 で giftPlan 100 万円 → -100 (支出として)
+    expect(getOneTimeForYear(cy + 5)).toBe(-100);
+    // 他の年は影響なし
+    expect(getOneTimeForYear(cy + 6)).toBe(0);
+  });
+});

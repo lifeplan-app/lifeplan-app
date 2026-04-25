@@ -90,6 +90,20 @@ function getInsurancePremiumsForYear(year) {
   return totalAnnual;
 }
 
+// [Phase 4q F2] 贈与計画の年次合計取得
+// state.inheritance.giftPlans[] から該当年の amount 合計を返す（万円）
+function getGiftExpenseForYear(year) {
+  const plans = (typeof state !== 'undefined' && state.inheritance && state.inheritance.giftPlans) || [];
+  let total = 0;
+  const yr = parseInt(year);
+  for (const plan of plans) {
+    if (parseInt(plan.year) === yr) {
+      total += parseFloat(plan.amount) || 0;
+    }
+  }
+  return total;
+}
+
 // 特定の暦年における一時的な収支（正=収入、負=支出、万円）
 function getOneTimeForYear(yr) {
   const cfTotal = (state.cashFlowEvents || []).reduce((total, e) => {
@@ -108,7 +122,8 @@ function getOneTimeForYear(yr) {
     return total;
   }, 0);
 
-  return cfTotal - plannedExpenses - getRecurringExpenseForYear(yr);
+  // [Phase 4q F2] 贈与計画も一時支出として差し引く
+  return cfTotal - plannedExpenses - getRecurringExpenseForYear(yr) - getGiftExpenseForYear(yr);
 }
 
 // ===== ② 昇給モデル =====

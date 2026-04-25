@@ -10,4 +10,10 @@
 - 他 4 サンプルは影響なし（giftPlans 空）
 
 ## 実測サマリー
-（修正後に記入）
+- snapshot 差分: シナリオ D のみ変動（贈与年で oneTime 減 = 支出大）
+  - `oneTime: -125 → -235`（110万円の贈与額が正しく減算）
+  - 5 snapshot テスト × 5 シナリオD サブテスト、211 hunks
+- `getGiftExpenseForYear` 追加（calc/income-expense.js）
+- `getOneTimeForYear` で giftPlans を減算
+- 他 4 サンプル不変
+- テスト: 229/229 グリーン (226 + BUG#19 3 件)
