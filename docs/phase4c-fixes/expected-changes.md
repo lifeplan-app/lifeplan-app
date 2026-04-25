@@ -73,6 +73,7 @@ Important 8 件を 6 グループに分けて修正した記録。
 - `calc/life-events.js` で refiCost を住居費に加算
 - UI: refi 編集フォームに「諸費用（万円）」欄追加（addMortgageEvent / editMortgageEvent / saveMortgageEvent / updateMortgageEvent 対応）
 - テスト: 171/171 グリーン（168 + BUG#6 3 件）
+- 実コミット: 23b155c
 
 ---
 
