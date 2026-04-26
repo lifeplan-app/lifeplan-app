@@ -1483,7 +1483,10 @@ const SUGGESTION_TRIGGERS = [
   {
     id: 'insurance_ratio',
     emoji: '🛡️',
-    check: (d) => d.income > 0 && (d.categoryTotals?.insurance || 0) / d.income > 0.15,
+    check: (d) => {
+      const income = state.income?.monthly || 0;
+      return income > 0 && (d.categoryTotals?.insurance || 0) / income > 0.15;
+    },
     avgCheck: (avg) => {
       const income = state.income?.monthly || 0;
       return income > 0 && (avg.cats.insurance || 0) / income > 0.15;
