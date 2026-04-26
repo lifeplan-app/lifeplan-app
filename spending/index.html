@@ -3555,15 +3555,27 @@ function renderIrregularList() {
 }
 
 function toggleIrregularApproval(catId, checked) {
+  const cat = state.categories.find(c => c.id === catId);
   if (!state.lifeplanSync.irregularSuggestions) state.lifeplanSync.irregularSuggestions = [];
   let sug = state.lifeplanSync.irregularSuggestions.find(s => s.categoryId === catId);
+
+  // [Fix-F / SP-LP-04] 承認時に現在の集計期間に基づく年額を計算
+  const irrKeys = getIrregularKeys(irregularAvgYears);
+  const nYears = Math.max(irrKeys.length / 12, 1);  // Fix-D と整合
+  let catTotal = 0;
+  for (const k of irrKeys) {
+    catTotal += state.months[k]?.categoryTotals?.[catId] || 0;
+  }
+  const annualManYen = Math.round(toManYen(catTotal / nYears) * 10) / 10;
+
   if (!sug) {
-    const cat = state.categories.find(c => c.id === catId);
-    sug = { categoryId: catId, name: cat?.name || catId, amount: 0, intervalYears: 1, approved: false };
+    sug = { categoryId: catId, name: cat?.name || catId, amount: annualManYen, intervalYears: 1, approved: false };
     state.lifeplanSync.irregularSuggestions.push(sug);
   }
   sug.approved = checked;
+  sug.amount = annualManYen;  // 既存項目も最新値に更新
   saveState();
+  renderIrregularList();
 }
 
 // 連携確認モーダルを開く（confirm() の代替）
