@@ -60,4 +60,17 @@ describe('utils.parseDate', () => {
   it('日付以外の文字列は null', () => {
     expect(parseDate('not-a-date')).toBe(null);
   });
+  it('yyyy.mm.dd（ドット区切り）も許容', () => {
+    expect(parseDate('2026.04.26')).toBe('2026-04-26');
+  });
+  it('Feb 30 等の不正カレンダー日付は null', () => {
+    expect(parseDate('2026/02/30')).toBe(null);
+    expect(parseDate('2026/04/31')).toBe(null);
+  });
+  it('うるう年の Feb 29 は許可', () => {
+    expect(parseDate('2024/02/29')).toBe('2024-02-29');
+  });
+  it('うるう年でない Feb 29 は null', () => {
+    expect(parseDate('2025/02/29')).toBe(null);
+  });
 });
