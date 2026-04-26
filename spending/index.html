@@ -741,9 +741,9 @@
   <!-- Legal Footer -->
   <div style="margin-top:16px;padding:12px 0 4px;border-top:1px solid var(--border);text-align:center;font-size:10px;color:var(--text-muted);line-height:1.9">
     本アプリの情報は一般的な参考情報であり、投資助言・金融商品の勧誘ではありません。<br>
-    <a href="../legal.html#disclaimer" target="_blank" style="color:var(--primary)">免責事項</a>
+    <a href="../legal.html#disclaimer" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">免責事項</a>
     &nbsp;·&nbsp;
-    <a href="../legal.html" target="_blank" style="color:var(--primary)">プライバシーポリシー・利用規約</a>
+    <a href="../legal.html" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">プライバシーポリシー・利用規約</a>
   </div>
 
 </div>
@@ -1413,7 +1413,7 @@
 </div>
 
 <script type="module">
-import { fmt, toManYen, fmtManYen, parseDate, escHtml } from './calc/utils.js';
+import { fmt, toManYen, fmtManYen, parseDate, escHtml, sanitizeImported } from './calc/utils.js';
 import { aggregateEntries, getMonthData } from './calc/aggregate.js';
 import {
   parseCSVLine, findCol,
@@ -1427,7 +1427,7 @@ import { calcSuggestionAvg, calcSavingsImpact } from './calc/suggest.js';
 
 // 既存の onclick="someFn()" 等が動くようグローバル登録
 Object.assign(window, {
-  fmt, toManYen, fmtManYen, parseDate, escHtml,
+  fmt, toManYen, fmtManYen, parseDate, escHtml, sanitizeImported,
   aggregateEntries, getMonthData,
   parseCSVLine, findCol, mapCategoryByKey, mapCategory,
   parseMFCSV, parseZaimCSV,
@@ -2509,7 +2509,7 @@ function renderSuggestions(monthData) {
       <div style="font-size:10px;color:var(--text-muted);text-align:center;padding:4px 0 8px;line-height:1.6">
         ※ 上記は一般的な情報提供であり、特定の金融商品・サービスの購入を推奨・勧誘するものではありません。<br>
         重要な判断は専門家（FP・税理士等）にご相談ください。
-        <a href="../legal.html#disclaimer" target="_blank" style="color:var(--primary);margin-left:4px">免責事項</a>
+        <a href="../legal.html#disclaimer" target="_blank" rel="noopener noreferrer" style="color:var(--primary);margin-left:4px">免責事項</a>
       </div>`;
   } else {
     el.innerHTML = '';
@@ -3882,7 +3882,7 @@ function activatePremiumTrial() {
 
 function openPremiumWaitlist() {
   closePremiumModal();
-  window.open(PREMIUM_WAITLIST_URL, '_blank');
+  window.open(PREMIUM_WAITLIST_URL, '_blank', 'noopener');
   showNotification('📧 メールアプリが開きました。送信してください。');
 }
 
@@ -5117,22 +5117,72 @@ function exportSpendingData() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showNotification('エクスポートしました ✓');
+  showNotification('保存しました（明細を含むため、機密情報として取扱に注意してください）');
 }
+
+// [Fix R4] インポート対象として許可するトップレベルキー（allowlist）
+const SPENDING_IMPORT_ALLOWED_KEYS = [
+  '_version', '_onboardingDone',
+  'categories', 'months', 'csvConfig', 'lifeplanSync', 'settings',
+  'income', 'bonuses', 'suggestions',
+];
 
 function importSpendingData(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // [Fix R4] ファイルサイズ上限 10MB
+  if (file.size > 10 * 1024 * 1024) {
+    showNotification('ファイルが大きすぎます（10MB 以内のファイルを選択してください）');
+    event.target.value = '';
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const imported = JSON.parse(e.target.result);
+      const raw = e.target.result;
+      // [Fix R4] サイズダブルチェック（FileReader 経由でも一応）
+      if (typeof raw === 'string' && raw.length > 10 * 1024 * 1024) {
+        showNotification('ファイルが大きすぎます');
+        return;
+      }
+      let imported;
+      try {
+        imported = JSON.parse(raw);
+      } catch (jsonErr) {
+        showNotification('JSON の解析に失敗しました: ' + jsonErr.message);
+        return;
+      }
       if (!imported || typeof imported !== 'object') throw new Error('不正なデータ形式');
+
+      // [Fix R4] プロトタイプ汚染対策
+      imported = sanitizeImported(imported);
+
+      // [Fix R4] スキーマ最低限検証
+      if (imported._version && imported._version !== 'spending_v1') {
+        if (!confirm(`異なるバージョン (${imported._version}) のデータです。インポートを続行しますか？`)) return;
+      }
+      if (imported.categories !== undefined && !Array.isArray(imported.categories)) {
+        showNotification('categories が配列ではありません');
+        return;
+      }
+      if (imported.months !== undefined && (typeof imported.months !== 'object' || Array.isArray(imported.months))) {
+        showNotification('months がオブジェクトではありません');
+        return;
+      }
+
       if (!confirm('現在のデータをインポートしたデータで上書きします。よろしいですか？')) {
         event.target.value = '';
         return;
       }
-      Object.assign(state, imported);
+
+      // [Fix R4] allowlist 方式: 既知キーのみ state にコピー
+      for (const k of Object.keys(state)) delete state[k];
+      Object.assign(state, createInitialState());
+      for (const k of SPENDING_IMPORT_ALLOWED_KEYS) {
+        if (imported[k] !== undefined) state[k] = imported[k];
+      }
       saveState();
       renderDashboard();
       closeCatSettings();
@@ -5148,12 +5198,54 @@ function importSpendingData(event) {
 function importSpendingDataOnboarding(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // [Fix R4] ファイルサイズ上限 10MB
+  if (file.size > 10 * 1024 * 1024) {
+    showNotification('ファイルが大きすぎます（10MB 以内のファイルを選択してください）');
+    event.target.value = '';
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const imported = JSON.parse(e.target.result);
+      const raw = e.target.result;
+      // [Fix R4] サイズダブルチェック
+      if (typeof raw === 'string' && raw.length > 10 * 1024 * 1024) {
+        showNotification('ファイルが大きすぎます');
+        return;
+      }
+      let imported;
+      try {
+        imported = JSON.parse(raw);
+      } catch (jsonErr) {
+        showNotification('JSON の解析に失敗しました: ' + jsonErr.message);
+        return;
+      }
       if (!imported || typeof imported !== 'object') throw new Error('不正なデータ形式');
-      Object.assign(state, imported);
+
+      // [Fix R4] プロトタイプ汚染対策
+      imported = sanitizeImported(imported);
+
+      // [Fix R4] スキーマ最低限検証
+      if (imported._version && imported._version !== 'spending_v1') {
+        if (!confirm(`異なるバージョン (${imported._version}) のデータです。インポートを続行しますか？`)) return;
+      }
+      if (imported.categories !== undefined && !Array.isArray(imported.categories)) {
+        showNotification('categories が配列ではありません');
+        return;
+      }
+      if (imported.months !== undefined && (typeof imported.months !== 'object' || Array.isArray(imported.months))) {
+        showNotification('months がオブジェクトではありません');
+        return;
+      }
+
+      // [Fix R4] allowlist 方式: 既知キーのみ state にコピー
+      for (const k of Object.keys(state)) delete state[k];
+      Object.assign(state, createInitialState());
+      for (const k of SPENDING_IMPORT_ALLOWED_KEYS) {
+        if (imported[k] !== undefined) state[k] = imported[k];
+      }
       state._onboardingDone = true;
       saveState();
       document.getElementById('onboardingOverlay').style.display = 'none';

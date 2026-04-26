@@ -90,8 +90,27 @@ const SAMPLE_TANAKA = {"_version":"spending_v1","categories":[{"id":"housing","n
 
 function applyData(data) {
   if (!data || typeof data !== 'object') throw new Error('不正なデータ形式です');
+
+  // [Fix R11] プロトタイプ汚染対策（インライン版）
+  function sanitize(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    const DANGEROUS = new Set(['__proto__', 'constructor', 'prototype']);
+    const clean = {};
+    for (const k of Object.keys(obj)) {
+      if (DANGEROUS.has(k)) continue;
+      clean[k] = sanitize(obj[k]);
+    }
+    return clean;
+  }
+  data = sanitize(data);
+
+  // [Fix R11] スキーマ検証
   if (!data.categories) throw new Error('"categories" がありません');
+  if (!Array.isArray(data.categories)) throw new Error('"categories" が配列ではありません');
   if (!data.months) throw new Error('"months" がありません');
+  if (typeof data.months !== 'object' || Array.isArray(data.months)) throw new Error('"months" がオブジェクトではありません');
+
   data._onboardingDone = true;
   localStorage.setItem('spending_v1', JSON.stringify(data));
 }

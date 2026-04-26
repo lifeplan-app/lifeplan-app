@@ -33,3 +33,20 @@ export function escHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+
+/**
+ * インポートされたオブジェクトから危険なキー（プロトタイプ汚染源）を再帰的に除去
+ * __proto__ / constructor / prototype を除外した clean なコピーを返す。
+ * null / プリミティブはそのまま返す。配列は要素を再帰サニタイズしてマップ。
+ */
+export function sanitizeImported(obj) {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeImported);
+  const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+  const clean = {};
+  for (const key of Object.keys(obj)) {
+    if (DANGEROUS_KEYS.has(key)) continue;
+    clean[key] = sanitizeImported(obj[key]);
+  }
+  return clean;
+}

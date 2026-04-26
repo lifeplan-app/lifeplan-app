@@ -1,6 +1,6 @@
 // test/spending/utils.test.js
 import { describe, it, expect } from 'vitest';
-import { fmt, toManYen, fmtManYen, parseDate, escHtml } from '../../spending/calc/utils.js';
+import { fmt, toManYen, fmtManYen, parseDate, escHtml, sanitizeImported } from '../../spending/calc/utils.js';
 
 describe('utils.fmt', () => {
   it('整数円を ¥ 付きカンマ区切りで整形', () => {
@@ -103,5 +103,48 @@ describe('escHtml', () => {
   });
   it('数値は文字列化してエスケープ通過', () => {
     expect(escHtml(42)).toBe('42');
+  });
+});
+
+describe('sanitizeImported', () => {
+  it('null/プリミティブはそのまま', () => {
+    expect(sanitizeImported(null)).toBe(null);
+    expect(sanitizeImported(42)).toBe(42);
+    expect(sanitizeImported('foo')).toBe('foo');
+  });
+  it('通常オブジェクトはそのまま通る', () => {
+    const out = sanitizeImported({ a: 1, b: { c: 2 } });
+    expect(out.a).toBe(1);
+    expect(out.b.c).toBe(2);
+  });
+  it('__proto__ キーを除去', () => {
+    const malicious = JSON.parse('{"__proto__": {"evil": true}, "safe": 1}');
+    const out = sanitizeImported(malicious);
+    expect(out.safe).toBe(1);
+    expect(out.__proto__.evil).toBe(undefined);
+  });
+  it('constructor キーを除去', () => {
+    const out = sanitizeImported({ constructor: { evil: true }, safe: 1 });
+    expect(out.safe).toBe(1);
+    expect(out.constructor.evil).toBe(undefined);
+  });
+  it('prototype キーを除去', () => {
+    const out = sanitizeImported({ prototype: { evil: true }, safe: 1 });
+    expect(out.safe).toBe(1);
+    expect(out.prototype).toBe(undefined);
+  });
+  it('ネストされた dangerous キーも再帰的に除去', () => {
+    const malicious = { user: { __proto__: { evil: true }, name: 'foo' } };
+    const out = sanitizeImported(malicious);
+    expect(out.user.name).toBe('foo');
+    expect(out.user.__proto__.evil).toBe(undefined);
+  });
+  it('配列内オブジェクトも再帰サニタイズ', () => {
+    const out = sanitizeImported({
+      items: [{ __proto__: { evil: true }, name: 'a' }, { name: 'b' }],
+    });
+    expect(out.items[0].name).toBe('a');
+    expect(out.items[0].__proto__.evil).toBe(undefined);
+    expect(out.items[1].name).toBe('b');
   });
 });
