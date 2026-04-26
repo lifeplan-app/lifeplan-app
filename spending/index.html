@@ -571,9 +571,10 @@
 /* ── Premium ── */
 .premium-badge {
   display:inline-flex;align-items:center;gap:3px;
-  padding:2px 8px;
-  background:linear-gradient(135deg,#F59E0B,#D97706);
-  color:#fff;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.5px;
+  padding:1px 6px;
+  background:var(--surface2);color:var(--text-muted);
+  border:1px solid var(--border);
+  border-radius:12px;font-size:9px;font-weight:600;letter-spacing:.3px;
 }
 .premium-lock {
   position:absolute;inset:0;
@@ -724,7 +725,7 @@
   <div class="section-card" id="premiumTrendCard" style="display:none">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <span>📊 カテゴリ別トレンド分析</span>
-      <span class="premium-badge">✨ PRO</span>
+      <span class="premium-badge">PRO（準備中）</span>
     </div>
     <div id="premiumTrendContent"></div>
   </div>
@@ -733,7 +734,7 @@
   <div class="section-card" id="premiumSimCard" style="display:none">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <span>💡 改善シミュレーター</span>
-      <span class="premium-badge">✨ PRO</span>
+      <span class="premium-badge">PRO（準備中）</span>
     </div>
     <div id="premiumSimContent"></div>
   </div>
@@ -1369,7 +1370,13 @@
   <div class="modal">
     <div class="modal-title">
       <button class="modal-close" onclick="closePremiumModal()">✕</button>
-      ✨ プレミアムにアップグレード
+      プレミアム機能のご案内
+    </div>
+
+    <!-- 準備中バナー -->
+    <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#92400E;line-height:1.5">
+      ⏳ 現在ローンチ準備中です。下記は予定内容で、価格・仕様・提供開始時期は変更となる場合があります。<br>
+      無料トライアルでひと足先に機能をお試しいただけます。
     </div>
 
     <!-- 機能リスト -->
@@ -1390,11 +1397,10 @@
       </div>
     </div>
 
-    <!-- 価格カード -->
-    <div style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:1.5px solid #C7D2FE;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-align:center">
-      <div style="font-size:11px;font-weight:700;color:#4338CA;letter-spacing:.5px;margin-bottom:4px">月額プラン</div>
-      <div style="font-size:28px;font-weight:900;color:#312E81">¥980<span style="font-size:14px;font-weight:400;color:#6366F1">/月</span></div>
-      <div style="font-size:11px;color:#6366F1;margin-top:2px">いつでもキャンセル可能</div>
+    <!-- 価格カード（控えめ表示） -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">予定価格（準備中・確定前）</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text)">¥980<span style="font-size:11px;font-weight:400;color:var(--text-muted)">/月</span></div>
     </div>
 
     <!-- CTAボタン群 -->
@@ -1402,12 +1408,10 @@
       <button class="btn btn-primary btn-full" onclick="activatePremiumTrial()" style="font-size:14px;padding:13px">
         🎉 7日間 無料で試す
       </button>
-      <button class="btn btn-secondary btn-full" onclick="openPremiumWaitlist()" style="font-size:13px;padding:11px">
-        💳 有料版の購入を申し込む
-      </button>
     </div>
-    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px">
-      無料トライアルはクレジットカード不要 · 7日後に自動終了
+    <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;line-height:1.5">
+      無料トライアルはクレジットカード不要 · 7日後に自動終了<br>
+      有料プランの正式提供開始時にあらためてご案内します
     </p>
   </div>
 </div>
@@ -4038,9 +4042,9 @@ function renderPremiumStatusBanner() {
           <div style="display:flex;align-items:center;gap:10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:12px">
             <span style="font-size:18px">⏰</span>
             <div style="flex:1;font-size:12px;color:#92400E">
-              <strong>トライアル残り${daysLeft}日</strong> — 継続するには有料版にアップグレードしてください
+              <strong>トライアル残り${daysLeft}日</strong> — 有料プランは現在準備中です（正式リリース時にあらためてご案内します）
             </div>
-            <button class="btn btn-primary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">アップグレード</button>
+            <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
           </div>`;
       } else {
         el.style.display = 'none';
@@ -4050,12 +4054,12 @@ function renderPremiumStatusBanner() {
     // 期限切れ
     el.style.display = '';
     el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;background:#FEE2E2;border:1px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px">
         <span style="font-size:18px">🔒</span>
-        <div style="flex:1;font-size:12px;color:#991B1B">
-          <strong>無料トライアルが終了しました</strong> — プレミアム機能を使い続けるには有料版が必要です
+        <div style="flex:1;font-size:12px;color:var(--text-muted)">
+          <strong>無料トライアルが終了しました</strong> — 有料プランは現在準備中です。正式リリース時にあらためてご案内します
         </div>
-        <button class="btn btn-primary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">プランを見る</button>
+        <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
       </div>`;
     return;
   }
@@ -4085,7 +4089,8 @@ function renderPremiumTrend() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 カテゴリ別トレンド分析</div>
           <div style="font-size:12px;color:var(--text-muted)">6ヶ月以上の推移とカテゴリ増減を表示</div>
-          <button class="btn btn-primary" onclick="openPremiumModal()" style="margin-top:4px;font-size:13px">✨ プレミアムで解放</button>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">プレミアム機能（準備中）</div>
+          <button class="btn btn-secondary" onclick="openPremiumModal()" style="margin-top:4px;font-size:12px;padding:6px 14px">無料体験する</button>
         </div>
       </div>`;
     return;
@@ -4193,7 +4198,8 @@ function renderPremiumSim() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 改善シミュレーター</div>
           <div style="font-size:12px;color:var(--text-muted)">任意のカテゴリで節約効果を試算</div>
-          <button class="btn btn-primary" onclick="openPremiumModal()" style="margin-top:4px;font-size:13px">✨ プレミアムで解放</button>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">プレミアム機能（準備中）</div>
+          <button class="btn btn-secondary" onclick="openPremiumModal()" style="margin-top:4px;font-size:12px;padding:6px 14px">無料体験する</button>
         </div>
       </div>`;
     return;
