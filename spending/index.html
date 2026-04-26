@@ -265,26 +265,48 @@
     .cat-amount { font-size: 13px; font-weight: 700; text-align: right; min-width: 70px; flex-shrink: 0; }
     .cat-ratio { font-size: 11px; color: var(--text-muted); text-align: right; min-width: 36px; flex-shrink: 0; }
 
-    /* ── Suggestion Banner ── */
-    .suggestion-banner {
+    /* ── Suggestion Carousel ── */
+    .sug-card {
       border-radius: var(--radius); padding: 14px 14px 14px 16px;
-      margin-bottom: 10px; border-left: 4px solid;
+      border-left: 4px solid;
       display: flex; gap: 10px; align-items: flex-start;
       background: var(--surface); box-shadow: var(--shadow-sm);
     }
-    .suggestion-banner .sug-body { flex: 1; }
-    .suggestion-banner .sug-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-    .suggestion-banner .sug-detail { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
-    .suggestion-banner .sug-actions { display: flex; gap: 8px; }
+    .sug-card.sug-strong { box-shadow: 0 2px 8px rgba(0,0,0,.10); }
+    .sug-card .sug-body { flex: 1; min-width: 0; }
+    .sug-card .sug-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .sug-card .sug-detail { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
+    .sug-card .sug-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .sug-nav { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 8px 0 4px; }
+    .sug-nav-btn {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 50%; width: 28px; height: 28px;
+      cursor: pointer; font-size: 14px; line-height: 1;
+      display: flex; align-items: center; justify-content: center; color: var(--text);
+    }
+    .sug-nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .sug-counter { font-size: 12px; color: var(--text-muted); min-width: 36px; text-align: center; }
+    .sug-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .sug-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 10px; border-radius: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      font-size: 12px; cursor: pointer; transition: background .15s;
+      color: var(--text-secondary);
+    }
+    .sug-chip:hover { background: var(--bg); }
+    .sug-minimize {
+      font-size: 11px; color: var(--text-muted);
+      background: none; border: none; cursor: pointer;
+      padding: 4px 6px; margin-left: auto; white-space: nowrap;
+    }
     .sug-cta { font-size: 12px; font-weight: 600; color: #fff; padding: 5px 12px; border-radius: 20px; text-decoration: none; border: none; cursor: pointer; }
-    .sug-dismiss { font-size: 12px; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 5px; }
     .sug-badge { display: inline-block; font-size: 10px; font-weight: 700; color: #fff; padding: 2px 7px; border-radius: 10px; margin-bottom: 5px; }
     .sug-impact { margin: 6px 0 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; font-size: 12px; line-height: 1.5; }
     .sug-impact strong { color: var(--primary); }
     .sug-impact-note { display: block; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
     .sug-blog { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--primary); text-decoration: none; margin: 4px 0 8px; }
     .sug-blog:hover { text-decoration: underline; }
-    .suggestion-banner.sug-strong { box-shadow: 0 2px 8px rgba(0,0,0,.10); }
 
     /* ── Empty State ── */
     .empty-state {
@@ -1430,6 +1452,7 @@ import {
 } from './calc/csv-parser.js';
 import { calcSyncValues } from './calc/sync.js';
 import { calcSuggestionAvg, calcSavingsImpact } from './calc/suggest.js';
+import { createSugCarousel } from './calc/sug-carousel.js';
 
 // 既存の onclick="someFn()" 等が動くようグローバル登録
 Object.assign(window, {
@@ -1853,6 +1876,7 @@ function changeMonth(delta) {
 // ═══════════════════════════════════════════════════════════════
 let catChartInstance = null;
 let annualTrendChartInstance = null;
+const _sugCarousel = createSugCarousel();
 let viewMode = 'monthly';
 let currentYear = new Date().getFullYear();
 
@@ -2446,112 +2470,140 @@ function updateBudgetModeBtn() {
   btn.textContent = on ? '📊 予算モード ON' : '📊 予算モード';
 }
 
+// カルーセル用の最新 items キャッシュ（minimizeSuggestion/expandSuggestion から再描画時に使用）
+let _lastSugItems = [];
+
 function renderSuggestions(monthData) {
   const el = document.getElementById('suggestionArea');
   if (!monthData) { el.innerHTML = ''; return; }
 
-  // 3ヶ月平均データ
   const avg3 = calcSuggestionAvg(state.months, 3);
-  // lifeplan_v1 存在チェック（節約インパクト表示可否）
   const hasLifeplan = !!localStorage.getItem('lifeplan_v1');
 
-  const banners = SUGGESTION_TRIGGERS
+  _lastSugItems = SUGGESTION_TRIGGERS
     .filter(t => {
       if (state.suggestions.find(s => s.id === `${t.id}_${currentMonth}` && s.dismissed)) return false;
-      // 平均チェックがあれば平均ベース、なければ単月ベース
       if (t.avgCheck && avg3) return t.avgCheck(avg3);
       return t.check(monthData);
     })
     .map(t => {
       const sugId = `${t.id}_${currentMonth}`;
-
-      // 表示値: 平均ベースを優先
       const val = (t.getAvgValue && avg3) ? t.getAvgValue(avg3) : t.getValue(monthData);
 
-      // 3ヶ月連続でトリガーしているか（強提案バッジ）
       let isStrong = false;
       if (t.avgCheck && avg3?.keys?.length >= 3) {
-        isStrong = avg3.keys.every(k => {
-          const d = state.months[k];
-          if (!d) return false;
-          return t.check(d);
-        });
+        isStrong = avg3.keys.every(k => { const d = state.months[k]; return d && t.check(d); });
       }
 
-      // 節約インパクト計算
       let impactHtml = '';
       if (t.savingsEstimate && hasLifeplan) {
-        const avgVal = avg3 ? (t.getAvgValue ? t.getAvgValue(avg3) : null) : null;
-        // getAvgValue が数値を返す場合のみ計算
-        const avgNum = typeof avgVal === 'number' ? avgVal : null;
+        const avgNum = typeof (avg3 && t.getAvgValue ? t.getAvgValue(avg3) : null) === 'number'
+          ? (t.getAvgValue ? t.getAvgValue(avg3) : null) : null;
         if (avgNum !== null && avgNum > 0) {
           const savings = t.savingsEstimate(avgNum);
           if (savings > 500) {
-            const _lpForSavings = (() => { try { return JSON.parse(localStorage.getItem('lifeplan_v1') || 'null'); } catch (_) { return null; } })();
-            const impact = calcSavingsImpact(savings, _lpForSavings);
-            impactHtml = `
-              <div class="sug-impact">
-                💰 月 ${fmt(savings)} 節約した場合 →
-                <strong>${impact.years}年で +${impact.amount}万円</strong>
-                <span class="sug-impact-note">年利${impact.rate}%複利 ／ ${t.savingsNote || '試算'}<br>※試算です。将来の運用成果を保証するものではありません。</span>
-              </div>`;
+            const _lp = (() => { try { return JSON.parse(localStorage.getItem('lifeplan_v1') || 'null'); } catch (_e) { return null; } })();
+            const impact = calcSavingsImpact(savings, _lp);
+            impactHtml = '<div class="sug-impact">💰 月 ' + fmt(savings) + ' 節約した場合 → '
+              + '<strong>' + impact.years + '年で +' + impact.amount + '万円</strong>'
+              + '<span class="sug-impact-note">年利' + impact.rate + '%複利 ／ ' + (t.savingsNote || '試算') + '<br>※試算です。将来の運用成果を保証するものではありません。</span>'
+              + '</div>';
           }
         }
       }
 
-      // CTAリンク（affiliate-config.js の status が 'active' のときのみ表示）
       const _linkEntry = t.affiliateKey ? (typeof AFFILIATE_LINKS !== 'undefined' ? AFFILIATE_LINKS[t.affiliateKey] : null) : null;
       const link = _linkEntry?.status === 'active' ? _linkEntry : null;
       const ctaHtml = link
-        ? `<a class="sug-cta" style="background:${t.color}" href="${link.url}" target="_blank"
-            rel="sponsored noopener noreferrer"
-            onclick="trackSuggestionAction('${sugId}')">${link.label} <span style="font-size:9px;opacity:.8">PR</span></a>`
+        ? '<a class="sug-cta" style="background:' + t.color + '" href="' + link.url + '" target="_blank"'
+          + ' rel="sponsored noopener noreferrer"'
+          + ' onclick="trackSuggestionAction(\'' + sugId + '\')">' + link.label + ' <span style="font-size:9px;opacity:.8">PR</span></a>'
         : '';
 
-      // ブログ記事リンク（個別記事があればそれ、なければ blog TOP）
       const _blogSlug = SUGGESTION_BLOG_LINKS[t.id];
-      const _blogUrl  = _blogSlug ? (BLOG_BASE + _blogSlug) : BLOG_TOP;
-      const _blogLabel = _blogSlug ? '関連記事を読む' : 'ブログで詳しく見る';
-      const blogHtml = `<a class="sug-blog" href="${_blogUrl}" target="_blank" rel="noopener noreferrer">📖 ${_blogLabel} →</a>`;
+      const blogHtml = '<a class="sug-blog" href="' + (_blogSlug ? BLOG_BASE + _blogSlug : BLOG_TOP) + '" target="_blank" rel="noopener noreferrer">'
+        + '📖 ' + (_blogSlug ? '関連記事を読む' : 'ブログで詳しく見る') + ' →</a>';
 
-      return `
-        <div class="suggestion-banner${isStrong ? ' sug-strong' : ''}" style="border-left-color:${t.color}" id="sug_${sugId}">
-          <div style="font-size:24px">${t.emoji || '💡'}</div>
-          <div class="sug-body">
-            ${isStrong ? `<div class="sug-badge" style="background:${t.color}">3ヶ月連続</div>` : ''}
-            <div class="sug-title">${t.title}</div>
-            <div class="sug-detail">${t.detail(val)}</div>
-            ${impactHtml}
-            ${blogHtml}
-            <div class="sug-actions">
-              ${ctaHtml}
-              <button class="sug-dismiss" onclick="dismissSuggestion('${sugId}')">✕ 閉じる</button>
-            </div>
-          </div>
-        </div>`;
+      return { id: sugId, emoji: t.emoji || '💡', title: t.title, color: t.color, isStrong, impactHtml, ctaHtml, blogHtml, detail: t.detail(val) };
     });
 
-  if (banners.length > 0) {
-    el.innerHTML = banners.join('') + `
-      <div style="font-size:10px;color:var(--text-muted);text-align:center;padding:4px 0 8px;line-height:1.6">
-        ※ 上記は一般的な情報提供であり、特定の金融商品・サービスの購入を推奨・勧誘するものではありません。<br>
-        重要な判断は専門家（FP・税理士等）にご相談ください。
-        <a href="../legal.html#disclaimer" target="_blank" rel="noopener noreferrer" style="color:var(--primary);margin-left:4px">免責事項</a>
-      </div>`;
-  } else {
-    el.innerHTML = '';
+  _sugCarousel.setAll(_lastSugItems.map(i => i.id));
+  _applySugCarouselToDOM(el);
+}
+
+function _applySugCarouselToDOM(el) {
+  if (_lastSugItems.length === 0) { el.innerHTML = ''; return; }
+
+  const s = _sugCarousel.state();
+  const itemMap = Object.fromEntries(_lastSugItems.map(i => [i.id, i]));
+
+  const parts = [];
+
+  if (s.active.length > 0) {
+    const item = itemMap[s.current];
+    parts.push(
+      '<div class="sug-card' + (item.isStrong ? ' sug-strong' : '') + '" style="border-left-color:' + item.color + '">'
+      + '<div style="font-size:24px;flex-shrink:0">' + item.emoji + '</div>'
+      + '<div class="sug-body">'
+      + (item.isStrong ? '<div class="sug-badge" style="background:' + item.color + '">3ヶ月連続</div>' : '')
+      + '<div class="sug-title">' + item.title + '</div>'
+      + '<div class="sug-detail">' + item.detail + '</div>'
+      + item.impactHtml
+      + item.blogHtml
+      + '<div class="sug-actions">'
+      + item.ctaHtml
+      + '<button class="sug-minimize" onclick="minimizeSuggestion(\'' + item.id + '\')">− 最小化</button>'
+      + '</div></div></div>'
+    );
+    if (s.active.length > 1) {
+      parts.push(
+        '<div class="sug-nav">'
+        + '<button class="sug-nav-btn" onclick="sugNav(-1)"' + (s.idx === 0 ? ' disabled' : '') + '>‹</button>'
+        + '<span class="sug-counter">' + (s.idx + 1) + ' / ' + s.active.length + '</span>'
+        + '<button class="sug-nav-btn" onclick="sugNav(1)"' + (s.idx === s.active.length - 1 ? ' disabled' : '') + '>›</button>'
+        + '</div>'
+      );
+    }
   }
+
+  if (s.minimized.length > 0) {
+    const chips = s.minimized.map(id => {
+      const item = itemMap[id];
+      const label = item.title.length > 14 ? item.title.slice(0, 14) + '…' : item.title;
+      return '<button class="sug-chip" onclick="expandSuggestion(\'' + id + '\')" title="' + item.title + '" style="border-color:' + item.color + '">'
+        + '<span>' + item.emoji + '</span><span>' + label + '</span></button>';
+    }).join('');
+    parts.push('<div class="sug-chips">' + chips + '</div>');
+  }
+
+  parts.push(
+    '<div style="font-size:10px;color:var(--text-muted);text-align:center;padding:4px 0 8px;line-height:1.6">'
+    + '※ 上記は一般的な情報提供であり、特定の金融商品・サービスの購入を推奨・勧誘するものではありません。<br>'
+    + '重要な判断は専門家（FP・税理士等）にご相談ください。'
+    + '<a href="../legal.html#disclaimer" target="_blank" rel="noopener noreferrer" style="color:var(--primary);margin-left:4px">免責事項</a>'
+    + '</div>'
+  );
+
+  el.innerHTML = parts.join('');
+}
+
+function minimizeSuggestion(id) {
+  _sugCarousel.minimize(id);
+  _applySugCarouselToDOM(document.getElementById('suggestionArea'));
+}
+
+function expandSuggestion(id) {
+  _sugCarousel.expand(id);
+  _applySugCarouselToDOM(document.getElementById('suggestionArea'));
+}
+
+function sugNav(dir) {
+  _sugCarousel.nav(dir);
+  _applySugCarouselToDOM(document.getElementById('suggestionArea'));
 }
 
 function dismissSuggestion(id) {
-  let sug = state.suggestions.find(s => s.id === id);
-  if (!sug) {
-    sug = { id, dismissed: false, actionedAt: null, createdAt: new Date().toISOString() };
-    state.suggestions.push(sug);
-  }
-  sug.dismissed = true;
-  saveState();
-  document.getElementById('sug_' + id)?.remove();
+  minimizeSuggestion(id);
 }
 
 function trackSuggestionAction(id) {
@@ -5393,7 +5445,7 @@ Object.assign(window, {
   toggleMonthExpand, deleteMonthData,
 
   // suggestion 系
-  dismissSuggestion, trackSuggestionAction,
+  dismissSuggestion, minimizeSuggestion, expandSuggestion, sugNav, trackSuggestionAction,
 
   // premium / waitlist 系
   openPremiumModal, closePremiumModal, openPremiumWaitlist,
