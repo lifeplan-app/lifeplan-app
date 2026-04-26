@@ -487,3 +487,25 @@ function applyData(data) {
 - 平文 JSON エクスポートと「機密扱い」表示の不在
 - Premium 判定が完全にクライアント完結 — マネタイズ戦略上、運営として「バイパス可能」を許容するか要決定
 - ライフプラン連携の双方向データフロー（特に `_spendingCatId` などのマーカープロパティ）に契約検証なし
+
+---
+
+## 対応状況（2026-04-26 追記）
+
+| ID | 重要度 | Phase | commit | 状態 |
+|---|---|---|---|---|
+| R3 | 🔴 Critical | 5e-c | 0282ac0 | ✅ 修正済み |
+| R1 | 🟡 Important | 5e-b | bc6ff3d | ✅ ラベル是正 |
+| R2 | 🟡 Important | 5e-b | bc6ff3d | ✅ noopener 追加 |
+| R4 | 🟡 Important | 5e-b | bc6ff3d | ✅ 検証強化 |
+| R8 | 🟡 Important | — | — | ⏸️ 受容（構造的） |
+| R9 | 🟡 Important | — | — | ⏸️ 5e-d 候補 |
+| R10 | 🟡 Important | — | — | ⏸️ 運営判断必要 |
+| R11 | 🟢 Minor | 5e-b | bc6ff3d | ✅ 検証強化 |
+| R5/R6/R7/R12 | 🟢 Minor | — | — | ⏸️ 受容 / 別フェーズ |
+
+### 未対応のうち継続検討
+
+- R8: Premium バイパス耐性（クライアント完結アーキテクチャの設計選択）
+- R9: syncToLifeplan 型検証 layer（lifeplan_v1 破壊リスク低減）
+- R10: PREMIUM_WAITLIST_URL を運営独自ドメイン or Google Form 等に移行
