@@ -6607,8 +6607,13 @@ function _applyImportedData(jsonStr, fileName) {
     showNotification('⚠️ ファイル形式が不正です（JSON 解析失敗）', 'error');
     return;
   }
+  // [Phase 5e-d] spending_v1 の誤インポートを拒否
+  if (data && data._version === 'spending_v1') {
+    showNotification('これは支出管理アプリのデータです。ライフプランアプリ用のデータをインポートしてください。', 'error');
+    return;
+  }
   if (!data._version && !data.profile && !data.assets) {
-    showNotification('⚠️ 対応していないファイル形式です');
+    showNotification('⚠️ ライフプランアプリのデータ形式と一致しません', 'error');
     return;
   }
   // [Phase 5b R4] 危険 key を再帰除去

@@ -105,6 +105,11 @@ function applyData(data) {
   }
   data = sanitize(data);
 
+  // [Phase 5e-d] cross-app import 拒否
+  if (data._version === 'lifeplan_v1') {
+    throw new Error('これはライフプランアプリのデータです。支出管理アプリ用のデータをご利用ください。');
+  }
+
   // [Fix R11] スキーマ検証
   if (!data.categories) throw new Error('"categories" がありません');
   if (!Array.isArray(data.categories)) throw new Error('"categories" が配列ではありません');

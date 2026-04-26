@@ -3696,11 +3696,22 @@ function doSyncToLifeplan() {
   }
   const lp = lpNow;  // 以降は最新値で更新
 
+  // [Phase 5e-d / R9] lp が plain object であることを検証
+  if (Array.isArray(lp) || typeof lp !== 'object' || lp === null) {
+    showNotification('ライフプランデータが破損しています（連携を中止しました）');
+    return;
+  }
+
   if (!lp.finance) lp.finance = {};
 
   // [Fix-2] 初回連携時の元値を保存（再連携時は既存の prev を保持）
   if (lp._spendingExpensePrev === undefined) {
     lp._spendingExpensePrev = lp.finance.expense ?? null;
+  }
+  // [Phase 5e-d / R9] manYen 検証
+  if (!Number.isFinite(manYen) || manYen < 0) {
+    showNotification('連携値が異常のため中断しました（金額が不正）');
+    return;
   }
   lp.finance.expense = manYen;
 
@@ -3797,6 +3808,12 @@ function unsyncFromLifeplan() {
   } catch(e) { lp = null; }
   if (!lp) {
     showNotification('lifeplan_v1 が見つかりません');
+    return;
+  }
+
+  // [Phase 5e-d / R9] lp が plain object であることを検証
+  if (Array.isArray(lp) || typeof lp !== 'object' || lp === null) {
+    showNotification('ライフプランデータが破損しています（連携解除を中止しました）');
     return;
   }
 
@@ -5159,9 +5176,21 @@ function importSpendingData(event) {
       // [Fix R4] プロトタイプ汚染対策
       imported = sanitizeImported(imported);
 
+      // [Phase 5e-d] _version 検証を厳格化（クロスアプリインポート拒否）
+      if (imported._version === 'lifeplan_v1') {
+        showNotification('これはライフプランアプリのデータです。支出管理アプリ用のデータをインポートしてください。');
+        return;
+      }
       // [Fix R4] スキーマ最低限検証
       if (imported._version && imported._version !== 'spending_v1') {
         if (!confirm(`異なるバージョン (${imported._version}) のデータです。インポートを続行しますか？`)) return;
+      }
+      // [Phase 5e-d] _version が無い場合は categories / months 存在で簡易判定（旧バージョン互換）
+      if (!imported._version) {
+        if (!imported.categories || !imported.months) {
+          showNotification('支出管理アプリのデータ形式と一致しません（categories/months 不在）');
+          return;
+        }
       }
       if (imported.categories !== undefined && !Array.isArray(imported.categories)) {
         showNotification('categories が配列ではありません');
@@ -5227,9 +5256,21 @@ function importSpendingDataOnboarding(event) {
       // [Fix R4] プロトタイプ汚染対策
       imported = sanitizeImported(imported);
 
+      // [Phase 5e-d] _version 検証を厳格化（クロスアプリインポート拒否）
+      if (imported._version === 'lifeplan_v1') {
+        showNotification('これはライフプランアプリのデータです。支出管理アプリ用のデータをインポートしてください。');
+        return;
+      }
       // [Fix R4] スキーマ最低限検証
       if (imported._version && imported._version !== 'spending_v1') {
         if (!confirm(`異なるバージョン (${imported._version}) のデータです。インポートを続行しますか？`)) return;
+      }
+      // [Phase 5e-d] _version が無い場合は categories / months 存在で簡易判定（旧バージョン互換）
+      if (!imported._version) {
+        if (!imported.categories || !imported.months) {
+          showNotification('支出管理アプリのデータ形式と一致しません（categories/months 不在）');
+          return;
+        }
       }
       if (imported.categories !== undefined && !Array.isArray(imported.categories)) {
         showNotification('categories が配列ではありません');
