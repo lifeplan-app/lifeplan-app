@@ -3372,8 +3372,10 @@ function renderSync() {
     const d = new Date(syncedAt);
     const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
     const exp = state.lifeplanSync.monthlyExpense;
+    // 値は number / Date 由来のみ（XSS リスクなし）。[Fix-2] で連携解除ボタンを追加。
     statusEl.innerHTML = `<span style="color:#10B981;font-weight:600">✓ 最終連携: ${dateStr}</span>`
-      + (exp ? `<br><span style="color:var(--text-muted)">ライフプランの月間生活費: ${exp}万円</span>` : '');
+      + (exp ? `<br><span style="color:var(--text-muted)">ライフプランの月間生活費: ${exp}万円</span>` : '')
+      + `<br><button class="btn btn-outline" style="font-size:11px;padding:4px 10px;margin-top:8px" onclick="unsyncFromLifeplan()">連携を解除</button>`;
     if (linkEl) linkEl.style.display = '';
   } else {
     statusEl.textContent = '';
@@ -3615,13 +3617,41 @@ function doSyncToLifeplan() {
   const params = _pendingSyncParams;  // 先に退避
   closeSyncConfirmModal();            // ← ここで _pendingSyncParams = null になる
   if (!params) return;
-  const { vals, lp, manYen, excludeHousing, excludeFamily } = params;
+  const { vals, lp: lpAtOpen, manYen, excludeHousing, excludeFamily } = params;
+
+  // [Fix-1] モーダル表示中に lifeplan_v1 が編集されていないか確認
+  let lpNow;
+  try {
+    const saved = localStorage.getItem('lifeplan_v1');
+    lpNow = saved ? JSON.parse(saved) : null;
+  } catch(e) { lpNow = null; }
+  if (!lpNow) {
+    showNotification('ライフプランデータが見つかりません');
+    return;
+  }
+  if (JSON.stringify(lpAtOpen) !== JSON.stringify(lpNow)) {
+    if (!confirm('別タブまたは別操作でライフプランデータが更新されています。\n最新の状態に対して連携を実行しますか？\n（キャンセルすると連携を中止します）')) {
+      return;
+    }
+  }
+  const lp = lpNow;  // 以降は最新値で更新
 
   if (!lp.finance) lp.finance = {};
+
+  // [Fix-2] 初回連携時の元値を保存（再連携時は既存の prev を保持）
+  if (lp._spendingExpensePrev === undefined) {
+    lp._spendingExpensePrev = lp.finance.expense ?? null;
+  }
   lp.finance.expense = manYen;
 
   // 承認済み不定期費用を recurringExpenses に追加
-  const approved = (state.lifeplanSync.irregularSuggestions || []).filter(s => s.approved);
+  // [Fix-3] irregular_variable は一回限りの特別費なので毎年計上扱いにせずスキップ
+  const approved = (state.lifeplanSync.irregularSuggestions || []).filter(s => {
+    if (!s.approved) return false;
+    const cat = state.categories.find(c => c.id === s.categoryId);
+    if (!cat) return false;
+    return cat.domain === 'irregular_fixed';
+  });
   if (approved.length > 0) {
     if (!lp.recurringExpenses) lp.recurringExpenses = [];
 
@@ -3694,6 +3724,56 @@ function doSyncToLifeplan() {
 
   showNotification('ライフプランに連携しました ✓');
 }
+
+// [Fix-2] ライフプラン連携を解除し、finance.expense を連携前値に復元
+function unsyncFromLifeplan() {
+  if (!confirm('ライフプラン連携を解除し、月間生活費を連携前の値に戻しますか？\n（自動追加された不定期費用も削除されます）')) return;
+
+  let lp;
+  try {
+    const saved = localStorage.getItem('lifeplan_v1');
+    lp = saved ? JSON.parse(saved) : null;
+  } catch(e) { lp = null; }
+  if (!lp) {
+    showNotification('lifeplan_v1 が見つかりません');
+    return;
+  }
+
+  // finance.expense を連携前値に戻す
+  if (lp._spendingExpensePrev !== undefined) {
+    if (lp._spendingExpensePrev === null) {
+      if (lp.finance) delete lp.finance.expense;
+    } else {
+      if (!lp.finance) lp.finance = {};
+      lp.finance.expense = lp._spendingExpensePrev;
+    }
+  }
+
+  // 自動追加された recurringExpenses を削除
+  if (Array.isArray(lp.recurringExpenses)) {
+    lp.recurringExpenses = lp.recurringExpenses.filter(r => !r._spendingCatId);
+  }
+
+  // 連携メタデータを全削除
+  delete lp._spendingSyncedAt;
+  delete lp._spendingExpense;
+  delete lp._spendingExpensePrev;
+  delete lp._spendingBasedOn;
+
+  localStorage.setItem('lifeplan_v1', JSON.stringify(lp));
+
+  state.settings.linkedToLifeplan   = false;
+  state.lifeplanSync.syncedAt       = null;
+  state.lifeplanSync.monthlyExpense = null;
+  state.lifeplanSync.basedOnMonths  = [];
+  saveState();
+
+  showNotification('ライフプラン連携を解除しました');
+  if (typeof renderSync === 'function') renderSync();
+  if (typeof updateLifeplanConnCard === 'function') updateLifeplanConnCard();
+}
+// [Fix-2] onclick="unsyncFromLifeplan()" 等から呼び出せるよう window に登録
+window.unsyncFromLifeplan = unsyncFromLifeplan;
 
 // ═══════════════════════════════════════════════════════════════
 // PREMIUM
