@@ -27,7 +27,7 @@
 | **R6**  | `keepRawMonths=3` で raw を null 化、`spending_v1` 容量・iOS ITP 影響 | 🟢 Minor | 別フェーズ |
 | **R7**  | spending 側に PDF 出力なし（OS 印刷経路のみ） | 🟢 Minor | 受容 |
 | **R8**  | `isPremium()` は localStorage 改竄で容易にバイパス可（クライアント完結なので構造的問題） | 🟡 Important | 設計上受容 / 要表記 |
-| **R9**  | `syncToLifeplan` / `unsyncFromLifeplan` が壊れた spending state で `lifeplan_v1` を破壊しうる | 🟡 Important | 要対応（5e-c） |
+| **R9**  | `syncToLifeplan` / `unsyncFromLifeplan` が壊れた spending state で `lifeplan_v1` を破壊しうる | 🟡 Important | ✅ 修正済み（5e-d / b9aa081） |
 | **R10** | `PREMIUM_WAITLIST_URL` で運営メアドが平文露出（スパムリスク） | 🟡 Important | 要対応（任意） |
 | **R11** | `load-data.html` は CSP の対象だがスキーマ検証が浅い（`categories`/`months` 存在チェックのみ） | 🟢 Minor | 要対応（5e-b） |
 | **R12** | Service Worker が cross-origin（cdnjs）レスポンスを無条件キャッシュ | 🟢 Minor | 別フェーズ |
@@ -312,6 +312,30 @@ function isPremium() {
 - `lp` が plain object であることを `Array.isArray` で否定検証
 - `_spendingCatId` の代わりに `Symbol` または UUID prefix を使う
 
+**対応 (Phase 5e-d / b9aa081)**:
+- ✅ `doSyncToLifeplan`: `manYen` の `Number.isFinite` + 非負検証を追加
+- ✅ `doSyncToLifeplan`: `lp` が plain object（非配列）か検証を追加
+- ✅ `unsyncFromLifeplan`: 同等の plain object 検証を追加
+- ⏸️ `_spendingCatId` の Symbol 化は未対応（互換性のため別フェーズで検討）
+
+---
+
+### 🟡 クロスアプリインポート拒否 (Phase 5e-d 追加対応)
+
+**背景**: spending と lifeplan は同一オリジンで `localStorage` を共有するが、
+インポート機能で互いのデータ形式を誤って読み込ませると state が汚染される。
+
+**対応 (Phase 5e-d / b9aa081)**:
+- ✅ spending `importSpendingData` / `importSpendingDataOnboarding`:
+  - `_version === 'lifeplan_v1'` なら明示的に拒否
+  - `_version` 不在 + `categories`/`months` 不在も拒否（旧バージョン互換）
+- ✅ lifeplan `_applyImportedData`:
+  - `_version === 'spending_v1'` なら明示的に拒否
+- ✅ spending `load-data.html` `applyData`:
+  - `_version === 'lifeplan_v1'` なら明示的に拒否
+
+これにより R4 経路と組み合わせた相互汚染リスクを構造的に遮断。
+
 ---
 
 ### 🟡 R10: `PREMIUM_WAITLIST_URL` のメアド露出
@@ -499,7 +523,8 @@ function applyData(data) {
 | R2 | 🟡 Important | 5e-b | bc6ff3d | ✅ noopener 追加 |
 | R4 | 🟡 Important | 5e-b | bc6ff3d | ✅ 検証強化 |
 | R8 | 🟡 Important | — | — | ⏸️ 受容（構造的） |
-| R9 | 🟡 Important | — | — | ⏸️ 5e-d 候補 |
+| R9 | 🟡 Important | 5e-d | b9aa081 | ✅ 修正済み |
+| クロスアプリインポート拒否 | 🟡 Important | 5e-d | b9aa081 | ✅ 修正済み |
 | R10 | 🟡 Important | — | — | ⏸️ 運営判断必要 |
 | R11 | 🟢 Minor | 5e-b | bc6ff3d | ✅ 検証強化 |
 | R5/R6/R7/R12 | 🟢 Minor | — | — | ⏸️ 受容 / 別フェーズ |
@@ -507,5 +532,4 @@ function applyData(data) {
 ### 未対応のうち継続検討
 
 - R8: Premium バイパス耐性（クライアント完結アーキテクチャの設計選択）
-- R9: syncToLifeplan 型検証 layer（lifeplan_v1 破壊リスク低減）
 - R10: PREMIUM_WAITLIST_URL を運営独自ドメイン or Google Form 等に移行
