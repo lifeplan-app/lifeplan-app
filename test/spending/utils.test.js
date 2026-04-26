@@ -1,6 +1,6 @@
 // test/spending/utils.test.js
 import { describe, it, expect } from 'vitest';
-import { fmt, toManYen, fmtManYen, parseDate } from '../../spending/calc/utils.js';
+import { fmt, toManYen, fmtManYen, parseDate, escHtml } from '../../spending/calc/utils.js';
 
 describe('utils.fmt', () => {
   it('整数円を ¥ 付きカンマ区切りで整形', () => {
@@ -72,5 +72,36 @@ describe('utils.parseDate', () => {
   });
   it('うるう年でない Feb 29 は null', () => {
     expect(parseDate('2025/02/29')).toBe(null);
+  });
+});
+
+describe('escHtml', () => {
+  it('null/undefined は空文字', () => {
+    expect(escHtml(null)).toBe('');
+    expect(escHtml(undefined)).toBe('');
+  });
+  it('通常文字列はそのまま', () => {
+    expect(escHtml('普通のカテゴリ名')).toBe('普通のカテゴリ名');
+  });
+  it('<script> タグをエスケープ', () => {
+    const r = escHtml('<script>alert(1)</script>');
+    expect(r).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(r).not.toContain('<script>');
+  });
+  it('属性内 quote をエスケープ', () => {
+    const r = escHtml('" onfocus="alert(1)');
+    expect(r).toContain('&quot;');
+    expect(r).not.toContain('"');
+  });
+  it("単引用符もエスケープ", () => {
+    const r = escHtml("' onfocus='alert(1)");
+    expect(r).toContain('&#39;');
+    expect(r).not.toContain("'");
+  });
+  it('& は最初に置換 (二重エスケープ防止)', () => {
+    expect(escHtml('Tom & Jerry <html>')).toBe('Tom &amp; Jerry &lt;html&gt;');
+  });
+  it('数値は文字列化してエスケープ通過', () => {
+    expect(escHtml(42)).toBe('42');
   });
 });

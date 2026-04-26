@@ -1413,7 +1413,7 @@
 </div>
 
 <script type="module">
-import { fmt, toManYen, fmtManYen, parseDate } from './calc/utils.js';
+import { fmt, toManYen, fmtManYen, parseDate, escHtml } from './calc/utils.js';
 import { aggregateEntries, getMonthData } from './calc/aggregate.js';
 import {
   parseCSVLine, findCol,
@@ -1427,7 +1427,7 @@ import { calcSuggestionAvg, calcSavingsImpact } from './calc/suggest.js';
 
 // 既存の onclick="someFn()" 等が動くようグローバル登録
 Object.assign(window, {
-  fmt, toManYen, fmtManYen, parseDate,
+  fmt, toManYen, fmtManYen, parseDate, escHtml,
   aggregateEntries, getMonthData,
   parseCSVLine, findCol, mapCategoryByKey, mapCategory,
   parseMFCSV, parseZaimCSV,
@@ -2306,10 +2306,10 @@ function renderCatList(categoryTotals, totalExpense) {
     })() : '';
     return `
       <div class="cat-item">
-        <span class="cat-emoji">${c.emoji}</span>
+        <span class="cat-emoji">${escHtml(c.emoji)}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px">
-            <span class="cat-name">${c.name}</span>
+            <span class="cat-name">${escHtml(c.name)}</span>
             <span class="cat-domain-dot" style="background:${dColor}"></span>
           </div>
           <div class="cat-bar" style="margin-top:4px">
@@ -2377,10 +2377,10 @@ function openBudgetModal() {
       <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${domains[domain] || domain}</div>
       ${cats.map(cat => `
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="font-size:18px;width:26px;text-align:center">${cat.emoji}</span>
-          <span style="flex:1;font-size:13px;font-weight:600">${cat.name}</span>
+          <span style="font-size:18px;width:26px;text-align:center">${escHtml(cat.emoji)}</span>
+          <span style="flex:1;font-size:13px;font-weight:600">${escHtml(cat.name)}</span>
           <div style="position:relative">
-            <input type="number" id="bm_${cat.id}" value="${cat.budget || ''}" min="0" step="1000"
+            <input type="number" id="bm_${escHtml(cat.id)}" value="${cat.budget || ''}" min="0" step="1000"
               placeholder="未設定"
               style="width:100px;padding:6px 26px 6px 8px;font-size:13px;text-align:right;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text)">
             <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-muted);pointer-events:none">円</span>
@@ -2618,13 +2618,13 @@ function renderLedgerList() {
               const cat = e.isIncome ? null : state.categories.find(c => c.id === e.categoryId);
               const label = e.isIncome
                 ? `<span style="color:var(--secondary);font-weight:600">収入</span>`
-                : `<span style="color:var(--text-muted)">${cat ? cat.emoji + ' ' + cat.name : '未分類'}</span>`;
+                : `<span style="color:var(--text-muted)">${cat ? escHtml(cat.emoji) + ' ' + escHtml(cat.name) : '未分類'}</span>`;
               const dateStr = e.date.slice(5).replace('-', '/');
               return `
                 <div class="ledger-entry-row">
                   <div style="flex:1;min-width:0">
                     <div style="font-size:12px;color:var(--text-muted)">${dateStr} ${label}</div>
-                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.description || (cat ? cat.emoji + ' ' + cat.name : '収入')}</div>
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.description ? escHtml(e.description) : (cat ? escHtml(cat.emoji) + ' ' + escHtml(cat.name) : '収入')}</div>
                   </div>
                   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
                     <span style="font-size:14px;font-weight:700;color:${e.isIncome ? 'var(--secondary)' : 'var(--text-primary)'}">${e.isIncome ? '+' : ''}${fmt(e.amount)}</span>
@@ -2807,14 +2807,14 @@ function detectCSVFormat(text) {
 // ── Category Mapping Modal ──
 function openMappingModal(unmapped) {
   const catOptions = state.categories.map(c =>
-    `<option value="${c.id}">${c.emoji} ${c.name}</option>`
+    `<option value="${escHtml(c.id)}">${escHtml(c.emoji)} ${escHtml(c.name)}</option>`
   ).join('');
 
   document.getElementById('mappingList').innerHTML = unmapped.map(cat => `
     <div class="map-item">
-      <span class="map-from">${cat}</span>
+      <span class="map-from">${escHtml(cat)}</span>
       <span style="color:var(--text-muted);font-size:12px">→</span>
-      <select class="map-select unmapped" data-mf="${cat}">
+      <select class="map-select unmapped" data-mf="${escHtml(cat)}">
         <option value="">-- 選択してください --</option>
         ${catOptions}
       </select>
@@ -3018,7 +3018,7 @@ function openManualModal() {
     const cats = state.categories.filter(c => c.domain === dId);
     if (!cats.length) return '';
     return `<optgroup label="${d.emoji} ${d.label}">
-      ${cats.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('')}
+      ${cats.map(c => `<option value="${escHtml(c.id)}">${escHtml(c.emoji)} ${escHtml(c.name)}</option>`).join('')}
     </optgroup>`;
   }).join('');
 
@@ -3042,7 +3042,7 @@ function openEditEntry(mk, entryId) {
     const cats = state.categories.filter(c => c.domain === dId);
     if (!cats.length) return '';
     return `<optgroup label="${d.emoji} ${d.label}">
-      ${cats.map(c => `<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('')}
+      ${cats.map(c => `<option value="${escHtml(c.id)}">${escHtml(c.emoji)} ${escHtml(c.name)}</option>`).join('')}
     </optgroup>`;
   }).join('');
 
@@ -3573,11 +3573,11 @@ function renderIrregularList() {
       const checked = existing?.approved ? 'checked' : '';
       return `
         <div class="irregular-item">
-          <input type="checkbox" id="irr_${cat.id}" ${checked}
-            onchange="toggleIrregularApproval('${cat.id}', this.checked)">
-          <span style="font-size:18px">${cat.emoji}</span>
+          <input type="checkbox" id="irr_${escHtml(cat.id)}" ${checked}
+            onchange="toggleIrregularApproval('${escHtml(cat.id)}', this.checked)">
+          <span style="font-size:18px">${escHtml(cat.emoji)}</span>
           <div style="flex:1">
-            <div style="font-size:13px;font-weight:600">${cat.name}</div>
+            <div style="font-size:13px;font-weight:600">${escHtml(cat.name)}</div>
             <div style="font-size:11px;color:var(--text-muted)">${fmt(annualAvg)}/年 → ${manYen}万円/年でライフプランに追加</div>
           </div>
         </div>`;
@@ -3901,7 +3901,7 @@ function renderBudgetAlertBanner(categoryTotals) {
   const items = overCats.map(c => {
     const actual  = categoryTotals[c.id] || 0;
     const overAmt = actual - c.budget;
-    return `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;color:#991B1B">${c.emoji} ${c.name} <span style="color:#DC2626">+${fmt(overAmt)}</span></span>`;
+    return `<span style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;color:#991B1B">${escHtml(c.emoji)} ${escHtml(c.name)} <span style="color:#DC2626">+${fmt(overAmt)}</span></span>`;
   }).join(' ');
 
   el.style.display = '';
@@ -4098,8 +4098,8 @@ function renderPremiumTrend() {
     const sign  = diff > 0 ? '+' : '';
     return `
       <div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border)">
-        <span style="font-size:16px;width:22px;text-align:center">${c.emoji}</span>
-        <span style="flex:1;font-size:12px;font-weight:600">${c.name}</span>
+        <span style="font-size:16px;width:22px;text-align:center">${escHtml(c.emoji)}</span>
+        <span style="flex:1;font-size:12px;font-weight:600">${escHtml(c.name)}</span>
         <span style="font-size:12px;color:var(--text-secondary)">${fmt(curr)}</span>
         <span style="font-size:12px;color:${color};font-weight:700;min-width:58px;text-align:right">${sign}${fmt(diff)}</span>
         <span style="font-size:11px;color:${color};min-width:38px;text-align:right">${typeof pct==='string'?pct:sign+pct+'%'}</span>
@@ -4191,7 +4191,7 @@ function renderPremiumSim() {
 
   const catOptions = simCats.map(c => {
     const amt = latestMonth?.categoryTotals?.[c.id] || 0;
-    return `<option value="${c.id}" data-amount="${amt}">${c.emoji} ${c.name}（${fmt(amt)}/月）</option>`;
+    return `<option value="${escHtml(c.id)}" data-amount="${amt}">${escHtml(c.emoji)} ${escHtml(c.name)}（${fmt(amt)}/月）</option>`;
   }).join('');
 
   el.innerHTML = `
@@ -4409,7 +4409,7 @@ function renderWizardStep() {
   // データサマリー
   const freqText = `${step.totalMonths}ヶ月中 ${step.monthsOccurred}ヶ月で発生`;
   const exText   = step.examples.length
-    ? `例: ${step.examples.join('、')}`
+    ? `例: ${step.examples.map(escHtml).join('、')}`
     : '';
   // 「毎月/不定期」「一定/変動」のヒントバッジ
   const monthlyHintHtml = step.isMonthly !== null
@@ -4493,8 +4493,8 @@ function renderWizardResult(step) {
   const dEx      = DOMAIN_EXAMPLES[domain];
   const catsInDomain = state.categories.filter(c => c.domain === domain);
   const catOptions   = catsInDomain.map(c =>
-    `<option value="${c.id}" ${c.id === step.selectedCategoryId ? 'selected' : ''}>
-      ${c.emoji} ${c.name}
+    `<option value="${escHtml(c.id)}" ${c.id === step.selectedCategoryId ? 'selected' : ''}>
+      ${escHtml(c.emoji)} ${escHtml(c.name)}
     </option>`
   ).join('');
 
@@ -4640,7 +4640,7 @@ function renderBonusList() {
        </p>`
     : bonuses.map((b, i) => `
         <div class="bonus-row">
-          <input type="text" class="form-input" value="${b.label}"
+          <input type="text" class="form-input" value="${escHtml(b.label)}"
             placeholder="名称（例: 夏季賞与）"
             oninput="state.income.bonuses[${i}].label = this.value">
           <input type="number" class="form-input" value="${b.amount}"
@@ -4882,14 +4882,14 @@ function renderMappingSettings() {
   const newCatSel = document.getElementById('mappingNewCat');
   if (newCatSel && !newCatSel.options.length) {
     newCatSel.innerHTML = state.categories.map(c =>
-      `<option value="${c.id}">${c.emoji} ${c.name}</option>`
+      `<option value="${escHtml(c.id)}">${escHtml(c.emoji)} ${escHtml(c.name)}</option>`
     ).join('');
   }
 
   const map = state.csvConfig.categoryMap || {};
   const keys = Object.keys(map).sort();
   const catOptions = state.categories.map(c =>
-    `<option value="${c.id}">${c.emoji} ${c.name}</option>`
+    `<option value="${escHtml(c.id)}">${escHtml(c.emoji)} ${escHtml(c.name)}</option>`
   ).join('');
 
   if (keys.length === 0) {
@@ -4903,12 +4903,13 @@ function renderMappingSettings() {
   document.getElementById('mappingSettingsList').innerHTML = keys.map(key => {
     const currentCatId = map[key] || '';
     const opts = state.categories.map(c =>
-      `<option value="${c.id}" ${c.id === currentCatId ? 'selected' : ''}>${c.emoji} ${c.name}</option>`
+      `<option value="${escHtml(c.id)}" ${c.id === currentCatId ? 'selected' : ''}>${escHtml(c.emoji)} ${escHtml(c.name)}</option>`
     ).join('');
     const escapedKey = key.replace(/'/g, '&#39;');
+    const safeKey = escHtml(key);
     return `
       <div class="mapping-row">
-        <span class="mapping-mf-key" title="${escapedKey}">${key}</span>
+        <span class="mapping-mf-key" title="${safeKey}">${safeKey}</span>
         <select class="form-select mapping-cat-select"
           onchange="updateMappingEntry('${escapedKey}', this.value)">${opts}</select>
         <button class="mapping-delete-btn" onclick="deleteMappingEntry('${escapedKey}')" title="削除">×</button>
@@ -4977,13 +4978,13 @@ function openCatSettings(tab = 'cat') {
   document.getElementById('catSettingsList').innerHTML =
     state.categories.map(cat => `
       <div class="cat-setting-row">
-        <span class="cat-setting-emoji">${cat.emoji}</span>
-        <span class="cat-setting-name">${cat.name}</span>
-        <input type="number" class="cat-budget-input" data-cat-id="${cat.id}" placeholder="予算（円）" value="${cat.budget || ''}" min="0" step="1000" style="width:90px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:right;background:var(--surface);color:var(--text)">
-        <select class="cat-setting-select" data-cat-id="${cat.id}" style="border-left:3px solid ${DOMAINS[cat.domain]?.color || '#ccc'}">
+        <span class="cat-setting-emoji">${escHtml(cat.emoji)}</span>
+        <span class="cat-setting-name">${escHtml(cat.name)}</span>
+        <input type="number" class="cat-budget-input" data-cat-id="${escHtml(cat.id)}" placeholder="予算（円）" value="${cat.budget || ''}" min="0" step="1000" style="width:90px;font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:right;background:var(--surface);color:var(--text)">
+        <select class="cat-setting-select" data-cat-id="${escHtml(cat.id)}" style="border-left:3px solid ${DOMAINS[cat.domain]?.color || '#ccc'}">
           ${domainOptions.replace(`value="${cat.domain}"`, `value="${cat.domain}" selected`)}
         </select>
-        ${cat._custom ? `<button style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:2px 4px;line-height:1;flex-shrink:0" onclick="deleteCustomCategory('${cat.id}')" title="削除">🗑</button>` : ''}
+        ${cat._custom ? `<button style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:2px 4px;line-height:1;flex-shrink:0" onclick="deleteCustomCategory('${escHtml(cat.id)}')" title="削除">🗑</button>` : ''}
       </div>`
     ).join('');
 
