@@ -3197,11 +3197,21 @@ function setAvgMonths(n) {
     const btn = document.getElementById('avg' + v);
     if (btn) btn.classList.toggle('active', v === n);
   });
+  // [Fix-K / SP-LP-04] 期間変更時に approval リセット（金額が変わるため）
+  if (state.lifeplanSync?.irregularSuggestions) {
+    state.lifeplanSync.irregularSuggestions.forEach(s => { s.approved = false; });
+    saveState();
+  }
   renderSync();
 }
 
 function setIrregularYears(y) {
   irregularAvgYears = y;
+  // [Fix-K / SP-LP-04] 期間変更時に approval リセット（金額が変わるため）
+  if (state.lifeplanSync?.irregularSuggestions) {
+    state.lifeplanSync.irregularSuggestions.forEach(s => { s.approved = false; });
+    saveState();
+  }
   renderIrregularList();
 }
 
