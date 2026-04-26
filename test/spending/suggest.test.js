@@ -85,4 +85,30 @@ describe('calcSavingsImpact', () => {
     const r = calcSavingsImpact(10000, lp);
     expect(r.rate).toBe(3);
   });
+
+  it('lifeplan.finance.simYears を優先して使用', () => {
+    const lp = {
+      profile: { birth: '1990-01-01' },
+      finance: { simYears: 40 },
+    };
+    const r = calcSavingsImpact(5000, lp);
+    expect(r.years).toBe(40);
+  });
+
+  it('simYears 無く retirement.targetAge があれば targetAge - age', () => {
+    const lp = {
+      profile: { birth: '1990-01-01' },
+      retirement: { targetAge: 65 },
+    };
+    const r = calcSavingsImpact(5000, lp);
+    const age = new Date().getFullYear() - 1990;
+    expect(r.years).toBe(Math.max(5, 65 - age));
+  });
+
+  it('simYears も targetAge も無ければ既存の 75 - age', () => {
+    const lp = { profile: { birth: '1990-01-01' } };
+    const r = calcSavingsImpact(5000, lp);
+    const age = new Date().getFullYear() - 1990;
+    expect(r.years).toBe(Math.max(5, 75 - age));
+  });
 });

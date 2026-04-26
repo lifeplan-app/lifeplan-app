@@ -32,10 +32,21 @@ export function calcSavingsImpact(monthlySavings, lifeplan = null) {
   let years = 30;
   let rate = 0.03;
   if (lifeplan) {
+    let age = null;
     if (lifeplan.profile?.birth) {
-      const age = new Date().getFullYear() - parseInt(lifeplan.profile.birth.split('-')[0]);
+      age = new Date().getFullYear() - parseInt(lifeplan.profile.birth.split('-')[0]);
+    }
+
+    // [Fix-E / SP-CL-06] 積立期間を lifeplan 設定から推定
+    if (typeof lifeplan.finance?.simYears === 'number' && lifeplan.finance.simYears > 0) {
+      years = Math.max(5, lifeplan.finance.simYears);
+    } else if (lifeplan.retirement?.targetAge && age != null) {
+      years = Math.max(5, parseInt(lifeplan.retirement.targetAge) - age);
+    } else if (age != null) {
       years = Math.max(5, 75 - age);
     }
+
+    // 利回り（既存ロジック）
     if (lifeplan.assets?.length) {
       const totalBal = lifeplan.assets.reduce((s, a) => s + (a.amount || 0), 0);
       if (totalBal > 0) {
