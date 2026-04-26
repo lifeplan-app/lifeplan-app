@@ -2739,6 +2739,13 @@ function handleCSVFile(event) {
       const text = decodeCSVBuffer(buf);
       const fmt = detectCSVFormat(text);
 
+      // [Fix-H / SP-CSV-08-B] unknown 形式は明示的に確認
+      if (fmt === 'unknown') {
+        if (!confirm('CSV 形式を自動検知できませんでした。マネーフォワード ME 形式として読み込みを試行しますか？\n（誤った形式で読み込まれる可能性があります）')) {
+          return;
+        }
+      }
+
       // フォーマットバッジ更新
       const badge = document.getElementById('csvFormatBadge');
       if (badge) {
