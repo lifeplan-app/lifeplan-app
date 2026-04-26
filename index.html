@@ -2152,6 +2152,11 @@
 
   <!-- リンク -->
   <div class="drawer-section">
+    <div class="drawer-section-label">学ぶ・読む</div>
+    <a class="drawer-item" href="https://lifeplan-app.net/blog/" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
+      <span class="d-icon">📚</span>ブログ（ライフプラン・FIRE・新NISA 解説）
+    </a>
+
     <div class="drawer-section-label">その他</div>
     <a class="drawer-item" href="legal.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">
       <span class="d-icon">📄</span>プライバシーポリシー・利用規約
@@ -6510,9 +6515,17 @@ function printLifePlan() {
   <!-- 出口戦略シミュレーション -->
   ${retSection}
 
+  <!-- 使いこなしガイド誘導 -->
+  <div style="margin-top:32px;padding:14px 18px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:9.5pt;line-height:1.7">
+    <div style="font-weight:700;color:#0369A1;margin-bottom:6px">📚 もっと活用する</div>
+    <div style="color:#0C4A6E">本レポートの数値をどう読み解くか・改善する打ち手は、ブログで詳しく解説しています。<br>
+    <a href="https://lifeplan-app.net/blog/" style="color:#0369A1;font-weight:600">https://lifeplan-app.net/blog/</a></div>
+  </div>
+
   <!-- フッター -->
-  <div style="margin-top:40px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:8.5pt;color:#94A3B8;text-align:center">
-    このレポートはライフプランアプリにより自動生成されました ／ ${dateStr}
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:8.5pt;color:#94A3B8;text-align:center">
+    このレポートはライフプランアプリにより自動生成されました ／ ${dateStr}<br>
+    <a href="https://app.lifeplan-app.net/" style="color:#94A3B8">app.lifeplan-app.net</a>
   </div>
 
 </div>
@@ -11615,6 +11628,14 @@ function _onbStepHTML(step) {
           <div class="onb-finish-icon">✅</div>
           <h2 class="onb-title" style="text-align:center">${ONBOARDING_COPY.finish.title}</h2>
           <p class="onb-subtitle" style="text-align:center">${name}資産推移グラフが作成されました。<br>タイムラインでシミュレーション結果を確認しましょう。</p>
+          <div style="margin-top:24px;padding:14px 16px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:12px;text-align:left">
+            <div style="font-size:12px;font-weight:700;color:#0369A1;margin-bottom:8px">📚 まずはこの 3 記事を読むと使いこなせます</div>
+            <ul style="margin:0;padding-left:18px;font-size:12px;color:#0C4A6E;line-height:1.8">
+              <li><a href="https://lifeplan-app.net/blog/" target="_blank" rel="noopener noreferrer" style="color:#0369A1">ライフプランの作り方完全ガイド</a></li>
+              <li><a href="https://lifeplan-app.net/blog/" target="_blank" rel="noopener noreferrer" style="color:#0369A1">新NISA を最大活用するコツ</a></li>
+              <li><a href="https://lifeplan-app.net/blog/" target="_blank" rel="noopener noreferrer" style="color:#0369A1">退職金・iDeCo の受け取り方で損しない方法</a></li>
+            </ul>
+          </div>
         </div>`;
     }
     default: return '';
