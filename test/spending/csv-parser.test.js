@@ -60,7 +60,7 @@ describe('parseMFCSV - 基本', () => {
     const csv = `計算対象,日付,内容,金額,大項目,中項目,振替,ID
 1,2026/04/01,ランチ,-1500,食費,昼食,0,test-1
 1,2026/04/02,給与,300000,収入,給与,0,test-2`;
-    const entries = parseMFCSV(csv);
+    const { entries } = parseMFCSV(csv);
     expect(entries.length).toBe(2);
     expect(entries[0].amount).toBe(1500);
     expect(entries[0].isIncome).toBe(false);
@@ -71,7 +71,7 @@ describe('parseMFCSV - 基本', () => {
     const csv = `計算対象,日付,内容,金額,大項目,中項目,振替,ID
 0,2026/04/01,スキップ,-1000,食費,昼食,0,t1
 1,2026/04/02,通常,-500,食費,昼食,0,t2`;
-    const entries = parseMFCSV(csv);
+    const { entries } = parseMFCSV(csv);
     expect(entries.length).toBe(1);
     expect(entries[0].id).toBe('t2');
   });
@@ -79,14 +79,14 @@ describe('parseMFCSV - 基本', () => {
     const csv = `計算対象,日付,内容,金額,大項目,中項目,振替,ID
 1,2026/04/01,振替,-1000,食費,昼食,1,t1
 1,2026/04/02,通常,-500,食費,昼食,0,t2`;
-    const entries = parseMFCSV(csv);
+    const { entries } = parseMFCSV(csv);
     expect(entries.length).toBe(1);
     expect(entries[0].id).toBe('t2');
   });
   it('BOM 付きでもパース可', () => {
     const csv = `﻿計算対象,日付,内容,金額,大項目,中項目,振替,ID
 1,2026/04/01,ランチ,-1500,食費,昼食,0,t1`;
-    const entries = parseMFCSV(csv);
+    const { entries } = parseMFCSV(csv);
     expect(entries.length).toBe(1);
   });
   it('対応しない形式は throw', () => {
@@ -99,7 +99,7 @@ describe('parseZaimCSV - 基本', () => {
     const csv = `日付,方向,カテゴリ,品目,金額,通貨,振替,ID
 2026/04/01,支出,食費,昼食,1500,JPY,0,z1
 2026/04/02,収入,給与,本業,300000,JPY,0,z2`;
-    const entries = parseZaimCSV(csv);
+    const { entries } = parseZaimCSV(csv);
     expect(entries.length).toBe(2);
     expect(entries[0].isIncome).toBe(false);
     expect(entries[1].isIncome).toBe(true);
@@ -112,8 +112,8 @@ describe('parseMFCSV: ID 列なし時の重複検知用 ID 生成', () => {
 1,2026/04/02,ディナー,-2500,銀行A,食費,夕食,,0`;
 
   it('ID 列なしでも同じ CSV を 2 回パースすれば同一 ID が生成される（決定的）', () => {
-    const r1 = parseMFCSV(csvNoId);
-    const r2 = parseMFCSV(csvNoId);
+    const { entries: r1 } = parseMFCSV(csvNoId);
+    const { entries: r2 } = parseMFCSV(csvNoId);
     expect(r1.length).toBeGreaterThan(0);
     expect(r1.length).toBe(r2.length);
     for (let i = 0; i < r1.length; i++) {
@@ -122,7 +122,7 @@ describe('parseMFCSV: ID 列なし時の重複検知用 ID 生成', () => {
   });
 
   it('ID には date / amount / カテゴリ情報が含まれる', () => {
-    const r = parseMFCSV(csvNoId);
+    const { entries: r } = parseMFCSV(csvNoId);
     expect(r[0].id).toContain('2026-04-01');
     expect(r[0].id).toContain('1500');
   });
@@ -134,12 +134,32 @@ describe('parseZaimCSV: ID 列なし時の重複検知用 ID 生成', () => {
 2026/04/02,支出,食費,夕食,2500,JPY,0`;
 
   it('ID 列なしでも同じ CSV を 2 回パースすれば同一 ID が生成される（決定的）', () => {
-    const r1 = parseZaimCSV(csvNoId);
-    const r2 = parseZaimCSV(csvNoId);
+    const { entries: r1 } = parseZaimCSV(csvNoId);
+    const { entries: r2 } = parseZaimCSV(csvNoId);
     expect(r1.length).toBeGreaterThan(0);
     expect(r1.length).toBe(r2.length);
     for (let i = 0; i < r1.length; i++) {
       expect(r1[i].id).toBe(r2[i].id);
     }
+  });
+});
+
+describe('parseMFCSV / parseZaimCSV: skipped 行数返却 (Fix-G)', () => {
+  it('parseMFCSV が skipped 行数を返す（計算対象=0 のスキップ）', () => {
+    const csv = `計算対象,日付,内容,金額(円),保有金融機関,大項目,中項目,メモ,振替,ID
+0,2026/04/01,スキップ,-1000,銀行A,食費,昼食,,0,t1
+1,2026/04/02,通常,-500,銀行A,食費,昼食,,0,t2`;
+    const { entries, skipped } = parseMFCSV(csv);
+    expect(entries.length).toBe(1);
+    expect(skipped).toBe(1);
+  });
+
+  it('parseZaimCSV が skipped 行数を返す（不正日付スキップ）', () => {
+    const csv = `日付,方向,カテゴリ,品目,金額,通貨,振替,ID
+不正日付,支出,食費,昼食,1500,JPY,0,z1
+2026/04/02,支出,食費,昼食,1200,JPY,0,z2`;
+    const { entries, skipped } = parseZaimCSV(csv);
+    expect(entries.length).toBe(1);
+    expect(skipped).toBe(1);
   });
 });

@@ -2744,12 +2744,17 @@ function handleCSVFile(event) {
         else badge.innerHTML = '<span style="background:#FEF9C3;color:#92400E;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600">⚠️ 形式不明</span>';
       }
 
-      let entries;
+      let entries, parseSkipped = 0;
       if (fmt === 'zaim') {
-        entries = parseZaimCSV(text);
+        const result = parseZaimCSV(text);
+        entries = result.entries;
+        parseSkipped = result.skipped;
       } else {
-        entries = parseMFCSV(text);
+        const result = parseMFCSV(text);
+        entries = result.entries;
+        parseSkipped = result.skipped;
       }
+      window._pendingParseSkipped = parseSkipped;
 
       if (!entries.length) { showNotification('データが見つかりませんでした'); return; }
       openMappingWizard(entries);
@@ -2961,7 +2966,12 @@ function confirmImport() {
   closePreviewModal();
   pendingEntries = [];
 
-  showNotification(`${imported}件インポート${skipped > 0 ? ` (${skipped}件重複スキップ)` : ''}`);
+  const parseSkip = window._pendingParseSkipped || 0;
+  window._pendingParseSkipped = 0;
+  const parts = [`${imported}件インポート`];
+  if (skipped > 0) parts.push(`${skipped}件重複スキップ`);
+  if (parseSkip > 0) parts.push(`${parseSkip}行パース失敗`);
+  showNotification(parts.join(' / '));
   showTab('ledger');
   renderImportList();
 }

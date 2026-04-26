@@ -260,26 +260,27 @@ export function parseMFCSV(text, userMap = {}) {
   };
 
   const entries = [];
+  let skipped = 0;
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
-    if (cols.length < 3) continue;
+    if (cols.length < 3) { skipped++; continue; }
 
     // 計算対象外（0）をスキップ
-    if (idx.calc >= 0 && cols[idx.calc]?.trim() === '0') continue;
+    if (idx.calc >= 0 && cols[idx.calc]?.trim() === '0') { skipped++; continue; }
 
     // 振替をスキップ（MF MEは "1"、他形式は "TRUE" に対応）
     if (idx.transfer >= 0) {
       const t = cols[idx.transfer]?.trim();
-      if (t === '1' || t?.toUpperCase() === 'TRUE') continue;
+      if (t === '1' || t?.toUpperCase() === 'TRUE') { skipped++; continue; }
     }
 
     const dateStr = idx.date >= 0 ? cols[idx.date]?.trim() : '';
     const rawAmount = idx.amount >= 0 ? cols[idx.amount]?.replace(/,/g, '').trim() : '';
     const amountNum = parseInt(rawAmount) || 0;
-    if (!amountNum) continue;
+    if (!amountNum) { skipped++; continue; }
 
     const date = parseDate(dateStr);
-    if (!date) continue;
+    if (!date) { skipped++; continue; }
 
     const rawType = idx.type >= 0 ? cols[idx.type]?.trim() : '';
     // 収入/支出を明示的に判定。型不明時は金額の符号で判断（負=支出）
@@ -301,8 +302,8 @@ export function parseMFCSV(text, userMap = {}) {
 
     // 二重計上・振替系カテゴリをスキップ（収入エントリは除外しない）
     if (!isIncome) {
-      if (MF_SKIP_MAIN.has(mfCat)) continue;
-      if (MF_SKIP_KEYS.has(mfMappingKey)) continue;
+      if (MF_SKIP_MAIN.has(mfCat)) { skipped++; continue; }
+      if (MF_SKIP_KEYS.has(mfMappingKey)) { skipped++; continue; }
     }
 
     entries.push({
@@ -319,7 +320,7 @@ export function parseMFCSV(text, userMap = {}) {
       source: 'csv',
     });
   }
-  return entries;
+  return { entries, skipped };
 }
 
 // ── Zaim CSV パーサー ──────────────────────────────────────────
@@ -352,32 +353,33 @@ export function parseZaimCSV(text, userMap = {}) {
   };
 
   const entries = [];
+  let skipped = 0;
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const cols = parseCSVLine(lines[i]);
-    if (cols.length < 3) continue;
+    if (cols.length < 3) { skipped++; continue; }
 
     // 振替スキップ
     if (idx.transfer >= 0) {
       const t = cols[idx.transfer]?.trim();
-      if (t === '1' || t?.toUpperCase() === 'TRUE') continue;
+      if (t === '1' || t?.toUpperCase() === 'TRUE') { skipped++; continue; }
     }
 
     const cat = idx.cat >= 0 ? cols[idx.cat]?.trim() : '';
     const item = idx.item >= 0 ? cols[idx.item]?.trim() : '';
 
     // スキップカテゴリ
-    if (ZAIM_SKIP_CATS.has(cat)) continue;
+    if (ZAIM_SKIP_CATS.has(cat)) { skipped++; continue; }
 
     const dir = idx.dir >= 0 ? cols[idx.dir]?.trim() : '';
     const isIncome = dir === '収入';
 
     const rawAmount = idx.amount >= 0 ? cols[idx.amount]?.replace(/,/g, '').trim() : '';
     const amountNum = parseInt(rawAmount) || 0;
-    if (!amountNum) continue;
+    if (!amountNum) { skipped++; continue; }
 
     const dateStr = idx.date >= 0 ? cols[idx.date]?.trim() : '';
     const date = parseDate(dateStr);
-    if (!date) continue;
+    if (!date) { skipped++; continue; }
 
     const entryId = idx.id >= 0 ? cols[idx.id]?.trim() : '';
 
@@ -398,5 +400,5 @@ export function parseZaimCSV(text, userMap = {}) {
       source: 'csv',
     });
   }
-  return entries;
+  return { entries, skipped };
 }

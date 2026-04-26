@@ -25,22 +25,22 @@ function normalizeEntries(entries) {
 describe('snapshot: MF CSV パース結果', () => {
   it('mf-normal.csv', () => {
     const text = readFixture('mf-normal.csv');
-    const entries = parseMFCSV(text);
+    const { entries } = parseMFCSV(text);
     expect(normalizeEntries(entries)).toMatchSnapshot();
   });
   it('mf-edge-quotes.csv', () => {
     const text = readFixture('mf-edge-quotes.csv');
-    const entries = parseMFCSV(text);
+    const { entries } = parseMFCSV(text);
     expect(normalizeEntries(entries)).toMatchSnapshot();
   });
   it('mf-unmapped-category.csv', () => {
     const text = readFixture('mf-unmapped-category.csv');
-    const entries = parseMFCSV(text);
+    const { entries } = parseMFCSV(text);
     expect(normalizeEntries(entries)).toMatchSnapshot();
   });
   it('cross-month.csv', () => {
     const text = readFixture('cross-month.csv');
-    const entries = parseMFCSV(text);
+    const { entries } = parseMFCSV(text);
     expect(normalizeEntries(entries)).toMatchSnapshot();
   });
 });
@@ -48,7 +48,7 @@ describe('snapshot: MF CSV パース結果', () => {
 describe('snapshot: Zaim CSV パース結果', () => {
   it('zaim-normal.csv', () => {
     const text = readFixture('zaim-normal.csv');
-    const entries = parseZaimCSV(text);
+    const { entries } = parseZaimCSV(text);
     expect(normalizeEntries(entries)).toMatchSnapshot();
   });
 });
