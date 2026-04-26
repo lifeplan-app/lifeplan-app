@@ -105,3 +105,41 @@ describe('parseZaimCSV - 基本', () => {
     expect(entries[1].isIncome).toBe(true);
   });
 });
+
+describe('parseMFCSV: ID 列なし時の重複検知用 ID 生成', () => {
+  const csvNoId = `計算対象,日付,内容,金額(円),保有金融機関,大項目,中項目,メモ,振替
+1,2026/04/01,ランチ,-1500,銀行A,食費,昼食,,0
+1,2026/04/02,ディナー,-2500,銀行A,食費,夕食,,0`;
+
+  it('ID 列なしでも同じ CSV を 2 回パースすれば同一 ID が生成される（決定的）', () => {
+    const r1 = parseMFCSV(csvNoId);
+    const r2 = parseMFCSV(csvNoId);
+    expect(r1.length).toBeGreaterThan(0);
+    expect(r1.length).toBe(r2.length);
+    for (let i = 0; i < r1.length; i++) {
+      expect(r1[i].id).toBe(r2[i].id);
+    }
+  });
+
+  it('ID には date / amount / カテゴリ情報が含まれる', () => {
+    const r = parseMFCSV(csvNoId);
+    expect(r[0].id).toContain('2026-04-01');
+    expect(r[0].id).toContain('1500');
+  });
+});
+
+describe('parseZaimCSV: ID 列なし時の重複検知用 ID 生成', () => {
+  const csvNoId = `日付,方向,カテゴリ,品目,金額,通貨,振替
+2026/04/01,支出,食費,昼食,1500,JPY,0
+2026/04/02,支出,食費,夕食,2500,JPY,0`;
+
+  it('ID 列なしでも同じ CSV を 2 回パースすれば同一 ID が生成される（決定的）', () => {
+    const r1 = parseZaimCSV(csvNoId);
+    const r2 = parseZaimCSV(csvNoId);
+    expect(r1.length).toBeGreaterThan(0);
+    expect(r1.length).toBe(r2.length);
+    for (let i = 0; i < r1.length; i++) {
+      expect(r1[i].id).toBe(r2[i].id);
+    }
+  });
+});

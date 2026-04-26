@@ -306,7 +306,8 @@ export function parseMFCSV(text, userMap = {}) {
     }
 
     entries.push({
-      id: entryId || `csv_${Date.now()}_${i}`,
+      // [Fix-B / SP-CSV-06] ID 列なし時は内容ベース ID で重複検知可能に
+      id: entryId || `csv_mf_${date}_${amountNum}_${mfCat}_${mfSubCat}_${i}`,
       date,
       amount,
       isIncome,
@@ -384,7 +385,8 @@ export function parseZaimCSV(text, userMap = {}) {
     const mfMappingKey = item ? `${cat}::${item}` : cat;
 
     entries.push({
-      id: entryId || `csv_zaim_${Date.now()}_${i}`,
+      // [Fix-B / SP-CSV-06] ID 列なし時は内容ベース ID で重複検知可能に
+      id: entryId || `csv_zaim_${date}_${amountNum}_${cat}_${item}_${i}`,
       date,
       amount: Math.abs(amountNum),
       isIncome,
