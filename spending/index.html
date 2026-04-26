@@ -3648,6 +3648,12 @@ function syncToLifeplan() {
     lines.push(`<span style="color:var(--text-muted);font-size:12px">不定期費用 ${approved.length}件 も一緒に連携します</span>`);
   }
 
+  // [Fix-L / SP-LP-01] 特別費（irregular_variable）は自動連携対象外であることを明示
+  const variableCount = state.categories.filter(c => c.domain === 'irregular_variable').length;
+  if (variableCount > 0) {
+    lines.push(`<span style="color:var(--text-muted);font-size:11px">※ 特別費（一回限りの支出）は自動連携対象外です。必要に応じてライフプラン側の「単発支出」で手動登録してください。</span>`);
+  }
+
   document.getElementById('syncConfirmBody').innerHTML = lines.join('<br>');
   document.getElementById('syncConfirmModal').classList.add('open');
 
