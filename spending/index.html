@@ -5129,6 +5129,60 @@ window.addEventListener('load', () => {
   renderDashboard();
   showOnboardingIfNeeded();
 });
+
+// ─────────────────────────────────────────────────────────────────
+// onclick / on* インライン event handler 用 window 登録
+// （<script type="module"> 内の関数は module-scoped でアクセス不可のため）
+// SP-1 Task 6 で抜けていた fix（Phase SP-1 ES module 化に伴うもの）
+// ─────────────────────────────────────────────────────────────────
+Object.assign(window, {
+  // sync / lifeplan 連携系
+  syncToLifeplan, doSyncToLifeplan, unsyncFromLifeplan,
+  closeSyncConfirmModal, renderSync,
+  setAvgMonths, setIrregularYears,
+  toggleIrregularApproval, adjustIrregularAmount, onIrregularAmountInput,
+
+  // import / export / CSV 系
+  exportSpendingData, importSpendingData, importSpendingDataOnboarding,
+  handleCSVFile, confirmImport,
+  confirmMapping, addMappingEntry, deleteMappingEntry, updateMappingEntry,
+  closeMappingModal, resetMappings, closePreviewModal,
+  updateCategoryHint,
+
+  // manual entry 系
+  openManualModal, closeManualModal, switchManualTab, saveManualEntry,
+  openEditEntry, deleteEntry,
+
+  // budget modal 系
+  openBudgetModal, closeBudgetModal, saveBudgetModal, toggleBudgetMode,
+  requestBudgetNotif, dismissNotifPermBanner,
+
+  // category settings 系
+  openCatSettings, closeCatSettings, saveCatSettings, switchSettingsTab,
+  addCustomCategory, deleteCustomCategory,
+
+  // income / bonus 系
+  saveIncomeSettings, addBonusRow, deleteBonus, toggleBonusInCalc,
+
+  // navigation / view 系
+  showTab, switchViewMode, changeMonth, changeYear,
+  toggleMonthExpand, deleteMonthData,
+
+  // suggestion 系
+  dismissSuggestion, trackSuggestionAction,
+
+  // premium / waitlist 系
+  openPremiumModal, closePremiumModal, openPremiumWaitlist,
+  activatePremiumTrial, updatePremiumSim,
+
+  // onboarding wizard 系
+  startOnboardingCSV, startOnboardingManual, skipOnboarding,
+  wizardNext, wizardPrev, wizardSkip,
+  wizardSetAnswer, wizardSetCategory,
+
+  // misc reset
+  resetAllSpendingData,
+});
 </script>
 <script>
   if ('serviceWorker' in navigator) {
