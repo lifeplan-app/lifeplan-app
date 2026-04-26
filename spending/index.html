@@ -3417,8 +3417,10 @@ function calcIrregularAmounts(keys, irCats) {
       catAmounts[cat.id] = (catAmounts[cat.id] || 0) + (d.categoryTotals?.[cat.id] || 0);
     }
   }
-  const nYears = keys.length / 12 || (1 / 12);
-  return { catAmounts, nYears: Math.max(nYears, 1 / 12) };
+  // [Fix-D / SP-CL-03] 12ヶ月未満データでの過大評価を防ぐため nYears 下限を 1.0 にクランプ
+  const rawNYears = keys.length / 12;
+  const nYears = Math.max(rawNYears, 1);
+  return { catAmounts, nYears };
 }
 
 function renderIrregularList() {
@@ -3666,7 +3668,8 @@ function doSyncToLifeplan() {
     if (!lp.recurringExpenses) lp.recurringExpenses = [];
 
     const irrKeys = getIrregularKeys(irregularAvgYears);
-    const nYears  = Math.max(irrKeys.length / 12, 1 / 12);
+    // [Fix-D / SP-CL-03] 12ヶ月未満データでの過大評価を防ぐため nYears 下限を 1.0 にクランプ
+    const nYears  = Math.max(irrKeys.length / 12, 1);
     const irCats  = state.categories.filter(c =>
       c.domain === 'irregular_fixed' || c.domain === 'irregular_variable'
     );
