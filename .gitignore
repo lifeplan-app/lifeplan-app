@@ -22,3 +22,13 @@ spending/inject_data.js
 
 # Internal diagrams / working files
 monetization-diagram.html
+
+# Playwright MCP cache
+.playwright-mcp/
+
+# 旧スクリーンショット (実データの可能性あり、scC 系架空サンプルのみ追跡)
+screenshots/01_*.png
+screenshots/02_*.png
+screenshots/03_*.png
+screenshots/04_*.png
+screenshots/05_*.png
