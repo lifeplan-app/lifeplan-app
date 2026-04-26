@@ -282,6 +282,8 @@
     .sug-impact { margin: 6px 0 8px; padding: 8px 10px; background: var(--bg); border-radius: 8px; font-size: 12px; line-height: 1.5; }
     .sug-impact strong { color: var(--primary); }
     .sug-impact-note { display: block; font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .sug-blog { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--primary); text-decoration: none; margin: 4px 0 8px; }
+    .sug-blog:hover { text-decoration: underline; }
     .suggestion-banner.sug-strong { box-shadow: 0 2px 8px rgba(0,0,0,.10); }
 
     /* ── Empty State ── */
@@ -1467,6 +1469,20 @@ const DEFAULT_CATEGORIES = [
 // AFFILIATE_LINKS は affiliate-config.js で定義（同ディレクトリ）
 // ASP審査通過後は affiliate-config.js のみ編集すればOK
 
+// ── ブログ記事誘導リンク（提案 ID → 個別記事 slug。空文字は blog TOP に誘導） ──
+const BLOG_BASE = 'https://lifeplan-app.net/';
+const BLOG_TOP  = 'https://lifeplan-app.net/blog/';
+const SUGGESTION_BLOG_LINKS = {
+  telecom_high:       'mvno-sim-basics/',  // 格安SIM基礎ガイド
+  insurance_ratio:    '',                   // 公開時に slug を追加
+  subscr_accumulate:  '',
+  food_increase:      '',
+  deficit:            '',
+  fixed_ratio_high:   '',
+  food_ratio:         '',
+  budget_over:        '',
+};
+
 const SUGGESTION_TRIGGERS = [
   // ── 通信費 ──
   {
@@ -2492,6 +2508,12 @@ function renderSuggestions(monthData) {
             onclick="trackSuggestionAction('${sugId}')">${link.label} <span style="font-size:9px;opacity:.8">PR</span></a>`
         : '';
 
+      // ブログ記事リンク（個別記事があればそれ、なければ blog TOP）
+      const _blogSlug = SUGGESTION_BLOG_LINKS[t.id];
+      const _blogUrl  = _blogSlug ? (BLOG_BASE + _blogSlug) : BLOG_TOP;
+      const _blogLabel = _blogSlug ? '関連記事を読む' : 'ブログで詳しく見る';
+      const blogHtml = `<a class="sug-blog" href="${_blogUrl}" target="_blank" rel="noopener noreferrer">📖 ${_blogLabel} →</a>`;
+
       return `
         <div class="suggestion-banner${isStrong ? ' sug-strong' : ''}" style="border-left-color:${t.color}" id="sug_${sugId}">
           <div style="font-size:24px">${t.emoji || '💡'}</div>
@@ -2500,6 +2522,7 @@ function renderSuggestions(monthData) {
             <div class="sug-title">${t.title}</div>
             <div class="sug-detail">${t.detail(val)}</div>
             ${impactHtml}
+            ${blogHtml}
             <div class="sug-actions">
               ${ctaHtml}
               <button class="sug-dismiss" onclick="dismissSuggestion('${sugId}')">✕ 閉じる</button>
