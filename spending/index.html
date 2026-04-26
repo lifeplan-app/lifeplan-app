@@ -1738,7 +1738,17 @@ function loadState() {
 }
 
 function saveState() {
-  localStorage.setItem('spending_v1', JSON.stringify(state));
+  try {
+    localStorage.setItem('spending_v1', JSON.stringify(state));
+  } catch (e) {
+    if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+      showNotification('⚠️ ストレージ容量上限に達したため保存できませんでした。古いデータを削除してください。');
+      console.error('[saveState] QuotaExceededError:', e);
+    } else {
+      showNotification('⚠️ データの保存に失敗しました（ブラウザ設定をご確認ください）');
+      console.error('[saveState] save failed:', e);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
