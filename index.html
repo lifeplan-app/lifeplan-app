@@ -2756,7 +2756,15 @@
       </div>
       <div id="pfDividendSection" style="margin-top:20px;display:none">
         <div style="font-size:13px;font-weight:700;color:#F97316;margin-bottom:8px">💴 配当収入シミュレーション（年間）</div>
-        <div style="position:relative;height:220px"><canvas id="pfDivChart"></canvas></div>
+        <div id="pfDivChartWrap" style="position:relative;height:220px"><canvas id="pfDivChart"></canvas></div>
+        <div id="pfDivPremiumGate" style="display:none;background:#FAF5FF;border:1.5px dashed #C4B5FD;border-radius:10px;padding:20px;text-align:center">
+          <div style="font-size:32px;margin-bottom:6px">💴</div>
+          <div style="font-weight:700;font-size:14px;color:#5B21B6;margin-bottom:6px">配当金推移シミュレーションは Premium 限定</div>
+          <div style="font-size:12px;color:#6D28D9;margin-bottom:12px;line-height:1.6">
+            配当アセットの年次収入推移（税引き後）をアセット別グラフで詳細確認できます
+          </div>
+          <button class="btn btn-sm btn-primary" onclick="showUpgradeModal('dividend_premium')">Premiumを見る →</button>
+        </div>
       </div>
 
       <!-- ===== リバランス提案（ポートフォリオ詳細内・折りたたみ） ===== -->
@@ -5963,8 +5971,9 @@ function load() {
     if (state._planBilling === undefined) state._planBilling = 'monthly';
     // [Plan Redesign Phase 2] Free アセットソフトリミット用フィールド
     if (state._assetGraceStart === undefined) state._assetGraceStart = null;
-    // Premium: 月次自動スナップショット（月初アクセス時に1回）
-    if (getUserPlan() === 'premium') takeAutoSnapshot();
+    // [Plan Redesign Phase 3] 年次自動スナップショット（旧 月次 takeAutoSnapshot は廃止）
+    // 既存の state.autoSnapshots[] データは互換性のため読み込み専用として保持
+    try { checkYearlySnapshot(); } catch (e) { console.warn('checkYearlySnapshot failed', e); }
     // [Plan Redesign Phase 2] Free プラン アセットソフトリミット判定
     try { checkAssetSoftLimit(); } catch (e) { console.warn('checkAssetSoftLimit failed', e); }
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
@@ -9303,13 +9312,24 @@ function renderPortfolio() {
     }
   });
 
-  // --- 配当収入シミュレーション ---
+  // --- 配当収入シミュレーション（[Plan Redesign Phase 3] Premium 限定） ---
   const divSection = document.getElementById('pfDividendSection');
+  const _divChartWrap = document.getElementById('pfDivChartWrap');
+  const _divGate      = document.getElementById('pfDivPremiumGate');
+  const _divPlan = getUserPlan();
   if (dividendAssets.length === 0) {
     divSection.style.display = 'none';
     if (pfDivObj) { pfDivObj.destroy(); pfDivObj = null; }
+  } else if (_divPlan !== 'premium') {
+    // 配当アセットあり・Free/Standard → アップグレード誘導プレースホルダー
+    divSection.style.display = 'block';
+    if (_divChartWrap) _divChartWrap.style.display = 'none';
+    if (_divGate)      _divGate.style.display      = 'block';
+    if (pfDivObj) { pfDivObj.destroy(); pfDivObj = null; }
   } else {
     divSection.style.display = 'block';
+    if (_divChartWrap) _divChartWrap.style.display = '';
+    if (_divGate)      _divGate.style.display      = 'none';
     // 各年の配当収入（税引き後）= その年の各配当アセット評価額 × 利回り × 課税率 の合計
     const divByYear = Array.from({ length: years + 1 }, (_, y) => {
       return Math.round(dividendAssets.reduce((s, a) => {
@@ -11996,6 +12016,16 @@ function showUpgradeModal(trigger) {
           body:     'アセットを 6件以上登録するには Standard プラン（¥480/月）以上が必要です。Standardではアセット数無制限・PDF出力・シナリオ保存も利用できます。',
           ctaLabel: 'Standardプランを見る',
           ctaPlan:  'standard',
+        };
+        break;
+      }
+      case 'dividend_premium': {
+        config = {
+          icon:     '💴',
+          title:    '配当金推移シミュレーションは Premium 限定機能です',
+          body:     '配当・分配金の年次推移（税引き後）をアセット別にグラフ表示します。Premium プラン（¥980/月）でご利用いただけます。',
+          ctaLabel: 'Premiumプランを見る',
+          ctaPlan:  'premium',
         };
         break;
       }
@@ -21573,23 +21603,55 @@ function updateScenarioMeta(id, updates) {
   save();
 }
 
-// --- 自動スナップショット（Premium） ---
+// --- 自動スナップショット（[Deprecated] 月次 → 年次へ移行） ---
+/**
+ * @deprecated 月次自動スナップショットは廃止予定。新しい書き込みは checkYearlySnapshot() を使ってください。
+ * 既存の state.autoSnapshots[] データは互換性のため読み込み専用として保持されます。
+ */
 function takeAutoSnapshot() {
-  if (getUserPlan() !== 'premium') return;
-  const month   = new Date().toISOString().slice(0, 7);
-  const already = (state.autoSnapshots || []).find(s => s.month === month);
-  if (already) return;
-  const { savedScenarios, autoSnapshots, ...snapshotBase } = state;
-  const snap = {
-    id:        'auto_' + month,
-    month,
-    label:     month.slice(0, 4) + '年' + month.slice(5, 7) + '月の状態',
-    createdAt: new Date().toISOString(),
+  console.warn('takeAutoSnapshot is deprecated. Use checkYearlySnapshot() instead.');
+  return;
+}
+
+/**
+ * 年次自動スナップショット。最後のスナップショットから365日経過していれば作成。
+ * プランごとの上限：Free 1件 / Standard 3件 / Premium 無制限。
+ * state.savedScenarios[] に _auto: true フラグ付きで保存。
+ */
+function checkYearlySnapshot() {
+  const plan = getUserPlan();
+  const now = new Date();
+  if (!state.savedScenarios) state.savedScenarios = [];
+  const autoSnapshots = state.savedScenarios.filter(s => s._auto);
+  const lastDate = autoSnapshots.length > 0
+    ? new Date(autoSnapshots.slice().sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''))[0].createdAt)
+    : null;
+  const diffDays = lastDate ? (now - lastDate) / (1000 * 60 * 60 * 24) : Infinity;
+  if (diffDays < 365) return;
+
+  const LIMITS = { free: 1, standard: 3, premium: Infinity };
+  const limit = LIMITS[plan] ?? 1;
+
+  // 上限到達時は最古を削除
+  if (autoSnapshots.length >= limit) {
+    const sorted = autoSnapshots.slice().sort((a,b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+    const removeCount = autoSnapshots.length - limit + 1;
+    const idsToRemove = new Set(sorted.slice(0, removeCount).map(s => s.id));
+    state.savedScenarios = state.savedScenarios.filter(s => !idsToRemove.has(s.id));
+  }
+
+  // 新規スナップショット作成（savedScenarios と autoSnapshots は除外）
+  const { savedScenarios: _ss, autoSnapshots: _as, ...snapshotBase } = state;
+  const snapshot = {
+    id:        'auto_' + Date.now(),
+    name:      `${now.getFullYear()}年版プラン`,
+    memo:      '自動保存された年次スナップショット',
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    _auto:     true,
     snapshot:  JSON.parse(JSON.stringify(snapshotBase)),
   };
-  if (!state.autoSnapshots) state.autoSnapshots = [];
-  state.autoSnapshots.unshift(snap);
-  if (state.autoSnapshots.length > 24) state.autoSnapshots = state.autoSnapshots.slice(0, 24);
+  state.savedScenarios.push(snapshot);
   save();
 }
 
@@ -21665,10 +21727,15 @@ function submitSaveScenario() {
 function renderSavedScenarioList() {
   const el = document.getElementById('savedScenarioList');
   if (!el) return;
-  const list = state.savedScenarios || [];
+  const allList = state.savedScenarios || [];
+  // [Plan Redesign Phase 3] 手動保存と自動年次スナップショットを分離
+  const manualList = allList.filter(s => !s._auto);
+  const autoList   = allList.filter(s => s._auto)
+    .slice().sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const plan  = getUserPlan();
   const limit = SCENARIO_LIMITS[plan].saved;
-  const canCompare = limit > 0; // Standard以上
+  // 比較機能：Free は前年版 vs 現在の 1-vs-1 のみ、Standard/Premium は最大3件オーバーレイ
+  const canCompare = plan !== 'free' || autoList.length > 0;
   let html = '';
 
   // K: 現在のプランは常に先頭にチェックボックス付きで表示
@@ -21686,15 +21753,29 @@ function renderSavedScenarioList() {
     </div>`;
   }
 
-  // T-06: ダウングレード警告（Freeで保存済みシナリオがある場合）
-  if (limit === 0 && list.length > 0) {
+  // T-06: ダウングレード警告（Freeで手動保存済みシナリオがある場合）
+  if (limit === 0 && manualList.length > 0) {
     html += `<div class="upgrade-banner upgrade-banner--warn">
-      <span class="upgrade-banner__text">${UPGRADE_COPY.downgrade_scenario.banner(list.length)}</span>
+      <span class="upgrade-banner__text">${UPGRADE_COPY.downgrade_scenario.banner(manualList.length)}</span>
     </div>`;
   }
 
-  // シナリオ一覧
-  if (list.length === 0) {
+  // [Plan Redesign Phase 2] アセットソフトリミット警告（Free 6件以上）
+  const grace = _checkAssetGraceStatus();
+  if (grace.warning) {
+    html += `<div class="upgrade-banner upgrade-banner--warn" style="margin-bottom:8px">
+      <span class="upgrade-banner__text">⚠️ Free プランはアセット5件まで（現在 ${state.assets.length}件）。あと ${grace.daysLeft}日で新規追加が制限されます。</span>
+      <button class="upgrade-banner__link" onclick="showUpgradeModal('asset_limit')">Standardを見る →</button>
+    </div>`;
+  } else if (grace.blocked) {
+    html += `<div class="upgrade-banner upgrade-banner--warn" style="margin-bottom:8px">
+      <span class="upgrade-banner__text">🔒 Free プラン上限超過：30日経過のため新規アセット追加は停止中です（既存アセットは維持されます）</span>
+      <button class="upgrade-banner__link" onclick="showUpgradeModal('asset_limit')">Standardを見る →</button>
+    </div>`;
+  }
+
+  // 手動シナリオ一覧
+  if (manualList.length === 0) {
     if (limit === 0) {
       html += `<div class="upgrade-banner">
         <span class="upgrade-banner__text">💡 Standardプラン以上で最大3件のシナリオを保存できます。</span>
@@ -21704,7 +21785,7 @@ function renderSavedScenarioList() {
       html += '<div style="color:var(--text-muted);font-size:14px;padding:12px 0 4px;text-align:center;">保存済みシナリオはありません<br><span style="font-size:12px">「今のプランを保存」でシナリオを追加できます</span></div>';
     }
   } else {
-    html += list.map(sc => {
+    html += manualList.map(sc => {
       const date = sc.updatedAt ? sc.updatedAt.slice(0, 10) : sc.createdAt.slice(0, 10);
       const canLoad = limit > 0;
       const isChecked = _compareSelected.has(sc.id);
@@ -21726,30 +21807,52 @@ function renderSavedScenarioList() {
     }).join('');
   }
 
-  // T-03: 自動スナップショット プレースホルダー（Standard/Free）
-  if (plan !== 'premium') {
-    const copy = UPGRADE_COPY.auto_snapshot;
-    html += `<div style="margin-top:16px;background:#F9FAFB;border:1.5px dashed #D1D5DB;border-radius:10px;padding:14px 16px;">
-      <div style="font-weight:700;font-size:14px;color:#374151;margin-bottom:4px">${copy.placeholder_title}</div>
-      <div style="font-size:13px;color:#6B7280;margin-bottom:10px">${copy.placeholder_body}</div>
-      <button class="btn btn-sm btn-secondary" onclick="showUpgradeModal('auto_snapshot')">${copy.cta}</button>
+  // [Plan Redesign Phase 3] 年次自動スナップショット一覧（全プラン）
+  const yearlyLimit = { free: 1, standard: 3, premium: Infinity }[plan];
+  html += `<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">
+    📅 年次自動スナップショット <span style="font-weight:400;color:#9CA3AF">（${plan==='premium'?'無制限':'最大'+yearlyLimit+'件'}・年1回自動保存）</span>
+  </div>`;
+  if (autoList.length === 0) {
+    html += `<div style="font-size:12px;color:#9CA3AF;padding:8px 0">
+      最初の年次スナップショットは登録から1年後に自動作成されます。
     </div>`;
   } else {
-    // Premium: autoSnapshots一覧
-    const snaps = state.autoSnapshots || [];
-    if (snaps.length > 0) {
-      html += '<div style="margin-top:16px"><div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">📅 自動スナップショット</div>';
-      html += snaps.map(s => `<div class="ssn-card">
-        <div class="ssn-card__meta">
-          <div class="ssn-card__name">${escapeHtml(s.label)}</div>
-          <div class="ssn-card__date">${s.createdAt.slice(0, 10)}</div>
+    html += autoList.map(sc => {
+      const date = (sc.createdAt || '').slice(0, 10);
+      const isChecked = _compareSelected.has(sc.id);
+      return `<div class="ssn-card" style="border-left:3px solid #10B981">
+        ${canCompare ? `<div class="sc-check-row" style="flex:1;min-width:0">
+          <input type="checkbox" id="sc_cb_${sc.id}" ${isChecked ? 'checked' : ''}
+            onchange="toggleCompareSelect('${sc.id}')">` : '<div style="flex:1;min-width:0">'}
+          <div class="ssn-card__meta" style="flex:1">
+            <div class="ssn-card__name">${escapeHtml(sc.name)}</div>
+            <div class="ssn-card__date">📅 自動 ／ ${date}</div>
+          </div>
+          <div class="ssn-card__actions">
+            <button class="btn btn-sm btn-primary" onclick="confirmLoadScenario('${sc.id}')">読み込む</button>
+          </div>
         </div>
-        <div class="ssn-card__actions">
-          <button class="btn btn-sm btn-primary" onclick="confirmLoadAutoSnapshot('${s.id}')">読み込む</button>
-        </div>
-      </div>`).join('');
-      html += '</div>';
-    }
+      </div>`;
+    }).join('');
+  }
+  html += '</div>';
+
+  // [Deprecated] 旧月次自動スナップショット（読み込み専用、データが残っている場合のみ表示）
+  const legacySnaps = state.autoSnapshots || [];
+  if (legacySnaps.length > 0) {
+    html += `<div style="margin-top:16px"><div style="font-size:12px;font-weight:600;color:#9CA3AF;margin-bottom:8px">
+      📦 旧 月次自動スナップショット <span style="font-weight:400">（読み込み専用・新規作成は停止）</span>
+    </div>`;
+    html += legacySnaps.slice(0, 6).map(s => `<div class="ssn-card" style="opacity:.75">
+      <div class="ssn-card__meta">
+        <div class="ssn-card__name" style="color:#6B7280">${escapeHtml(s.label || s.id)}</div>
+        <div class="ssn-card__date">${(s.createdAt || '').slice(0, 10)}</div>
+      </div>
+      <div class="ssn-card__actions">
+        <button class="btn btn-sm btn-secondary" onclick="confirmLoadAutoSnapshot('${s.id}')">読み込む</button>
+      </div>
+    </div>`).join('');
+    html += '</div>';
   }
 
   el.innerHTML = html;
@@ -22015,6 +22118,9 @@ let _compareActiveTab = 'chart';
 let _compareActiveScId = '__current__';
 
 function toggleCompareSelect(id) {
+  // [Plan Redesign Phase 3] プラン別比較上限：Free/Standard 2件 / Premium 3件オーバーレイ
+  const _plan = getUserPlan();
+  const _maxCompare = _plan === 'premium' ? 3 : 2;
   if (_compareSelected.has(id)) {
     if (_compareSelected.size <= 1) {
       // 最低1件は残す。チェックを戻す
@@ -22024,8 +22130,9 @@ function toggleCompareSelect(id) {
     }
     _compareSelected.delete(id);
   } else {
-    if (_compareSelected.size >= 3) {
-      showNotification('比較は最大3件までです');
+    if (_compareSelected.size >= _maxCompare) {
+      const msg = _plan === 'premium' ? '比較は最大3件までです' : '3件以上の比較は Premium プラン限定です';
+      showNotification(msg);
       const cb = document.getElementById('sc_cb_' + id);
       if (cb) cb.checked = false;
       return;
