@@ -749,7 +749,7 @@
   <div class="section-card" id="premiumTrendCard" style="display:none">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <span>📊 カテゴリ別トレンド分析</span>
-      <span class="premium-badge">PRO（準備中）</span>
+      <span class="premium-badge">Standard / Premium</span>
     </div>
     <div id="premiumTrendContent"></div>
   </div>
@@ -758,7 +758,7 @@
   <div class="section-card" id="premiumSimCard" style="display:none">
     <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
       <span>💡 改善シミュレーター</span>
-      <span class="premium-badge">PRO（準備中）</span>
+      <span class="premium-badge">Premium 限定</span>
     </div>
     <div id="premiumSimContent"></div>
   </div>
@@ -1408,10 +1408,10 @@
       プレミアム機能のご案内
     </div>
 
-    <!-- 準備中バナー -->
+    <!-- ライフプラン連携バナー -->
     <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#92400E;line-height:1.5">
-      ⏳ 現在ローンチ準備中です。下記は予定内容で、価格・仕様・提供開始時期は変更となる場合があります。<br>
-      無料トライアルでひと足先に機能をお試しいただけます。
+      ⏳ プレミアム機能はライフプランアプリと連携しています。<br>
+      <a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約いただくと、こちらの機能も自動でご利用いただけます。
     </div>
 
     <!-- 機能リスト -->
@@ -1440,13 +1440,13 @@
 
     <!-- CTAボタン群 -->
     <div style="display:flex;flex-direction:column;gap:8px">
-      <button class="btn btn-primary btn-full" onclick="activatePremiumTrial()" style="font-size:14px;padding:13px">
-        🎉 7日間 無料で試す
-      </button>
+      <a class="btn btn-primary btn-full" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="font-size:14px;padding:13px;text-decoration:none;text-align:center">
+        🚀 ライフプランアプリでプランを確認する
+      </a>
     </div>
     <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;line-height:1.5">
-      無料トライアルはクレジットカード不要 · 7日後に自動終了<br>
-      有料プランの正式提供開始時にあらためてご案内します
+      Standard プラン（¥480/月）・Premium プラン（¥980/月）<br>
+      ライフプランアプリでご契約後、こちらの機能も自動で解放されます
     </p>
   </div>
 </div>
@@ -3962,6 +3962,14 @@ function isPremium() {
   return false;
 }
 
+// ライフプランアプリのプランを参照（free / standard / premium）
+function getLifeplanPlan() {
+  try {
+    const lp = JSON.parse(localStorage.getItem('lifeplan_v1') || 'null');
+    return lp?._plan || 'free';
+  } catch(e) { return 'free'; }
+}
+
 function getPremiumTrialDaysLeft() {
   const s = state.settings;
   if (s?.premiumPlan !== 'trial' || !s.premiumTrialStart) return 0;
@@ -4128,7 +4136,7 @@ function renderPremiumStatusBanner() {
           <div style="display:flex;align-items:center;gap:10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:12px">
             <span style="font-size:18px">⏰</span>
             <div style="flex:1;font-size:12px;color:#92400E">
-              <strong>トライアル残り${daysLeft}日</strong> — 有料プランは現在準備中です（正式リリース時にあらためてご案内します）
+              <strong>トライアル残り${daysLeft}日</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約ください
             </div>
             <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
           </div>`;
@@ -4143,7 +4151,7 @@ function renderPremiumStatusBanner() {
       <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px">
         <span style="font-size:18px">🔒</span>
         <div style="flex:1;font-size:12px;color:var(--text-muted)">
-          <strong>無料トライアルが終了しました</strong> — 有料プランは現在準備中です。正式リリース時にあらためてご案内します
+          <strong>無料トライアルが終了しました</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約ください
         </div>
         <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
       </div>`;
@@ -4165,7 +4173,7 @@ function renderPremiumTrend() {
   if (allKeys.length < 2) { card.style.display = 'none'; return; }
   card.style.display = '';
 
-  if (!isPremium()) {
+  if (getLifeplanPlan() === 'free') {
     // ロック表示（ぼかしプレビュー付き）
     el.innerHTML = `
       <div style="position:relative;min-height:160px">
@@ -4175,8 +4183,8 @@ function renderPremiumTrend() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 カテゴリ別トレンド分析</div>
           <div style="font-size:12px;color:var(--text-muted)">6ヶ月以上の推移とカテゴリ増減を表示</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">プレミアム機能（準備中）</div>
-          <button class="btn btn-secondary" onclick="openPremiumModal()" style="margin-top:4px;font-size:12px;padding:6px 14px">無料体験する</button>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">カテゴリ別トレンド分析は ライフプランアプリ Standard / Premium プランで解放されます</div>
+          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">ライフプランアプリで契約する</a>
         </div>
       </div>`;
     return;
@@ -4273,7 +4281,7 @@ function renderPremiumSim() {
   if (!allKeys.length) { card.style.display = 'none'; return; }
   card.style.display = '';
 
-  if (!isPremium()) {
+  if (getLifeplanPlan() !== 'premium') {
     el.innerHTML = `
       <div style="position:relative;min-height:130px">
         <div style="filter:blur(4px);pointer-events:none;opacity:.5;padding:14px;background:var(--surface2);border-radius:8px">
@@ -4284,8 +4292,8 @@ function renderPremiumSim() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 改善シミュレーター</div>
           <div style="font-size:12px;color:var(--text-muted)">任意のカテゴリで節約効果を試算</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">プレミアム機能（準備中）</div>
-          <button class="btn btn-secondary" onclick="openPremiumModal()" style="margin-top:4px;font-size:12px;padding:6px 14px">無料体験する</button>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">改善シミュレーターは ライフプランアプリ Premium プランで解放されます</div>
+          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">ライフプランアプリで契約する</a>
         </div>
       </div>`;
     return;
