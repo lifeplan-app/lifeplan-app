@@ -5508,33 +5508,52 @@ const PLAN_NAMES = { free: 'Free', standard: 'Standard', premium: 'Premium' };
 
 // ===== G: プラン管理 定数 =====
 const PLAN_FEATURES = [
+  { label: '価格',                                free: '無料', standard: '¥480/月', premium: '¥980/月' },
   { label: 'タイムライン・資産シミュレーション', free: '✅', standard: '✅', premium: '✅' },
   { label: 'ライフイベント管理（住宅・子ども等）', free: '✅', standard: '✅', premium: '✅' },
   { label: 'リタイア設計・出口戦略',              free: '✅', standard: '✅', premium: '✅' },
   { label: '保険管理・相続設計',                  free: '✅', standard: '✅', premium: '✅' },
-  { label: 'PDF出力・データ書き出し',              free: '✅', standard: '✅', premium: '✅' },
+  { label: 'アセット登録数',                       free: '5件', standard: '無制限', premium: '無制限' },
+  { label: 'PDF出力（フル版）',                    free: '✗',   standard: '✅', premium: '✅' },
+  { label: 'データ書き出し（JSON）',               free: '✅', standard: '✅', premium: '✅' },
   { label: 'ポートフォリオテンプレート',           free: '1種', standard: '3種', premium: '12種' },
-  { label: 'シナリオ保存（スナップショット）',     free: '✗',  standard: '3件', premium: '無制限' },
-  { label: '月次自動スナップショット',             free: '✗',  standard: '✗',  premium: '最大24件' },
+  { label: 'シナリオ保存（手動）',                 free: '✗',   standard: '3件', premium: '無制限' },
+  { label: '年次自動スナップショット',             free: '1件', standard: '3件', premium: '無制限' },
+  { label: '配当金推移シミュレーション',           free: '✗',   standard: '✗',   premium: '✅' },
+  { label: 'モンテカルロ シミュレーション',         free: '200回', standard: '200回', premium: '1000回' },
 ];
+// 価格表示（料金体系再設計：Free / Standard ¥480/月 / Premium ¥980/月、年額は10ヶ月分=2ヶ月分OFF）
+const PLAN_PRICING = {
+  free:     { monthly: 0,   yearly: 0,    label: '無料' },
+  standard: { monthly: 480, yearly: 4800, monthlyLabel: '¥480 / 月', yearlyLabel: '¥4,800 / 年', yearlyHint: '2ヶ月分お得（¥960 OFF）' },
+  premium:  { monthly: 980, yearly: 9800, monthlyLabel: '¥980 / 月', yearlyLabel: '¥9,800 / 年', yearlyHint: '2ヶ月分お得（¥1,960 OFF）' },
+};
+
+function _planPriceLabel(plan, billing) {
+  const p = PLAN_PRICING[plan];
+  if (!p) return '—';
+  if (plan === 'free') return p.label;
+  return billing === 'yearly' ? p.yearlyLabel : p.monthlyLabel;
+}
+
 const PLAN_CARD_DEF = {
   free: {
     icon: '🌱', color: '#6B7280', bg: '#F9FAFB',
     price: '無料',
-    features: ['基本シミュレーション全機能', 'スターターテンプレート1種', 'PDF出力・データ保存'],
-    disabled: ['シナリオ保存', '自動スナップショット', '追加テンプレート'],
+    features: ['基本シミュレーション全機能', 'スターターテンプレート1種', 'アセット最大5件まで'],
+    disabled: ['PDF出力（フル版）', 'シナリオ保存', '自動スナップショット', '追加テンプレート'],
   },
   standard: {
     icon: '⭐', color: '#6366F1', bg: '#EEF2FF',
-    price: '近日公開',
-    features: ['Free の全機能', 'シナリオ保存 3件', 'テンプレート 3種（DINKS・FIRE等）'],
-    disabled: ['月次自動スナップショット', 'Premiumテンプレート（9種）'],
+    price: '¥480 / 月',
+    features: ['Free の全機能', 'アセット数 無制限', 'PDF出力（フル版）', 'シナリオ保存 3件', 'テンプレート 3種（DINKS・FIRE等）', '年次自動スナップショット 3件'],
+    disabled: ['配当金推移シミュレーション', 'モンテカルロ 1000回', 'Premiumテンプレート（9種）'],
   },
   premium: {
     icon: '💎', color: '#7C3AED', bg: '#FAF5FF',
-    price: '近日公開',
+    price: '¥980 / 月',
     popular: true,
-    features: ['Standard の全機能', 'シナリオ保存 無制限', '月次自動スナップショット（最大24件）', 'テンプレート全12種'],
+    features: ['Standard の全機能', 'シナリオ保存 無制限', '年次自動スナップショット 無制限', '配当金推移シミュレーション', 'モンテカルロ 1000回試行', 'テンプレート全12種'],
     disabled: [],
   },
 };
@@ -5767,7 +5786,8 @@ let state = {
   disclaimerAck: { shown: false, rateHash: '' },
   assetTypeStats: {},   // アセット種別使用回数統計 { [typeId]: number }
   savedScenarios: [],   // 手動保存シナリオ（Standard: 最大3件 / Premium: 無制限）
-  autoSnapshots:  [],   // 月次自動スナップショット（Premium: 最大24件）
+  autoSnapshots:  [],   // [Deprecated] 月次自動スナップショット（読み込み専用、新規書き込みは年次に移行）
+  _planBilling: 'monthly', // 月額/年額 切替（プランページUI状態）
   scenarioComp: [
     { name: 'シナリオA', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
@@ -5887,6 +5907,8 @@ function load() {
     if (state._spendingExpense     === undefined) state._spendingExpense    = null;
     if (state._spendingBasedOn     === undefined) state._spendingBasedOn   = null;
     if (state._spendingAckedAt     === undefined) state._spendingAckedAt   = null;
+    // [Plan Redesign Phase 1] 月額/年額 切替フラグのマイグレーション
+    if (state._planBilling === undefined) state._planBilling = 'monthly';
     // Premium: 月次自動スナップショット（月初アクセス時に1回）
     if (getUserPlan() === 'premium') takeAutoSnapshot();
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
@@ -21649,6 +21671,7 @@ function escapeHtml(str) {
 
 function renderPlanPage() {
   const cur = getUserPlan();
+  const billing = state._planBilling || 'monthly'; // 'monthly' | 'yearly'
 
   // ── 現在のプランバナー ──
   const def = PLAN_CARD_DEF[cur];
@@ -21663,6 +21686,25 @@ function renderPlanPage() {
           : 'すべての機能が利用可能です ✨'
         }</div>
       </div>
+    </div>
+    <!-- 月額/年額 切替トグル -->
+    <div style="display:flex;justify-content:center;gap:0;margin:16px 0 20px">
+      <div style="display:inline-flex;background:#F3F4F6;border-radius:999px;padding:4px;font-size:13px;font-weight:600">
+        <button onclick="setPlanBilling('monthly')"
+          style="padding:8px 18px;border-radius:999px;border:0;cursor:pointer;background:${billing==='monthly'?'#fff':'transparent'};color:${billing==='monthly'?'#1F2937':'#6B7280'};box-shadow:${billing==='monthly'?'0 1px 3px rgba(0,0,0,.08)':'none'}">
+          月額
+        </button>
+        <button onclick="setPlanBilling('yearly')"
+          style="padding:8px 18px;border-radius:999px;border:0;cursor:pointer;background:${billing==='yearly'?'#fff':'transparent'};color:${billing==='yearly'?'#1F2937':'#6B7280'};box-shadow:${billing==='yearly'?'0 1px 3px rgba(0,0,0,.08)':'none'};display:flex;align-items:center;gap:6px">
+          年額
+          <span style="background:#10B981;color:#fff;font-size:10px;padding:2px 6px;border-radius:8px">17% OFF</span>
+        </button>
+      </div>
+    </div>
+    <!-- B2B 法人プラン誘導 -->
+    <div style="margin:0 0 20px;padding:10px 14px;background:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;font-size:12px;color:#0C4A6E;display:flex;align-items:center;gap:10px">
+      <span style="font-size:16px">🏢</span>
+      <span style="flex:1">業務利用・FP/IFA向けプランは <a href="https://pro.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#0369A1;font-weight:700;text-decoration:underline">法人プラン pro.lifeplan-app.net</a> をご検討ください。</span>
     </div>`;
 
   // ── プランカードグリッド ──
@@ -21678,6 +21720,20 @@ function renderPlanPage() {
       ...d.features.map(f => `<li><span class="fc-ok">✓</span> ${f}</li>`),
       ...d.disabled.map(f => `<li class="fc-dim"><span class="fc-no">✗</span> ${f}</li>`),
     ].join('');
+    // 価格表示（月額/年額 切替対応）
+    const pr = PLAN_PRICING[p];
+    let priceHtml;
+    if (p === 'free') {
+      priceHtml = `<div class="plan-card__price">無料</div>`;
+    } else if (billing === 'yearly') {
+      priceHtml = `
+        <div class="plan-card__price">${pr.yearlyLabel}</div>
+        <div style="font-size:11px;color:#10B981;font-weight:700;margin-top:-4px;margin-bottom:8px">${pr.yearlyHint}</div>`;
+    } else {
+      priceHtml = `
+        <div class="plan-card__price">${pr.monthlyLabel}</div>
+        <div style="font-size:11px;color:#9CA3AF;margin-top:-4px;margin-bottom:8px">年額なら ${pr.yearlyLabel}（17% OFF）</div>`;
+    }
     let ctaClass, ctaLabel, ctaOnclick;
     if (isCurrent) {
       ctaClass = 'plan-cta plan-cta--current'; ctaLabel = '利用中'; ctaOnclick = '';
@@ -21690,7 +21746,7 @@ function renderPlanPage() {
       <div class="plan-card${isCurrent ? ' plan-card--current' : ''}${d.popular && !isCurrent ? ' plan-card--popular' : ''}">
         ${topBadge}
         <div class="plan-card__name" style="color:${d.color}">${d.icon} ${PLAN_NAMES[p]}</div>
-        <div class="plan-card__price">${d.price}</div>
+        ${priceHtml}
         <ul class="plan-card__features">${featHtml}</ul>
         <button id="planCta_${p}" class="${ctaClass}" ${ctaOnclick} ${isCurrent ? 'disabled' : ''}>${ctaLabel}</button>
       </div>`;
@@ -21740,6 +21796,14 @@ function setDemoPlan(plan) {
   showNotification(`プランを「${PLAN_NAMES[plan]}」に変更しました（デモ）`);
   // ダッシュボードが表示されているならバッジ更新
   if (document.getElementById('page-dashboard')?.classList.contains('active')) renderDashboard();
+}
+
+/** 月額/年額 切替（プランページの料金表示） */
+function setPlanBilling(billing) {
+  if (billing !== 'monthly' && billing !== 'yearly') return;
+  state._planBilling = billing;
+  save();
+  renderPlanPage();
 }
 
 function planExternalCta(plan) {
