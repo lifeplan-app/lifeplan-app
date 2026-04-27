@@ -15,6 +15,8 @@
   <link rel="apple-touch-icon" href="icon-lifeplan.svg">
   <!-- Analytics -->
   <script src="analytics.js" data-app="lifeplan"></script>
+  <!-- PWA インストール促進 -->
+  <script src="pwa-install.js" defer></script>
   <!-- OGP -->
   <meta property="og:title" content="ライフプランアプリ — 人生100年を、自分の手で設計する">
   <meta property="og:description" content="収入・支出・資産・ライフイベントを入力するだけで老後シミュレーションが動く無料ツール。データはブラウザ内に保存。登録不要。">
@@ -28,6 +30,48 @@
   <meta name="twitter:title" content="ライフプランアプリ — 人生100年を、自分の手で設計する">
   <meta name="twitter:description" content="収入・支出・資産・ライフイベントを入力するだけで老後シミュレーションが動く無料ツール。データはブラウザ内に保存。登録不要。">
   <meta name="twitter:image" content="https://YOUR-DOMAIN.com/ogp/lifeplan-ogp.png">
+  <!-- WebApplication 構造化データ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ライフプランアプリ",
+    "alternateName": ["ライフプラン アプリ", "ライフプランシミュレーター"],
+    "url": "https://app.lifeplan-app.net/",
+    "description": "収入・支出・資産・ライフイベント・住宅ローン・年金・NISA・iDeCoを1つの画面で試算できる、無料・登録不要・ブラウザ完結のライフプランシミュレーター。データはローカルストレージ内のみで完結し外部送信されません。",
+    "applicationCategory": "FinanceApplication",
+    "applicationSubCategory": "PersonalFinance",
+    "operatingSystem": "Any (Web browser)",
+    "browserRequirements": "Requires modern browser with JavaScript enabled (Chrome, Safari, Firefox, Edge)",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
+    "featureList": [
+      "老後資産シミュレーション",
+      "新NISA運用試算",
+      "iDeCo拠出シミュレーション",
+      "住宅ローン返済計画",
+      "年金受給額試算",
+      "ライフイベント別キャッシュフロー",
+      "PDF レポート出力",
+      "ブラウザのみで完結（インストール不要）",
+      "PWA インストール可"
+    ],
+    "creator": {
+      "@type": "Organization",
+      "name": "ライフプランアプリ",
+      "url": "https://lifeplan-app.net/"
+    },
+    "inLanguage": "ja",
+    "potentialAction": {
+      "@type": "UseAction",
+      "target": "https://app.lifeplan-app.net/"
+    }
+  }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
     :root {

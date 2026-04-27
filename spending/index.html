@@ -15,6 +15,8 @@
   <link rel="apple-touch-icon" href="icon-spending.svg">
   <!-- Analytics -->
   <script src="../analytics.js" data-app="spending"></script>
+  <!-- PWA インストール促進 -->
+  <script src="../pwa-install.js" defer></script>
   <!-- OGP -->
   <meta property="og:title" content="支出管理アプリ — 毎月の支出を4領域で見える化する">
   <meta property="og:description" content="毎月固定・変動・不定期費を4領域で管理。MF・Zaim対応CSVインポート。データはブラウザ内に保存。完全無料。">
@@ -28,6 +30,46 @@
   <meta name="twitter:title" content="支出管理アプリ — 毎月の支出を4領域で見える化する">
   <meta name="twitter:description" content="毎月固定・変動・不定期費を4領域で管理。MF・Zaim対応CSVインポート。データはブラウザ内に保存。完全無料。">
   <meta name="twitter:image" content="https://app.lifeplan-app.net/ogp/spending-ogp.svg">
+  <!-- WebApplication 構造化データ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "支出管理アプリ",
+    "alternateName": ["家計簿アプリ", "支出見える化アプリ"],
+    "url": "https://app.lifeplan-app.net/spending/",
+    "description": "毎月固定費・毎月変動費・不定期固定費・不定期変動費の4領域で家計の支出を見える化する、無料・登録不要・ブラウザ完結の支出管理アプリ。マネーフォワードME / Zaim の CSV エクスポートに対応。データはローカルストレージ内のみで完結し外部送信されません。",
+    "applicationCategory": "FinanceApplication",
+    "applicationSubCategory": "PersonalFinance",
+    "operatingSystem": "Any (Web browser)",
+    "browserRequirements": "Requires modern browser with JavaScript enabled (Chrome, Safari, Firefox, Edge)",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
+    "featureList": [
+      "4領域での家計支出分類（毎月固定/毎月変動/不定期固定/不定期変動）",
+      "マネーフォワードME / Zaim CSV インポート",
+      "月次・年次の収支グラフ",
+      "予算設定・予算超過アラート",
+      "カテゴリ別支出推移",
+      "ブラウザのみで完結（インストール不要）",
+      "PWA インストール可"
+    ],
+    "creator": {
+      "@type": "Organization",
+      "name": "ライフプランアプリ",
+      "url": "https://lifeplan-app.net/"
+    },
+    "inLanguage": "ja",
+    "potentialAction": {
+      "@type": "UseAction",
+      "target": "https://app.lifeplan-app.net/spending/"
+    }
+  }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- アフィリエイトリンク設定（URLのみ affiliate-config.js で管理） -->
   <script src="affiliate-config.js"></script>

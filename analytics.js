@@ -78,9 +78,44 @@
     'openCatSettings':     'open_categories',
   };
 
+  // アフィリエイトASPドメイン（クリック検出用）
+  var AFFILIATE_DOMAIN_MAP = {
+    'a8.net':              'a8',
+    'moshimo.com':         'moshimo',
+    'linksynergy.com':     'rakuten',
+    'valuecommerce.com':   'valuecommerce',
+    'accesstrade.net':     'accesstrade',
+    'afl.rakuten.co.jp':   'rakuten_afl',
+    'amazon.co.jp':        'amazon',
+  };
+  function detectAffProgram(hostname) {
+    for (var d in AFFILIATE_DOMAIN_MAP) {
+      if (hostname === d || hostname.endsWith('.' + d)) return AFFILIATE_DOMAIN_MAP[d];
+    }
+    return null;
+  }
+
   document.addEventListener('click', function (ev) {
     var el = ev.target.closest('button, a, [onclick]');
     if (!el) return;
+
+    // アフィリエイトリンク検出（aタグのみ）
+    if (el.tagName === 'A' && el.href) {
+      try {
+        var u = new URL(el.href);
+        var aff = detectAffProgram(u.hostname);
+        if (aff) {
+          window.trackAppEvent('affiliate_click', {
+            aff_program: aff,
+            aff_link_text: (el.textContent || '').trim().slice(0, 60),
+            aff_url_host: u.hostname,
+          });
+          // returnせず操作キーワード検出も継続（同じリンクが両方マッチする可能性）
+        }
+      } catch (e) { /* invalid URL */ }
+    }
+
+    // 主要操作キーワード
     var oc = el.getAttribute('onclick') || '';
     var id = el.id || '';
     for (var key in ACTION_KEYWORDS) {
