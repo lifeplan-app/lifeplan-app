@@ -5452,6 +5452,57 @@ function getUserPlan() {
 }
 const PLAN_ORDER = { free: 0, standard: 1, premium: 2 };
 
+// ===== Free アセット 5件 ソフトリミット =====
+const ASSET_FREE_LIMIT = 5;
+const ASSET_GRACE_DAYS = 30;
+
+/**
+ * アセットソフトリミット状態を判定する。
+ * - Free プラン以外は常に { warning: false, blocked: false }
+ * - 5件以下も { warning: false, blocked: false }
+ * - 6件以上で初回検出時は state._assetGraceStart を記録 → warning = true
+ * - 30日以内なら warning = true、経過後は blocked = true
+ */
+function _checkAssetGraceStatus() {
+  const plan = getUserPlan();
+  const count = (state.assets || []).length;
+  if (plan !== 'free' || count <= ASSET_FREE_LIMIT) {
+    return { warning: false, blocked: false, daysLeft: null };
+  }
+  if (!state._assetGraceStart) {
+    state._assetGraceStart = new Date().toISOString();
+    save();
+  }
+  const start = new Date(state._assetGraceStart);
+  const elapsed = (Date.now() - start.getTime()) / (1000 * 60 * 60 * 24);
+  const daysLeft = Math.max(0, Math.ceil(ASSET_GRACE_DAYS - elapsed));
+  if (elapsed >= ASSET_GRACE_DAYS) {
+    return { warning: false, blocked: true, daysLeft: 0 };
+  }
+  return { warning: true, blocked: false, daysLeft };
+}
+
+/**
+ * アプリ初期化時に Free プラン超過状態をチェックし、必要なら _assetGraceStart を初期化。
+ * 5件以下に減った場合は grace をリセット。
+ */
+function checkAssetSoftLimit() {
+  const plan = getUserPlan();
+  const count = (state.assets || []).length;
+  if (plan !== 'free' || count <= ASSET_FREE_LIMIT) {
+    if (state._assetGraceStart) {
+      state._assetGraceStart = null;
+      save();
+    }
+    return;
+  }
+  // 検出時に grace 開始日を記録
+  if (!state._assetGraceStart) {
+    state._assetGraceStart = new Date().toISOString();
+    save();
+  }
+}
+
 // ===== F: Upgrade誘導UI 定数 =====
 const UPGRADE_COPY = {
   // T-01: テンプレートロック
@@ -5788,6 +5839,7 @@ let state = {
   savedScenarios: [],   // 手動保存シナリオ（Standard: 最大3件 / Premium: 無制限）
   autoSnapshots:  [],   // [Deprecated] 月次自動スナップショット（読み込み専用、新規書き込みは年次に移行）
   _planBilling: 'monthly', // 月額/年額 切替（プランページUI状態）
+  _assetGraceStart: null,  // Free アセット5件超ソフトリミット開始日（ISO）
   scenarioComp: [
     { name: 'シナリオA', retireAge: null, monthlyExpense: null, returnMod: 0 },
     { name: 'シナリオB', retireAge: null, monthlyExpense: null, returnMod: 0 },
@@ -5909,8 +5961,12 @@ function load() {
     if (state._spendingAckedAt     === undefined) state._spendingAckedAt   = null;
     // [Plan Redesign Phase 1] 月額/年額 切替フラグのマイグレーション
     if (state._planBilling === undefined) state._planBilling = 'monthly';
+    // [Plan Redesign Phase 2] Free アセットソフトリミット用フィールド
+    if (state._assetGraceStart === undefined) state._assetGraceStart = null;
     // Premium: 月次自動スナップショット（月初アクセス時に1回）
     if (getUserPlan() === 'premium') takeAutoSnapshot();
+    // [Plan Redesign Phase 2] Free プラン アセットソフトリミット判定
+    try { checkAssetSoftLimit(); } catch (e) { console.warn('checkAssetSoftLimit failed', e); }
     if (!state.lifeScenario.housing) state.lifeScenario.housing = { scenarios: [
       { label: '賃貸',         monthlyRent: 12,  purchasePrice: 0,    downPayment: 0,   loanYears: 0,  loanRate: 1.0, type: 'rent' },
       { label: '持ち家（一括）', monthlyRent: 0,   purchasePrice: 3000, downPayment: 3000, loanYears: 0, loanRate: 1.0, type: 'buy_cash' },
@@ -6159,10 +6215,23 @@ function captureChartAsBase64(canvasId) {
 }
 
 function printLifePlan() {
+  // [Plan Redesign Phase 2] PDF 出力は Standard 以上限定
+  const _plan = getUserPlan();
+  if (_plan === 'free') {
+    showUpgradeModal('pdf_export');
+    return;
+  }
   const p = state.profile || {};
   const age = calcAge();
   const now = new Date();
   const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  // [Plan Redesign Phase 2] レポートID生成（LP-YYYYMMDD-XXXXXXXX）
+  const _pad = n => String(n).padStart(2, '0');
+  const _ymd = `${now.getFullYear()}${_pad(now.getMonth()+1)}${_pad(now.getDate())}`;
+  const _rid = Array.from(crypto.getRandomValues(new Uint8Array(4)))
+    .map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const reportId = `LP-${_ymd}-${_rid}`;
+  const planLabel = PLAN_NAMES[_plan] || 'Standard';
   const totalAssets = state.assets.reduce((s, a) => s + (a.currentVal || 0), 0);
   const currentYear = now.getFullYear();
   const annualIncome = getIncomeForYear(currentYear);
@@ -6544,10 +6613,19 @@ function printLifePlan() {
     <a href="https://lifeplan-app.net/blog/" style="color:#0369A1;font-weight:600">https://lifeplan-app.net/blog/</a></div>
   </div>
 
-  <!-- フッター -->
-  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:8.5pt;color:#94A3B8;text-align:center">
-    このレポートはライフプランアプリにより自動生成されました ／ ${dateStr}<br>
-    <a href="https://app.lifeplan-app.net/" style="color:#94A3B8">app.lifeplan-app.net</a>
+  <!-- フッター（レポートID・透かし・B2B誘導） -->
+  <div style="margin-top:32px;padding-top:12px;border-top:1px solid #E2E8F0;font-size:8.5pt;color:#94A3B8;text-align:center;line-height:1.7">
+    <div style="font-family:monospace;font-size:8pt;color:#64748B;margin-bottom:4px">
+      レポート ID: <strong>${reportId}</strong>
+    </div>
+    <div style="margin-bottom:4px">
+      このレポートはライフプランアプリ <strong style="color:#7C3AED">${planLabel} プラン</strong>で作成されました ／ ${dateStr}
+    </div>
+    <div>
+      <a href="https://app.lifeplan-app.net/" style="color:#94A3B8">app.lifeplan-app.net</a>
+      &nbsp;｜&nbsp;
+      業務利用は法人プラン <a href="https://pro.lifeplan-app.net/" style="color:#7C3AED;font-weight:600">pro.lifeplan-app.net</a> へ
+    </div>
   </div>
 
 </div>
@@ -8636,6 +8714,18 @@ function recordAssetTypeUsage(type) {
 }
 
 function openAssetModal(id) {
+  // [Plan Redesign Phase 2] Free プランは新規追加時 5件までに制限（既存編集は許可）
+  if (!id) {
+    const _plan = getUserPlan();
+    if (_plan === 'free' && (state.assets || []).length >= 5) {
+      const grace = _checkAssetGraceStatus();
+      if (grace.blocked || !grace.warning) {
+        showUpgradeModal('asset_limit');
+        return;
+      }
+      // grace.warning 中は警告のみで追加を許可（ソフトリミット）
+    }
+  }
   editingAssetId = id || null;
   document.getElementById('assetModalTitle').textContent = id ? 'アセットを編集' : 'アセットを追加';
   // data-asset-id を設定（resetAssetRateToPreset で参照）
@@ -11885,6 +11975,26 @@ function showUpgradeModal(trigger) {
           title:    UPGRADE_COPY.rebalance.placeholder_title,
           body:     UPGRADE_COPY.rebalance.placeholder_body,
           ctaLabel: UPGRADE_COPY.rebalance.cta,
+          ctaPlan:  'standard',
+        };
+        break;
+      }
+      case 'pdf_export': {
+        config = {
+          icon:     '📄',
+          title:    'PDF レポート出力は Standard 以上で利用できます',
+          body:     'グラフ・詳細分析を含むフルレポートを PDF として出力できます。¥480/月 の Standard プランからご利用いただけます。',
+          ctaLabel: 'Standardプランを見る',
+          ctaPlan:  'standard',
+        };
+        break;
+      }
+      case 'asset_limit': {
+        config = {
+          icon:     '🗂️',
+          title:    'Free プランのアセット登録は最大 5件までです',
+          body:     'アセットを 6件以上登録するには Standard プラン（¥480/月）以上が必要です。Standardではアセット数無制限・PDF出力・シナリオ保存も利用できます。',
+          ctaLabel: 'Standardプランを見る',
           ctaPlan:  'standard',
         };
         break;
