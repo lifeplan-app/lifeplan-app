@@ -220,9 +220,17 @@ document.querySelectorAll('.tp-rv').forEach(el => io.observe(el));
 
 ## 12. セキュリティ制約（両アプリ共通）
 
-- CSP `connect-src 'none'` — 外部API通信は絶対に禁止
 - localStorage のみでデータ完結（`lifeplan_v1` / `spending_v1`）
+- ユーザーが入力した家計データ・個人情報は**外部送信しない**（CSPで遮断）
 - 外部画像・外部JS・外部フォントは使わない（WAFとCSPで二重に拒否される）
+
+### 12.1 CSP 例外（GA4のみ許可、2026-04-27）
+集客効果計測のため、GA4 に限定して以下のドメインを許可している：
+- `script-src`: `https://www.googletagmanager.com`
+- `connect-src`: `https://www.google-analytics.com`, `https://*.analytics.google.com`, `https://*.google-analytics.com`, `https://www.googletagmanager.com`
+- `img-src`: `https://www.google-analytics.com`, `https://www.googletagmanager.com`
+
+送信するのは流入元・操作種別のみ（`anonymize_ip` 有効）。家計データの送信は実装上も意図上も行わない。実装は `analytics.js` を参照。
 
 ---
 
