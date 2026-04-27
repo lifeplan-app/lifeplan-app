@@ -56,13 +56,26 @@ const AFFILIATE_LINKS = {
     note:   'ASP未登録。食費 > 収入の25% でトリガー',
   },
 
-  // ── NISA・資産運用 ────────────────────────────────
+  // ── NISA ──────────────────────────────────────────
+  // 注意: 金融商品取引法上、特定の金融商品・証券会社の推奨は投資助言業に該当する。
+  // 提案カルーセルでは中立的な情報誘導文言のみを使用し、商品名・社名は出さない。
   nisa: {
-    label:  'NISAで資産を増やす',
-    url:    '#pending',
-    status: 'pending',
-    asp:    null,
-    note:   'ASP未登録。将来的にlifeplanアプリの貯蓄不足トリガーと連携予定',
+    label:  'NISA制度について詳しく見る',
+    url:    'https://px.a8.net/svt/ejp?a8mat=4B1RXW+6V2XLM+3XCC+64C3M',
+    pixel:  'https://www12.a8.net/0.gif?a8mat=4B1RXW+6V2XLM+3XCC+64C3M',
+    status: 'active',
+    asp:    'A8.net',
+    note:   '中立表現。リンク先は外部サイト（A8経由）。表示文言で商品/社名は出さない',
+  },
+
+  // ── iDeCo ─────────────────────────────────────────
+  ideco: {
+    label:  'iDeCo制度について詳しく見る',
+    url:    'https://px.a8.net/svt/ejp?a8mat=4B1RXW+6YNJ8A+3XCC+BXIYQ',
+    pixel:  'https://www11.a8.net/0.gif?a8mat=4B1RXW+6YNJ8A+3XCC+BXIYQ',
+    status: 'active',
+    asp:    'A8.net',
+    note:   '中立表現。リンク先は外部サイト（A8経由）。表示文言で商品/社名は出さない',
   },
 
 };

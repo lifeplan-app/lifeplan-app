@@ -1682,6 +1682,63 @@ const SUGGESTION_TRIGGERS = [
       return `${names} が予算超過です。支出を振り返って来月の計画に活かしましょう。`;
     },
   },
+  // ── 資産形成系（黒字を運用に回す提案）──
+  // NISA: 月3万円以上の黒字がある人向け（収入条件は緩め）
+  {
+    id: 'nisa_surplus',
+    emoji: '📈',
+    check: (d) => {
+      const income = state.income?.monthly || 0;
+      const surplus = income - (d.totalExpense || 0);
+      return income >= 200000 && surplus >= 30000;
+    },
+    avgCheck: (avg) => {
+      const income = state.income?.monthly || 0;
+      const expTotal = avg.cats ? Object.values(avg.cats).reduce((a, b) => a + b, 0) : 0;
+      return income >= 200000 && (income - expTotal) >= 30000;
+    },
+    getValue: (d) => Math.max(0, (state.income?.monthly || 0) - (d.totalExpense || 0)),
+    getAvgValue: (avg) => {
+      const income = state.income?.monthly || 0;
+      const expTotal = avg.cats ? Object.values(avg.cats).reduce((a, b) => a + b, 0) : 0;
+      return Math.max(0, income - expTotal);
+    },
+    color: '#1B4FE8',
+    title: '月の黒字を非課税で運用する選択肢',
+    detail: (v) => `月平均 ${fmt(v)} の黒字があります。新NISAなら年間最大360万円まで運用益が無期限で非課税です。`,
+    affiliateKey: 'nisa',
+    savingsEstimate: (avg) => {
+      const income = state.income?.monthly || 0;
+      const expTotal = avg.cats ? Object.values(avg.cats).reduce((a, b) => a + b, 0) : 0;
+      const surplus = Math.max(0, income - expTotal);
+      // つみたて投資枠の月10万円上限を考慮
+      return Math.min(surplus, 100000);
+    },
+    savingsNote: '黒字額（最大月10万円）をつみたてNISAで運用した場合の試算',
+  },
+  // iDeCo: 月収50万円以上 & 黒字3万円以上（節税効果が大きい層向け）
+  {
+    id: 'ideco_high_income',
+    emoji: '💰',
+    check: (d) => {
+      const income = state.income?.monthly || 0;
+      const surplus = income - (d.totalExpense || 0);
+      return income >= 500000 && surplus >= 30000;
+    },
+    avgCheck: (avg) => {
+      const income = state.income?.monthly || 0;
+      const expTotal = avg.cats ? Object.values(avg.cats).reduce((a, b) => a + b, 0) : 0;
+      return income >= 500000 && (income - expTotal) >= 30000;
+    },
+    getValue: () => state.income?.monthly || 0,
+    getAvgValue: () => state.income?.monthly || 0,
+    color: '#5856D6',
+    title: 'iDeCoで所得控除を受けられる可能性',
+    detail: (v) => `月収 ${fmt(v)} の方は、iDeCoの掛け金が全額所得控除されます。所得税・住民税の節税効果が期待できます（流動性は60歳まで制限）。`,
+    affiliateKey: 'ideco',
+    savingsEstimate: () => 23000,
+    savingsNote: 'iDeCo月2.3万円（会社員上限の目安）を満額拠出した場合の試算',
+  },
 ];
 
 // ── 4領域の説明と例示 ──
