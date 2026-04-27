@@ -2515,6 +2515,7 @@ function renderSuggestions(monthData) {
       }
 
       let impactHtml = '';
+      let lifeplanLinkHtml = '';
       if (t.savingsEstimate && hasLifeplan) {
         const avgNum = typeof (avg3 && t.getAvgValue ? t.getAvgValue(avg3) : null) === 'number'
           ? (t.getAvgValue ? t.getAvgValue(avg3) : null) : null;
@@ -2527,6 +2528,10 @@ function renderSuggestions(monthData) {
               + '<strong>' + impact.years + '年で +' + impact.amount + '万円</strong>'
               + '<span class="sug-impact-note">年利' + impact.rate + '%複利 ／ ' + (t.savingsNote || '試算') + '<br>※試算です。将来の運用成果を保証するものではありません。</span>'
               + '</div>';
+            lifeplanLinkHtml = '<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer"'
+              + ' class="sug-blog"'
+              + ' style="display:inline-flex;align-items:center;gap:4px;margin-top:4px">'
+              + '📊 ライフプラン影響を見る →</a>';
           }
         }
       }
@@ -2543,7 +2548,7 @@ function renderSuggestions(monthData) {
       const blogHtml = '<a class="sug-blog" href="' + (_blogSlug ? BLOG_BASE + _blogSlug : BLOG_TOP) + '" target="_blank" rel="noopener noreferrer">'
         + '📖 ' + (_blogSlug ? '関連記事を読む' : 'ブログで詳しく見る') + ' →</a>';
 
-      return { id: sugId, emoji: t.emoji || '💡', title: t.title, color: t.color, isStrong, impactHtml, ctaHtml, blogHtml, detail: t.detail(val) };
+      return { id: sugId, emoji: t.emoji || '💡', title: t.title, color: t.color, isStrong, impactHtml, lifeplanLinkHtml, ctaHtml, blogHtml, detail: t.detail(val) };
     });
 
   _sugCarousel.setAll(_lastSugItems.map(i => i.id));
@@ -2568,6 +2573,7 @@ function _applySugCarouselToDOM(el) {
       + '<div class="sug-title">' + item.title + '</div>'
       + '<div class="sug-detail">' + item.detail + '</div>'
       + item.impactHtml
+      + (item.lifeplanLinkHtml || '')
       + item.blogHtml
       + '<div class="sug-actions">'
       + item.ctaHtml
@@ -3757,6 +3763,29 @@ function syncToLifeplan() {
   const variableCount = state.categories.filter(c => c.domain === 'irregular_variable').length;
   if (variableCount > 0) {
     lines.push(`<span style="color:var(--text-muted);font-size:11px">※ 特別費（一回限りの支出）は自動連携対象外です。必要に応じてライフプラン側の「単発支出」で手動登録してください。</span>`);
+  }
+
+  // [Phase 6 X] 世帯ベース注記
+  lines.push(`<div style="margin-top:10px;padding:8px 10px;background:#FEF3C7;border-radius:6px;font-size:11px;color:#92400E;line-height:1.5">
+  ⓘ これは<strong>世帯ベースの月間生活費</strong>として反映されます。<br>
+  本人/配偶者の個別収入・年金・退職金などの個別データは、ライフプランアプリの設定値が維持されます。
+</div>`);
+
+  // [Phase 6 X] 住居費二重計上警告
+  const hasRent = (lp.lifeEvents?.rent?.monthlyRent || 0) > 0;
+  const hasMortgage = (lp.lifeEvents?.mortgage?.amount || 0) > 0;
+  const housingAvg = vals.housingAvg || 0;
+  if ((hasRent || hasMortgage) && housingAvg > 0 && !excludeHousing) {
+    const housingType = hasRent ? '家賃' : '住宅ローン';
+    const lpHousingMonthly = hasRent
+      ? lp.lifeEvents.rent.monthlyRent
+      : Math.round(lp.lifeEvents.mortgage.monthlyPayment || 0);
+    lines.unshift(`<div style="margin-bottom:10px;padding:10px 12px;background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;font-size:12px;color:#991B1B;line-height:1.6">
+    ⚠️ <strong>住居費の二重計上に注意</strong><br>
+    ライフプラン側で${housingType}（月${lpHousingMonthly}万円）が設定されています。
+    現在の連携には住居費（月${Math.round(housingAvg/10000)}万円）が含まれているため、二重計上になる可能性があります。<br>
+    「住宅費を除外」を ON にすることを推奨します。
+  </div>`);
   }
 
   document.getElementById('syncConfirmBody').innerHTML = lines.join('<br>');
