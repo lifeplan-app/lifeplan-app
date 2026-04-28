@@ -1,7 +1,7 @@
 {
-  "name": "みらいコンパス｜ライフコンパス",
+  "name": "みらいコンパス",
   "short_name": "みらいコンパス",
-  "description": "老後・FIRE・住宅ローン・NISA・iDeCo・年金を1画面で試算できる、無料・登録不要・ブラウザ完結のライフプランナビ。みらいコンパスのライフプラン機能。",
+  "description": "老後・FIRE・住宅ローン・NISA・iDeCo・年金を1画面で試算できる、無料・登録不要・ブラウザ完結のライフプランナビ。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
