@@ -1,7 +1,7 @@
 // Service Worker — ライフプランアプリ / 支出管理アプリ
 // バージョンを上げると古いキャッシュが activate 時に削除され、
 // 新しい analytics.js / pwa-install.js 等を確実に取得し直せる
-const CACHE_NAME = 'lifeplan-app-v2';
+const CACHE_NAME = 'mirai-compass-v3';
 
 const PRECACHE = [
   './',

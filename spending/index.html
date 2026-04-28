@@ -18,16 +18,16 @@
   <!-- PWA インストール促進 -->
   <script src="../pwa-install.js" defer></script>
   <!-- OGP -->
-  <meta property="og:title" content="支出管理アプリ — 毎月の支出を4領域で見える化する">
+  <meta property="og:title" content="家計コンパス — 毎月の支出を4領域で見える化する">
   <meta property="og:description" content="毎月固定・変動・不定期費を4領域で管理。MF・Zaim対応CSVインポート。データはブラウザ内に保存。完全無料。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://app.lifeplan-app.net/spending/">
   <meta property="og:image" content="https://app.lifeplan-app.net/ogp/spending-ogp.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="支出管理アプリ">
+  <meta property="og:site_name" content="家計コンパス">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="支出管理アプリ — 毎月の支出を4領域で見える化する">
+  <meta name="twitter:title" content="家計コンパス — 毎月の支出を4領域で見える化する">
   <meta name="twitter:description" content="毎月固定・変動・不定期費を4領域で管理。MF・Zaim対応CSVインポート。データはブラウザ内に保存。完全無料。">
   <meta name="twitter:image" content="https://app.lifeplan-app.net/ogp/spending-ogp.svg">
   <!-- WebApplication 構造化データ -->
@@ -35,10 +35,10 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "支出管理アプリ",
+    "name": "家計コンパス",
     "alternateName": ["家計簿アプリ", "支出見える化アプリ"],
     "url": "https://app.lifeplan-app.net/spending/",
-    "description": "毎月固定費・毎月変動費・不定期固定費・不定期変動費の4領域で家計の支出を見える化する、無料・登録不要・ブラウザ完結の支出管理アプリ。マネーフォワードME / Zaim の CSV エクスポートに対応。データはローカルストレージ内のみで完結し外部送信されません。",
+    "description": "毎月固定費・毎月変動費・不定期固定費・不定期変動費の4領域で家計の支出を見える化する、無料・登録不要・ブラウザ完結の家計コンパス。マネーフォワードME / Zaim の CSV エクスポートに対応。データはローカルストレージ内のみで完結し外部送信されません。",
     "applicationCategory": "FinanceApplication",
     "applicationSubCategory": "PersonalFinance",
     "operatingSystem": "Any (Web browser)",
@@ -60,7 +60,7 @@
     ],
     "creator": {
       "@type": "Organization",
-      "name": "ライフプランアプリ",
+      "name": "みらいコンパス",
       "url": "https://lifeplan-app.net/"
     },
     "inLanguage": "ja",
@@ -973,7 +973,7 @@
     </label>
 
     <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">
-      ライフプランアプリの「収入・支出」に設定されている月間生活費に、この値を反映します。
+      みらいコンパスの「収入・支出」に設定されている月間生活費に、この値を反映します。
     </p>
   </div>
 
@@ -1007,16 +1007,16 @@
   <!-- Sync Button -->
   <div id="syncStatus" style="margin-bottom:10px;font-size:12px;color:var(--text-muted);text-align:center"></div>
   <button class="btn btn-primary btn-full" onclick="syncToLifeplan()" id="syncBtn">
-    🔗 ライフプランアプリに連携する
+    🔗 みらいコンパスに連携する
   </button>
   <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;line-height:1.6">
-    同じドメインのライフプランアプリのデータを更新します。<br>連携前に確認ダイアログが表示されます。
+    同じドメインのみらいコンパスのデータを更新します。<br>連携前に確認ダイアログが表示されます。
   </p>
 
   <!-- 連携後のリンク（連携済みの場合のみ表示） -->
   <div id="syncAfterLink" style="display:none;margin-top:14px;text-align:center">
     <a href="../index.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#E0F2FE;color:#0369A1;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none">
-      📊 ライフプランアプリで確認する →
+      📊 みらいコンパスで確認する →
     </a>
   </div>
 
@@ -1029,7 +1029,7 @@
     <!-- App icon + title -->
     <div style="text-align:center;margin-bottom:24px">
       <div style="width:72px;height:72px;background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(16,185,129,.3)">💸</div>
-      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 8px">支出管理アプリへようこそ</h1>
+      <h1 style="font-size:22px;font-weight:800;color:var(--text);margin:0 0 8px">家計コンパスへようこそ</h1>
       <p style="font-size:13px;color:var(--text-secondary);line-height:1.75;margin:0">
         毎月の支出を <strong style="color:var(--text)">4つの領域</strong> に整理して、<br>
         「お金はどこに消えているか」を見える化します。<br>
@@ -1462,8 +1462,8 @@
 
     <!-- ライフプラン連携バナー -->
     <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#92400E;line-height:1.5">
-      ⏳ プレミアム機能はライフプランアプリと連携しています。<br>
-      <a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約いただくと、こちらの機能も自動でご利用いただけます。
+      ⏳ プレミアム機能はみらいコンパスと連携しています。<br>
+      <a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">みらいコンパス</a>で Standard / Premium プランをご契約いただくと、こちらの機能も自動でご利用いただけます。
     </div>
 
     <!-- 機能リスト -->
@@ -1493,12 +1493,12 @@
     <!-- CTAボタン群 -->
     <div style="display:flex;flex-direction:column;gap:8px">
       <a class="btn btn-primary btn-full" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="font-size:14px;padding:13px;text-decoration:none;text-align:center">
-        🚀 ライフプランアプリでプランを確認する
+        🚀 みらいコンパスでプランを確認する
       </a>
     </div>
     <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:10px;line-height:1.5">
       Standard プラン（¥480/月）・Premium プラン（¥980/月）<br>
-      ライフプランアプリでご契約後、こちらの機能も自動で解放されます
+      みらいコンパスでご契約後、こちらの機能も自動で解放されます
     </p>
   </div>
 </div>
@@ -3485,7 +3485,7 @@ function updateLifeplanConnCard(monthlyTotal) {
     iconEl.textContent = '⚠️';
     titleEl.textContent = 'ライフプランのデータが見つかりません';
     titleEl.style.color = 'var(--warning, #FF9500)';
-    descEl.textContent  = 'ライフプランアプリを一度開いてデータを作成してください';
+    descEl.textContent  = 'みらいコンパスを一度開いてデータを作成してください';
     openLink.style.display = '';
     if (previewEl) previewEl.style.display = 'none';
     if (syncBtn) { syncBtn.disabled = true; syncBtn.classList.remove('pulse'); }
@@ -3829,7 +3829,7 @@ function syncToLifeplan() {
   } catch(e) { lp = null; }
 
   if (!lp) {
-    showNotification('ライフプランアプリのデータが見つかりません。先にライフプランアプリを開いてください。');
+    showNotification('みらいコンパスのデータが見つかりません。先にみらいコンパスを開いてください。');
     updateLifeplanConnCard(vals.monthlyTotal);
     return;
   }
@@ -3869,7 +3869,7 @@ function syncToLifeplan() {
   // [Phase 6 X] 世帯ベース注記
   lines.push(`<div style="margin-top:10px;padding:8px 10px;background:#FEF3C7;border-radius:6px;font-size:11px;color:#92400E;line-height:1.5">
   ⓘ これは<strong>世帯ベースの月間生活費</strong>として反映されます。<br>
-  本人/配偶者の個別収入・年金・退職金などの個別データは、ライフプランアプリの設定値が維持されます。
+  本人/配偶者の個別収入・年金・退職金などの個別データは、みらいコンパスの設定値が維持されます。
 </div>`);
 
   // [Phase 6 X] 住居費二重計上警告
@@ -3983,7 +3983,7 @@ function doSyncToLifeplan() {
         intervalYears: 1,
         startYear: new Date().getFullYear(),
         endYear: null,
-        note: '支出管理アプリから連携',
+        note: '家計コンパスから連携',
       };
       if (existingIdx >= 0) lp.recurringExpenses[existingIdx] = entry;
       else lp.recurringExpenses.push(entry);
@@ -4100,7 +4100,7 @@ function isPremium() {
   return false;
 }
 
-// ライフプランアプリのプランを参照（free / standard / premium）
+// みらいコンパスのプランを参照（free / standard / premium）
 function getLifeplanPlan() {
   try {
     const lp = JSON.parse(localStorage.getItem('lifeplan_v1') || 'null');
@@ -4274,7 +4274,7 @@ function renderPremiumStatusBanner() {
           <div style="display:flex;align-items:center;gap:10px;background:#FEF3C7;border:1px solid #FCD34D;border-radius:10px;padding:10px 14px;margin-bottom:12px">
             <span style="font-size:18px">⏰</span>
             <div style="flex:1;font-size:12px;color:#92400E">
-              <strong>トライアル残り${daysLeft}日</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約ください
+              <strong>トライアル残り${daysLeft}日</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:#92400E;font-weight:700">みらいコンパス</a>で Standard / Premium プランをご契約ください
             </div>
             <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
           </div>`;
@@ -4289,7 +4289,7 @@ function renderPremiumStatusBanner() {
       <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:12px">
         <span style="font-size:18px">🔒</span>
         <div style="flex:1;font-size:12px;color:var(--text-muted)">
-          <strong>無料トライアルが終了しました</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:700">ライフプランアプリ</a>で Standard / Premium プランをご契約ください
+          <strong>無料トライアルが終了しました</strong> — 継続利用には<a href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);font-weight:700">みらいコンパス</a>で Standard / Premium プランをご契約ください
         </div>
         <button class="btn btn-secondary" onclick="openPremiumModal()" style="font-size:11px;padding:5px 10px;white-space:nowrap">詳細</button>
       </div>`;
@@ -4321,8 +4321,8 @@ function renderPremiumTrend() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 カテゴリ別トレンド分析</div>
           <div style="font-size:12px;color:var(--text-muted)">6ヶ月以上の推移とカテゴリ増減を表示</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">カテゴリ別トレンド分析は ライフプランアプリ Standard / Premium プランで解放されます</div>
-          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">ライフプランアプリで契約する</a>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">カテゴリ別トレンド分析は みらいコンパス Standard / Premium プランで解放されます</div>
+          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">みらいコンパスで契約する</a>
         </div>
       </div>`;
     return;
@@ -4430,8 +4430,8 @@ function renderPremiumSim() {
         <div class="premium-lock">
           <div style="font-size:14px;font-weight:700">🔒 改善シミュレーター</div>
           <div style="font-size:12px;color:var(--text-muted)">任意のカテゴリで節約効果を試算</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">改善シミュレーターは ライフプランアプリ Premium プランで解放されます</div>
-          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">ライフプランアプリで契約する</a>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">改善シミュレーターは みらいコンパス Premium プランで解放されます</div>
+          <a class="btn btn-secondary" href="https://app.lifeplan-app.net/" target="_blank" rel="noopener noreferrer" style="margin-top:4px;font-size:12px;padding:6px 14px;text-decoration:none">みらいコンパスで契約する</a>
         </div>
       </div>`;
     return;
@@ -5416,7 +5416,7 @@ function importSpendingData(event) {
 
       // [Phase 5e-d] _version 検証を厳格化（クロスアプリインポート拒否）
       if (imported._version === 'lifeplan_v1') {
-        showNotification('これはライフプランアプリのデータです。支出管理アプリ用のデータをインポートしてください。');
+        showNotification('これはみらいコンパスのデータです。家計コンパス用のデータをインポートしてください。');
         return;
       }
       // [Fix R4] スキーマ最低限検証
@@ -5426,7 +5426,7 @@ function importSpendingData(event) {
       // [Phase 5e-d] _version が無い場合は categories / months 存在で簡易判定（旧バージョン互換）
       if (!imported._version) {
         if (!imported.categories || !imported.months) {
-          showNotification('支出管理アプリのデータ形式と一致しません（categories/months 不在）');
+          showNotification('家計コンパスのデータ形式と一致しません（categories/months 不在）');
           return;
         }
       }
@@ -5496,7 +5496,7 @@ function importSpendingDataOnboarding(event) {
 
       // [Phase 5e-d] _version 検証を厳格化（クロスアプリインポート拒否）
       if (imported._version === 'lifeplan_v1') {
-        showNotification('これはライフプランアプリのデータです。支出管理アプリ用のデータをインポートしてください。');
+        showNotification('これはみらいコンパスのデータです。家計コンパス用のデータをインポートしてください。');
         return;
       }
       // [Fix R4] スキーマ最低限検証
@@ -5506,7 +5506,7 @@ function importSpendingDataOnboarding(event) {
       // [Phase 5e-d] _version が無い場合は categories / months 存在で簡易判定（旧バージョン互換）
       if (!imported._version) {
         if (!imported.categories || !imported.months) {
-          showNotification('支出管理アプリのデータ形式と一致しません（categories/months 不在）');
+          showNotification('家計コンパスのデータ形式と一致しません（categories/months 不在）');
           return;
         }
       }

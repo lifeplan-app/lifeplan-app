@@ -1,7 +1,7 @@
 {
-  "name": "ライフプランアプリ",
-  "short_name": "ライフプラン",
-  "description": "人生100年時代の資産・キャッシュフローシミュレーター。老後資金・住宅・教育費をまとめて管理。",
+  "name": "みらいコンパス｜ライフコンパス",
+  "short_name": "みらいコンパス",
+  "description": "老後・FIRE・住宅ローン・NISA・iDeCo・年金を1画面で試算できる、無料・登録不要・ブラウザ完結のライフプランナビ。みらいコンパスのライフプラン機能。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,10 @@
   "lang": "ja",
   "dir": "ltr",
   "orientation": "portrait-primary",
-  "categories": ["finance", "utilities"],
+  "categories": [
+    "finance",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-lifeplan.svg",

@@ -1,7 +1,7 @@
 {
-  "name": "支出管理アプリ",
-  "short_name": "支出管理",
-  "description": "家計の支出を4領域（毎月固定・毎月変動・不定期固定・不定期変動）で管理するアプリ。CSVインポート対応。",
+  "name": "みらいコンパス｜家計コンパス",
+  "short_name": "家計コンパス",
+  "description": "家計の支出を4領域（毎月固定・毎月変動・不定期固定・不定期変動）で管理。CSVインポート対応。みらいコンパスの家計管理機能。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,10 @@
   "lang": "ja",
   "dir": "ltr",
   "orientation": "portrait-primary",
-  "categories": ["finance", "utilities"],
+  "categories": [
+    "finance",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-spending.svg",

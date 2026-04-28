@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>ライフプランアプリ — 人生100年を、自分の手で設計する</title>
+  <title>みらいコンパス — 人生100年を、自分の手で設計する</title>
   <meta name="description" content="収入・支出・資産・ライフイベントを入力するだけで、リタイアまでの資産シミュレーションが動き始める無料のライフプランニングツールです。データはすべてブラウザ内に保存されます。">
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -18,16 +18,16 @@
   <!-- PWA インストール促進 -->
   <script src="pwa-install.js" defer></script>
   <!-- OGP -->
-  <meta property="og:title" content="ライフプランアプリ — 人生100年を、自分の手で設計する">
+  <meta property="og:title" content="みらいコンパス — 人生100年を、自分の手で設計する">
   <meta property="og:description" content="収入・支出・資産・ライフイベントを入力するだけで老後シミュレーションが動く無料ツール。データはブラウザ内に保存。登録不要。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://app.lifeplan-app.net/">
   <meta property="og:image" content="https://app.lifeplan-app.net/ogp/lifeplan-ogp.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:site_name" content="ライフプランアプリ">
+  <meta property="og:site_name" content="みらいコンパス">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="ライフプランアプリ — 人生100年を、自分の手で設計する">
+  <meta name="twitter:title" content="みらいコンパス — 人生100年を、自分の手で設計する">
   <meta name="twitter:description" content="収入・支出・資産・ライフイベントを入力するだけで老後シミュレーションが動く無料ツール。データはブラウザ内に保存。登録不要。">
   <meta name="twitter:image" content="https://app.lifeplan-app.net/ogp/lifeplan-ogp.png">
   <!-- WebApplication 構造化データ -->
@@ -35,7 +35,7 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "ライフプランアプリ",
+    "name": "みらいコンパス",
     "alternateName": ["ライフプラン アプリ", "ライフプランシミュレーター"],
     "url": "https://app.lifeplan-app.net/",
     "description": "収入・支出・資産・ライフイベント・住宅ローン・年金・NISA・iDeCoを1つの画面で試算できる、無料・登録不要・ブラウザ完結のライフプランシミュレーター。データはローカルストレージ内のみで完結し外部送信されません。",
@@ -62,7 +62,7 @@
     ],
     "creator": {
       "@type": "Organization",
-      "name": "ライフプランアプリ",
+      "name": "みらいコンパス",
       "url": "https://lifeplan-app.net/"
     },
     "inLanguage": "ja",
@@ -2161,11 +2161,11 @@
 
   <div class="drawer-divider"></div>
 
-  <!-- 支出管理アプリ -->
+  <!-- 家計コンパス -->
   <div class="drawer-section">
     <div class="drawer-section-label">連携アプリ</div>
     <a class="drawer-item" href="./spending/" style="text-decoration:none;color:#059669;font-weight:700" id="drawerSpendingLink">
-      <span class="d-icon">💰</span><span id="drawerSpendingLabel">支出管理アプリ</span>
+      <span class="d-icon">💰</span><span id="drawerSpendingLabel">家計コンパス</span>
     </a>
   </div>
 
@@ -2409,7 +2409,7 @@
       </div>
     </div>
 
-    <!-- 支出管理アプリ連携バナー -->
+    <!-- 家計コンパス連携バナー -->
     <div id="dashSpendingSyncBanner" style="display:none;margin-bottom:16px"></div>
 
     <!-- 警告・アラートバナー -->
@@ -6013,7 +6013,7 @@ function load() {
     if (!state.disclaimerAck.onboarding && state.disclaimerAck.onboarding !== null) {
       state.disclaimerAck.onboarding = null;
     }
-    // 支出管理アプリ連携フラグのマイグレーション
+    // 家計コンパス連携フラグのマイグレーション
     if (state._spendingSyncedAt   === undefined) state._spendingSyncedAt   = null;
     if (state._spendingExpense     === undefined) state._spendingExpense    = null;
     if (state._spendingBasedOn     === undefined) state._spendingBasedOn   = null;
@@ -6114,9 +6114,9 @@ function save() {
   }
 }
 
-// ===== 支出管理アプリ連携: 自動検知 =====
+// ===== 家計コンパス連携: 自動検知 =====
 /**
- * localStorage の lifeplan_v1 に支出管理アプリが書き込んだ新しいフラグを検知し、
+ * localStorage の lifeplan_v1 に家計コンパスが書き込んだ新しいフラグを検知し、
  * ダッシュボードへ自動反映する。
  * - 同一タブ内では `storage` イベントが発火しないため `visibilitychange` でも補完。
  */
@@ -6147,7 +6147,7 @@ function _checkSpendingSync() {
 
     const d = new Date(newTs);
     const label = `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-    showNotification(`💡 支出管理アプリの連携データを反映しました（${label}）`);
+    showNotification(`💡 家計コンパスの連携データを反映しました（${label}）`);
   } catch(e) { /* 無視 */ }
 }
 
@@ -6679,7 +6679,7 @@ function printLifePlan() {
       レポート ID: <strong>${reportId}</strong>
     </div>
     <div style="margin-bottom:4px">
-      このレポートはライフプランアプリ <strong style="color:#7C3AED">${planLabel} プラン</strong>で作成されました ／ ${dateStr}
+      このレポートはみらいコンパス <strong style="color:#7C3AED">${planLabel} プラン</strong>で作成されました ／ ${dateStr}
     </div>
     <div>
       <a href="https://app.lifeplan-app.net/" style="color:#94A3B8">app.lifeplan-app.net</a>
@@ -6782,11 +6782,11 @@ function _applyImportedData(jsonStr, fileName) {
   }
   // [Phase 5e-d] spending_v1 の誤インポートを拒否
   if (data && data._version === 'spending_v1') {
-    showNotification('これは支出管理アプリのデータです。ライフプランアプリ用のデータをインポートしてください。', 'error');
+    showNotification('これは家計コンパスのデータです。みらいコンパス用のデータをインポートしてください。', 'error');
     return;
   }
   if (!data._version && !data.profile && !data.assets) {
-    showNotification('⚠️ ライフプランアプリのデータ形式と一致しません', 'error');
+    showNotification('⚠️ みらいコンパスのデータ形式と一致しません', 'error');
     return;
   }
   // [Phase 5b R4] 危険 key を再帰除去
@@ -9459,7 +9459,7 @@ function renderFinance() {
   document.getElementById('finIncome').value = f.income || '';
   document.getElementById('finBonus').value = f.bonus || '';
   document.getElementById('finExpense').value = f.expense || '';
-  // 支出管理アプリからの連携バッジ
+  // 家計コンパスからの連携バッジ
   (function() {
     const badgeEl = document.getElementById('finExpenseSyncBadge');
     if (!badgeEl) return;
@@ -9468,7 +9468,7 @@ function renderFinance() {
     const d = new Date(syncedAt);
     const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
     badgeEl.style.display = '';
-    badgeEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;border-radius:20px;font-size:11px;font-weight:700">🔗 支出管理アプリから連携（${dateStr}）</span>`;
+    badgeEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#ECFDF5;color:#059669;border:1px solid #A7F3D0;border-radius:20px;font-size:11px;font-weight:700">🔗 家計コンパスから連携（${dateStr}）</span>`;
   })();
   document.getElementById('simYears').value = f.simYears || 10;
   document.getElementById('inflationRate').value = f.inflationRate ?? 2;
@@ -10425,7 +10425,7 @@ function renderFinCharts() {
           <a href="https://app.lifeplan-app.net/spending/" target="_blank" rel="noopener noreferrer"
              class="btn btn-secondary"
              style="display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:8px 14px;text-decoration:none">
-            💡 支出を見直す（支出管理アプリへ）
+            💡 支出を見直す（家計コンパスへ）
           </a>
         </div>
       </div>`;
@@ -15830,7 +15830,7 @@ function renderBreakdownSection(result, displayWithdrawalType) {
             </div>`).join('')}
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text-muted)">
-          ※ 数値はライフプランアプリの各入力値を元に自動取得しています。変更は各タブから行ってください。
+          ※ 数値はみらいコンパスの各入力値を元に自動取得しています。変更は各タブから行ってください。
         </div>
       </div>
     </div>`;
@@ -22121,7 +22121,7 @@ function _renderSpendingSyncBanner() {
         <div style="display:flex;align-items:center;gap:12px;background:#FFFBEB;border:1px solid #FCD34D;border-radius:12px;padding:12px 16px">
           <span style="font-size:22px;flex-shrink:0">📊</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#92400E">支出管理アプリに実績データがあります</div>
+            <div style="font-size:13px;font-weight:700;color:#92400E">家計コンパスに実績データがあります</div>
             <div style="font-size:11px;color:#B45309;margin-top:2px">
               月間生活費: <strong>${spExp}万円</strong>${basedStr}${diffNote}
             </div>
@@ -22134,7 +22134,7 @@ function _renderSpendingSyncBanner() {
         <div style="display:flex;align-items:center;gap:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px">
           <span style="font-size:22px;flex-shrink:0">💰</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:700;color:#166534">支出管理アプリと連携すると月間生活費が自動更新されます</div>
+            <div style="font-size:13px;font-weight:700;color:#166534">家計コンパスと連携すると月間生活費が自動更新されます</div>
             <div style="font-size:11px;color:#16A34A;margin-top:2px">実際の支出データをもとにシミュレーション精度が上がります</div>
           </div>
           <a href="./spending/" style="flex-shrink:0;padding:7px 14px;background:#16A34A;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap">開く →</a>
@@ -22162,7 +22162,7 @@ function _renderSpendingSyncBanner() {
     <div style="display:flex;align-items:center;gap:12px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px">
       <span style="font-size:22px;flex-shrink:0">🔗</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;color:#065F46">支出管理アプリと連携中${newDataNote}</div>
+        <div style="font-size:13px;font-weight:700;color:#065F46">家計コンパスと連携中${newDataNote}</div>
         <div style="font-size:11px;color:#059669;margin-top:2px">
           月間生活費: <strong>${exp ?? '—'}万円</strong>${basedStr} ／ 最終連携: ${dateStr}
         </div>
@@ -22171,7 +22171,7 @@ function _renderSpendingSyncBanner() {
     </div>`;
   // ドロワーのラベルも更新
   const drawerLabel = document.getElementById('drawerSpendingLabel');
-  if (drawerLabel) drawerLabel.textContent = '支出管理アプリ（連携中 ✓）';
+  if (drawerLabel) drawerLabel.textContent = '家計コンパス（連携中 ✓）';
 }
 
 // ===== K: シナリオ比較 =====
