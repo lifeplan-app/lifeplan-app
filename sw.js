@@ -1,11 +1,19 @@
 // Service Worker — ライフプランアプリ / 支出管理アプリ
-const CACHE_NAME = 'lifeplan-app-v1';
+// バージョンを上げると古いキャッシュが activate 時に削除され、
+// 新しい analytics.js / pwa-install.js 等を確実に取得し直せる
+const CACHE_NAME = 'lifeplan-app-v2';
 
 const PRECACHE = [
   './',
   './index.html',
   './spending/index.html',
   './spending/',
+  './analytics.js',
+  './pwa-install.js',
+  './manifest.json',
+  './icon-lifeplan.svg',
+  './spending/manifest.json',
+  './icon-spending.svg',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
 ];
 
