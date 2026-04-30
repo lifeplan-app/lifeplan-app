@@ -660,9 +660,9 @@
 
 <!-- Header -->
 <header class="header">
-  <span class="header-title">💰 支出管理</span>
+  <span class="header-title">💰 家計コンパス</span>
   <button class="header-settings-btn" onclick="openCatSettings()" title="カテゴリ設定">⚙️</button>
-  <a class="header-link" href="../index.html">ライフプランへ →</a>
+  <a class="header-link" href="../index.html">みらいコンパスへ →</a>
 </header>
 
 <!-- Tab Navigation -->
@@ -1442,7 +1442,7 @@
   <div class="modal">
     <div class="modal-title">
       <button class="modal-close" onclick="closeSyncConfirmModal()">✕</button>
-      🔗 ライフプランへの連携確認
+      🔗 みらいコンパスへの連携確認
     </div>
     <div id="syncConfirmBody" style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin-bottom:16px"></div>
     <div style="display:flex;gap:8px;margin-top:4px">
@@ -4244,7 +4244,7 @@ function checkBudgetNotification(categoryTotals) {
   sessionStorage.setItem(sessionKey, '1');
 
   const names = overCats.map(c => c.name).join('・');
-  new Notification('💸 支出管理 — 予算超過', {
+  new Notification('💸 家計コンパス — 予算超過', {
     body: `${names} が予算を超過しています`,
     icon: '/spending/icon-spending.svg',
     tag:  `budget-over-${currentMonth}`,  // 同月で重複しない
