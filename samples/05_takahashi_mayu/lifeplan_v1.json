@@ -89,8 +89,16 @@
   ],
   "lifeEvents": {
     "children": [
-      {"id": "child_01", "birth": "2015-06-15", "name": "花（長女）"},
-      {"id": "child_02", "birth": "2018-11-20", "name": "蓮（長男）"}
+      {
+        "id": "child_01",
+        "birth": "2015-06-15",
+        "name": "花（長女）"
+      },
+      {
+        "id": "child_02",
+        "birth": "2018-11-20",
+        "name": "蓮（長男）"
+      }
     ],
     "housingType": "rent",
     "rent": {
@@ -112,18 +120,22 @@
     {
       "id": "ev_01",
       "title": "養育費収入（元夫）",
-      "type": "income",
-      "year": 2026,
-      "monthlyAmount": 2,
-      "note": "不定期のため最小値で計上"
+      "type": "income_change",
+      "startAge": 39,
+      "endAge": 50,
+      "monthlyAmount": 30,
+      "bonusAmount": 0,
+      "continueGrowth": true,
+      "note": "不定期のため最小値で計上。花の大学卒業（本人50歳）まで（28+2=30万）"
     },
     {
       "id": "ev_02",
       "title": "花 大学卒業→教育費終了",
-      "type": "expense_end",
-      "year": 2037,
-      "monthlyAmount": -5,
-      "note": "教育費が大幅に減少"
+      "type": "expense_change",
+      "startAge": 50,
+      "endAge": null,
+      "monthlyAmount": 12.6,
+      "note": "教育費が大幅に減少（17.6-5=12.6万）"
     }
   ],
   "retirement": {},
@@ -153,7 +165,9 @@
     ],
     "needs": {}
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",

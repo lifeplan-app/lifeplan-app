@@ -82,18 +82,20 @@
     {
       "id": "ev_01",
       "title": "iDeCo開始（月68,000円満額拠出）",
-      "type": "expense_start",
-      "year": 2026,
-      "monthlyAmount": -6.8,
-      "note": "フリーランスの国民年金基金連合会経由・月最大68,000円"
+      "type": "expense_change",
+      "startAge": 35,
+      "endAge": null,
+      "monthlyAmount": 27.9,
+      "note": "フリーランスの国民年金基金連合会経由・月最大68,000円（21.1+6.8=27.9万）"
     },
     {
       "id": "ev_02",
       "title": "小規模企業共済加入（月7万）",
-      "type": "expense_start",
-      "year": 2027,
-      "monthlyAmount": -7,
-      "note": "掛金全額所得控除。退職金代わり"
+      "type": "expense_change",
+      "startAge": 36,
+      "endAge": null,
+      "monthlyAmount": 34.9,
+      "note": "掛金全額所得控除。退職金代わり（27.9+7=34.9万）"
     }
   ],
   "retirement": {},
@@ -119,7 +121,9 @@
       "kyosai": "小規模企業共済未加入。退職金代わりになる"
     }
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",

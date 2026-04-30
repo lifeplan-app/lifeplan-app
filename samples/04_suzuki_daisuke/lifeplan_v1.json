@@ -97,8 +97,16 @@
   ],
   "lifeEvents": {
     "children": [
-      {"id": "child_01", "birth": "2009-04-10", "name": "翔太（長男）"},
-      {"id": "child_02", "birth": "2012-09-05", "name": "さくら（長女）"}
+      {
+        "id": "child_01",
+        "birth": "2009-04-10",
+        "name": "翔太（長男）"
+      },
+      {
+        "id": "child_02",
+        "birth": "2012-09-05",
+        "name": "さくら（長女）"
+      }
     ],
     "housingType": "mortgage",
     "mortgage": {
@@ -120,26 +128,31 @@
     {
       "id": "ev_01",
       "title": "妻 パート就労開始（さくら中学卒業後）",
-      "type": "income",
-      "year": 2028,
-      "monthlyAmount": 8,
-      "note": "子供が高校入学後にパート開始想定"
+      "type": "income_change",
+      "startAge": 47,
+      "endAge": null,
+      "monthlyAmount": 63,
+      "bonusAmount": 0,
+      "continueGrowth": true,
+      "note": "子供が高校入学後にパート開始想定。妻8万/月を本人収入に合算（55+8=63万）"
     },
     {
       "id": "ev_02",
       "title": "長男 大学卒業→教育費終了",
-      "type": "expense_end",
-      "year": 2031,
-      "monthlyAmount": -7,
-      "note": "長男の学費・仕送り終了"
+      "type": "expense_change",
+      "startAge": 50,
+      "endAge": null,
+      "monthlyAmount": 23.6,
+      "note": "長男の学費・仕送り終了（30.6-7=23.6万）"
     },
     {
       "id": "ev_03",
       "title": "長女 大学卒業→教育費終了",
-      "type": "expense_end",
-      "year": 2034,
-      "monthlyAmount": -7,
-      "note": "長女の学費・仕送り終了"
+      "type": "expense_change",
+      "startAge": 53,
+      "endAge": null,
+      "monthlyAmount": 16.6,
+      "note": "長女の学費・仕送り終了（23.6-7=16.6万）"
     }
   ],
   "retirement": {},
@@ -169,7 +182,9 @@
     ],
     "needs": {}
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",

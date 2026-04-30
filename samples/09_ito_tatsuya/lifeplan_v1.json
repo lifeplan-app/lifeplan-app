@@ -52,7 +52,11 @@
   ],
   "lifeEvents": {
     "children": [
-      {"id": "child_01", "birth": "2015-01-20", "name": "長男"}
+      {
+        "id": "child_01",
+        "birth": "2015-01-20",
+        "name": "長男"
+      }
     ],
     "housingType": "rent",
     "rent": {
@@ -74,18 +78,20 @@
     {
       "id": "ev_01",
       "title": "iDeCo開始（満額・月68,000円）",
-      "type": "expense",
-      "year": 2026,
-      "monthlyAmount": 6.8,
-      "note": "個人事業主iDeCo上限。全額所得控除で年約25万円節税効果"
+      "type": "expense_change",
+      "startAge": 42,
+      "endAge": null,
+      "monthlyAmount": 31.6,
+      "note": "個人事業主iDeCo上限。全額所得控除で年約25万節税効果（24.8+6.8=31.6万）"
     },
     {
       "id": "ev_02",
       "title": "子供独立→教育費終了",
-      "type": "expense_end",
-      "year": 2037,
-      "monthlyAmount": -3,
-      "note": "子供22歳・大学卒業後の教育費消滅"
+      "type": "expense_change",
+      "startAge": 53,
+      "endAge": null,
+      "monthlyAmount": 28.6,
+      "note": "子供22歳・大学卒業後の教育費消滅（31.6-3=28.6万）"
     }
   ],
   "retirement": {},
@@ -116,7 +122,9 @@
     ],
     "needs": {}
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",

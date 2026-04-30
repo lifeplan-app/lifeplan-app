@@ -69,7 +69,11 @@
   ],
   "lifeEvents": {
     "children": [
-      {"id": "child_01", "birth": "2025-09-15", "name": "第1子"}
+      {
+        "id": "child_01",
+        "birth": "2025-09-15",
+        "name": "第1子"
+      }
     ],
     "housingType": "rent",
     "rent": {
@@ -91,18 +95,22 @@
     {
       "id": "ev_01",
       "title": "育休明け・収入回復",
-      "type": "income",
-      "year": 2027,
-      "monthlyAmount": 20,
-      "note": "育休明け復帰（時短勤務想定）。月収18万→38万の差額20万円増加"
+      "type": "income_change",
+      "startAge": 33,
+      "endAge": null,
+      "monthlyAmount": 38,
+      "bonusAmount": 0,
+      "continueGrowth": true,
+      "note": "育休明け復帰（時短勤務想定）。月収18万→38万に回復"
     },
     {
       "id": "ev_02",
       "title": "保育費終了（小学校入学）",
-      "type": "expense_end",
-      "year": 2031,
-      "monthlyAmount": -7,
-      "note": "第1子6歳・小学校入学で保育費消滅"
+      "type": "expense_change",
+      "startAge": 37,
+      "endAge": null,
+      "monthlyAmount": 3.8,
+      "note": "第1子6歳・小学校入学で保育費消滅（10.8-7=3.8万）"
     }
   ],
   "retirement": {},
@@ -116,7 +124,9 @@
       }
     }
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",

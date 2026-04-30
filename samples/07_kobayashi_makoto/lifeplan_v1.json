@@ -113,23 +113,32 @@
     {
       "id": "cf_01",
       "title": "定年退職（収入終了）",
-      "type": "income_end",
-      "year": 2032,
-      "monthlyAmount": 0
+      "type": "income_change",
+      "startAge": 60,
+      "endAge": null,
+      "monthlyAmount": 0,
+      "bonusAmount": 0,
+      "note": "60歳定年退職。給与収入ゼロへ"
     },
     {
       "id": "cf_02",
       "title": "年金受給開始（65歳）",
-      "type": "income",
-      "year": 2037,
-      "monthlyAmount": 18
+      "type": "income_change",
+      "startAge": 65,
+      "endAge": null,
+      "monthlyAmount": 18,
+      "bonusAmount": 0,
+      "note": "本人の公的年金受給開始（月18万）"
     },
     {
       "id": "cf_03",
-      "title": "妻・年金受給開始（65歳）",
-      "type": "income",
-      "year": 2040,
-      "monthlyAmount": 8
+      "title": "妻・年金受給開始（本人68歳時）",
+      "type": "income_change",
+      "startAge": 68,
+      "endAge": null,
+      "monthlyAmount": 26,
+      "bonusAmount": 0,
+      "note": "本人年金18万＋妻年金8万の合算（26万）"
     }
   ],
   "retirement": {
@@ -157,7 +166,9 @@
     ],
     "needs": {}
   },
-  "inheritance": {"giftPlans": []},
+  "inheritance": {
+    "giftPlans": []
+  },
   "goals": [
     {
       "id": "goal_01",
